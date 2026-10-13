@@ -37,3 +37,6 @@ docs/referencias/*.pdf
 # Python
 __pycache__/
 *.pyc
+
+# Pacotes de sincronização
+.sync/
