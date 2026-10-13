@@ -1,0 +1,48 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": false,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@open-dot/core": [
+        "./packages/core/src/index.ts"
+      ],
+      "@open-dot/core/*": [
+        "./packages/core/src/*"
+      ],
+      "@open-dot/connectors/*": [
+        "./packages/connectors/src/*"
+      ]
+    }
+  },
+  "include": [
+    "packages",
+    "apps",
+    "tests",
+    "scripts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/dist"
+  ]
+}

@@ -1,0 +1,16 @@
+---
+description: Worker, banco, conectores e IA
+globs: apps/worker/**,packages/**,scripts/**
+alwaysApply: false
+---
+# Backend
+
+- Toda rota autenticada filtra por `ownerId` da sessão. Webhook usa a identidade da instalação/assinatura, nunca `ownerId` do payload.
+- Mutações exigem cabeçalho `x-open-dot: 1` e Origin do app (CSRF).
+- SQL sempre parametrizado. Migrações em `apps/worker/migrations/NNNN_nome.sql`, aditivas, nunca editadas depois de aplicadas; atualize `REQUIRED_SCHEMA`.
+- Banco do Open Dot é separado. Nunca rode migração em banco com tabelas de outro projeto.
+- Execução: chave única por dono+rotina+slot; lease + compare-and-set; estado terminal não é sobrescrito; resultado incerto não é repetido às cegas.
+- Workers Free: 10 ms de CPU e 50 subrequisições por invocação. Use `SubrequestBudget`; quebre trabalho em tiques.
+- IA: só via `AiRouter` (allowlist, privacidade por tipo de dado, reserva atômica, 429/Retry-After, timeout, circuit breaker). Sem provedor permitido → resumo por regras. Registro de uso sem conteúdo.
+- Links de fonte são montados pelo conector a partir de IDs, nunca aceitos da resposta do modelo.
+- Teste os riscos (isolamento, OAuth revogado, assinatura inválida, duplicado/fora de ordem, 429/timeout, falha parcial, concorrência, injeção) — não testes que só repetem a implementação.

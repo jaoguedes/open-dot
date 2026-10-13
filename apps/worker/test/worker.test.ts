@@ -1,0 +1,321 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { client, makeCtx, loadMigrations } from "./harness.ts";
+import { FakeGoogle } from "./fake-google.ts";
+import { tick } from "../src/jobs.ts";
+import * as repo from "../src/repo.ts";
+import { applyMigrations } from "../src/db/migrate.ts";
+import { SqliteDb } from "../src/db/sqlite.ts";
+import { hashProposal } from "@open-dot/core";
+
+async function connectGmail(google: FakeGoogle, ctx: Awaited<ReturnType<typeof makeCtx>>) {
+  const c = client(ctx);
+  assert.equal((await c.call("POST", "/api/session/dev")).status, 200);
+  const start = await c.call("POST", "/api/connections/gmail/start");
+  assert.equal(start.status, 200);
+  const authUrl = new URL(start.json.url);
+  assert.equal(authUrl.searchParams.get("scope"), "openid email https://www.googleapis.com/auth/gmail.readonly");
+  assert.equal(authUrl.searchParams.get("code_challenge_method"), "S256");
+  assert.equal(authUrl.searchParams.get("access_type"), "offline");
+  google.nextNonce = authUrl.searchParams.get("nonce");
+  const cb = await c.call("GET", `/api/oauth/google/callback?code=abc&state=${encodeURIComponent(authUrl.searchParams.get("state")!)}`);
+  assert.equal(cb.status, 302);
+  assert.equal(cb.headers.get("location"), "/conexoes?ok=gmail");
+  return c;
+}
+
+test("migrações: idempotentes, detectam alteração e recusam destrutivas", async () => {
+  const db = new SqliteDb();
+  const ms = loadMigrations();
+  assert.deepEqual((await applyMigrations(db, ms)).applied, ["0001"]);
+  assert.deepEqual((await applyMigrations(db, ms)).skipped, ["0001"]);
+  await assert.rejects(applyMigrations(db, [{ ...ms[0]!, sql: ms[0]!.sql + "\n-- mudou" }]), /alterada/);
+  await assert.rejects(applyMigrations(db, [{ version: "0002", name: "x", sql: "DROP TABLE od_owners;" }]), /destrutiva/);
+});
+
+test("fluxo completo simulado: conectar Gmail (leitura), sincronizar e publicar revisão com links e cobertura", async () => {
+  const google = new FakeGoogle();
+  google.addMessage({ id: "m1", subject: "Confirme a entrega de amanhã?", from: "Loja <pedidos@loja.com>" }, false);
+  google.addMessage({ id: "m2", subject: "Ofertas da semana", listUnsubscribe: true }, false);
+  const ctx = await makeCtx({ fetch: google.fetch });
+  const c = await connectGmail(google, ctx);
+
+  const conns = (await c.call("GET", "/api/connections")).json.connections;
+  assert.equal(conns[0].status, "connected");
+  assert.deepEqual(conns[0].scopes.filter((s: string) => s.includes("gmail")), ["https://www.googleapis.com/auth/gmail.readonly"]);
+
+  const routines = (await c.call("GET", "/api/routines")).json.routines;
+  assert.deepEqual(routines[0].times, ["08:00", "17:00"]);
+  assert.equal(routines[0].timeZone, "America/Sao_Paulo");
+
+  await c.call("POST", `/api/routines/${routines[0].id}/run-now`);
+  const report = await tick(ctx);
+  assert.equal(report.synced[0]?.fetched, 2);
+  assert.equal(report.runs[0]?.state, "succeeded");
+
+  const feed = (await c.call("GET", "/api/feed")).json.items;
+  assert.equal(feed.length, 1);
+  const d = feed[0];
+  assert.equal(d.kind, "email_digest");
+  assert.equal(d.body.total, 2);
+  assert.equal(d.body.counts.important + d.body.counts.review + d.body.counts.low, 2);
+  assert.match(d.body.top[0].href, /^https:\/\/mail\.google\.com\/mail\/\?authuser=joao%40gmail\.com#all\/t-m1$/);
+  assert.equal(d.body.aiUsed, false);
+  assert.match(d.body.aiNote, /regras/);
+  assert.equal(d.coverage.analyzed, 2);
+  // nenhuma chamada de escrita ao Gmail
+  assert.ok(google.calls.every((x) => x.startsWith("GET gmail") || x.includes("oauth2")), google.calls.join("\n"));
+});
+
+test("tokens ficam cifrados: refresh token não aparece em texto no banco", async () => {
+  const google = new FakeGoogle();
+  const ctx = await makeCtx({ fetch: google.fetch });
+  await connectGmail(google, ctx);
+  const dump = JSON.stringify(ctx.db.raw.prepare("SELECT * FROM od_connection_secrets").all());
+  assert.ok(!dump.includes("rt-secret-123"));
+  assert.ok(!dump.includes("at-0"));
+});
+
+test("isolamento por dono: outra sessão não lê nem desconecta dados alheios", async () => {
+  const google = new FakeGoogle();
+  const ctx = await makeCtx({ fetch: google.fetch });
+  const a = await connectGmail(google, ctx);
+  const connId = (await a.call("GET", "/api/connections")).json.connections[0].id;
+  await repo.insertFeed(ctx.db, ctx.keys, { ownerId: (await ctx.db.query<{ id: string }>("SELECT id FROM od_owners"))[0]!.id, agentId: "correio", runId: "r-a", kind: "notice", title: "Privado do A", body: { s: 1 }, freshness: "fresh", coverage: null, now: ctx.now() });
+
+  // Dono B com sessão própria.
+  const ownerB = await repo.upsertOwner(ctx.db, { sub: "sub-b", email: "b@example.com", name: "B", now: ctx.now() });
+  const b = client(ctx);
+  const { startSession } = await import("../src/http.ts");
+  b.setCookie((await startSession(ctx, new Request("http://localhost:8787/"), ownerB)).split(";")[0]!);
+  assert.equal((await b.call("GET", "/api/feed")).json.items.length, 0);
+  assert.equal((await b.call("GET", "/api/connections")).json.connections.length, 0);
+  assert.equal((await b.call("POST", `/api/connections/${connId}/disconnect`)).status, 404);
+  assert.equal((await a.call("GET", "/api/connections")).json.connections[0].status, "connected");
+});
+
+test("CSRF: mutação sem cabeçalho próprio ou de outra origem é recusada", async () => {
+  const ctx = await makeCtx();
+  const c = client(ctx);
+  assert.equal((await c.call("POST", "/api/session/dev", undefined, { "x-open-dot": "0" })).status, 403);
+  assert.equal((await c.call("POST", "/api/session/dev", undefined, { "x-open-dot": "1", origin: "https://evil.example" })).status, 403);
+  assert.equal((await c.call("POST", "/api/session/dev")).status, 200);
+});
+
+test("OAuth: state reutilizado ou inválido é recusado", async () => {
+  const google = new FakeGoogle();
+  const ctx = await makeCtx({ fetch: google.fetch });
+  const c = client(ctx);
+  await c.call("POST", "/api/session/dev");
+  const url = new URL((await c.call("POST", "/api/connections/gmail/start")).json.url);
+  google.nextNonce = url.searchParams.get("nonce");
+  const state = url.searchParams.get("state")!;
+  assert.equal((await c.call("GET", `/api/oauth/google/callback?code=a&state=${state}`)).headers.get("location"), "/conexoes?ok=gmail");
+  assert.equal((await c.call("GET", `/api/oauth/google/callback?code=a&state=${state}`)).headers.get("location"), "/?erro=estado_expirado");
+  assert.equal((await c.call("GET", `/api/oauth/google/callback?code=a&state=forjado`)).headers.get("location"), "/?erro=estado_expirado");
+});
+
+test("OAuth: usuário que negou a permissão do Gmail não vira conexão", async () => {
+  const google = new FakeGoogle();
+  google.grantedScope = "openid email";
+  const ctx = await makeCtx({ fetch: google.fetch });
+  const c = client(ctx);
+  await c.call("POST", "/api/session/dev");
+  const url = new URL((await c.call("POST", "/api/connections/gmail/start")).json.url);
+  google.nextNonce = url.searchParams.get("nonce");
+  const r = await c.call("GET", `/api/oauth/google/callback?code=a&state=${url.searchParams.get("state")}`);
+  assert.equal(r.headers.get("location"), "/conexoes?erro=permissao_gmail_negada");
+  assert.equal((await c.call("GET", "/api/connections")).json.connections.length, 0);
+});
+
+test("acesso revogado: marca reconexão uma única vez e para de sincronizar", async () => {
+  const google = new FakeGoogle();
+  const ctx = await makeCtx({ fetch: google.fetch });
+  const c = await connectGmail(google, ctx);
+  ctx.clock.t += 2 * 3600_000; // access token expirou
+  google.refreshRevoked = true;
+  const r1 = await tick(ctx);
+  assert.equal(r1.synced[0]?.status, "reauth_required");
+  ctx.clock.t += 5 * 60_000;
+  const r2 = await tick(ctx);
+  assert.equal(r2.synced.length, 0, "conexão em reauth não é sincronizada");
+  const feed = (await c.call("GET", "/api/feed")).json.items.filter((i: any) => i.title === "Reconecte seu Gmail");
+  assert.equal(feed.length, 1);
+  const status = (await c.call("GET", "/api/status")).json.agents.find((a: any) => a.agentId === "correio");
+  assert.equal(status.semantic, "disconnected");
+});
+
+test("sincronização incremental: dedupe, cursor expirado ressincroniza, falha parcial não perde mensagens", async () => {
+  const google = new FakeGoogle();
+  google.addMessage({ id: "a1" }, false);
+  const ctx = await makeCtx({ fetch: google.fetch });
+  await connectGmail(google, ctx);
+  await tick(ctx);
+  const count = async () => Number((await ctx.db.query<{ n: number }>("SELECT COUNT(*) n FROM od_email_messages"))[0]!.n);
+  assert.equal(await count(), 1);
+
+  google.addMessage({ id: "a2" });
+  google.addMessage({ id: "a3" });
+  google.failMeta.add("a3");
+  ctx.clock.t += 5 * 60_000;
+  const r = await tick(ctx);
+  assert.equal(r.synced[0]?.status, "error");
+  assert.equal(await count(), 2, "a2 salvo, a3 pendente");
+  const pending = await ctx.db.query<{ message_id: string }>("SELECT message_id FROM od_email_pending");
+  assert.deepEqual(pending.map((p) => p.message_id), ["a3"]);
+
+  google.failMeta.clear();
+  google.historyExpired = true; // cursor antigo → 404 → ressincroniza janela
+  ctx.clock.t += 5 * 60_000;
+  await tick(ctx);
+  assert.equal(await count(), 3);
+  // duplicatas da ressincronização não criam linhas novas
+  ctx.clock.t += 5 * 60_000;
+  await tick(ctx);
+  assert.equal(await count(), 3);
+});
+
+test("rate limit do Gmail agenda nova tentativa sem perder a rotina", async () => {
+  const google = new FakeGoogle();
+  const ctx = await makeCtx({ fetch: google.fetch });
+  await connectGmail(google, ctx);
+  google.rateLimited = true;
+  const r = await tick(ctx);
+  assert.equal(r.synced[0]?.status, "rate_limited");
+  const conn = (await ctx.db.query<{ status: string }>("SELECT status FROM od_connections"))[0]!;
+  assert.equal(conn.status, "connected");
+});
+
+test("cron repetido no mesmo slot das 08h cria uma única revisão", async () => {
+  const google = new FakeGoogle();
+  const ctx = await makeCtx({ fetch: google.fetch });
+  await connectGmail(google, ctx);
+  ctx.clock.t = Date.parse("2026-10-13T11:01:00Z"); // 08:01 em São Paulo
+  await tick(ctx);
+  await tick(ctx);
+  ctx.clock.t += 60_000;
+  await tick(ctx);
+  const runs = await ctx.db.query<{ slot_key: string; state: string }>("SELECT slot_key, state FROM od_runs WHERE slot_key NOT LIKE '%manual%'");
+  assert.equal(runs.length, 1);
+  assert.match(runs[0]!.slot_key, /2026-10-13T08:00$/);
+  const digests = await ctx.db.query("SELECT id FROM od_feed_items WHERE kind = 'email_digest'");
+  assert.equal(digests.length, 1);
+});
+
+test("lease/CAS: duas execuções disputando o mesmo run, só uma vence", async () => {
+  const ctx = await makeCtx();
+  const owner = await repo.upsertOwner(ctx.db, { sub: "s", email: "e@x.com", name: null, now: ctx.now() });
+  await repo.createRunForSlot(ctx.db, { ownerId: owner, routineId: null, agentId: "correio", kind: "email_review", slotKey: "k", scheduledAt: ctx.now(), late: false, now: ctx.now() });
+  const [run] = await repo.dueRuns(ctx.db, ctx.now());
+  const [x, y] = await Promise.all([repo.claimRun(ctx.db, run!, ctx.now()), repo.claimRun(ctx.db, run!, ctx.now())]);
+  assert.equal([x, y].filter(Boolean).length, 1);
+});
+
+test("aprovações concorrentes no banco: um único efeito", async () => {
+  const ctx = await makeCtx();
+  const owner = await repo.upsertOwner(ctx.db, { sub: "s", email: "e@x.com", name: null, now: ctx.now() });
+  const proposal = { action: "gmail.draft", service: "gmail", account: "e@x.com", resource: "t1", payload: { body: "ok" }, consequence: "rascunho" };
+  const h = await hashProposal(proposal);
+  await ctx.db.run("INSERT INTO od_approvals (id, owner_id, action, proposal_enc, payload_hash, status, version, expires_at, created_at) VALUES ('ap1', ?, 'gmail.draft', 'x', ?, 'pending', 1, ?, ?)", [owner, h, new Date(ctx.now() + 3600_000).toISOString(), new Date(ctx.now()).toISOString()]);
+  const results = await Promise.all([1, 2, 3].map(() => repo.decideApproval(ctx.db, { ownerId: owner, id: "ap1", decision: "approve", expectedVersion: 1, payloadHash: h, now: ctx.now() })));
+  assert.deepEqual(results.sort(), ["conflict", "conflict", "ok"]);
+  assert.equal(await repo.decideApproval(ctx.db, { ownerId: "outro", id: "ap1", decision: "approve", expectedVersion: 2, payloadHash: h, now: ctx.now() }), "not_found");
+});
+
+test("orçamento de IA no banco: reservas concorrentes no último saldo não estouram", async () => {
+  const ctx = await makeCtx();
+  const ledger = new repo.DbLedger(ctx.db, { ownerCalls: 3, ownerTokens: 1000, modelRequests: () => 100, modelTokens: () => 100_000 }, ctx.now);
+  const rs = await Promise.all(Array.from({ length: 8 }, () => ledger.reserve({ ownerId: "o", providerId: "groq", modelId: "m", day: "2026-10-13", tokens: 100 })));
+  assert.equal(rs.filter((r) => r.ok).length, 3);
+  const deny = rs.find((r) => !r.ok);
+  assert.deepEqual(deny, { ok: false, reason: "owner_calls" });
+  // release devolve a chamada; commit devolve tokens não usados
+  const first = rs.find((r) => r.ok) as { ok: true; reservationId: string };
+  await ledger.release(first.reservationId);
+  await ledger.release(first.reservationId); // idempotente
+  const c = await ctx.db.query<{ calls: number; tokens: number }>("SELECT calls, tokens FROM od_quota_counters WHERE scope_key = 'owner:o'");
+  assert.deepEqual({ ...c[0] }, { calls: 2, tokens: 200 });
+  // limite de tokens do modelo também barra
+  const tight = new repo.DbLedger(ctx.db, { ownerCalls: 100, ownerTokens: 100_000, modelRequests: () => 100, modelTokens: () => 250 }, ctx.now);
+  const t = await tight.reserve({ ownerId: "o2", providerId: "groq", modelId: "m", day: "2026-10-13", tokens: 100 });
+  assert.deepEqual(t, { ok: false, reason: "model_tokens" });
+});
+
+test("webhook GitHub: assinatura inválida, entrega duplicada e evento fora de ordem", async () => {
+  const ctx = await makeCtx({ env: { GITHUB_WEBHOOK_SECRET: "segredo-webhook" } });
+  const owner = await repo.upsertOwner(ctx.db, { sub: "s", email: "e@x.com", name: null, now: ctx.now() });
+  await ctx.db.run("INSERT INTO od_github_installations (installation_id, owner_id, active, updated_at) VALUES (42, ?, 1, ?)", [owner, new Date().toISOString()]);
+  const sign = async (body: string) => {
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode("segredo-webhook"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const mac = Buffer.from(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body))).toString("hex");
+    return `sha256=${mac}`;
+  };
+  const { handleApi } = await import("../src/app.ts");
+  const send = async (body: string, delivery: string, sig?: string) =>
+    handleApi(ctx, new Request("http://localhost:8787/api/webhooks/github", { method: "POST", body, headers: { "x-github-event": "workflow_run", "x-github-delivery": delivery, "x-hub-signature-256": sig ?? (await sign(body)) } }));
+  const run = (conclusion: string, updated: string) =>
+    JSON.stringify({ installation: { id: 42 }, repository: { full_name: "joao/app" }, workflow_run: { id: 7, name: "CI", status: "completed", conclusion, html_url: "https://github.com/joao/app/actions/runs/7", head_sha: "abcdef1234", updated_at: updated, run_number: 3 } });
+
+  const failed = run("failure", "2026-10-13T10:05:00Z");
+  assert.equal((await send(failed, "d1", "sha256=" + "0".repeat(64))).status, 401);
+  assert.equal((await send(failed, "d1")).status, 200);
+  const dup = await (await send(failed, "d1")).json();
+  assert.equal(dup.duplicate, true);
+  const older = await (await send(run("success", "2026-10-13T10:00:00Z"), "d2")).json();
+  assert.equal(older.stale, true);
+  const r = await ctx.db.query<{ conclusion: string }>("SELECT conclusion FROM od_github_resources");
+  assert.equal(r[0]!.conclusion, "failure", "evento antigo não regride o estado");
+  const feed = await ctx.db.query("SELECT id FROM od_feed_items WHERE kind = 'ci_failure'");
+  assert.equal(feed.length, 1);
+});
+
+test("monitor: SSRF recusado no cadastro; incidente só após 3 falhas e com correlação honesta", async () => {
+  let up = false;
+  const ctx = await makeCtx({ fetch: async () => (up ? new Response("ok", { status: 200 }) : new Response("x", { status: 503 })) });
+  const c = client(ctx);
+  await c.call("POST", "/api/session/dev");
+  assert.equal((await c.call("POST", "/api/monitors", { url: "https://169.254.169.254/latest", label: "x" })).status, 400);
+  assert.equal((await c.call("POST", "/api/monitors", { url: "http://meusite.vercel.app", label: "x" })).status, 400);
+  assert.equal((await c.call("POST", "/api/monitors", { url: "https://meusite.vercel.app/", label: "Meu site" })).status, 200);
+  for (let i = 0; i < 3; i++) {
+    await tick(ctx);
+    ctx.clock.t += 5 * 60_000;
+  }
+  const incidents = await ctx.db.query("SELECT title FROM od_feed_items WHERE kind = 'site_incident'");
+  assert.equal(incidents.length, 1);
+  up = true;
+  for (let i = 0; i < 2; i++) {
+    await tick(ctx);
+    ctx.clock.t += 5 * 60_000;
+  }
+  const recovered = await ctx.db.query("SELECT title FROM od_feed_items WHERE title LIKE '%voltou%'");
+  assert.equal(recovered.length, 1);
+});
+
+test("health não expõe segredos", async () => {
+  const ctx = await makeCtx({ env: { GROQ_API_KEY: "gsk_super_secreta" } });
+  const r = await client(ctx).call("GET", "/api/health");
+  assert.equal(r.status, 200);
+  assert.ok(!JSON.stringify(r.json).includes("gsk_super_secreta"));
+  assert.equal(r.json.configured.ai, true);
+  assert.equal(r.json.configured.aiPrivate, false);
+});
+
+test("pergunta sem IA aprovada responde só com fontes do feed do próprio dono", async () => {
+  const google = new FakeGoogle();
+  google.addMessage({ id: "f1", subject: "Fatura do cartão vence sexta", from: "Banco <aviso@banco.com>" }, false);
+  const ctx = await makeCtx({ fetch: google.fetch, env: { GROQ_API_KEY: "k" } });
+  const c = await connectGmail(google, ctx);
+  const rid = (await c.call("GET", "/api/routines")).json.routines[0].id;
+  await c.call("POST", `/api/routines/${rid}/run-now`);
+  await tick(ctx);
+  const r = await c.call("POST", "/api/ask", { question: "quando vence a fatura?" });
+  assert.equal(r.status, 200);
+  assert.equal(r.json.aiUsed, false, "sem ZDR, e-mail privado não vai para IA");
+  assert.ok(r.json.sources.length >= 1);
+  assert.match(r.json.sources[0].href, /^https:\/\/mail\.google\.com\//);
+  assert.ok(google.calls.every((x) => !x.includes("groq")));
+  const none = await c.call("POST", "/api/ask", { question: "resultado do jogo de ontem" });
+  assert.equal(none.json.sources.length, 0);
+  assert.match(none.json.answer, /Não encontrei/);
+});

@@ -1,0 +1,24 @@
+---
+description: Direção visual da interface e do mascote Dot
+globs: apps/web/**,blender/**,assets/dot/**
+alwaysApply: false
+---
+# Direção visual
+
+- Preserve o layout aprovado (v0.2): barra lateral ~224 px, conversa com leitura ≤ 720 px, painel de contexto 262 px, ilha do Dot embaixo.
+- Inter local (`apps/web/public/fonts`), pesos 400/500/600. Sem CDN de fonte.
+- Tokens em `apps/web/src/styles.css` (cap. 37 do PDF): corpo 15/22, metadados 12–13, títulos 24–28; raios 10/16; borda 1 px.
+- Glass só na ilha, menus e modal, com alternativa opaca ("Reduzir transparência"). Gradiente só no topo/área do Dot, 6–10%.
+- Um botão primário por bloco. Detalhes sob demanda (`<details>`). Resultado → evidência → detalhes técnicos.
+- Cor nunca é o único sinal: todo estado tem texto. Teste 320 px, zoom 200%, teclado e movimento reduzido.
+
+# Dot
+- Corpo marfim arredondado e macio; olhos escuros ovais e baixos; blush discreto.
+- **Sem boca e sem sobrancelhas** em qualquer estado.
+- **Tracinho de absorção** no alto da face frontal: é a entrada de arquivos, não uma boca. Não remova.
+- Acessórios removíveis (boné Correio, óculos Código, fone Foco). Sem badge permanente acima da cabeça.
+- Cores: Correio azul #64B5F6, Código lavanda #AA96EF, Sentinela ciano #59CFC6; erro vermelho #EB6470 (com texto), aprovação âmbar #E9B75E, sucesso menta #79C9A5 breve.
+- Prioridade: erro > aprovação > desconectado > execução > pensando > sucesso > carinho > repouso. Evento antigo não sobrescreve estado novo.
+- Separe camadas: corpo, expressão, olhar, cor do agente, estado, acessório, efeitos. Cada coração tem ciclo de vida próprio.
+- Absorção: seleção ≠ envio ≠ recebido (persistido) ≠ organizado (job concluído). Só comemore "organizado".
+- A prévia 2D (`Dot2D.tsx`) é fallback rotulado; o modelo final vem do Blender (`blender/`).

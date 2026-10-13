@@ -1,0 +1,43 @@
+{
+  "name": "open-dot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open Dot — assistente pessoal com agentes, rotinas remotas e o mascote Dot.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "tsx scripts/dev.ts",
+    "demo": "tsx scripts/dev.ts --demo",
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --import tsx \"packages/**/test/*.test.ts\" \"apps/**/test/*.test.ts\" \"tests/*.test.ts\"",
+    "test:ui": "node scripts/ui-check.mjs",
+    "check": "npm run typecheck && npm test && npm run test:blender && npm run build",
+    "db:migrate": "tsx scripts/db-migrate.ts",
+    "turso:inspect": "tsx scripts/turso-inspect.ts",
+    "secrets:keygen": "node scripts/keygen.mjs",
+    "blender:check": "python3 blender/run_blender.py preflight",
+    "blender:build": "python3 blender/run_blender.py build",
+    "worker:deploy": "npm run check && npx --yes wrangler@4 deploy",
+    "worker:dev": "npx --yes wrangler@4 dev",
+    "setup:cloud": "tsx scripts/setup-cloud.ts",
+    "test:blender": "python3 blender/test_spec.py"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "esbuild": "0.28.2",
+    "tsx": "4.23.12",
+    "typescript": "6.0.3"
+  },
+  "optionalDependencies": {}
+}
