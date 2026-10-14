@@ -15,7 +15,7 @@ cpSync(join(web, "public"), dist, { recursive: true });
 cpSync(join(web, "index.html"), join(dist, "index.html"));
 
 await build({
-  entryPoints: { app: join(web, "src/main.tsx") },
+  entryPoints: { app: join(web, "src/main.tsx"), "extract-worker": join(web, "src/absorb/extract.worker.ts") },
   outdir: join(dist, "assets"),
   bundle: true,
   format: "esm",

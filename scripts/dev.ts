@@ -46,7 +46,7 @@ async function buildWeb() {
   cpSync(join(root, "apps/web/index.html"), join(dist, "index.html"));
   copyDotAssets(root, dist);
   const ctx = await context({
-    entryPoints: { app: join(root, "apps/web/src/main.tsx") },
+    entryPoints: { app: join(root, "apps/web/src/main.tsx"), "extract-worker": join(root, "apps/web/src/absorb/extract.worker.ts") },
     outdir: join(dist, "assets"),
     bundle: true,
     format: "esm",

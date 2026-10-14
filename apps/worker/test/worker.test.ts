@@ -27,10 +27,10 @@ async function connectGmail(google: FakeGoogle, ctx: Awaited<ReturnType<typeof m
 test("migrações: idempotentes, detectam alteração e recusam destrutivas", async () => {
   const db = new SqliteDb();
   const ms = loadMigrations();
-  assert.deepEqual((await applyMigrations(db, ms)).applied, ["0001"]);
-  assert.deepEqual((await applyMigrations(db, ms)).skipped, ["0001"]);
+  assert.deepEqual((await applyMigrations(db, ms)).applied, ["0001", "0002"]);
+  assert.deepEqual((await applyMigrations(db, ms)).skipped, ["0001", "0002"]);
   await assert.rejects(applyMigrations(db, [{ ...ms[0]!, sql: ms[0]!.sql + "\n-- mudou" }]), /alterada/);
-  await assert.rejects(applyMigrations(db, [{ version: "0002", name: "x", sql: "DROP TABLE od_owners;" }]), /destrutiva/);
+  await assert.rejects(applyMigrations(db, [{ version: "0099", name: "x", sql: "DROP TABLE od_owners;" }]), /destrutiva/);
 });
 
 test("fluxo completo simulado: conectar Gmail (leitura), sincronizar e publicar revisão com links e cobertura", async () => {

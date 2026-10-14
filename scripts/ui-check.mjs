@@ -4,6 +4,7 @@
 // zoom 200%, teclado/foco, tema claro/escuro, movimento reduzido e erros de console.
 import { chromium } from "playwright";
 import { mkdirSync, writeFileSync } from "node:fs";
+import { makePdf } from "./lib/make-pdf.mjs";
 
 const BASE = process.env.UI_BASE ?? "http://localhost:8787";
 const OUT = process.env.UI_OUT ?? "test-results/ui";
@@ -143,6 +144,7 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
 }
 
 // 7) Dot 3D: fallback sem WebGL e com movimento reduzido; com WebGL, um único canvas, render sob demanda e medição.
+if (!ONLY || ONLY === "dot3d") {
 {
   const ctx2 = await browser2d.newContext();
   const p = await ctx2.newPage();
@@ -226,6 +228,92 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
     check("Dot 3D: perda de contexto cai para o 2D", (await p.locator("[data-dot-renderer]").first().getAttribute("data-dot-fallback")) === "context-lost");
   }
   check("Dot 3D: sem erros de console", errors.length === 0, errors.join(" | ").slice(0, 300));
+  await ctx.close();
+}
+}
+
+// 8) Absorção de arquivos (servidor real local): upload lento, PDF com texto e escaneado, grande, duplicado, tipo errado.
+if (!ONLY || ONLY === "absorb") {
+  const { p, ctx, errors } = await page();
+  await p.goto(BASE + "/");
+  await p.getByRole("button", { name: /modo desenvolvimento/i }).click();
+  const panel = p.getByRole("region", { name: "Absorver arquivo" });
+  await panel.waitFor();
+  const status = panel.getByTestId("absorb-status");
+  const phase = () => panel.getAttribute("data-absorb-phase");
+  const input = panel.locator('input[type="file"]');
+  // Todas as mudanças de texto do status, em ordem, para provar que "recebido" não aparece antes da resposta.
+  await p.evaluate(() => {
+    window.__absorbLog = [];
+    const el = document.querySelector('[data-testid="absorb-status"]');
+    new MutationObserver(() => window.__absorbLog.push(el.textContent)).observe(el, { childList: true, characterData: true, subtree: true });
+  });
+  const stamp = Date.now();
+  const txt = { name: `notas-${stamp}.md`, mimeType: "text/markdown", buffer: Buffer.from(`# Notas de teste ${stamp}\n\nReunião sobre manutenção do contrato e prazos de entrega.\n\n## Próximos passos\n\nRevisar relatório de manutenção até sexta.`) };
+
+  // Upload lento: segura a resposta do POST por 2,5 s.
+  let releasedAt = 0;
+  await p.route("**/api/uploads", async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    await new Promise((r) => setTimeout(r, 2500));
+    const res = await route.fetch();
+    releasedAt = Date.now();
+    await route.fulfill({ response: res });
+  });
+  await input.setInputFiles(txt);
+  await p.waitForTimeout(1500);
+  const during = await phase();
+  const logDuring = await p.evaluate(() => window.__absorbLog.join(" | "));
+  check("upload lento: continua 'enviando' enquanto o servidor não responde", during === "uploading", `${during} · ${logDuring}`);
+  check("upload lento: 'recebido' não aparece antes da resposta", !/recebido|organizado/i.test(logDuring), logDuring);
+  await p.locator('[data-absorb-phase="organized"]').waitFor({ timeout: 15_000 });
+  check("upload lento: termina 'organizado' após o job, com resultado", releasedAt > 0 && (await panel.getByTestId("absorb-result").innerText()).includes(`Notas de teste ${stamp}`));
+  const log = await p.evaluate(() => window.__absorbLog);
+  const iRec = log.findIndex((t) => /recebido/i.test(t));
+  const iOrg = log.findIndex((t) => /organizado/i.test(t));
+  check("ordem real das fases: enviando → recebido → organizado", log.some((t) => /Enviando/.test(t)) && iRec >= 0 && iOrg > iRec, log.join(" | ").slice(0, 300));
+  await p.screenshot({ path: `${OUT}/absorcao-organizado.png` });
+  await p.unroute("**/api/uploads");
+
+  // Duplicado.
+  await input.setInputFiles(txt);
+  await p.locator('[data-absorb-phase="failed"]').waitFor({ timeout: 10_000 });
+  check("arquivo duplicado: mensagem específica", /já foi absorvido/.test(await status.innerText()), await status.innerText());
+
+  // Grande (> 5 MB): recusado antes de extrair/enviar.
+  let posts = 0;
+  p.on("request", (r) => r.url().endsWith("/api/uploads") && r.method() === "POST" && posts++);
+  await input.setInputFiles({ name: "grande.txt", mimeType: "text/plain", buffer: Buffer.alloc(5 * 1024 * 1024 + 10, 97) });
+  await p.waitForTimeout(300);
+  check("arquivo grande: recusado com mensagem, sem envio", /maior que 5 MB/.test(await status.innerText()) && posts === 0, await status.innerText());
+
+  // Tipo errado.
+  await input.setInputFiles({ name: "programa.exe", mimeType: "application/x-msdownload", buffer: Buffer.from("MZ") });
+  await p.waitForTimeout(300);
+  check("tipo não suportado: mensagem específica", /não suportado/.test(await status.innerText()) && posts === 0, await status.innerText());
+
+  // PDF escaneado (sem camada de texto): extraído no Web Worker com pdf.js, recusado sem enviar.
+  await input.setInputFiles({ name: "digitalizado.pdf", mimeType: "application/pdf", buffer: Buffer.from(makePdf([null, null])) });
+  await p.waitForFunction(() => /escaneado|imagem/i.test(document.querySelector('[data-testid="absorb-status"]')?.textContent ?? ""), null, { timeout: 20_000 }).catch(() => {});
+  check("PDF escaneado: mensagem específica, sem envio", /escaneado|imagem/i.test(await status.innerText()) && posts === 0, await status.innerText());
+
+  // PDF com texto: pdf.js real no Web Worker, páginas contadas.
+  await input.setInputFiles({ name: `contrato-${stamp}.pdf`, mimeType: "application/pdf", buffer: Buffer.from(makePdf([`Contrato ${stamp} de manutencao predial`, "Clausula de prazos e entregas mensais"])) });
+  await p.locator('[data-absorb-phase="organized"]').waitFor({ timeout: 20_000 }).catch(() => {});
+  const pdfResult = (await panel.getByTestId("absorb-result").count()) ? await panel.getByTestId("absorb-result").innerText() : await status.innerText();
+  check("PDF com texto: extraído no navegador e organizado (2 páginas)", /2 páginas/.test(pdfResult), pdfResult.slice(0, 200));
+
+  // Limpeza: apaga o que este teste criou (o banco local persiste entre execuções).
+  const removed = await p.evaluate(async (stamp) => {
+    const list = await (await fetch("/api/uploads")).json();
+    const mine = list.uploads.filter((u) => u.fileName.includes(String(stamp)));
+    for (const u of mine) await fetch(`/api/uploads/${u.id}`, { method: "DELETE", headers: { "x-open-dot": "1" } });
+    return mine.length;
+  }, stamp);
+  check("limpeza: uploads do teste apagados", removed === 2, String(removed));
+  // 4xx esperados (duplicado) aparecem como "Failed to load resource" no console; o resto conta.
+  const unexpected = errors.filter((e) => !/status of 409/.test(e));
+  check("absorção: sem erros de console inesperados", unexpected.length === 0, unexpected.join(" | ").slice(0, 300));
   await ctx.close();
 }
 

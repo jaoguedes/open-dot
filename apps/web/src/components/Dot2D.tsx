@@ -23,6 +23,8 @@ interface Props {
   /** Incrementar para pedir carinho por botão (equivalente de teclado/toque ao hover). */
   affectionSignal?: number;
   onAffection?: (result: "ok" | "cooldown" | "suppressed" | "hidden") => void;
+  /** Animação de entrada do arquivo pelo tracinho (só visual; não indica recebimento). */
+  absorbing?: boolean;
 }
 
 const BODY = "M20 80 C20 40 26 32 80 32 C134 32 140 40 140 80 C140 116 134 126 80 126 C26 126 20 116 20 80 Z";
@@ -97,7 +99,7 @@ function Heart({ f }: { f: EffectFrame }) {
   );
 }
 
-export function Dot2D({ visual, accessory, size, animate, reducedMotion, showBadge, interactive, label, affectionSignal, onAffection }: Props) {
+export function Dot2D({ visual, accessory, size, animate, reducedMotion, showBadge, interactive, label, affectionSignal, onAffection, absorbing }: Props) {
   const gid = useId().replace(/:/g, "");
   const [squash, setSquash] = useState(0);
   const [frames, setFrames] = useState<EffectFrame[]>([]);
@@ -185,11 +187,19 @@ export function Dot2D({ visual, accessory, size, animate, reducedMotion, showBad
           {/* Tracinho de absorção (entrada de arquivos), no alto da face frontal. Não é boca. */}
           <rect x={68} y={47} width={24} height={5} rx={2.5} fill="#D6CDBF" />
           <rect x={70.5} y={48.6} width={19} height={1.8} rx={0.9} fill="#9C9386" opacity={0.75} />
+          {absorbing && <rect className={`slot-glow ${reducedMotion ? "" : "pulse"}`} x={66} y={45.5} width={28} height={8} rx={4} fill="#F5D88A" opacity={0.55} />}
           <ellipse cx={80 - 37} cy={92} rx={9} ry={5} fill="#EAB6B2" opacity={0.5} />
           <ellipse cx={80 + 37} cy={92} rx={9} ry={5} fill="#EAB6B2" opacity={0.5} />
           <Eyes expression={visual.expression} />
           <AccessoryLayer kind={accessory} />
         </g>
+        {absorbing && !reducedMotion && (
+          // Folha descendo até o tracinho e sumindo dentro dele.
+          <g className="absorb-sheet" aria-hidden="true">
+            <rect x={71} y={2} width={18} height={22} rx={2} fill="#FFFFFF" stroke="#CFC6B8" strokeWidth={1} />
+            <path d="M74 9 H86 M74 13 H86 M74 17 H82" stroke="#CFC6B8" strokeWidth={1.2} strokeLinecap="round" />
+          </g>
+        )}
       </svg>
       {frames.length > 0 && (
         <div className="hearts" aria-hidden="true">

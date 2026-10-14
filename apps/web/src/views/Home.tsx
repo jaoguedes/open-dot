@@ -6,6 +6,7 @@ import { demoAsk } from "../demo.ts";
 import { DigestBlock, FeedRow } from "../components/FeedViews.tsx";
 import { Icon } from "../components/Icons.tsx";
 import { Dot2D } from "../components/Dot2D.tsx";
+import { AbsorbPanel } from "../components/AbsorbPanel.tsx";
 import { fmtTime, greeting } from "../format.ts";
 
 /** Conversa do agente: resumo curto, ações pendentes e perguntas com fontes. */
@@ -28,6 +29,7 @@ export function Home({ agentId }: { agentId: AgentId }) {
         {digest && <span>{fmtTime(digest.createdAt)}</span>}
       </div>
       {agentId === "dot" && <h1 style={{ marginBottom: 8 }}>{greeting()}{name ? `, ${name}` : ""}.</h1>}
+      {agentId === "dot" && snap && <AbsorbPanel />}
 
       {!snap ? (
         <Loading />

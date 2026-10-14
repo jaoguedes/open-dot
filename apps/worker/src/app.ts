@@ -12,6 +12,7 @@ import { pkceChallenge, randomToken } from "./crypto.ts";
 import { csrfOk, currentOwner, endSession, json, problem, redirect, SECURITY_HEADERS, startSession } from "./http.ts";
 import * as repo from "./repo.ts";
 import { makeRouter } from "./services/email-review.ts";
+import * as uploads from "./services/uploads.ts";
 
 type Handler = (ctx: Ctx, req: Request, params: Record<string, string>, ownerId: string | null) => Promise<Response>;
 
@@ -342,6 +343,44 @@ route("POST", "/api/approvals/:id/decision", { auth: true }, async (ctx, req, p,
   const status = r === "ok" ? 200 : r === "not_found" ? 404 : 409;
   await repo.audit(ctx.db, { ownerId, actor: "user", action: `approval_${body.decision}`, target: p.id!, outcome: r, now: ctx.now() });
   return json({ result: r }, status);
+});
+
+// ---------------------------------------------------------------- Absorção de arquivos
+
+route("POST", "/api/uploads", { auth: true }, async (ctx, req, _p, ownerId) => {
+  const declared = Number(req.headers.get("content-length") ?? "0");
+  if (declared > uploads.MAX_UPLOAD_BODY) return problem(413, "too_large", "Texto extraído grande demais.");
+  const raw = await req.arrayBuffer();
+  if (raw.byteLength > uploads.MAX_UPLOAD_BODY) return problem(413, "too_large", "Texto extraído grande demais.");
+  let body: unknown;
+  try {
+    body = JSON.parse(new TextDecoder().decode(raw));
+  } catch {
+    return problem(400, "invalid_input", "Dados inválidos.");
+  }
+  const input = uploads.parseUploadInput(body);
+  if (!input) return problem(400, "invalid_input", "Dados inválidos.");
+  const r = await uploads.createUpload(ctx, ownerId!, input);
+  if (!r.ok) return json({ error: { code: r.code, message: r.message }, ...(r.existing ? { existing: r.existing } : {}) }, r.status);
+  return json(r, 201);
+});
+
+route("GET", "/api/uploads", { auth: true }, async (ctx, _r, _p, ownerId) => json({ uploads: await uploads.listUploads(ctx, ownerId!) }));
+
+route("GET", "/api/uploads/:id", { auth: true }, async (ctx, _r, p, ownerId) => {
+  const u = await uploads.getUpload(ctx, ownerId!, p.id!);
+  return u ? json(u) : problem(404, "not_found", "Arquivo não encontrado.");
+});
+
+route("POST", "/api/uploads/:id/process", { auth: true }, async (ctx, _r, p, ownerId) => {
+  const u = await uploads.processNow(ctx, ownerId!, p.id!);
+  return u ? json(u) : problem(404, "not_found", "Arquivo não encontrado.");
+});
+
+route("DELETE", "/api/uploads/:id", { auth: true }, async (ctx, _r, p, ownerId) => {
+  const ok = await uploads.deleteUpload(ctx, ownerId!, p.id!);
+  if (ok) await repo.audit(ctx.db, { ownerId, actor: "user", action: "upload_delete", target: p.id!, outcome: "ok", now: ctx.now() });
+  return ok ? json({ ok: true }) : problem(404, "not_found", "Arquivo não encontrado.");
 });
 
 // ---------------------------------------------------------------- Monitores

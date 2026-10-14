@@ -7,6 +7,7 @@ import { REQUIRED_SCHEMA, currentSchema } from "./db/migrate.ts";
 import * as repo from "./repo.ts";
 import { syncGmail } from "./services/gmail.ts";
 import { runEmailReview } from "./services/email-review.ts";
+import { organizeUpload } from "./services/uploads.ts";
 
 /**
  * Tique do cron (a cada 5 minutos, UTC). Tudo é idempotente: o cron pode repetir
@@ -55,6 +56,10 @@ export async function tick(ctx: Ctx): Promise<TickReport> {
     try {
       if (claimed.kind === "email_review") {
         const r = await runEmailReview(ctx, claimed, f);
+        await repo.finishRun(ctx.db, claimed, { state: r.state, ...(r.errorCode ? { errorCode: r.errorCode } : {}), ...(r.message ? { errorMessage: r.message } : {}), now: ctx.now() });
+        report.runs.push({ id: claimed.id, state: r.state });
+      } else if (claimed.kind === "file_organize") {
+        const r = await organizeUpload(ctx, claimed);
         await repo.finishRun(ctx.db, claimed, { state: r.state, ...(r.errorCode ? { errorCode: r.errorCode } : {}), ...(r.message ? { errorMessage: r.message } : {}), now: ctx.now() });
         report.runs.push({ id: claimed.id, state: r.state });
       } else {

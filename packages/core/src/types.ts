@@ -70,7 +70,7 @@ export interface FeedItem {
   ownerId: string;
   agentId: AgentId;
   runId: string | null;
-  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice";
+  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice" | "file_organized";
   title: string;
   /** Por que importa, em uma frase. */
   summary: string;

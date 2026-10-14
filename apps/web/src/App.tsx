@@ -168,7 +168,7 @@ function headerFor(route: string, agent: AgentId | null): { title: string; subti
 
 function Sidebar({ open, go, current, onPalette }: { open: boolean; go: (p: string) => void; current: string; onPalette: () => void }) {
   const app = useApp();
-  const pending = app.snap?.feed.filter((f) => f.kind !== "notice").length ?? 0;
+  const pending = app.snap?.feed.filter((f) => f.kind !== "notice" && f.kind !== "file_organized").length ?? 0;
   const usage = app.snap?.usage;
   const pct = usage ? Math.min(100, Math.round((usage.calls / Math.max(1, usage.limits.calls)) * 100)) : 0;
   const statusLine = (a: AgentId) => {

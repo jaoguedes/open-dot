@@ -4,7 +4,7 @@ import { Icon, type IconName } from "./Icons.tsx";
 import { fmtDateTime, fmtTime, senderName } from "../format.ts";
 import { useApp } from "../store.tsx";
 
-const ICON: Record<FeedEntry["kind"], IconName> = { email_digest: "mail", site_incident: "globe", ci_failure: "code", deploy: "layers", notice: "alert" };
+const ICON: Record<FeedEntry["kind"], IconName> = { email_digest: "mail", site_incident: "globe", ci_failure: "code", deploy: "layers", notice: "alert", file_organized: "file" };
 
 export function FreshnessChip({ f }: { f: FeedEntry["freshness"] }) {
   if (f === "fresh") return null;

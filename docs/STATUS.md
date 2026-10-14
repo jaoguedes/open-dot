@@ -9,6 +9,7 @@ _Atualizado em 13/10/2026 · fases 1 a 3 concluídas · fases 4, 5, 6 e 8 implem
 | 0 · Base | ✅ | Node 24.21; `npm install` com lockfile; `npm run check` verde após corrigir um tipo no teste Hrana |
 | 1 · Dot no Blender | ✅ técnico · 🟡 arte | `npm run blender:build` → validação OK. Corrigido: acessórios exportavam o Dot inteiro (sem `window` em `--background`); efeitos apareciam nos posters; tracinho invisível; EEVEE travando. Validador agora recusa peça com corpo/clipes |
 | 2 · Dot 3D no app | ✅ | `npm run check` (74 testes) e `npm run test:ui` 50/50, incluindo fallback sem WebGL, movimento reduzido, perda de contexto, pausa oculta, ≤ 30 fps e repouso sob demanda |
+| 3 · Absorção de arquivos | ✅ local | `npm run check` (89 testes: 6 de integração do upload, 4 de extração com pdf.js real, 5 do organizador) e `npm run test:ui` 61/61 (11 novos: upload lento, PDF escaneado, PDF com texto no Web Worker, grande, duplicado, tipo errado, ordem real das fases) |
 
 ## Legenda
 
@@ -25,7 +26,7 @@ _Atualizado em 13/10/2026 · fases 1 a 3 concluídas · fases 4, 5, 6 e 8 implem
 | Revisão do PDF | ✅ | `docs/REVISAO_DO_PDF.md`: 46 pontos com página, decisão, motivo, impacto, fonte oficial (conferida em 13/10/2026) e critério de aceite |
 | Repositório, regras e docs | ✅ | `.cursor/rules/*.mdc` no formato atual, `CLAUDE.md`, `AGENTS.md`, `.env.example`, decisões, licenças, guia do Cursor |
 | Núcleo (`packages/core`) | ✅ | Estados de execução, resolvedor visual com prioridade e revisão, corações independentes, absorção (selecionado → enviado → recebido → organizado), agenda por fuso IANA, aprovações por hash e CAS, supervisor de ferramentas, triagem por regras, resumo com cobertura, monitor anti-SSRF, roteador de IA |
-| Persistência | ✅ SQLite · 🟡 Turso | Migração `0001` aditiva com prefixo `od_`; tudo filtrado por dono; segredos e trechos de e-mail cifrados (AES-GCM, chave versionada). Cliente Turso HTTP testado contra um servidor Hrana simulado |
+| Persistência | ✅ SQLite · 🟡 Turso | Migrações `0001` e `0002` (uploads) aditivas com prefixo `od_`; tudo filtrado por dono; segredos e trechos de e-mail cifrados (AES-GCM, chave versionada). Cliente Turso HTTP testado contra um servidor Hrana simulado |
 | API / Worker | ✅ local · 🟡 Cloudflare | Sessão (cookie HttpOnly), CSRF, feed, rotinas, execuções, uso, conexões, monitores, aprovações, perguntas com fontes, webhook do GitHub, cron |
 | Login | ✅ local (dev) · 🟡 Google | Login Google OIDC (PKCE, state, nonce, dono único). A entrada de desenvolvimento só funciona em localhost |
 | Gmail (somente leitura) | 🧪 testado com Google simulado · 🟡 real | OAuth com `gmail.readonly`, sync incremental (`historyId` como texto), dedupe, ressincronização após 404, lotes dentro do limite de subrequisições, renovação de token com lease, reconexão única quando revogado, resumo das 08h/17h com links para o Gmail |

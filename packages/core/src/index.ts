@@ -4,6 +4,7 @@ export * from "./runs.ts";
 export * from "./visual.ts";
 export * from "./effects.ts";
 export * from "./absorption.ts";
+export * from "./organize.ts";
 export * from "./schedule.ts";
 export * from "./approvals.ts";
 export * from "./agents.ts";

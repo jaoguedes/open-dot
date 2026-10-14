@@ -17,7 +17,7 @@ export interface FeedEntry {
   id: string;
   agentId: AgentId;
   runId: string | null;
-  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice";
+  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice" | "file_organized";
   title: string;
   body: {
     headline?: string;
@@ -169,7 +169,67 @@ export const api = {
   runNow: (id: string) => req<{ ok: true; created: boolean; note: string }>(`/api/routines/${encodeURIComponent(id)}/run-now`, { method: "POST" }),
   addMonitor: (url: string, label: string) => req<{ id: string }>("/api/monitors", { method: "POST", body: JSON.stringify({ url, label }) }),
   ask: (question: string) => req<AskAnswer>("/api/ask", { method: "POST", body: JSON.stringify({ question }) }),
+  uploads: () => req<{ uploads: UploadView[] }>("/api/uploads"),
+  upload: (id: string) => req<UploadView>(`/api/uploads/${encodeURIComponent(id)}`),
+  processUpload: (id: string) => req<UploadView>(`/api/uploads/${encodeURIComponent(id)}/process`, { method: "POST" }),
+  deleteUpload: (id: string) => req<{ ok: true }>(`/api/uploads/${encodeURIComponent(id)}`, { method: "DELETE" }),
 };
+
+export interface UploadView {
+  id: string;
+  fileName: string;
+  mime: string;
+  fileBytes: number;
+  textChars: number;
+  pages: number | null;
+  state: "received" | "processing" | "organized" | "failed";
+  runId: string | null;
+  result: { title: string; chars: number; words: number; pages: number | null; headings: string[]; keywords: string[]; preview: string; readingMinutes: number } | null;
+  error: { code: string; message: string } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UploadBody {
+  fileName: string;
+  mime: string;
+  fileBytes: number;
+  fileSha256: string;
+  text: string;
+  textSha256: string;
+  pages: number | null;
+}
+
+/**
+ * Envio com progresso real (XHR expõe upload.onprogress; fetch não). Resolve só com a
+ * resposta 201 do servidor — é ela que autoriza mostrar "recebido".
+ */
+export function sendUpload(body: UploadBody, onProgress: (loaded: number, total: number | null) => void, signal?: AbortSignal): Promise<{ id: string; runId: string; state: "received" }> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/uploads");
+    xhr.setRequestHeader("content-type", "application/json");
+    xhr.setRequestHeader("x-open-dot", "1");
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = (e) => onProgress(e.loaded, e.lengthComputable ? e.total : null);
+    xhr.onerror = () => reject(new ApiError(0, "offline", "Sem conexão com o servidor."));
+    xhr.onabort = () => reject(new ApiError(0, "aborted", "Envio cancelado."));
+    xhr.onload = () => {
+      let data: any = null;
+      try {
+        data = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+      } catch {
+        return reject(new ApiError(xhr.status, "not_api", "O servidor não respondeu como a API do Open Dot."));
+      }
+      if (xhr.status === 201 && data?.id) return resolve(data);
+      const err = new ApiError(xhr.status, data?.error?.code ?? "error", data?.error?.message ?? `Erro ${xhr.status}`);
+      (err as ApiError & { existing?: unknown }).existing = data?.existing;
+      reject(err);
+    };
+    signal?.addEventListener("abort", () => xhr.abort(), { once: true });
+    xhr.send(JSON.stringify(body));
+  });
+}
 
 export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Snapshot; failures: string[] }> {
   const failures: string[] = [];
