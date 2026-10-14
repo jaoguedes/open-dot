@@ -26,6 +26,8 @@ export interface DotViewProps {
   label?: string;
   /** Sentinela: anel só enquanto verifica. */
   ring?: boolean;
+  /** Reação "oi" na montagem (splash). Com movimento reduzido o motor ignora a linha do tempo. */
+  hello?: boolean;
 }
 
 function q(svg: SVGSVGElement, role: string): SVGElement {
@@ -199,6 +201,7 @@ export function DotView(props: DotViewProps) {
     if (map === "react-success") engine.react("success");
     else engine.setState(map, true);
     lastSem.current = props.visual.semantic;
+    if (props.hello) engine.react("oi");
     apply(svg, uid, engine.frame());
 
     const tick = subscribe((dt) => {
@@ -287,6 +290,7 @@ export function DotView(props: DotViewProps) {
     <div
       ref={wrap}
       className="dot-view"
+      data-dot-renderer="engine"
       style={{ width: props.size, cursor: props.interactive ? "pointer" : undefined, touchAction: "manipulation" }}
       onPointerMove={onMove}
       onClick={props.interactive ? onTap : undefined}

@@ -32,6 +32,12 @@ async function page(opts = {}) {
 
 const noHScroll = (p) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 
+async function ready(p) {
+  const splash = p.locator(".splash");
+  await splash.waitFor({ state: "attached", timeout: 3000 }).catch(() => {});
+  await splash.waitFor({ state: "detached", timeout: 8000 }).catch(() => {});
+}
+
 // UI_ONLY=dot3d roda só a seção do Dot 3D (iteração rápida); sem a variável, roda tudo.
 const ONLY = process.env.UI_ONLY ?? "";
 if (!ONLY) {
@@ -39,6 +45,10 @@ if (!ONLY) {
 {
   const { p, ctx, errors } = await page({ colorScheme: "dark" });
   await p.goto(BASE + "/");
+  const splashOn = await p.locator(".splash").waitFor({ timeout: 2000 }).then(() => true).catch(() => false);
+  check("splash aparece no boot", splashOn);
+  await ready(p);
+  check("splash some depois da sessão", (await p.locator(".splash").count()) === 0);
   await p.getByRole("button", { name: /modo desenvolvimento/i }).click();
   await p.getByRole("heading", { name: /Conecte seu Gmail/i }).waitFor();
   check("login local leva ao estado vazio com ação de conectar Gmail", true);
@@ -58,6 +68,7 @@ if (!ONLY) {
 for (const scheme of ["dark", "light"]) {
   const { p, ctx, errors } = await page({ colorScheme: scheme });
   await p.goto(BASE + "/?demo=1");
+  await ready(p);
   await p.getByText("Demonstração", { exact: true }).waitFor();
   check(`demo rotulada (${scheme})`, (await p.locator(".banner.demo").count()) === 1);
   const font = await p.evaluate(() => getComputedStyle(document.body).fontFamily);
@@ -69,6 +80,7 @@ for (const scheme of ["dark", "light"]) {
   await p.screenshot({ path: `${OUT}/demo-home-${scheme}.png` });
   for (const [path, name] of [["/meu-dia", "meu-dia"], ["/rotinas", "rotinas"], ["/mascote", "mascote"], ["/agente/sentinela", "sentinela"]]) {
     await p.goto(BASE + path + "?demo=1");
+    await ready(p);
     await p.waitForTimeout(150);
     await p.screenshot({ path: `${OUT}/demo-${name}-${scheme}.png`, fullPage: true });
   }
@@ -81,10 +93,11 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
   const { p, ctx } = await page({ viewport: { width: w, height: 800 }, colorScheme: "light", deviceScaleFactor: label.startsWith("zoom") ? 2 : 1 });
   for (const path of ["/", "/meu-dia", "/rotinas", "/conexoes", "/mascote"]) {
     await p.goto(BASE + path + "?demo=1");
-    await p.waitForTimeout(100);
+    await ready(p);
     check(`${label} sem rolagem horizontal em ${path}`, await noHScroll(p));
   }
   await p.goto(BASE + "/?demo=1");
+  await ready(p);
   await p.screenshot({ path: `${OUT}/demo-home-${label}.png`, fullPage: true });
   // menu acessível no celular
   if (w < 768) {
@@ -99,6 +112,7 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
 {
   const { p, ctx } = await page({ colorScheme: "dark" });
   await p.goto(BASE + "/?demo=1");
+  await ready(p);
   await p.locator(".banner.demo").waitFor();
   await p.keyboard.press("Tab");
   const first = await p.evaluate(() => document.activeElement?.textContent?.trim());
@@ -118,33 +132,71 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
 {
   const { p, ctx } = await page({ reducedMotion: "reduce" });
   await p.goto(BASE + "/?demo=1");
+  await ready(p);
   const anim = await p.evaluate(() => [...document.querySelectorAll(".dot-body")].map((e) => getComputedStyle(e).animationName).filter((n) => n && n !== "none"));
-  check("prefers-reduced-motion: nenhuma animação no corpo do Dot", anim.length === 0, anim.join(","));
+  check("prefers-reduced-motion: nenhuma animação CSS no corpo do Dot", anim.length === 0, anim.join(","));
+  check("prefers-reduced-motion: motor SVG no caminho padrão", (await p.locator('[data-dot-renderer="engine"]').count()) > 0);
   await ctx.close();
 }
 
-// 6) Prioridade visual: carinho suprimido quando há aprovação/erro (prévia 2D, movimento completo sem WebGL)
+// 6) Motor SVG: carinho, bloqueio, toque, tonto, olhar, acessórios
 {
-  const ctx2 = await browser2d.newContext({ viewport: { width: 1440, height: 900 } });
-  const p = await ctx2.newPage();
+  const { p, ctx } = await page({ colorScheme: "dark" });
+  const requested = [];
+  p.on("request", (r) => requested.push(r.url()));
   await p.goto(BASE + "/mascote?demo=1");
-  await p.locator('[data-dot-renderer="2d"]').waitFor();
+  await ready(p);
+  await p.locator('[data-dot-renderer="engine"]').first().waitFor();
+  check("caminho padrão usa o motor SVG", (await p.locator('[data-dot-renderer="engine"]').count()) > 0);
+  check("chunk do three.js não carrega no caminho padrão", !requested.some((u) => /DotScene/.test(u)), requested.filter((u) => /DotScene|three/.test(u)).join(" | ").slice(0, 200));
+
   await p.getByRole("radio", { name: "Esperando seu OK" }).check();
   await p.getByRole("button", { name: "Fazer carinho" }).first().click();
   await p.waitForTimeout(200);
-  const hearts = await p.locator("section.card .hearts svg").count();
+  const heartsBlocked = await p.evaluate(() => [...document.querySelectorAll("section.card [data-part]")].filter((e) => Number(e.getAttribute("opacity")) > 0.08).length);
   const note = await p.getByText(/Carinho não aparece/).count();
-  check("carinho não mascara aprovação pendente", hearts === 0 && note === 1);
+  check("carinho não mascara aprovação pendente", heartsBlocked === 0 && note === 1, `partículas=${heartsBlocked} nota=${note}`);
+
   await p.getByRole("radio", { name: "Em repouso" }).check();
   await p.getByRole("button", { name: "Fazer carinho" }).first().click();
+  await p.waitForTimeout(400);
+  const hearts = await p.evaluate(() => [...document.querySelectorAll("section.card [data-part]")].filter((e) => Number(e.getAttribute("opacity")) > 0.08).length);
+  check("carinho aparece em repouso", hearts > 0, `${hearts} partículas`);
+
+  await p.getByRole("radio", { name: "Com erro" }).check();
+  const stage = p.locator("section.card [data-dot-renderer='engine']").first();
+  await stage.click({ position: { x: 110, y: 110 } });
+  await p.waitForTimeout(150);
+  const blockedPoke = await p.evaluate(() => document.querySelector("section.card [data-dot-renderer='engine'] svg")?.getAttribute("aria-label") ?? "");
+  check("toque no erro não troca o estado", /erro/i.test(blockedPoke), blockedPoke);
+
+  await p.getByRole("radio", { name: "Em repouso" }).check();
+  await stage.click({ position: { x: 110, y: 110 } });
+  await p.waitForTimeout(80);
+  await stage.click({ position: { x: 110, y: 110 } });
+  await p.waitForTimeout(80);
+  await stage.click({ position: { x: 110, y: 110 } });
   await p.waitForTimeout(250);
-  check("carinho aparece em repouso", (await p.locator("section.card .hearts svg").count()) > 0);
-  await ctx2.close();
+  const dizzy = await p.evaluate(() => Number(document.querySelector('section.card [data-r="ind-spiral"]')?.getAttribute("opacity") ?? "0"));
+  check("três toques em 0,9 s disparam tonto", dizzy > 0, `spiral=${dizzy}`);
+
+  const before = await p.evaluate(() => document.querySelector('section.card [data-r="eyeAd0"]')?.parentElement?.getAttribute("transform") ?? "");
+  const box = await stage.boundingBox();
+  if (box) await p.mouse.move(box.x + box.width * 0.85, box.y + box.height * 0.4);
+  await p.waitForTimeout(200);
+  const after = await p.evaluate(() => document.querySelector('section.card [data-r="eyeAd0"]')?.parentElement?.getAttribute("transform") ?? "");
+  check("o olhar segue o ponteiro", before !== after, `${before} → ${after}`);
+
+  await p.getByRole("radio", { name: "Correio" }).check();
+  await p.waitForTimeout(200);
+  const cap = await p.evaluate(() => Number(document.querySelector('section.card [data-r="cap"]')?.getAttribute("opacity") ?? "0"));
+  check("acessório do Correio (boné) aparece", cap > 0, `cap=${cap}`);
+  await ctx.close();
 }
 }
 
-// 7) Dot 3D: fallback sem WebGL e com movimento reduzido; com WebGL, um único canvas, render sob demanda e medição.
-if (!ONLY || ONLY === "dot3d") {
+// 7) Dot 3D (só com DOT_RENDERER=glb). No caminho padrão o motor SVG cobre o mascote.
+if (process.env.DOT_RENDERER === "glb" && (!ONLY || ONLY === "dot3d")) {
 {
   const ctx2 = await browser2d.newContext();
   const p = await ctx2.newPage();
@@ -236,6 +288,7 @@ if (!ONLY || ONLY === "dot3d") {
 if (!ONLY || ONLY === "absorb") {
   const { p, ctx, errors } = await page();
   await p.goto(BASE + "/");
+  await ready(p);
   await p.getByRole("button", { name: /modo desenvolvimento/i }).click();
   const panel = p.getByRole("region", { name: "Absorver arquivo" });
   await panel.waitFor();

@@ -1,6 +1,6 @@
 import type { AgentId } from "@open-dot/core";
 import { useApp } from "../store.tsx";
-import { Dot2D } from "./Dot2D.tsx";
+import { AgentDot } from "../dot/AgentDot.tsx";
 import { Icon } from "./Icons.tsx";
 import { fmtTime, RUN_LABEL } from "../format.ts";
 
@@ -20,7 +20,7 @@ export function ContextPanel({ open, onClose, agentId }: { open: boolean; onClos
         </button>
       )}
       <div className="ctx-dot">
-        <Dot2D visual={visual} accessory={app.accessoryFor(agentId)} size={130} animate reducedMotion={app.reducedMotion} interactive showBadge />
+        <AgentDot visual={visual} accessory={app.accessoryFor(agentId)} size={130} reducedMotion={app.reducedMotion} interactive />
         <h2 style={{ marginTop: 8 }}>{visual.semantic === "idle" ? "Tudo no seu tempo." : visual.label}</h2>
         <p className="meta">{visual.reason ?? "Eu organizo. Você decide."}</p>
       </div>

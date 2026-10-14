@@ -5,7 +5,7 @@ import { api, ApiError, type AskAnswer } from "../api.ts";
 import { demoAsk } from "../demo.ts";
 import { DigestBlock, FeedRow } from "../components/FeedViews.tsx";
 import { Icon } from "../components/Icons.tsx";
-import { Dot2D } from "../components/Dot2D.tsx";
+import { AgentDot } from "../dot/AgentDot.tsx";
 import { AbsorbPanel } from "../components/AbsorbPanel.tsx";
 import { fmtTime, greeting } from "../format.ts";
 
@@ -24,7 +24,7 @@ export function Home({ agentId }: { agentId: AgentId }) {
       <div className="day-sep">Hoje, {today}</div>
       {agentId !== "dot" && <AgentAbout agentId={agentId} />}
       <div className="msg-head">
-        <Dot2D visual={app.visualFor(agentId)} accessory={app.accessoryFor(agentId)} size={22} animate={false} reducedMotion />
+        <AgentDot visual={app.visualFor(agentId)} accessory={app.accessoryFor(agentId)} size={22} animate={false} reducedMotion={app.reducedMotion} />
         <b>{AGENTS[agentId].name}</b>
         {digest && <span>{fmtTime(digest.createdAt)}</span>}
       </div>

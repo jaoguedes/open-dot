@@ -3,7 +3,7 @@ import { initialAbsorption, reduceAbsorption, toVisual, type SemanticState } fro
 import { useApp } from "../store.tsx";
 import { api, ApiError, sendUpload, type UploadView } from "../api.ts";
 import type { ExtractMessage } from "../absorb/extract.worker.ts";
-import { Dot2D } from "./Dot2D.tsx";
+import { AgentDot } from "../dot/AgentDot.tsx";
 
 /**
  * Arraste ou escolha um arquivo para o Dot absorver. Fases reais (packages/core/src/absorption.ts):
@@ -151,7 +151,7 @@ export function AbsorbPanel() {
         if (f) void absorb(f);
       }}
     >
-      <Dot2D visual={visual} accessory="none" size={84} animate reducedMotion={app.reducedMotion} absorbing={local.kind === "extracting" || s.phase === "selected" || s.phase === "uploading"} label={`Dot — ${statusText || "pronto para absorver um arquivo"}`} />
+      <AgentDot visual={visual} accessory="none" size={84} reducedMotion={app.reducedMotion} absorbing={local.kind === "extracting" || s.phase === "selected" || s.phase === "uploading"} label={`Dot — ${statusText || "pronto para absorver um arquivo"}`} />
       <div>
         <b>Dar um arquivo ao Dot</b>
         <p className="meta" style={{ margin: "2px 0 0" }}>

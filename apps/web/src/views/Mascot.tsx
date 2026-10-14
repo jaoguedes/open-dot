@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AGENTS, toVisual, type AgentId, type SemanticState } from "@open-dot/core";
 import { useApp } from "../store.tsx";
-import { Dot3D } from "../components/Dot3D.tsx";
+import { AgentDot } from "../dot/AgentDot.tsx";
 
 const STATES: Array<{ id: SemanticState; label: string }> = [
   { id: "idle", label: "Em repouso" },
@@ -27,17 +27,19 @@ export function Mascot() {
     <>
       <h1>Mascote & aparência</h1>
       <p className="meta" style={{ margin: "4px 0 16px" }}>
-        Prévia dos estados do Dot. O modelo 3D vem do Blender e ainda aguarda aprovação artística; sem WebGL ou com movimento reduzido, aparece a versão 2D.
+        Motor em código (superelipse). Toque, três toques (tonto) e carinho. O GLB/three.js fica atrás de DOT_RENDERER=glb e não carrega neste caminho.
       </p>
 
       <section className="card" aria-label="Prévia do Dot" style={{ display: "grid", placeItems: "center", gap: 16, padding: 24, background: "var(--hero), var(--bg)" }}>
-        <Dot3D
+        <AgentDot
           visual={visual}
           accessory={app.accessoryFor(agent)}
           size={220}
           reducedMotion={app.reducedMotion}
+          interactive
           affectionSignal={signal}
           onAffection={(r) => setNote(r === "ok" ? "" : r === "suppressed" ? "Carinho não aparece durante erro, aprovação ou desconexão." : r === "cooldown" ? "Aguarde um instante." : "")}
+          ring={agent === "sentinela" && (state === "working" || state === "thinking")}
         />
         <div style={{ textAlign: "center" }}>
           <h2>{AGENTS[agent].name}</h2>
@@ -101,7 +103,7 @@ export function Mascot() {
           <input id="pf-acc" type="checkbox" checked={app.prefs.accessories} onChange={(e) => app.setPrefs({ accessories: e.target.checked })} />
         </div>
         <p className="tiny" style={{ marginTop: 8 }}>
-          Preferências ficam neste navegador. Sem boca e sem sobrancelhas em nenhum estado; o tracinho no alto é a entrada de arquivos.
+          Preferências ficam neste navegador. Sem boca e sem sobrancelhas. O tracinho só aparece durante a absorção.
         </p>
       </section>
     </>

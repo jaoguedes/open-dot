@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AGENTS, SEMANTIC_PRIORITY, type AgentId } from "@open-dot/core";
 import { useApp } from "./store.tsx";
 import { Icon, type IconName } from "./components/Icons.tsx";
-import { Dot2D } from "./components/Dot2D.tsx";
+import { AgentDot } from "./dot/AgentDot.tsx";
+import { SplashScreen } from "./dot/SplashScreen.tsx";
 import { api } from "./api.ts";
 import { Home } from "./views/Home.tsx";
 import { MyDay } from "./views/MyDay.tsx";
@@ -11,6 +12,26 @@ import { Connections } from "./views/Connections.tsx";
 import { Mascot } from "./views/Mascot.tsx";
 import { ContextPanel } from "./components/ContextPanel.tsx";
 import { fmtTime } from "./format.ts";
+
+function useSplash(loading: boolean, reduced: boolean): { show: boolean; fading: boolean } {
+  const [show, setShow] = useState(true);
+  const [fading, setFading] = useState(false);
+  const t0 = useRef(performance.now());
+  useEffect(() => {
+    if (loading) return;
+    let fadeT = 0;
+    const wait = Math.max(0, 1200 - (performance.now() - t0.current));
+    const showT = window.setTimeout(() => {
+      setFading(true);
+      fadeT = window.setTimeout(() => setShow(false), reduced ? 0 : 250);
+    }, wait);
+    return () => {
+      window.clearTimeout(showT);
+      if (fadeT) window.clearTimeout(fadeT);
+    };
+  }, [loading, reduced]);
+  return { show, fading };
+}
 
 const SIDEBAR_AGENTS: AgentId[] = ["dot", "correio", "codigo", "sentinela"];
 
@@ -47,9 +68,28 @@ export function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  if (app.mode === "loading") return <Splash />;
-  if (app.mode === "login") return <Login />;
-  if (app.mode === "setup") return <Setup />;
+  const splash = useSplash(app.mode === "loading", app.reducedMotion);
+  if (app.mode === "loading" && splash.show) {
+    return <SplashScreen fading={splash.fading} reducedMotion={app.reducedMotion} />;
+  }
+  if (app.mode === "login") {
+    return (
+      <>
+        {splash.show && <SplashScreen fading={splash.fading} reducedMotion={app.reducedMotion} />}
+        <div aria-hidden={splash.show && !splash.fading ? true : undefined}>
+          <Login />
+        </div>
+      </>
+    );
+  }
+  if (app.mode === "setup") {
+    return (
+      <>
+        {splash.show && <SplashScreen fading={splash.fading} reducedMotion={app.reducedMotion} />}
+        <Setup />
+      </>
+    );
+  }
 
   const go = (p: string) => {
     app.navigate(p);
@@ -84,6 +124,7 @@ export function App() {
 
   return (
     <>
+      {splash.show && <SplashScreen fading={splash.fading} reducedMotion={app.reducedMotion} />}
       <a className="skip" href="#conteudo">
         Pular para o conteúdo
       </a>
@@ -118,7 +159,7 @@ export function App() {
                 <Icon name="menu" />
               </button>
               <div className="who">
-                {header.agent ? <Dot2D visual={app.visualFor(header.agent)} accessory={app.accessoryFor(header.agent)} size={36} animate={false} reducedMotion /> : <Icon name={header.icon} size={22} />}
+                {header.agent ? <AgentDot visual={app.visualFor(header.agent)} accessory={app.accessoryFor(header.agent)} size={36} animate={false} reducedMotion={app.reducedMotion} /> : <Icon name={header.icon} size={22} />}
                 <div>
                   <h1 style={{ fontSize: 15, lineHeight: "20px" }}>{header.title}</h1>
                   <div className="tiny">{header.subtitle}</div>
@@ -185,7 +226,7 @@ function Sidebar({ open, go, current, onPalette }: { open: boolean; go: (p: stri
   return (
     <nav className={`sidebar ${open ? "open" : ""}`} aria-label="Navegação principal">
       <div className="brand">
-        <Dot2D visual={app.visualFor("dot")} accessory="none" size={26} animate={false} reducedMotion label="Open Dot" />
+        <AgentDot visual={app.visualFor("dot")} accessory="none" size={26} animate={false} reducedMotion={app.reducedMotion} label="Open Dot" />
         open dot
       </div>
       <button className="search" onClick={onPalette} aria-label="Buscar ou ir para (Command K)">
@@ -205,7 +246,7 @@ function Sidebar({ open, go, current, onPalette }: { open: boolean; go: (p: stri
           const path = a === "dot" ? "/" : `/agente/${a}`;
           return (
             <a key={a} href={path} className="nav-item agent-item" aria-current={current === path ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(path))}>
-              <Dot2D visual={app.visualFor(a)} accessory={app.accessoryFor(a)} size={34} animate={false} reducedMotion />
+              <AgentDot visual={app.visualFor(a)} accessory={app.accessoryFor(a)} size={34} animate={false} reducedMotion={app.reducedMotion} />
               <span className="lines">
                 <span>{AGENTS[a].name}</span>
                 <span>{statusLine(a)}</span>
@@ -277,11 +318,10 @@ function Island({ go }: { go: (p: string) => void }) {
   const line2 = dom.reason ?? (digest ? `${digest.body.counts?.important ?? 0} itens para olhar quando puder` : "Nada pendente agora");
   return (
     <aside className={`island ${compact ? "compact" : ""}`} aria-label="Ilha do Dot">
-      <Dot2D
+      <AgentDot
         visual={dom}
         accessory={app.accessoryFor(dom.agentId)}
         size={44}
-        animate
         reducedMotion={app.reducedMotion}
         interactive
         affectionSignal={signal}
@@ -334,18 +374,6 @@ function Palette({ onClose, go }: { onClose: () => void; go: (p: string) => void
   );
 }
 
-function Splash() {
-  return (
-    <div style={{ display: "grid", placeItems: "center", height: "100%" }} role="status" aria-live="polite">
-      <div style={{ width: 220, display: "flex", flexDirection: "column", gap: 10 }}>
-        <div className="skeleton" />
-        <div className="skeleton" style={{ width: "70%" }} />
-        <span className="sr-only">Carregando o Open Dot…</span>
-      </div>
-    </div>
-  );
-}
-
 function Login() {
   const app = useApp();
   const err = new URLSearchParams(location.search).get("erro");
@@ -358,7 +386,7 @@ function Login() {
   return (
     <main style={{ display: "grid", placeItems: "center", minHeight: "100%", padding: 16 }}>
       <div style={{ width: "min(400px, 100%)", display: "flex", flexDirection: "column", gap: 16, alignItems: "center", textAlign: "center" }}>
-        <Dot2D visual={app.visualFor("dot")} accessory="none" size={120} animate reducedMotion={app.reducedMotion} label="Dot" />
+        <AgentDot visual={app.visualFor("dot")} accessory="none" size={120} reducedMotion={app.reducedMotion} label="Dot" />
         <h1>Open Dot</h1>
         <p className="meta">Seu contexto. Um companheiro. Entre para ver suas revisões.</p>
         {err && msgs[err] && (
