@@ -159,11 +159,13 @@ def build_face(body, col):
         disc(bm, loc, nrm, S.CHEEK_RX, S.CHEEK_RZ, 0.001, segments=20, lift=0.0025)
     cheeks = mesh_object("Cheeks", bm, col, ["M_Cheek"])
 
-    # Tracinho de absorção no alto da face frontal (cápsula rebaixada). Não é boca.
+    # Tracinho de absorção no alto da face frontal. Não é boca.
+    # Cápsula fina com tampa frontal um pouco acima da superfície: uma tampa só por trás
+    # ficaria dentro do corpo e o tracinho sumiria nos posters.
     bm = bmesh.new()
     loc, nrm = surface_point(body, 0.0, S.SLOT_Z)
     rot = nrm.to_track_quat("-Y", "Z").to_matrix().to_4x4()
-    m = Matrix.Translation(loc + nrm * 0.0008) @ rot
+    m = Matrix.Translation(loc + nrm * 0.0012) @ rot
     pts = []
     seg = 10
     r = S.SLOT_HALF_H
@@ -171,13 +173,15 @@ def build_face(body, col):
         for i in range(seg + 1):
             t = math.radians(a0 + 180 * i / seg)
             pts.append((cx + r * math.cos(t), r * math.sin(t)))
-    front = [bm.verts.new(m @ Vector((x, -0.002, z))) for x, z in pts]
-    back = [bm.verts.new(m @ Vector((x * 0.9, 0.006, z * 0.7))) for x, z in pts]
+    front = [bm.verts.new(m @ Vector((x, -0.0015, z))) for x, z in pts]
+    back = [bm.verts.new(m @ Vector((x * 1.04, 0.004, z * 1.1))) for x, z in pts]
     n = len(pts)
     for i in range(n):
         j = (i + 1) % n
         bm.faces.new((front[i], front[j], back[j], back[i]))
-    bm.faces.new(back)
+    bm.faces.new(front)
+    bm.faces.new(list(reversed(back)))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     slot = mesh_object("Slot", bm, col, ["M_Slot"])
     return eyes, cheeks, slot, sides
 
@@ -469,11 +473,14 @@ def face_clips(eyes):
 
 # --------------------------------------------------------------------------- exportação
 
-def export_glb(path, objects, scene_override=None):
-    bpy.ops.object.select_all(action="DESELECT")
+def export_glb(path, objects, animations=True):
+    for o in bpy.context.view_layer.objects:
+        o.select_set(False)
     for o in objects:
         o.select_set(True)
     bpy.context.view_layer.objects.active = objects[0]
+    if sorted(o.name for o in bpy.context.selected_objects) != sorted(o.name for o in objects):
+        raise RuntimeError(f"seleção para {os.path.basename(path)} difere do pedido")
     props = bpy.ops.export_scene.gltf.get_rna_type().properties.keys()
     wanted = {
         "filepath": path,
@@ -487,7 +494,7 @@ def export_glb(path, objects, scene_override=None):
         "export_extras": True,
         "export_cameras": False,
         "export_lights": False,
-        "export_animations": True,
+        "export_animations": animations,
         "export_animation_mode": "ACTIONS",
         "export_merge_animation": "ACTION",
         "export_force_sampling": True,
@@ -508,34 +515,29 @@ def export_glb(path, objects, scene_override=None):
     REPORT["exports"][os.path.basename(path)] = {"bytes": os.path.getsize(path), "options": sorted(use)}
 
 
-def export_standalone(name, bm_builder, mat_name):
-    """Exporta uma peça na origem (coordenadas locais do socket) em cena temporária."""
-    main = bpy.context.window.scene if bpy.context.window else bpy.context.scene
-    tmp = bpy.data.scenes.new(f"export_{name}")
-    bm = bm_builder()
-    obj = mesh_object(name, bm, tmp.collection, [mat_name])
-    if bpy.context.window:
-        bpy.context.window.scene = tmp
+def export_standalone(name, bm_builder, mat_name, col):
+    """Exporta uma peça na origem (coordenadas locais do socket), só ela e sem animações.
+    Em --background não há window para trocar de cena, por isso a peça nasce na cena principal."""
+    obj = mesh_object(name, bm_builder(), col, [mat_name])
     path = os.path.join(OUT, f"{'fx' if name in S.FX else 'prop'}-{name}.glb")
-    export_glb(path, [obj])
+    export_glb(path, [obj], animations=False)
     tris = sum(len(p.vertices) - 2 for p in obj.data.polygons)
     REPORT["objects"][name] = {"tris": tris}
-    if bpy.context.window:
-        bpy.context.window.scene = main
-    return obj, tmp
+    return obj
 
 
 # --------------------------------------------------------------------------- render de conferência
 
 def setup_preview(col_preview, target_z):
     scene = bpy.context.scene
-    for engine in ("BLENDER_EEVEE_NEXT", "BLENDER_EEVEE", "BLENDER_WORKBENCH"):
-        try:
-            scene.render.engine = engine
-            break
-        except TypeError:
-            continue
-    REPORT["render_engine"] = scene.render.engine
+    # Cycles na CPU: o EEVEE depende da GPU (Metal) e travou em segundo plano com a tela do Mac bloqueada.
+    scene.render.engine = "CYCLES"
+    scene.cycles.device = "CPU"
+    scene.cycles.samples = 32
+    scene.cycles.use_adaptive_sampling = True
+    scene.cycles.use_denoising = True
+    scene.cycles.max_bounces = 4
+    REPORT["render_engine"] = f"{scene.render.engine} (CPU, {scene.cycles.samples} amostras)"
     scene.render.film_transparent = True
     scene.render.image_settings.file_format = "PNG"
     scene.view_settings.view_transform = "Standard"  # fixado por versão; comparar com o runtime
@@ -549,7 +551,7 @@ def setup_preview(col_preview, target_z):
     cam = bpy.data.objects.new("Cam", cam_data)
     col_preview.objects.link(cam)
     scene.camera = cam
-    for name, (loc, energy, size) in {"Key": ((-1.6, -2.0, 2.4), 260, 2.0), "Fill": ((2.0, -1.5, 1.0), 60, 3.0), "Rim": ((0.5, 2.2, 1.8), 120, 1.0)}.items():
+    for name, (loc, energy, size) in {"Key": ((-1.6, -2.0, 2.4), 260, 2.0), "Fill": ((2.0, -1.5, 1.0), 60, 3.0), "FillSide": ((-2.6, 0.6, 1.2), 70, 3.0), "Rim": ((0.5, 2.2, 1.8), 120, 1.0)}.items():
         ld = bpy.data.lights.new(name, "AREA")
         ld.energy = energy
         ld.size = size
@@ -568,12 +570,22 @@ def render_views(cam, target_z):
         dist = 4.2
         cam.location = (dist * math.sin(t), -dist * math.cos(t), target_z + 0.25)
         cam.rotation_euler = (Vector((0, 0, target_z)) - cam.location).to_track_quat("-Z", "Y").to_euler()
-        for px in ([512, 160, 64, 32] if label == "frente" else [512]):
-            scene.render.resolution_x = scene.render.resolution_y = px
-            path = os.path.join(OUT, f"poster-{label}-{px}.png")
-            scene.render.filepath = path
-            bpy.ops.render.render(write_still=True)
-            REPORT["renders"].append(os.path.basename(path))
+        scene.render.resolution_x = scene.render.resolution_y = 512
+        path = os.path.join(OUT, f"poster-{label}-512.png")
+        scene.render.filepath = path
+        t0 = time.time()
+        bpy.ops.render.render(write_still=True)
+        REPORT["renders"].append({"file": os.path.basename(path), "seconds": round(time.time() - t0, 1)})
+    # Legibilidade em tamanhos pequenos: reduz o poster de frente (mesma imagem, sem novo render).
+    for px in (160, 64, 32):
+        img = bpy.data.images.load(os.path.join(OUT, "poster-frente-512.png"), check_existing=False)
+        img.scale(px, px)
+        small = os.path.join(OUT, f"poster-frente-{px}.png")
+        img.filepath_raw = small
+        img.file_format = "PNG"
+        img.save()
+        bpy.data.images.remove(img)
+        REPORT["renders"].append({"file": os.path.basename(small), "seconds": 0})
 
 
 # --------------------------------------------------------------------------- principal
@@ -616,27 +628,21 @@ def main():
     blend_path = os.path.join(OUT, "dot_master.blend")
     export_glb(os.path.join(OUT, "dot-base.glb"), [root, rig, body, eyes, cheeks, slot, *sockets])
 
-    tmp_scenes = []
+    pieces = []
     for name, spec in S.PROPS.items():
         builder = {"Prop_MailCap": build_mail_cap, "Prop_Glasses": build_glasses, "Prop_Headphones": build_headphones}[name]
-        obj, tmp = export_standalone(name, builder, spec["material"])
-        tmp_scenes.append(tmp)
+        pieces.append(export_standalone(name, builder, spec["material"], c_props))
     for name, mat in S.FX.items():
         builder = {"Heart_Source": build_heart, "Ring_Source": build_ring}[name]
-        obj, tmp = export_standalone(name, builder, mat)
-        tmp_scenes.append(tmp)
+        pieces.append(export_standalone(name, builder, mat, c_fx))
 
-    # Volta à cena principal e posiciona prévias desligadas das peças nos sockets.
-    for tmp in tmp_scenes:
-        for o in list(tmp.collection.objects):
-            target = c_props if o.name.startswith("Prop_") else c_fx
-            target.objects.link(o)
-            anchor = S.PROPS.get(o.name, {}).get("anchor")
-            if anchor:
-                o.parent = bpy.data.objects[anchor]
-                o.hide_render = True
-                o.hide_viewport = True
-        bpy.data.scenes.remove(tmp)
+    # Prévias desligadas no .blend: acessórios presos aos sockets; nada aparece nos posters.
+    for o in pieces:
+        anchor = S.PROPS.get(o.name, {}).get("anchor")
+        if anchor:
+            o.parent = bpy.data.objects[anchor]
+        o.hide_render = True
+        o.hide_viewport = True
 
     try:
         cam = setup_preview(c_prev, S.HEIGHT * 0.45)

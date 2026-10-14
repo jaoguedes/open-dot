@@ -127,8 +127,15 @@ def check_base(info):
     return errors, warnings, tris
 
 
-def check_piece(info, limit):
+def check_piece(info, limit, name=None):
     errors, warnings = [], []
+    leaked = sorted(set(info["nodes"]) & set(S.REQUIRED_NODES))
+    if leaked:
+        errors.append(f"{info['file']}: peça contém nós do corpo ({', '.join(leaked)})")
+    if info["animations"]:
+        errors.append(f"{info['file']}: peça contém {len(info['animations'])} animações (devem ficar só no GLB base)")
+    if name and set(info["meshes"]) != {name}:
+        errors.append(f"{info['file']}: esperado só a malha {name}, encontrado {sorted(info['meshes'])}")
     tris = sum(m["tris"] for m in info["meshes"].values())
     if tris > limit:
         warnings.append(f"{info['file']}: {tris} triângulos (meta ≤ {limit})")
@@ -165,7 +172,7 @@ def run(out_dir, publish=None, khronos_ran=False):
             continue
         pi = inspect(p)
         limit = S.BUDGET["heart_tris_max"] if name == "Heart_Source" else S.BUDGET["prop_tris_max"]
-        e, w, t = check_piece(pi, limit)
+        e, w, t = check_piece(pi, limit, name)
         report["errors"] += e
         report["warnings"] += w
         report["files"][fname] = {**pi, "tris_total": t}
@@ -175,7 +182,7 @@ def run(out_dir, publish=None, khronos_ran=False):
         os.makedirs(publish, exist_ok=True)
         manifest = {
             "assetVersion": "dot-0.1.0",
-            "convention": {"units": "1 = largura do corpo", "up": "Y (glTF)", "forward": "-Z (glTF; -Y no Blender)"},
+            "convention": {"units": "1 = largura do corpo", "up": "Y (glTF)", "forward": "+Z (glTF; -Y no Blender)"},
             "base": None,
             "root": "Root_Dot",
             "requiredNodes": S.REQUIRED_NODES,
@@ -200,6 +207,11 @@ def run(out_dir, publish=None, khronos_ran=False):
                 manifest["props"][key] = {"file": dst_name, "anchor": S.PROPS[key]["anchor"]}
             else:
                 manifest["fx"][stem.replace("fx-", "")] = {"file": dst_name}
+        published = {manifest["base"], *(p["file"] for p in manifest["props"].values()), *(p["file"] for p in manifest["fx"].values())}
+        for old in os.listdir(publish):
+            # Só GLB com o padrão de nome do próprio pipeline (<peça>.<hash10>.glb).
+            if old.endswith(".glb") and old not in published and len(old.split(".")) == 3 and len(old.split(".")[1]) == 10:
+                os.remove(os.path.join(publish, old))
         for png in sorted(f for f in os.listdir(out_dir) if f.startswith("poster-") and f.endswith(".png")):
             shutil.copyfile(os.path.join(out_dir, png), os.path.join(publish, png))
         with open(os.path.join(publish, "manifest.json"), "w", encoding="utf-8") as f:

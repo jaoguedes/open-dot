@@ -1,0 +1,145 @@
+{
+  "assetVersion": "dot-0.1.0",
+  "convention": {
+    "units": "1 = largura do corpo",
+    "up": "Y (glTF)",
+    "forward": "+Z (glTF; -Y no Blender)"
+  },
+  "base": "dot-base.2f37543757.glb",
+  "root": "Root_Dot",
+  "requiredNodes": [
+    "Root_Dot",
+    "Rig_Dot",
+    "Body",
+    "Eyes",
+    "Cheeks",
+    "Slot",
+    "Socket_Head",
+    "Socket_Face",
+    "Socket_Sides",
+    "Socket_FX"
+  ],
+  "morphs": {
+    "Eyes": [
+      "Blink_L",
+      "Blink_R",
+      "Happy_L",
+      "Happy_R",
+      "Sleep_L",
+      "Sleep_R",
+      "Squint_L",
+      "Squint_R",
+      "Surprise_L",
+      "Surprise_R"
+    ],
+    "Body": [
+      "Body_Squash",
+      "Absorb_Receive"
+    ]
+  },
+  "clips": {
+    "body": [
+      "body_absorb_receive",
+      "body_error",
+      "body_idle_breathe",
+      "body_sleep_enter",
+      "body_sleep_idle",
+      "body_success",
+      "body_surprised",
+      "body_think",
+      "body_touch_squash",
+      "body_wait_ok",
+      "body_wake",
+      "body_work"
+    ],
+    "face": [
+      "face_blink",
+      "face_happy",
+      "face_sleep",
+      "face_squint",
+      "face_surprised",
+      "face_wake",
+      "face_wink"
+    ]
+  },
+  "states": {
+    "idle": {
+      "body": "body_idle_breathe",
+      "face": null
+    },
+    "thinking": {
+      "body": "body_think",
+      "face": null
+    },
+    "working": {
+      "body": "body_work",
+      "face": null
+    },
+    "waiting": {
+      "body": "body_wait_ok",
+      "face": null
+    },
+    "success": {
+      "body": "body_success",
+      "face": "face_happy"
+    },
+    "error": {
+      "body": "body_error",
+      "face": "face_squint"
+    },
+    "sleep": {
+      "body": "body_sleep_idle",
+      "face": "face_sleep"
+    },
+    "touch": {
+      "body": "body_touch_squash",
+      "face": null
+    },
+    "surprised": {
+      "body": "body_surprised",
+      "face": "face_surprised"
+    },
+    "affection": {
+      "body": "body_success",
+      "face": "face_happy"
+    },
+    "absorb": {
+      "body": "body_absorb_receive",
+      "face": null
+    }
+  },
+  "props": {
+    "Prop_MailCap": {
+      "file": "prop-Prop_MailCap.fa613e2983.glb",
+      "anchor": "Socket_Head"
+    },
+    "Prop_Glasses": {
+      "file": "prop-Prop_Glasses.8da1c2cb79.glb",
+      "anchor": "Socket_Face"
+    },
+    "Prop_Headphones": {
+      "file": "prop-Prop_Headphones.22efbb677e.glb",
+      "anchor": "Socket_Sides"
+    }
+  },
+  "fx": {
+    "Heart_Source": {
+      "file": "fx-Heart_Source.ac9584eea4.glb"
+    },
+    "Ring_Source": {
+      "file": "fx-Ring_Source.2c59ea4f91.glb"
+    }
+  },
+  "limits": {
+    "fps": 30,
+    "maxHearts": 6,
+    "maxDpr": 1.5,
+    "gazeYawDeg": 8.0,
+    "gazePitchDeg": 5.0
+  },
+  "validation": {
+    "structural": "ok",
+    "khronos": "não executado",
+    "runtime": "pendente"
+  }
+}

@@ -91,7 +91,7 @@ def main():
         sys.exit(r.returncode)
 
     if cmd == "build":
-        r = blender(bin_path, os.path.join(HERE, "build_dot.py"), {"DOT_OUT": out})
+        r = blender(bin_path, os.path.join(HERE, "build_dot.py"), {"DOT_OUT": out}, timeout=1800)
         if r.returncode != 0:
             sys.exit(f"Build falhou. Veja {os.path.join(out, 'build-report.json')}")
         v = subprocess.run([sys.executable, os.path.join(HERE, "validate_glb.py"), out, "--publish", os.path.join(ROOT, "assets", "dot")])

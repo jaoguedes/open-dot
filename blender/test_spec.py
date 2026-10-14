@@ -11,7 +11,7 @@ import dot_spec as S  # noqa: E402
 import validate_glb as V  # noqa: E402
 
 
-def make_glb(path, nodes, animations, eye_morphs, tris=100, skins=1, uri=None):
+def make_glb(path, nodes, animations, eye_morphs, tris=100, skins=1, uri=None, mesh_nodes=("Body", "Eyes")):
     # Buffer mínimo: um acessor de índices com tris*3 elementos.
     gltf = {
         "asset": {"version": "2.0", "generator": "teste"},
@@ -24,7 +24,7 @@ def make_glb(path, nodes, animations, eye_morphs, tris=100, skins=1, uri=None):
         "buffers": [{"byteLength": 4, **({"uri": uri} if uri else {})}],
     }
     for i, n in enumerate(gltf["nodes"]):
-        if n["name"] in ("Body", "Eyes"):
+        if n["name"] in mesh_nodes:
             gltf["meshes"].append({"name": n["name"], "primitives": [{"attributes": {"POSITION": 1}, "indices": 0}], "extras": {"targetNames": eye_morphs if n["name"] == "Eyes" else []}})
             n["mesh"] = len(gltf["meshes"]) - 1
     js = json.dumps(gltf).encode()
@@ -70,10 +70,43 @@ class SpecTests(unittest.TestCase):
             self.assertIn("nó proibido", joined)
             self.assertIn("recursos externos", joined)
 
+    def test_peca_com_corpo_ou_clipes_vazados_e_recusada(self):
+        # Regressão: em --background o exportador levava a cena inteira para cada acessório.
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "prop-Prop_Glasses.glb")
+            make_glb(p, ["Prop_Glasses"] + S.REQUIRED_NODES, ["body_idle_breathe"], [])
+            e, _, _ = V.check_piece(V.inspect(p), 1000, "Prop_Glasses")
+            joined = " | ".join(e)
+            self.assertIn("nós do corpo", joined)
+            self.assertIn("animações", joined)
+            self.assertIn("esperado só a malha", joined)
+
+    def test_publicacao_remove_glb_antigo_do_pipeline_e_preserva_o_resto(self):
+        with tempfile.TemporaryDirectory() as out, tempfile.TemporaryDirectory() as pub:
+            make_glb(os.path.join(out, "dot-base.glb"), S.REQUIRED_NODES, list(S.BODY_CLIPS) + list(S.FACE_CLIPS), S.EYE_MORPHS)
+            for name in list(S.PROPS) + list(S.FX):
+                make_glb(os.path.join(out, f"{'fx' if name in S.FX else 'prop'}-{name}.glb"), [name], [], [], skins=0, mesh_nodes=(name,))
+            for keep in ("README.md", "meu-modelo.glb"):
+                with open(os.path.join(pub, keep), "w") as f:
+                    f.write("x")
+            with open(os.path.join(pub, "prop-Prop_MailCap.0123456789.glb"), "w") as f:
+                f.write("antigo")
+            rep = V.run(out, pub)
+            self.assertTrue(rep["ok"], rep["errors"])
+            left = set(os.listdir(pub))
+            self.assertNotIn("prop-Prop_MailCap.0123456789.glb", left)
+            self.assertIn("README.md", left)
+            self.assertIn("meu-modelo.glb", left)
+            with open(os.path.join(pub, "manifest.json"), encoding="utf-8") as f:
+                m = json.load(f)
+            self.assertIn(m["base"], left)
+            self.assertTrue(all(p["file"] in left for p in m["props"].values()))
+
     def test_glb_invalido(self):
         with tempfile.TemporaryDirectory() as d:
             p = os.path.join(d, "x.glb")
-            open(p, "wb").write(b"not a glb at all")
+            with open(p, "wb") as f:
+                f.write(b"not a glb at all")
             with self.assertRaises(ValueError):
                 V.read_glb(p)
 

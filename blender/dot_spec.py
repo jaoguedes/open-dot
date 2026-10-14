@@ -22,13 +22,13 @@ EYE_Z = 0.30 * HEIGHT   # 30% da altura a partir da base
 EYE_RX = 0.043          # semi-largura
 EYE_RZ = 0.050          # semi-altura
 CHEEK_X = 0.29
-CHEEK_Z = EYE_Z + 0.035
+CHEEK_Z = EYE_Z - 0.005  # na linha dos olhos, um pouco abaixo (catálogo)
 CHEEK_RX = 0.055
 CHEEK_RZ = 0.030
 # Tracinho de absorção (entrada de arquivos) — preservado conforme o catálogo. Não é boca.
 SLOT_Z = 0.82 * HEIGHT
 SLOT_HALF_W = 0.10
-SLOT_HALF_H = 0.016
+SLOT_HALF_H = 0.018
 
 # Limite do olhar (graus)
 GAZE_MAX_YAW = 8.0
@@ -39,7 +39,7 @@ MATERIALS = {
     "M_Body": {"hex": "#F3EDE2", "roughness": 0.64, "metallic": 0.0},
     "M_Eyes": {"hex": "#292628", "roughness": 0.38, "metallic": 0.0},
     "M_Cheek": {"hex": "#EAB6B2", "roughness": 0.7, "metallic": 0.0},
-    "M_Slot": {"hex": "#B9AF9F", "roughness": 0.6, "metallic": 0.0},
+    "M_Slot": {"hex": "#8F8475", "roughness": 0.6, "metallic": 0.0},  # contraste suficiente para o tracinho aparecer a 64 px
     "M_Glasses": {"hex": "#44414A", "roughness": 0.48, "metallic": 0.0},
     "M_Cloth": {"hex": "#A8BED8", "roughness": 0.75, "metallic": 0.0},
     "M_ClothLav": {"hex": "#B6ACD4", "roughness": 0.75, "metallic": 0.0},
