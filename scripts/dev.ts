@@ -63,7 +63,7 @@ async function buildWeb() {
   await ctx.rebuild();
 }
 
-const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".woff": "font/woff", ".txt": "text/plain; charset=utf-8", ".map": "application/json", ".json": "application/json", ".glb": "model/gltf-binary", ".png": "image/png", ".mjs": "text/javascript" };
+const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".woff": "font/woff", ".woff2": "font/woff2", ".txt": "text/plain; charset=utf-8", ".map": "application/json", ".json": "application/json", ".glb": "model/gltf-binary", ".png": "image/png", ".mjs": "text/javascript", ".webmanifest": "application/manifest+json" };
 
 function serveStatic(pathname: string): { body: Buffer; type: string; status: number } {
   const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, "");

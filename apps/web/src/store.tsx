@@ -44,7 +44,7 @@ export function useApp(): AppState {
 
 const PREFS_KEY = "open-dot:prefs";
 function readPrefs(): Prefs {
-  const base: Prefs = { theme: "system", motion: "system", transparency: "system", accessories: true };
+  const base: Prefs = { theme: "dark", motion: "system", transparency: "system", accessories: true };
   try {
     return { ...base, ...(JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}") as Partial<Prefs>) };
   } catch {

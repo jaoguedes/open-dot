@@ -12,6 +12,8 @@ _Atualizado em 14/10/2026 · motor SVG (D-014) no núcleo, testado · visual/PWA
 | 3 · Absorção de arquivos | ✅ local | `npm run check` (89 testes) e `npm run test:ui` 61/61 |
 | Motor SVG (D-014) | ✅ núcleo | `packages/core/src/dot`: geometria superelipse, molas 120 Hz, estados/reações do protótipo, RNG com semente. 7 testes (10 mil passos sem NaN, bloqueios, absorção m→0, ≤18 partículas, semente, `question`). `npm run check` 96/96 |
 | Motor SVG · vista | ✅ arte + ticker | `apps/web/src/dot`: DotView monta o SVG uma vez e atualiza atributos por refs; arte 2D (olhos em traço, selos, partículas); acessórios por geometria (sem innerHTML por quadro); um rAF para todas as instâncias, pausa com aba oculta. 2 testes (paths sem NaN; ticker para quando oculta). `npm run check` 98/98 |
+| Motor SVG · app | ✅ ligado | AgentDot no lugar do Dot2D (arquivo 2D/3D preservados). semantic → motor; success → react; anel da Sentinela só em working/thinking; carinho/poke/dizzy; absorção. Splash 1,2 s + fade 250 ms com “oi”. Build sem chunk three.js no caminho padrão. |
+| Visual D-015 | ✅ tokens + shell | Tema escuro padrão (#050608). Tokens em `theme.css`. Inter + Instrument Serif itálico + JetBrains Mono locais (OFL). Shell da tela 01: nav em pílula azul, ilha preta no topo, Meu dia com saudação em serif, 3 cartões com brilho e dados reais/demo rotulados. |
 
 ## Legenda
 
@@ -37,7 +39,7 @@ _Atualizado em 14/10/2026 · motor SVG (D-014) no núcleo, testado · visual/PWA
 | GitHub | 🧪 webhook testado com eventos simulados · 🟡 GitHub App | Assinatura HMAC, dedupe por delivery, evento fora de ordem não regride, falha de CI vai para o feed. O token de instalação está implementado, sem teste real |
 | Vercel | 🟡 | Leitura de `/v7/deployments` a cada ~15 min; deploy com ERROR vai para o feed. Sem escrita |
 | Sites (Sentinela) | ✅ | Até 3 URLs HTTPS; bloqueio de IP interno e de redirecionamento; incidente após 3 falhas e encerramento após 2 sucessos; correlação com deploy dita como “sinal, não causa” |
-| Interface web | ✅ | Layout v0.2, Inter local, claro/escuro, ilha com glass e opção opaca, ⌘K, estados (carregando, vazio, offline, falha parcial, reconexão, cobertura parcial, configuração incompleta), demonstração isolada e rotulada |
+| Interface web | ✅ | Tema escuro padrão (D-015), tokens únicos, Inter/Instrument Serif/JetBrains Mono locais, shell da tela 01, ilha preta no topo, ⌘K, demonstração isolada e rotulada. Claro continua. Layout móvel 02/03 ainda é o menu lateral (fase 5) |
 | Dot 2D (fallback) | ✅ | Sem boca, sem sobrancelhas, **tracinho de absorção preservado**, blush, acessórios removíveis, tinta por estado, carinho suprimido em erro/aprovação, movimento reduzido. Rotulado como “2D” |
 | Dot 3D (Blender) | ✅ técnico · 🟡 arte | `npm run blender:build` roda no Mac (Blender 4.5.14 LTS) e passa na validação: GLB base 164 KB, 3.500 triângulos, 19 clipes, 10 morphs dos olhos; 5 peças de 3–12 KB. Posters em `assets/dot/poster-*.png` (Cycles na CPU). **Aprovação artística pendente** (`ACOES_DO_JOAO.md`, grupo A). Validador Khronos não executado |
 | Dot 3D no app | ✅ Chromium/SwiftShader · 🟡 GPU real | `Dot3D.tsx` + `dot3d/DotScene.ts`: um único canvas, clipes `body_*`/`face_*` em camadas, olhar limitado (8°/5°), tom do agente/estado pelo resolvedor, acessório no socket, corações do `HeartEmitter`, crossfade de 200 ms, ≤ 30 fps, render sob demanda em repouso, pausa com a janela oculta, fallback 2D sem WebGL, com perda de contexto e com movimento reduzido. three.js num chunk carregado só quando o 3D aparece (página Mascote) |
@@ -79,7 +81,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Fase 3 da sessão 14/10: ligar o DotView ao app (semantic → motor, success → react, acessórios, anel da Sentinela, carinho/poke/dizzy, absorção) e o SplashScreen com “oi” e mãos. O GLB continua no repositório, fora do caminho padrão.
+Fase 5 da sessão 14/10: layout móvel (<760 px, telas 02–03) e a tela de aprovação (hash + CAS; Gmail só leitura). Depois PWA (fase 6).
 
 ## Como retomar em outra sessão
 

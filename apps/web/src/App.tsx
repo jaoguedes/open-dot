@@ -11,7 +11,7 @@ import { Routines } from "./views/Routines.tsx";
 import { Connections } from "./views/Connections.tsx";
 import { Mascot } from "./views/Mascot.tsx";
 import { ContextPanel } from "./components/ContextPanel.tsx";
-import { fmtTime } from "./format.ts";
+import { fmtHeaderStamp, fmtTime } from "./format.ts";
 
 function useSplash(loading: boolean, reduced: boolean): { show: boolean; fading: boolean } {
   const [show, setShow] = useState(true);
@@ -34,6 +34,7 @@ function useSplash(loading: boolean, reduced: boolean): { show: boolean; fading:
 }
 
 const SIDEBAR_AGENTS: AgentId[] = ["dot", "correio", "codigo", "sentinela"];
+const LIST_AGENTS: AgentId[] = ["correio", "codigo", "sentinela", "foco"];
 
 interface NavDef {
   path: string;
@@ -41,9 +42,10 @@ interface NavDef {
   icon: IconName;
 }
 const NAV: NavDef[] = [
-  { path: "/meu-dia", label: "Meu dia", icon: "inbox" },
-  { path: "/rotinas", label: "Rotinas", icon: "calendar" },
+  { path: "/meu-dia", label: "Meu dia", icon: "home" },
+  { path: "/rotinas", label: "Rotinas", icon: "clock" },
   { path: "/conexoes", label: "Conexões", icon: "plug" },
+  { path: "/mascote", label: "Mascote", icon: "sparkle" },
 ];
 
 export function App() {
@@ -98,7 +100,6 @@ export function App() {
   const agentMatch = /^\/agente\/(\w+)$/.exec(app.path);
   const agentId = (agentMatch?.[1] && agentMatch[1] in AGENTS ? agentMatch[1] : null) as AgentId | null;
   const route = agentId ? "agent" : app.path;
-  const header = headerFor(route, agentId);
   const showContext = route === "/" || route === "agent";
 
   let view;
@@ -130,7 +131,7 @@ export function App() {
       </a>
       <div className="app">
         {menuOpen && <div className="scrim" onClick={() => setMenuOpen(false)} />}
-        <Sidebar open={menuOpen} go={go} current={app.path} onPalette={() => setPalette(true)} />
+        <Sidebar open={menuOpen} go={go} current={app.path} />
         <div className="main">
           <div>
             {app.mode === "demo" && (
@@ -158,14 +159,13 @@ export function App() {
               <button className="icon-btn menu-btn" aria-label="Abrir menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
                 <Icon name="menu" />
               </button>
-              <div className="who">
-                {header.agent ? <AgentDot visual={app.visualFor(header.agent)} accessory={app.accessoryFor(header.agent)} size={36} animate={false} reducedMotion={app.reducedMotion} /> : <Icon name={header.icon} size={22} />}
-                <div>
-                  <h1 style={{ fontSize: 15, lineHeight: "20px" }}>{header.title}</h1>
-                  <div className="tiny">{header.subtitle}</div>
-                </div>
-              </div>
+              <time className="top-date hide-sm" dateTime={new Date().toISOString()}>{fmtHeaderStamp()}</time>
               <div className="spacer" />
+              <Island go={go} />
+              <div className="spacer" />
+              <button className="search" onClick={() => setPalette(true)} aria-label="Pergunte ao Dot">
+                <Icon name="search" size={16} /> Pergunte ao Dot <kbd>⌘K</kbd>
+              </button>
               {showContext && (
                 <button className="icon-btn" aria-label="Mostrar contexto" aria-expanded={ctxOpen} onClick={() => setCtxOpen((v) => !v)}>
                   <Icon name="panel" />
@@ -182,7 +182,6 @@ export function App() {
           </div>
         </div>
       </div>
-      <Island go={go} />
       {palette && <Palette onClose={() => setPalette(false)} go={go} />}
       <div className="sr-only" aria-live="polite">
         {app.announcement}
@@ -191,23 +190,7 @@ export function App() {
   );
 }
 
-function headerFor(route: string, agent: AgentId | null): { title: string; subtitle: string; agent?: AgentId; icon: IconName } {
-  if (agent) return { title: AGENTS[agent].name, subtitle: AGENTS[agent].description, agent, icon: "sparkle" };
-  switch (route) {
-    case "/meu-dia":
-      return { title: "Meu dia", subtitle: "Resultados dos seus agentes", icon: "inbox" };
-    case "/rotinas":
-      return { title: "Rotinas", subtitle: "Quando seus agentes trabalham", icon: "calendar" };
-    case "/conexoes":
-      return { title: "Conexões", subtitle: "Permissões e contas", icon: "plug" };
-    case "/mascote":
-      return { title: "Mascote & aparência", subtitle: "Presença, movimento e tema", icon: "sparkle" };
-    default:
-      return { title: "Dot", subtitle: "Seu assistente pessoal", agent: "dot", icon: "sparkle" };
-  }
-}
-
-function Sidebar({ open, go, current, onPalette }: { open: boolean; go: (p: string) => void; current: string; onPalette: () => void }) {
+function Sidebar({ open, go, current }: { open: boolean; go: (p: string) => void; current: string }) {
   const app = useApp();
   const pending = app.snap?.feed.filter((f) => f.kind !== "notice" && f.kind !== "file_organized").length ?? 0;
   const usage = app.snap?.usage;
@@ -225,13 +208,10 @@ function Sidebar({ open, go, current, onPalette }: { open: boolean; go: (p: stri
   };
   return (
     <nav className={`sidebar ${open ? "open" : ""}`} aria-label="Navegação principal">
-      <div className="brand">
-        <AgentDot visual={app.visualFor("dot")} accessory="none" size={26} animate={false} reducedMotion={app.reducedMotion} label="Open Dot" />
-        open dot
-      </div>
-      <button className="search" onClick={onPalette} aria-label="Buscar ou ir para (Command K)">
-        <Icon name="search" size={16} /> Buscar ou ir para… <kbd>⌘K</kbd>
-      </button>
+      <a className="brand" href="/meu-dia" onClick={(e) => (e.preventDefault(), go("/meu-dia"))}>
+        <AgentDot visual={app.visualFor("dot")} accessory="none" size={30} animate={false} reducedMotion={app.reducedMotion} label="Open Dot" />
+        <span className="od-wordmark"><span>open</span><b>dot</b></span>
+      </a>
       <div className="nav">
         {NAV.map((n) => (
           <a key={n.path} href={n.path} className="nav-item" aria-current={current === n.path ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(n.path))}>
@@ -242,36 +222,34 @@ function Sidebar({ open, go, current, onPalette }: { open: boolean; go: (p: stri
       </div>
       <div className="nav">
         <div className="nav-label">Seus agentes</div>
-        {SIDEBAR_AGENTS.map((a) => {
-          const path = a === "dot" ? "/" : `/agente/${a}`;
+        {LIST_AGENTS.map((a) => {
+          const path = `/agente/${a}`;
+          const v = app.visualFor(a);
+          const feedHit = app.snap?.feed.some((f) => f.agentId === a && (f.kind === "ci_failure" || f.kind === "site_incident"));
+          const st = v.semantic === "error" || feedHit ? "err" : v.semantic === "working" || v.semantic === "thinking" ? "busy" : a === "sentinela" ? "ok" : "";
           return (
             <a key={a} href={path} className="nav-item agent-item" aria-current={current === path ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(path))}>
-              <AgentDot visual={app.visualFor(a)} accessory={app.accessoryFor(a)} size={34} animate={false} reducedMotion={app.reducedMotion} />
+              <AgentDot visual={v} accessory={app.accessoryFor(a)} size={38} animate={false} reducedMotion={app.reducedMotion} />
               <span className="lines">
                 <span>{AGENTS[a].name}</span>
                 <span>{statusLine(a)}</span>
               </span>
+              <span className={`agent-dot-status ${st}`} aria-hidden="true" />
             </a>
           );
         })}
       </div>
-      <div className="nav">
-        <div className="nav-label">Personalizar</div>
-        <a href="/mascote" className="nav-item" aria-current={current === "/mascote" ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/mascote"))}>
-          <Icon name="sparkle" /> Mascote & aparência
-        </a>
-      </div>
       <div className="sidebar-foot">
         <div>
           <div className="tiny" style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>Uso da IA hoje{app.mode === "demo" ? " · exemplo" : ""}</span>
-            <span>{usage ? `${usage.calls}/${usage.limits.calls}` : "—"}</span>
+            <span>IA hoje{app.mode === "demo" ? " · exemplo" : ""}</span>
+            <span className="mono">{usage ? `${usage.calls} / ${usage.limits.calls}` : "—"}</span>
           </div>
           <div className="meter" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Chamadas de IA usadas hoje">
             <i style={{ width: `${pct}%` }} />
           </div>
           <div className="tiny" style={{ marginTop: 6 }}>
-            {usage && !usage.aiConfigured ? "IA não configurada: resumos por regras" : "Limite gratuito com pausa automática"}
+            Custo R$ 0. {usage && !usage.aiConfigured ? "Resumos por regras." : "Sem cobrança extra."}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -302,8 +280,6 @@ function ThemeButton() {
 
 function Island({ go }: { go: (p: string) => void }) {
   const app = useApp();
-  const [compact, setCompact] = useState(false);
-  const [signal, setSignal] = useState(0);
   const dom = useMemo(() => {
     let best = app.visualFor("dot");
     for (const a of SIDEBAR_AGENTS) {
@@ -313,33 +289,21 @@ function Island({ go }: { go: (p: string) => void }) {
     return best;
   }, [app]);
   const digest = app.snap?.feed.find((f) => f.kind === "email_digest");
-  const line1 =
-    dom.semantic === "idle" || dom.semantic === "success" ? (digest ? "Seu resumo está pronto." : "Tudo no seu tempo.") : `${AGENTS[dom.agentId].name}: ${dom.label.toLowerCase()}`;
-  const line2 = dom.reason ?? (digest ? `${digest.body.counts?.important ?? 0} itens para olhar quando puder` : "Nada pendente agora");
+  const line1 = `${AGENTS[dom.agentId].name} ${dom.label.toLowerCase()}`;
+  const line2 = dom.reason ?? (digest ? `${digest.body.counts?.important ?? 0} mensagens desde as 17h` : "Nada pendente agora");
   return (
-    <aside className={`island ${compact ? "compact" : ""}`} aria-label="Ilha do Dot">
+    <aside className="island" aria-label="Ilha do Dot">
       <AgentDot
         visual={dom}
         accessory={app.accessoryFor(dom.agentId)}
-        size={44}
+        size={40}
         reducedMotion={app.reducedMotion}
         interactive
-        affectionSignal={signal}
         onAffection={(r) => r === "suppressed" && app.announce("Carinho pausado: há algo que precisa da sua atenção.")}
       />
-      <div className="txt" role="status">
+      <button type="button" className="txt" role="status" onClick={() => go("/")} aria-label="Abrir conversa com o Dot">
         <span>{line1}</span>
         <span>{line2}</span>
-      </div>
-      <span className="sep" aria-hidden="true" />
-      <button className="icon-btn more" aria-label="Abrir conversa com o Dot" onClick={() => go("/")}>
-        <Icon name="chat" />
-      </button>
-      <button className="icon-btn more" aria-label="Fazer carinho no Dot" onClick={() => setSignal((n) => n + 1)}>
-        <Icon name="heart" />
-      </button>
-      <button className="icon-btn" aria-label={compact ? "Expandir ilha" : "Recolher ilha"} aria-expanded={!compact} onClick={() => setCompact((c) => !c)}>
-        <Icon name={compact ? "plus" : "minus"} />
       </button>
     </aside>
   );

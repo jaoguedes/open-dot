@@ -18,7 +18,11 @@ export function demoSnapshot(): Snapshot {
     owner: { email: "exemplo@demo.local", name: "João", timeZone: "America/Sao_Paulo" },
     configured: { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false },
     connections: [],
-    monitors: [],
+    monitors: [
+      { id: "m1", url: "https://exemplo.com", label: "exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
+      { id: "m2", url: "https://loja.exemplo.com", label: "loja.exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
+      { id: "m3", url: "https://docs.exemplo.com", label: "docs.exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
+    ],
     usage: { day: today.toISOString().slice(0, 10), calls: 12, tokens: 24_000, limits: { calls: 50, tokens: 100_000 }, aiConfigured: false, privateAllowed: false },
     routines: [{ id: "demo-rt", agentId: "correio", kind: "email_review", times: ["08:00", "17:00"], timeZone: "America/Sao_Paulo", weekdays: [], enabled: true, nextRunAt: at(17) }],
     runs: [{ id: "demo-run", agentId: "correio", kind: "email_review", state: "succeeded", scheduledAt: at(8), late: false, attempt: 1, errorCode: null, errorMessage: null, updatedAt: at(8, 2) }],

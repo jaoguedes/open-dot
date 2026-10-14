@@ -1,0 +1,43 @@
+/* Tokens do sistema visual (tela 05, D-015). Nenhuma cor solta nos componentes. */
+@font-face { font-family: "Inter"; src: url("/fonts/Inter-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("/fonts/Inter-Medium.woff") format("woff"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("/fonts/Inter-SemiBold.woff") format("woff"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Instrument Serif"; src: url("/fonts/InstrumentSerif-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "JetBrains Mono"; src: url("/fonts/JetBrainsMono-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+
+:root {
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Instrument Serif", "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", menlo, monospace;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+  --r-ctl: 12px; --r-card: 20px; --r-float: 22px; --r-pill: 999px;
+  --sidebar: 260px; --context: 280px; --reading: 920px;
+
+  --bg: #050608; --surface: #0E1014; --surface-2: #16181E; --text: #F3F4F7; --text-2: #9AA0AE; --text-3: #6B7181; --border: #1A1D24;
+  --accent: #3361FF; --accent-soft: rgba(51, 97, 255, 0.16); --on-accent: #FFFFFF;
+  --ok: #2BD47F; --warn: #FFB627; --err: #FF4D6A; --info: #5B8CFF; --muted: #6B7181;
+  --agent-correio: #5B8CFF; --agent-codigo: #8C6BFF; --agent-sentinela: #45E2BE; --agent-foco: #A98BFF;
+  --glass: #000000; --glass-border: #22252E;
+  --shadow: 0 12px 40px rgba(0,0,0,.6);
+  --focus: #8EA6FF;
+  --hero: none;
+  --btn-primary-bg: #F3F4F7; --btn-primary-fg: #0B0C10;
+  --glow-mail: radial-gradient(closest-side, rgba(54,216,244,.45), rgba(63,123,255,.25) 50%, transparent);
+  --glow-need: radial-gradient(closest-side, rgba(255,182,39,.42), rgba(255,111,163,.2) 55%, transparent);
+  --glow-site: radial-gradient(closest-side, rgba(69,226,190,.4), rgba(140,107,255,.2) 55%, transparent);
+  --wordmark-dot: linear-gradient(135deg, #36D8F4, #3F7BFF 50%, #9E83FF);
+  --need-border: #2A2414;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #F4F5F8; --surface: #FFFFFF; --surface-2: #ECEEF3; --text: #12141A; --text-2: #5C6370; --text-3: #7A8190; --border: #D8DCE6;
+  --accent: #3361FF; --accent-soft: rgba(51, 97, 255, 0.10); --on-accent: #FFFFFF;
+  --ok: #1A9A5A; --warn: #B57900; --err: #C22745; --info: #3361FF; --muted: #5C6370;
+  --glass: #FFFFFF; --glass-border: #D8DCE6;
+  --shadow: 0 8px 28px rgba(18,20,26,.08);
+  --focus: #2748C7;
+  --btn-primary-bg: #12141A; --btn-primary-fg: #F3F4F7;
+  --need-border: #E8D7A8;
+  color-scheme: light;
+}

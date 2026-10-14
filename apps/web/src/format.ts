@@ -14,6 +14,21 @@ export function fmtDateTime(iso: string | null | undefined, tz = TZ): string {
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: tz }).format(new Date(iso));
 }
 
+export function fmtHeaderStamp(tz = TZ): string {
+  const d = new Date();
+  const wd = new Intl.DateTimeFormat("pt-BR", { weekday: "short", timeZone: tz }).format(d).replace(".", "").slice(0, 3).toUpperCase();
+  const day = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", timeZone: tz }).format(d);
+  const mo = new Intl.DateTimeFormat("pt-BR", { month: "short", timeZone: tz }).format(d).replace(".", "").slice(0, 3).toUpperCase();
+  return `${wd} · ${day} ${mo} · ${fmtTime(d.toISOString(), tz)}`;
+}
+
+export function needYouLine(n: number): string {
+  if (n <= 0) return "Tudo calmo por aqui.";
+  const w = ["", "Uma", "Duas", "Três", "Quatro", "Cinco", "Seis", "Sete", "Oito", "Nove", "Dez"];
+  if (n === 1) return "Uma coisa pede você.";
+  return `${w[n] ?? String(n)} coisas pedem você.`;
+}
+
 export function greeting(tz = TZ): string {
   const h = Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: tz }).format(new Date()));
   return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
