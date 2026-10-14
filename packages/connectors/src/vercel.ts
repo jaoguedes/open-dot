@@ -35,3 +35,27 @@ export async function listDeployments(fetchImpl: typeof fetch, p: { token: strin
     inspectorUrl: typeof d.inspectorUrl === "string" && d.inspectorUrl.startsWith("https://vercel.com/") ? d.inspectorUrl : null,
   }));
 }
+
+/**
+ * Web Analytics no Hobby pode existir no painel; a API de insights costuma recusar o plano Free.
+ * Nunca inventa visitas: se a leitura falhar, devolve unavailable.
+ */
+export async function webAnalyticsHint(
+  fetchImpl: typeof fetch,
+  p: { token: string; projectId: string; teamId?: string },
+): Promise<{ available: false; note: string }> {
+  const q = new URLSearchParams({ projectId: p.projectId });
+  if (p.teamId) q.set("teamId", p.teamId);
+  try {
+    const resp = await fetchWithTimeout(fetchImpl, `https://api.vercel.com/v1/web/insights?${q}`, { headers: { authorization: `Bearer ${p.token}` } }, 10_000);
+    if (resp.ok) {
+      return { available: false, note: "A API de insights respondeu, mas este app não lê números de visita ainda — só deployments. Sem dado inventado." };
+    }
+    return {
+      available: false,
+      note: `Web Analytics do Hobby não está disponível neste token (HTTP ${resp.status}). Visitas só aparecem se a conta tiver o recurso gratuito ativo; nada foi inventado.`,
+    };
+  } catch {
+    return { available: false, note: "Não foi possível consultar Web Analytics. Deployments continuam só leitura. Sem visitas inventadas." };
+  }
+}

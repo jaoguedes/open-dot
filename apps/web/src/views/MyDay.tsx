@@ -9,7 +9,7 @@ import type { FeedEntry } from "../api.ts";
 type Filter = "all" | "need" | "sources";
 
 function isNeed(it: FeedEntry): boolean {
-  if (it.kind === "ci_failure" || it.kind === "site_incident") return true;
+  if (it.kind === "ci_failure" || it.kind === "site_incident" || it.kind === "quote_alert") return true;
   if (it.kind === "email_digest") return (it.body.counts?.important ?? 0) > 0;
   return false;
 }
@@ -22,7 +22,7 @@ export function MyDay() {
   const name = snap?.owner?.name?.split(" ")[0];
   const digest = snap?.feed.find((f) => f.kind === "email_digest");
   const items = (snap?.feed ?? []).filter((f) => f.kind !== "notice");
-  const shown = items.filter((it) => (filter === "all" ? true : filter === "need" ? isNeed(it) : Boolean(it.body.href) || it.kind === "email_digest"));
+  const shown = items.filter((it) => (filter === "all" ? true : filter === "need" ? isNeed(it) : Boolean(it.body.href) || it.kind === "email_digest" || it.kind === "news_digest"));
   const need = digest?.body.counts?.important ?? items.filter(isNeed).length;
   const reviewed = digest?.body.total ?? 0;
   const monitors = snap?.monitors ?? [];
@@ -31,7 +31,7 @@ export function MyDay() {
   const gmail = snap?.connections.find((c) => c.provider === "gmail" && c.status !== "disabled");
   const visual = (() => {
     let best = app.visualFor("dot");
-    for (const a of ["correio", "codigo", "sentinela"] as AgentId[]) {
+    for (const a of ["correio", "codigo", "sentinela", "noticias", "mercado", "marketing"] as AgentId[]) {
       const v = app.visualFor(a);
       if (v.semantic === "error" || v.semantic === "waiting") return v;
       if (v.semantic === "working") best = v;
@@ -59,7 +59,7 @@ export function MyDay() {
           )}
         </div>
         <div className="hero-dot">
-          <AgentDot visual={visual} accessory={app.accessoryFor(visual.agentId)} size={280} reducedMotion={app.reducedMotion} interactive />
+          <AgentDot visual={visual} accessory={app.accessoryFor(visual.agentId)} size={280} reducedMotion={app.reducedMotion} interactive antennaPulse={visual.agentId === "noticias" && items.some((f) => f.kind === "news_digest" && f.freshness === "fresh")} />
         </div>
       </section>
 
@@ -143,7 +143,7 @@ export function MyDay() {
             ) : (
               nextRoutines.map((r) => (
                 <div key={r.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 14 }}>
-                  <span>{r.kind === "email_review" ? "Revisão de e-mail" : r.kind}</span>
+                  <span>{r.kind === "email_review" ? "Revisão de e-mail" : r.kind === "news_review" ? "O mundo hoje" : r.kind}</span>
                   <span className="mono" style={{ color: "var(--text-2)" }}>{r.nextRunAt ? fmtTime(r.nextRunAt) : r.times[0]}</span>
                 </div>
               ))

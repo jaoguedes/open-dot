@@ -57,6 +57,7 @@ async function main() {
   const googleSecret = await ask("GOOGLE_CLIENT_SECRET (oculto): ", true);
   const ownerEmail = await ask("Seu e-mail Google (dono único): ");
   const groq = await ask("GROQ_API_KEY (opcional, Enter para pular; oculto): ", true);
+  const finnhub = await ask("FINNHUB_API_KEY (opcional, plano gratuito, Enter para pular; oculto): ", true);
 
   // URL pública é variável não secreta: vai para o wrangler.jsonc.
   const wr = readFileSync("wrangler.jsonc", "utf8").replace(/"APP_ORIGIN":\s*"[^"]*"/, `"APP_ORIGIN": "${origin}"`);
@@ -79,6 +80,7 @@ async function main() {
     GOOGLE_CLIENT_SECRET: googleSecret,
     OWNER_EMAIL: ownerEmail,
     ...(groq ? { GROQ_API_KEY: groq } : {}),
+    ...(finnhub ? { FINNHUB_API_KEY: finnhub } : {}),
   };
   for (const [name, value] of Object.entries(secrets)) {
     const res = npx(["secret", "put", name], value);

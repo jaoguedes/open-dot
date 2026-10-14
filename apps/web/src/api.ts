@@ -17,7 +17,7 @@ export interface FeedEntry {
   id: string;
   agentId: AgentId;
   runId: string | null;
-  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice" | "file_organized";
+  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice" | "file_organized" | "news_digest" | "quote_alert" | "marketing_ideas";
   title: string;
   body: {
     headline?: string;
@@ -32,6 +32,11 @@ export interface FeedEntry {
     correlation?: string | null;
     href?: string | null;
     actions?: Array<{ kind: string; label: string }>;
+    worldToday?: Array<{ theme: string; items: Array<{ title: string; link: string; outlet: string; publishedAt: string | null }> }>;
+    politics?: Array<{ topic: string; eachSide: Array<{ outlet: string; title: string; link: string }>; notice: string | null }>;
+    drafts?: Array<{ text: string; sources: Array<{ title: string; link: string; outlet: string }>; status: "draft"; publish: false }>;
+    published?: boolean;
+    disclaimer?: string;
   };
   freshness: "fresh" | "stale" | "partial";
   coverage: { analyzed: number; available: number | null; syncedUntil: string | null; fieldsRead: string[]; partial: boolean; partialReason?: string } | null;
@@ -40,12 +45,31 @@ export interface FeedEntry {
 
 export interface Connection {
   id: string;
-  provider: "gmail" | "github" | "vercel";
+  provider: "gmail" | "github" | "vercel" | "gsc";
   status: "connected" | "reauth_required" | "error" | "disabled";
   accountLabel: string | null;
   scopes: string[];
   lastSyncAt: string | null;
   lastError: string | null;
+}
+
+export interface AgentSource {
+  id: string;
+  label: string;
+  detail: string;
+}
+
+export interface AgentCard {
+  id: "noticias" | "mercado" | "marketing";
+  name: string;
+  description: string;
+  enabled: boolean;
+  lastTestAt: string | null;
+  lastError: string | null;
+  sources: AgentSource[];
+  missing: string[];
+  note: string;
+  quotes?: Array<{ symbol: string; price: number; changePct: number | null; source: string; quotedAt: string; fetchedAt: string; stale: boolean; disclaimer: string }>;
 }
 
 export interface Configured {
@@ -57,6 +81,7 @@ export interface Configured {
   vercel: boolean;
   ai: boolean;
   aiPrivate: boolean;
+  finnhub: boolean;
 }
 
 export interface Routine {
@@ -118,6 +143,7 @@ export interface Snapshot {
   usage: Usage | null;
   monitors: Monitor[];
   status: Array<AgentVisual & { revision: number }>;
+  agents: AgentCard[];
 }
 
 export class ApiError extends Error {
@@ -157,7 +183,11 @@ export const api = {
   devLogin: () => req<{ ok: true }>("/api/session/dev", { method: "POST" }),
   logout: () => req<{ ok: true }>("/api/logout", { method: "POST" }),
   feed: () => req<{ items: FeedEntry[]; next: string | null }>("/api/feed"),
-  connections: () => req<{ configured: Configured; connections: Connection[] }>("/api/connections"),
+  connections: () => req<{ configured: Configured; connections: Connection[]; agents: AgentCard[] }>("/api/connections"),
+  startGsc: () => req<{ url: string }>("/api/connections/gsc/start", { method: "POST" }),
+  testAgent: (id: string) => req<{ ok: true; failures?: string[]; missing?: string[]; published?: false; traded?: false; note?: string }>(`/api/agents/${encodeURIComponent(id)}/test`, { method: "POST" }),
+  disableAgent: (id: string) => req<{ ok: true; enabled: false }>(`/api/agents/${encodeURIComponent(id)}/disable`, { method: "POST" }),
+  enableAgent: (id: string) => req<{ ok: true; enabled: true }>(`/api/agents/${encodeURIComponent(id)}/enable`, { method: "POST" }),
   routines: () => req<{ routines: Routine[] }>("/api/routines"),
   runs: () => req<{ runs: RunInfo[] }>("/api/runs"),
   usage: () => req<Usage>("/api/usage"),
@@ -244,7 +274,7 @@ export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Sn
   };
   const [feed, conns, routines, runs, usage, monitors, status] = await Promise.all([
     settle("feed", api.feed(), { items: [], next: null }),
-    settle("conexões", api.connections(), { configured: emptyConfigured, connections: [] }),
+    settle("conexões", api.connections(), { configured: emptyConfigured, connections: [], agents: [] }),
     settle("rotinas", api.routines(), { routines: [] }),
     settle("execuções", api.runs(), { runs: [] }),
     settle("uso", api.usage(), null),
@@ -252,9 +282,9 @@ export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Sn
     settle("estado", api.status(), { agents: [] }),
   ]);
   return {
-    snap: { owner, feed: feed.items, connections: conns.connections, configured: conns.configured, routines: routines.routines, runs: runs.runs, usage, monitors: monitors.monitors, status: status.agents },
+    snap: { owner, feed: feed.items, connections: conns.connections, configured: conns.configured, routines: routines.routines, runs: runs.runs, usage, monitors: monitors.monitors, status: status.agents, agents: conns.agents ?? [] },
     failures,
   };
 }
 
-export const emptyConfigured: Configured = { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false };
+export const emptyConfigured: Configured = { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false };

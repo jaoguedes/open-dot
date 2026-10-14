@@ -15,3 +15,7 @@ export * from "./ai/config.ts";
 export * from "./ai/budget.ts";
 export * from "./ai/router.ts";
 export * from "./dot/index.ts";
+export * from "./news-feeds.ts";
+export * from "./news.ts";
+export * from "./quotes.ts";
+export * from "./marketing.ts";

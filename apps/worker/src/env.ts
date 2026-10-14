@@ -31,6 +31,8 @@ export const EnvSchema = z.object({
 
   GROQ_API_KEY: z.string().optional(),
   GROQ_ZDR_CONFIRMED: z.enum(["true", "false"]).optional(),
+  /** Finnhub free (ações). Sem chave, cripto e câmbio continuam. */
+  FINNHUB_API_KEY: z.string().optional(),
 
   AI_CALLS_PER_DAY: z.coerce.number().int().min(0).max(1000).default(50),
   AI_TOKENS_PER_DAY: z.coerce.number().int().min(0).max(1_000_000).default(100_000),
@@ -57,5 +59,6 @@ export function configured(env: Env) {
     vercel: Boolean(env.VERCEL_TOKEN && env.VERCEL_PROJECT_ID),
     ai: Boolean(env.GROQ_API_KEY),
     aiPrivate: env.GROQ_ZDR_CONFIRMED === "true",
+    finnhub: Boolean(env.FINNHUB_API_KEY),
   };
 }

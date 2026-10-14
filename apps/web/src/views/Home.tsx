@@ -102,6 +102,10 @@ function EmptyState({ agentId }: { agentId: AgentId }) {
     title = "GitHub ainda não conectado.";
     text = "O Código lê PRs, issues e workflows dos repositórios que você escolher no GitHub App.";
     action = { label: "Ver conexões", path: "/conexoes" };
+  } else if (agentId === "noticias" || agentId === "mercado" || agentId === "marketing") {
+    title = "Este agente ainda não tem dados.";
+    text = AGENTS[agentId].description + " Em Conexões você testa, vê o que falta e desativa. Nada é inventado.";
+    action = { label: "Abrir conexões", path: "/conexoes" };
   } else if (next) {
     text = `Próxima revisão: ${fmtTime(next)}.`;
   }

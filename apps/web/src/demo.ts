@@ -16,7 +16,7 @@ const at = (h: number, m = 0) => {
 export function demoSnapshot(): Snapshot {
   return {
     owner: { email: "exemplo@demo.local", name: "João", timeZone: "America/Sao_Paulo" },
-    configured: { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false },
+    configured: { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false },
     connections: [],
     monitors: [
       { id: "m1", url: "https://exemplo.com", label: "exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
@@ -31,6 +31,48 @@ export function demoSnapshot(): Snapshot {
       { ...toVisual("correio", "success"), revision: 1 },
       { ...toVisual("codigo", "idle"), revision: 1 },
       { ...toVisual("sentinela", "idle"), revision: 1 },
+      { ...toVisual("noticias", "idle"), revision: 1 },
+      { ...toVisual("mercado", "idle"), revision: 1 },
+      { ...toVisual("marketing", "idle"), revision: 1 },
+    ],
+    agents: [
+      {
+        id: "noticias",
+        name: "Notícias",
+        description: "Exemplo fictício — feeds não foram buscados.",
+        enabled: true,
+        lastTestAt: null,
+        lastError: null,
+        sources: [
+          { id: "ex-bbc", label: "BBC News · tecnologia (exemplo)", detail: "https://feeds.bbci.co.uk/news/technology/rss.xml" },
+          { id: "ex-npr", label: "NPR · tecnologia (exemplo)", detail: "https://feeds.npr.org/1019/rss.xml" },
+        ],
+        missing: ["Demonstração: nenhuma fonte real foi consultada."],
+        note: "Exemplos fictícios. Só RSS/Atom da allowlist no modo ao vivo.",
+      },
+      {
+        id: "mercado",
+        name: "Mercado",
+        description: "Exemplo fictício — sem cotação real.",
+        enabled: true,
+        lastTestAt: null,
+        lastError: null,
+        sources: [{ id: "BTC", label: "Bitcoin (BTC)", detail: "CoinGecko · exemplo" }],
+        quotes: [],
+        missing: ["Demonstração: sem cotação real. Nada é recomendação."],
+        note: "Só informativo, não é recomendação",
+      },
+      {
+        id: "marketing",
+        name: "Marketing",
+        description: "Exemplo fictício — Search Console e Vercel não conectados.",
+        enabled: true,
+        lastTestAt: null,
+        lastError: null,
+        sources: [],
+        missing: ["Demonstração: Search Console e Vercel não conectados.", "Redes sociais: planejadas, sem implementar."],
+        note: "Ideias de post são rascunho. Publicar nunca é automático.",
+      },
     ],
     feed: [
       {
@@ -80,6 +122,66 @@ export function demoSnapshot(): Snapshot {
         createdAt: at(7, 20),
         coverage: null,
         body: { summary: "CI terminou com falha no commit a1b2c3d. Os logs não foram baixados automaticamente." },
+      },
+      {
+        id: "demo-news",
+        agentId: "noticias",
+        runId: null,
+        kind: "news_digest",
+        title: "O mundo hoje (exemplo fictício)",
+        freshness: "fresh",
+        createdAt: at(8, 5),
+        coverage: { analyzed: 4, available: 4, syncedUntil: at(8), fieldsRead: ["título", "link", "veículo"], partial: false },
+        body: {
+          headline: "O mundo hoje",
+          summary: "Exemplo fictício. Títulos de feeds públicos; o Dot não opina.",
+          worldToday: [
+            {
+              theme: "tecnologia",
+              items: [{ title: "Chip experimental reduz consumo (exemplo)", link: "https://example.com/tech", outlet: "BBC News", publishedAt: at(7) }],
+            },
+            {
+              theme: "politica",
+              items: [{ title: "Congresso discute orçamento (exemplo)", link: "https://example.com/pol", outlet: "NPR", publishedAt: at(6, 30) }],
+            },
+          ],
+          politics: [
+            {
+              topic: "Congresso discute orçamento (exemplo)",
+              eachSide: [
+                { outlet: "BBC News", title: "Congresso discute orçamento (exemplo BBC)", link: "https://example.com/pol-bbc" },
+                { outlet: "NPR", title: "Congresso discute orçamento (exemplo NPR)", link: "https://example.com/pol-npr" },
+              ],
+              notice: null,
+            },
+          ],
+        },
+      },
+      {
+        id: "demo-quote",
+        agentId: "mercado",
+        runId: null,
+        kind: "quote_alert",
+        title: "BTC passou do limite (exemplo fictício)",
+        freshness: "stale",
+        createdAt: at(8, 6),
+        coverage: null,
+        body: { summary: "Bitcoin variou 9,2% (fonte CoinGecko, exemplo). Só informativo, não é recomendação.", disclaimer: "Só informativo, não é recomendação" },
+      },
+      {
+        id: "demo-mkt",
+        agentId: "marketing",
+        runId: null,
+        kind: "marketing_ideas",
+        title: "Ideias de post (rascunho, exemplo fictício)",
+        freshness: "fresh",
+        createdAt: at(8, 7),
+        coverage: null,
+        body: {
+          summary: "Rascunho a partir da notícia de exemplo. Nada foi publicado.",
+          published: false,
+          drafts: [{ text: "Chip experimental reduz consumo — rascunho (exemplo fictício). Nada foi publicado.", sources: [{ title: "Chip experimental", link: "https://example.com/tech", outlet: "BBC News" }], status: "draft", publish: false }],
+        },
       },
     ],
   };

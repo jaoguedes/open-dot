@@ -3,7 +3,7 @@
  * Nada aqui depende de rede, banco ou navegador.
  */
 
-export const AGENT_IDS = ["dot", "correio", "codigo", "sentinela", "social", "foco"] as const;
+export const AGENT_IDS = ["dot", "correio", "codigo", "sentinela", "social", "foco", "noticias", "mercado", "marketing"] as const;
 export type AgentId = (typeof AGENT_IDS)[number];
 
 /** Estados persistidos de uma execução (capítulo 13 do PDF). */
@@ -25,7 +25,7 @@ export const TERMINAL_RUN_STATES: ReadonlySet<RunState> = new Set(["succeeded", 
 /** Classe de sensibilidade de um dado — decide para qual provedor de IA ele pode ir. */
 export type DataClass = "public" | "personal" | "private_email" | "private_code" | "secret";
 
-export type EvidenceSource = "gmail" | "github" | "vercel" | "http" | "demo";
+export type EvidenceSource = "gmail" | "github" | "vercel" | "http" | "demo" | "rss" | "quotes" | "gsc";
 
 /** Cobertura: quanto da fonte foi efetivamente lido. */
 export interface Coverage {
@@ -70,7 +70,7 @@ export interface FeedItem {
   ownerId: string;
   agentId: AgentId;
   runId: string | null;
-  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice" | "file_organized";
+  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice" | "file_organized" | "news_digest" | "quote_alert" | "marketing_ideas";
   title: string;
   /** Por que importa, em uma frase. */
   summary: string;
@@ -87,7 +87,7 @@ export type ConnectionStatus = "not_connected" | "connected" | "reauth_required"
 
 export interface ConnectionSummary {
   id: string;
-  provider: "gmail" | "github" | "vercel" | "http";
+  provider: "gmail" | "github" | "vercel" | "http" | "gsc";
   status: ConnectionStatus;
   accountLabel: string | null;
   scopes: string[];

@@ -13,6 +13,8 @@ export const GOOGLE_REVOKE = "https://oauth2.googleapis.com/revoke";
 
 export const LOGIN_SCOPES = ["openid", "email", "profile"];
 export const GMAIL_READ_SCOPES = ["openid", "email", "https://www.googleapis.com/auth/gmail.readonly"];
+/** Search Console só leitura. Conferido em developers.google.com/webmaster-tools/v1/how-tos/authorizing (14/10/2026). */
+export const GSC_READ_SCOPES = ["openid", "email", "https://www.googleapis.com/auth/webmasters.readonly"];
 
 export function authUrl(p: { clientId: string; redirectUri: string; scopes: string[]; state: string; codeChallenge: string; nonce?: string; loginHint?: string; offline: boolean }): string {
   const u = new URL(GOOGLE_AUTH);

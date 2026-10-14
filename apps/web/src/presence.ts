@@ -14,7 +14,8 @@ export function agentPresence(agentId: AgentId, visual: AgentVisual, feed: FeedE
   const mine = feed.filter((f) => f.agentId === agentId);
   const incidents = mine.filter((f) => f.kind === "ci_failure" || f.kind === "site_incident");
   const digest = mine.find((f) => f.kind === "email_digest");
-  const needN = digest?.body.counts?.important ?? 0;
+  const quoteAlerts = mine.filter((f) => f.kind === "quote_alert").length;
+  const needN = (digest?.body.counts?.important ?? 0) + quoteAlerts;
   const openInc = monitors.filter((m) => m.incident?.open).length;
 
   if (visual.semantic === "error" || incidents.length > 0 || (agentId === "sentinela" && openInc > 0)) {

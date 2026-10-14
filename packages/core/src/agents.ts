@@ -17,7 +17,10 @@ export type ToolName =
   | "vercel.redeploy"
   | "http.check"
   | "feed.read"
-  | "feed.publish";
+  | "feed.publish"
+  | "rss.read"
+  | "quotes.read"
+  | "gsc.read";
 
 export type ToolKind = "read" | "write";
 
@@ -33,6 +36,9 @@ export const TOOL_KIND: Record<ToolName, ToolKind> = {
   "http.check": "read",
   "feed.read": "read",
   "feed.publish": "write",
+  "rss.read": "read",
+  "quotes.read": "read",
+  "gsc.read": "read",
 };
 
 /** Escritas que exigem aprovação vinculada ao payload, sempre. */
@@ -112,6 +118,33 @@ export const AGENTS: Record<AgentId, AgentProfile> = {
     dataClass: "personal",
     maxModelStepsPerJob: 0,
     maxToolCallsPerStep: 0,
+  },
+  noticias: {
+    id: "noticias",
+    name: "Notícias",
+    description: "Lê feeds RSS/Atom públicos da allowlist (tecnologia, mundo, Brasil, política). Sem scraping de paywall. Tom neutro; política só com ≥ 2 veículos.",
+    tools: ["rss.read", "feed.publish"],
+    dataClass: "public",
+    maxModelStepsPerJob: 2,
+    maxToolCallsPerStep: 4,
+  },
+  mercado: {
+    id: "mercado",
+    name: "Mercado",
+    description: "Cotações públicas (cripto, câmbio, ações). Só informativo, não é recomendação. Sem corretora, carteira ou ordem.",
+    tools: ["quotes.read", "feed.publish"],
+    dataClass: "public",
+    maxModelStepsPerJob: 1,
+    maxToolCallsPerStep: 4,
+  },
+  marketing: {
+    id: "marketing",
+    name: "Marketing",
+    description: "Métricas de leitura: Vercel Analytics (se o plano gratuito tiver) e Search Console. Redes sociais ficam planejadas. Ideias de post são rascunho; publicar nunca é automático.",
+    tools: ["vercel.read", "gsc.read", "feed.publish"],
+    dataClass: "personal",
+    maxModelStepsPerJob: 2,
+    maxToolCallsPerStep: 4,
   },
 };
 

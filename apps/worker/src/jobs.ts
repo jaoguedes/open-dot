@@ -8,6 +8,8 @@ import * as repo from "./repo.ts";
 import { syncGmail } from "./services/gmail.ts";
 import { runEmailReview } from "./services/email-review.ts";
 import { organizeUpload } from "./services/uploads.ts";
+import { ingestNews, publishWorldToday } from "./services/news.ts";
+import { ingestQuotes } from "./services/quotes.ts";
 
 /**
  * Tique do cron (a cada 5 minutos, UTC). Tudo é idempotente: o cron pode repetir
@@ -62,6 +64,11 @@ export async function tick(ctx: Ctx): Promise<TickReport> {
         const r = await organizeUpload(ctx, claimed);
         await repo.finishRun(ctx.db, claimed, { state: r.state, ...(r.errorCode ? { errorCode: r.errorCode } : {}), ...(r.message ? { errorMessage: r.message } : {}), now: ctx.now() });
         report.runs.push({ id: claimed.id, state: r.state });
+      } else if (claimed.kind === "news_review") {
+        await ingestNews(ctx, claimed.owner_id, f, { maxFeeds: Math.min(8, budget.remaining()) });
+        await publishWorldToday(ctx, claimed.owner_id, claimed.id);
+        await repo.finishRun(ctx.db, claimed, { state: "succeeded", now: ctx.now() });
+        report.runs.push({ id: claimed.id, state: "succeeded" });
       } else {
         await repo.finishRun(ctx.db, claimed, { state: "failed", errorCode: "not_supported", errorMessage: `tipo ${claimed.kind} não implementado`, now: ctx.now() });
       }
@@ -147,6 +154,13 @@ export async function tick(ctx: Ctx): Promise<TickReport> {
         await repo.audit(ctx.db, { ownerId, actor: "system", action: "vercel_poll", outcome: "error", detail: e instanceof Error ? e.message : "erro", now: ctx.now() });
       }
     }
+  }
+
+  // 5b) Notícias (RSS allowlist) e cotações públicas — respeitando o teto de subrequisições.
+  const owners = await ctx.db.query<{ id: string }>("SELECT id FROM od_owners LIMIT 3");
+  for (const o of owners) {
+    if (budget.remaining() >= 5) await ingestNews(ctx, o.id, f, { maxFeeds: Math.min(4, budget.remaining() - 1) });
+    if (budget.remaining() >= 3) await ingestQuotes(ctx, o.id, f);
   }
 
   // 6) Retenção uma vez por hora.

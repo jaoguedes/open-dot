@@ -45,7 +45,7 @@ export async function deleteSession(db: Db, idHash: string) {
 
 // ---------------- OAuth state (uso único) ----------------
 
-export async function saveOAuthState(db: Db, keys: Keyring, p: { stateHash: string; ownerId: string | null; purpose: "login" | "gmail"; verifier: string; nonce: string | null; now: number }) {
+export async function saveOAuthState(db: Db, keys: Keyring, p: { stateHash: string; ownerId: string | null; purpose: "login" | "gmail" | "gsc"; verifier: string; nonce: string | null; now: number }) {
   await db.run("INSERT INTO od_oauth_states (state_hash, owner_id, purpose, verifier_enc, nonce, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)", [
     p.stateHash,
     p.ownerId,
@@ -58,7 +58,7 @@ export async function saveOAuthState(db: Db, keys: Keyring, p: { stateHash: stri
 }
 
 export async function consumeOAuthState(db: Db, keys: Keyring, stateHash: string, now: number) {
-  const r = await db.query<{ owner_id: string | null; purpose: "login" | "gmail"; verifier_enc: string; nonce: string | null }>(
+  const r = await db.query<{ owner_id: string | null; purpose: "login" | "gmail" | "gsc"; verifier_enc: string; nonce: string | null }>(
     "SELECT owner_id, purpose, verifier_enc, nonce FROM od_oauth_states WHERE state_hash = ? AND expires_at > ?",
     [stateHash, iso(now)],
   );
@@ -116,6 +116,22 @@ export async function upsertGmailConnection(db: Db, keys: Keyring, p: { ownerId:
           args: [id, p.ownerId, p.email, p.email, JSON.stringify(p.scopes), now, now] as SqlValue[],
         },
       ];
+  stmts.push({
+    sql: "INSERT INTO od_connection_secrets (connection_id, owner_id, key_version, ciphertext, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(connection_id) DO UPDATE SET key_version = excluded.key_version, ciphertext = excluded.ciphertext, updated_at = excluded.updated_at",
+    args: [id, p.ownerId, keys.current, secret, now],
+  });
+  await db.batch(stmts);
+  return id;
+}
+
+export async function upsertGscConnection(db: Db, keys: Keyring, p: { ownerId: string; account: string; scopes: string[]; tokens: object; now: number }): Promise<string> {
+  const existing = (await db.query<{ id: string }>("SELECT id FROM od_connections WHERE owner_id = ? AND provider = 'gsc'", [p.ownerId]))[0];
+  const id = existing?.id ?? randomId("con_");
+  const secret = await seal(keys, JSON.stringify(p.tokens), `conn:${id}`);
+  const now = iso(p.now);
+  const stmts = existing
+    ? [{ sql: "UPDATE od_connections SET status = 'connected', account_label = ?, scopes = ?, last_error = NULL, version = version + 1, updated_at = ? WHERE id = ? AND owner_id = ?", args: [p.account, JSON.stringify(p.scopes), now, id, p.ownerId] as SqlValue[] }]
+    : [{ sql: "INSERT INTO od_connections (id, owner_id, provider, status, account_label, external_id, scopes, created_at, updated_at) VALUES (?, ?, 'gsc', 'connected', ?, ?, ?, ?, ?)", args: [id, p.ownerId, p.account, p.account, JSON.stringify(p.scopes), now, now] as SqlValue[] }];
   stmts.push({
     sql: "INSERT INTO od_connection_secrets (connection_id, owner_id, key_version, ciphertext, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(connection_id) DO UPDATE SET key_version = excluded.key_version, ciphertext = excluded.ciphertext, updated_at = excluded.updated_at",
     args: [id, p.ownerId, keys.current, secret, now],
@@ -204,6 +220,62 @@ export async function ensureEmailRoutine(db: Db, ownerId: string, now: number): 
     iso(now),
   ]);
   return id;
+}
+
+export async function ensureNewsRoutine(db: Db, ownerId: string, now: number): Promise<string> {
+  const r = await db.query<{ id: string }>("SELECT id FROM od_routines WHERE owner_id = ? AND kind = 'news_review'", [ownerId]);
+  if (r[0]) return r[0].id;
+  const id = randomId("rt_");
+  await db.run("INSERT INTO od_routines (id, owner_id, agent_id, kind, times, time_zone, weekdays, enabled, last_planned_at, created_at, updated_at) VALUES (?, ?, 'noticias', 'news_review', ?, 'America/Sao_Paulo', '[]', 1, ?, ?, ?)", [
+    id,
+    ownerId,
+    JSON.stringify(["08:00"]),
+    iso(now),
+    iso(now),
+    iso(now),
+  ]);
+  return id;
+}
+
+export async function agentSettings(db: Db, ownerId: string, agentId: string) {
+  return (
+    await db.query<{ enabled: number; config: string; last_test_at: string | null; last_error: string | null }>(
+      "SELECT enabled, config, last_test_at, last_error FROM od_agent_settings WHERE owner_id = ? AND agent_id = ?",
+      [ownerId, agentId],
+    )
+  )[0] ?? null;
+}
+
+export async function listAgentSettings(db: Db, ownerId: string) {
+  return db.query<{ agent_id: string; enabled: number; config: string; last_test_at: string | null; last_error: string | null }>(
+    "SELECT agent_id, enabled, config, last_test_at, last_error FROM od_agent_settings WHERE owner_id = ?",
+    [ownerId],
+  );
+}
+
+export async function setRoutineKindEnabled(db: Db, ownerId: string, kind: string, enabled: boolean, now: number) {
+  await db.run("UPDATE od_routines SET enabled = ?, updated_at = ? WHERE owner_id = ? AND kind = ?", [enabled ? 1 : 0, iso(now), ownerId, kind]);
+}
+
+export async function setAgentEnabled(db: Db, ownerId: string, agentId: string, enabled: boolean, now: number) {
+  await db.run(
+    "INSERT INTO od_agent_settings (owner_id, agent_id, enabled, config, updated_at) VALUES (?, ?, ?, '{}', ?) ON CONFLICT(owner_id, agent_id) DO UPDATE SET enabled = excluded.enabled, updated_at = excluded.updated_at",
+    [ownerId, agentId, enabled ? 1 : 0, iso(now)],
+  );
+}
+
+export async function touchAgentSettings(db: Db, ownerId: string, agentId: string, p: { lastTestAt: string | null; lastError: string | null; now: number }) {
+  await db.run(
+    "INSERT INTO od_agent_settings (owner_id, agent_id, enabled, config, last_test_at, last_error, updated_at) VALUES (?, ?, 1, '{}', ?, ?, ?) ON CONFLICT(owner_id, agent_id) DO UPDATE SET last_test_at = excluded.last_test_at, last_error = excluded.last_error, updated_at = excluded.updated_at",
+    [ownerId, agentId, p.lastTestAt, p.lastError, iso(p.now)],
+  );
+}
+
+export async function listQuotes(db: Db, ownerId: string) {
+  return db.query<{ symbol: string; price: number; change_pct: number | null; source: string; quoted_at: string; fetched_at: string }>(
+    "SELECT symbol, price, change_pct, source, quoted_at, fetched_at FROM od_quotes WHERE owner_id = ?",
+    [ownerId],
+  );
 }
 
 export async function listRoutines(db: Db, ownerId: string) {

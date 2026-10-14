@@ -8,7 +8,7 @@ export interface Migration {
 }
 
 /** Versão de schema que este código exige. Atualize ao criar nova migração. */
-export const REQUIRED_SCHEMA = "0002";
+export const REQUIRED_SCHEMA = "0003";
 
 const META = `CREATE TABLE IF NOT EXISTS od_schema_migrations (
   version TEXT PRIMARY KEY,

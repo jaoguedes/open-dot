@@ -38,8 +38,8 @@ function useSplash(loading: boolean, reduced: boolean): { show: boolean; fading:
   return { show, fading };
 }
 
-const SIDEBAR_AGENTS: AgentId[] = ["dot", "correio", "codigo", "sentinela"];
-const LIST_AGENTS: AgentId[] = ["correio", "codigo", "sentinela", "foco"];
+const SIDEBAR_AGENTS: AgentId[] = ["dot", "correio", "codigo", "sentinela", "noticias", "mercado", "marketing"];
+const LIST_AGENTS: AgentId[] = ["correio", "codigo", "sentinela", "foco", "noticias", "mercado", "marketing"];
 
 interface NavDef {
   path: string;
@@ -226,7 +226,7 @@ function Sidebar({ open, go, current }: { open: boolean; go: (p: string) => void
           const p = presenceOf(a);
           return (
             <a key={a} href={path} className="nav-item agent-item" aria-current={current === path ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(path))}>
-              <AgentDot visual={v} accessory={app.accessoryFor(a)} size={44} animate={false} reducedMotion={app.reducedMotion} />
+              <AgentDot visual={v} accessory={app.accessoryFor(a)} size={44} animate={false} reducedMotion={app.reducedMotion} antennaPulse={a === "noticias" && (app.snap?.feed.some((f) => f.agentId === "noticias" && f.kind === "news_digest" && f.freshness === "fresh") ?? false)} />
               <span className="lines">
                 <span>{AGENTS[a].name}</span>
                 <span>{p.label}</span>

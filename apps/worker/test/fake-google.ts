@@ -45,6 +45,9 @@ export class FakeGoogle {
       return jsonResponse({ access_token: "at-0", refresh_token: "rt-secret-123", expires_in: 3600, scope: this.grantedScope, id_token: idToken });
     }
     if (url.host === "oauth2.googleapis.com" && url.pathname === "/revoke") return new Response("", { status: 200 });
+    if (url.host === "www.googleapis.com" && url.pathname === "/webmasters/v3/sites") {
+      return jsonResponse({ siteEntry: [{ siteUrl: "https://exemplo.com/", permissionLevel: "siteOwner" }] });
+    }
     if (url.host === "gmail.googleapis.com") {
       if (this.rateLimited) return jsonResponse({ error: { errors: [{ reason: "rateLimitExceeded" }] } }, 429, { "retry-after": "30" });
       const path = url.pathname.replace("/gmail/v1/users/me", "");

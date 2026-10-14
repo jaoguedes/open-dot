@@ -27,8 +27,8 @@ async function connectGmail(google: FakeGoogle, ctx: Awaited<ReturnType<typeof m
 test("migrações: idempotentes, detectam alteração e recusam destrutivas", async () => {
   const db = new SqliteDb();
   const ms = loadMigrations();
-  assert.deepEqual((await applyMigrations(db, ms)).applied, ["0001", "0002"]);
-  assert.deepEqual((await applyMigrations(db, ms)).skipped, ["0001", "0002"]);
+  assert.deepEqual((await applyMigrations(db, ms)).applied, ["0001", "0002", "0003"]);
+  assert.deepEqual((await applyMigrations(db, ms)).skipped, ["0001", "0002", "0003"]);
   await assert.rejects(applyMigrations(db, [{ ...ms[0]!, sql: ms[0]!.sql + "\n-- mudou" }]), /alterada/);
   await assert.rejects(applyMigrations(db, [{ version: "0099", name: "x", sql: "DROP TABLE od_owners;" }]), /destrutiva/);
 });
@@ -45,10 +45,12 @@ test("fluxo completo simulado: conectar Gmail (leitura), sincronizar e publicar 
   assert.deepEqual(conns[0].scopes.filter((s: string) => s.includes("gmail")), ["https://www.googleapis.com/auth/gmail.readonly"]);
 
   const routines = (await c.call("GET", "/api/routines")).json.routines;
-  assert.deepEqual(routines[0].times, ["08:00", "17:00"]);
-  assert.equal(routines[0].timeZone, "America/Sao_Paulo");
+  const emailRt = routines.find((r: { kind: string }) => r.kind === "email_review");
+  assert.ok(emailRt);
+  assert.deepEqual(emailRt.times, ["08:00", "17:00"]);
+  assert.equal(emailRt.timeZone, "America/Sao_Paulo");
 
-  await c.call("POST", `/api/routines/${routines[0].id}/run-now`);
+  await c.call("POST", `/api/routines/${emailRt.id}/run-now`);
   const report = await tick(ctx);
   assert.equal(report.synced[0]?.fetched, 2);
   assert.equal(report.runs[0]?.state, "succeeded");
@@ -63,8 +65,8 @@ test("fluxo completo simulado: conectar Gmail (leitura), sincronizar e publicar 
   assert.equal(d.body.aiUsed, false);
   assert.match(d.body.aiNote, /regras/);
   assert.equal(d.coverage.analyzed, 2);
-  // nenhuma chamada de escrita ao Gmail
-  assert.ok(google.calls.every((x) => x.startsWith("GET gmail") || x.includes("oauth2")), google.calls.join("\n"));
+  // nenhuma chamada de escrita ao Gmail (o tick também lê RSS/cotações no mesmo fetch)
+  assert.ok(google.calls.filter((x) => x.includes("gmail")).every((x) => x.startsWith("GET ")), google.calls.join("\n"));
 });
 
 test("tokens ficam cifrados: refresh token não aparece em texto no banco", async () => {
@@ -195,9 +197,11 @@ test("cron repetido no mesmo slot das 08h cria uma única revisão", async () =>
   await tick(ctx);
   ctx.clock.t += 60_000;
   await tick(ctx);
-  const runs = await ctx.db.query<{ slot_key: string; state: string }>("SELECT slot_key, state FROM od_runs WHERE slot_key NOT LIKE '%manual%'");
+  const runs = await ctx.db.query<{ slot_key: string; kind: string }>("SELECT slot_key, kind FROM od_runs WHERE slot_key NOT LIKE '%manual%' AND kind = 'email_review'");
   assert.equal(runs.length, 1);
   assert.match(runs[0]!.slot_key, /2026-10-13T08:00$/);
+  const newsRuns = await ctx.db.query("SELECT id FROM od_runs WHERE kind = 'news_review' AND slot_key NOT LIKE '%manual%'");
+  assert.ok(newsRuns.length <= 1);
   const digests = await ctx.db.query("SELECT id FROM od_feed_items WHERE kind = 'email_digest'");
   assert.equal(digests.length, 1);
 });
@@ -306,7 +310,7 @@ test("pergunta sem IA aprovada responde só com fontes do feed do próprio dono"
   google.addMessage({ id: "f1", subject: "Fatura do cartão vence sexta", from: "Banco <aviso@banco.com>" }, false);
   const ctx = await makeCtx({ fetch: google.fetch, env: { GROQ_API_KEY: "k" } });
   const c = await connectGmail(google, ctx);
-  const rid = (await c.call("GET", "/api/routines")).json.routines[0].id;
+  const rid = (await c.call("GET", "/api/routines")).json.routines.find((r: { kind: string }) => r.kind === "email_review").id;
   await c.call("POST", `/api/routines/${rid}/run-now`);
   await tick(ctx);
   const r = await c.call("POST", "/api/ask", { question: "quando vence a fatura?" });

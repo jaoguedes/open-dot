@@ -39,6 +39,9 @@ export const AGENT_COLORS: Record<AgentId, string> = {
   sentinela: "#59CFC6",
   foco: "#8C9AE8",
   social: "#F2EBDD",
+  noticias: "#FF7A1F",
+  mercado: "#16B26A",
+  marketing: "#F0457F",
 };
 
 export const STATE_COLORS = {
@@ -60,6 +63,9 @@ export const DEFAULT_ACCESSORY: Record<AgentId, Accessory> = {
   sentinela: "none", // aro é efeito temporário durante verificação, não peça presa
   foco: "headphones",
   social: "none",
+  noticias: "antenna",
+  mercado: "visor",
+  marketing: "beret",
 };
 
 export interface VisualEvent {

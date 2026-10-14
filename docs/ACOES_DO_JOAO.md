@@ -90,7 +90,7 @@ Os seus bancos atuais, como o do SafeWear, **não serão tocados**.
    - Não cole no chat. O `npm run setup:cloud` pede a URL e o token e aplica as migrações.
    - Se o banco tiver tabelas de outro projeto, o script recusa e não altera nada.
 
-- **Como verifico:** o setup mostra “Migrações aplicadas: 0001” e o `/api/health` mostra `"schema": "0001"`.
+- **Como verifico:** o setup mostra “Migrações aplicadas: 0001, 0002, 0003” (ou “já atualizado”) e o `/api/health` mostra `"schema": "0003"`.
 
 ---
 
@@ -119,6 +119,21 @@ Sem isso, os resumos continuam funcionando por regras.
    - Só depois do passo 2, troque `GROQ_ZDR_CONFIRMED` para `"true"` no `wrangler.jsonc` (ou no `.dev.vars`).
 
 - **Como verifico:** a página Conexões mostra “Groq · dados privados liberados (ZDR confirmado)” e o resumo passa a dizer “Classificado com IA”.
+
+---
+
+## H. Opcional: Search Console (Marketing) e Finnhub (Mercado)
+
+Não cole chaves no chat.
+
+1. **Search Console API** (só leitura) no mesmo projeto Google do passo B:
+   - Ativar: https://console.cloud.google.com/apis/library/searchconsole.googleapis.com
+   - Em **Data access**, acrescente `.../auth/webmasters.readonly` (além do Gmail). O app pede esse escopo num fluxo separado, em Conexões → Marketing → “Conectar Search Console”.
+2. **Finnhub Free** (só se quiser ações, ex.: PETR4.SA):
+   - Conta gratuita em https://finnhub.io — a documentação do plano gratuito (14/10/2026) exige chave; cripto (CoinGecko) e câmbio (Frankfurter) continuam sem chave.
+   - Grave `FINNHUB_API_KEY` no `.dev.vars` ou pelo `npm run setup:cloud`. Sem a chave, o cartão do Mercado diz o que falta — sem cotação inventada.
+
+- **Como verifico:** Conexões mostra Search Console “conectado · leitura” e, no Mercado, PETR4 deixa de pedir a chave.
 
 ---
 

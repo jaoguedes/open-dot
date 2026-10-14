@@ -16,6 +16,7 @@ _Atualizado em 14/10/2026 · motor SVG (D-014) no núcleo, testado · visual/PWA
 | Visual D-015 | ✅ tokens + shell | Tema escuro padrão (#050608). Tokens em `theme.css`. Inter + Instrument Serif itálico + JetBrains Mono locais (OFL). Shell da tela 01: nav em pílula azul, ilha preta no topo, Meu dia com saudação em serif, 3 cartões com brilho e dados reais/demo rotulados. |
 | Tela 01 (correções) | ✅ unidade | `/` e `/?demo=1` = Meu dia (`aria-current`). Saudação 56–64 px / 600 / -0,045em; serif do estado real; DotView 280 px; 3 cartões com brilho; filtro Tudo / Precisa de você / Fontes. Status dos agentes: uma fonte (`presence.ts`) — âmbar / vermelho “N incidente” / azul / cinza, nunca “Em repouso” com incidente. Mini-Dots 44 px; `.lines { flex: 1 }`. Splash: “opendot” + pontinho depois. `--ask-bar` reserva a caixa de pergunta. Tema fica no grupo `.top-actions`. |
 | Chapéus (livro HAT) | ✅ unidade | Copa/meridianos/sombra pelo contorno da superelipse (`hatCrown`/`hatOff`). Trabalho: boné, fone, antena, viseira, boina. Guarda-roupa: gorro de gatinho, bucket, coroa (`CROWN_UNLOCKED = false`). Antena pisca só com `antennaPulse`. Peças montadas uma vez; por quadro só `d`/transform/opacity. |
+| Agentes Notícias / Mercado / Marketing (D-017) | ✅ unidade · 🟡 contas reais | Núcleo aditivo + schema `0003`. RSS allowlist (termos 14/10/2026). Cotações CoinGecko/Frankfurter/Finnhub opcional. GSC `webmasters.readonly`. Sem rota de ordem e `MARKETING_CAN_PUBLISH = false`. Testes de dedupe, política ≥ 2 veículos, feed indisponível, cotação velha, ordem 404, marketing não publica. |
 
 ## Legenda
 
@@ -32,14 +33,17 @@ _Atualizado em 14/10/2026 · motor SVG (D-014) no núcleo, testado · visual/PWA
 | Revisão do PDF | ✅ | `docs/REVISAO_DO_PDF.md`: 46 pontos com página, decisão, motivo, impacto, fonte oficial (conferida em 13/10/2026) e critério de aceite |
 | Repositório, regras e docs | ✅ | `.cursor/rules/*.mdc` no formato atual, `CLAUDE.md`, `AGENTS.md`, `.env.example`, decisões, licenças, guia do Cursor |
 | Núcleo (`packages/core`) | ✅ | Estados de execução, resolvedor visual com prioridade e revisão, corações independentes, absorção (selecionado → enviado → recebido → organizado), agenda por fuso IANA, aprovações por hash e CAS, supervisor de ferramentas, triagem por regras, resumo com cobertura, monitor anti-SSRF, roteador de IA |
-| Persistência | ✅ SQLite · 🟡 Turso | Migrações `0001` e `0002` (uploads) aditivas com prefixo `od_`; tudo filtrado por dono; segredos e trechos de e-mail cifrados (AES-GCM, chave versionada). Cliente Turso HTTP testado contra um servidor Hrana simulado |
+| Persistência | ✅ SQLite · 🟡 Turso | Migrações `0001`, `0002` (uploads) e `0003` (notícias/cotações/agentes) aditivas com prefixo `od_`; tudo filtrado por dono; segredos e trechos de e-mail cifrados (AES-GCM, chave versionada). Cliente Turso HTTP testado contra um servidor Hrana simulado |
 | API / Worker | ✅ local · 🟡 Cloudflare | Sessão (cookie HttpOnly), CSRF, feed, rotinas, execuções, uso, conexões, monitores, aprovações, perguntas com fontes, webhook do GitHub, cron |
 | Login | ✅ local (dev) · 🟡 Google | Login Google OIDC (PKCE, state, nonce, dono único). A entrada de desenvolvimento só funciona em localhost |
 | Gmail (somente leitura) | 🧪 testado com Google simulado · 🟡 real | OAuth com `gmail.readonly`, sync incremental (`historyId` como texto), dedupe, ressincronização após 404, lotes dentro do limite de subrequisições, renovação de token com lease, reconexão única quando revogado, resumo das 08h/17h com links para o Gmail |
 | Rotinas 08h/17h | ✅ | Chave única por slot; cron repetido não duplica; após dias offline gera um único resumo “atrasado”; mudar o horário cancela execuções futuras |
 | IA | ✅ lógica · ⛔ chave | Allowlist com o Groq; e-mail privado bloqueado até o ZDR ser confirmado; reserva atômica no banco; 429/Retry-After; timeout; circuit breaker; cancelamento; registro de consumo sem conteúdo. Sem chave, tudo cai para regras |
 | GitHub | 🧪 webhook testado com eventos simulados · 🟡 GitHub App | Assinatura HMAC, dedupe por delivery, evento fora de ordem não regride, falha de CI vai para o feed. O token de instalação está implementado, sem teste real |
-| Vercel | 🟡 | Leitura de `/v7/deployments` a cada ~15 min; deploy com ERROR vai para o feed. Sem escrita |
+| Vercel | 🟡 | Leitura de `/v7/deployments` a cada ~15 min; deploy com ERROR vai para o feed. Sem escrita. Web Analytics Hobby: sem visitas inventadas se a API não responder |
+| Notícias | ✅ unidade · 🟡 RSS reais | Allowlist RSS/Atom (BBC, NPR, Folha). Dedupe, política ≥ 2 veículos, “O mundo hoje” às 08h (máx. 3/tema). Sem scraping de paywall |
+| Mercado | ✅ unidade · 🟡 APIs reais | CoinGecko + Frankfurter sem chave; Finnhub Free opcional (`setup:cloud`). Alerta no limite. Sem corretora/ordem |
+| Marketing | ✅ unidade · 🟡 GSC/Vercel reais | Search Console só leitura; ideias de post = rascunho; redes sociais 📋. Não publica |
 | Sites (Sentinela) | ✅ | Até 3 URLs HTTPS; bloqueio de IP interno e de redirecionamento; incidente após 3 falhas e encerramento após 2 sucessos; correlação com deploy dita como “sinal, não causa” |
 | Interface web | ✅ | Tema escuro padrão (D-015), tokens únicos, Inter/Instrument Serif/JetBrains Mono locais, shell da tela 01, ilha preta no topo, ⌘K, demonstração isolada e rotulada. Claro continua. Layout móvel 02/03 ainda é o menu lateral (fase 5) |
 | Dot 2D (fallback) | ✅ | Sem boca, sem sobrancelhas, **tracinho de absorção preservado**, blush, acessórios removíveis, tinta por estado, carinho suprimido em erro/aprovação, movimento reduzido. Rotulado como “2D” |
@@ -83,7 +87,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Três agentes novos (Notícias, Mercado, Marketing) — D-014, R$ 0, só leitura. Depois Fase 5 (celular + aprovação).
+Fase 5: layout celular (telas 02/03) + tela de aprovação (hash + CAS). Depois PWA, GLB/desempenho e Parte C da IA.
 
 ## Como retomar em outra sessão
 

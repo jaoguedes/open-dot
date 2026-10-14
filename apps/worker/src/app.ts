@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, isValidTimeZone, nextSlot, parseHHMM, renderUntrusted, sanitizeUntrusted, sha256Hex, toVisual, type AgentId, type SemanticState } from "@open-dot/core";
-import { GMAIL_READ_SCOPES, LOGIN_SCOPES, authUrl, exchangeCode, readIdToken, revoke } from "@open-dot/connectors/google.ts";
+import { AGENTS, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, isValidTimeZone, nextSlot, parseHHMM, renderUntrusted, sanitizeUntrusted, sha256Hex, toVisual, type AgentId, type SemanticState } from "@open-dot/core";
+import { GMAIL_READ_SCOPES, GSC_READ_SCOPES, LOGIN_SCOPES, authUrl, exchangeCode, readIdToken, revoke } from "@open-dot/connectors/google.ts";
 import { getProfile } from "@open-dot/connectors/gmail.ts";
 import { normalizeEvent, verifySignature, isNewer } from "@open-dot/connectors/github.ts";
 import { checkTarget } from "@open-dot/core";
@@ -13,6 +13,10 @@ import { csrfOk, currentOwner, endSession, json, problem, redirect, SECURITY_HEA
 import * as repo from "./repo.ts";
 import { makeRouter } from "./services/email-review.ts";
 import * as uploads from "./services/uploads.ts";
+import { ingestNews, listRecentNews } from "./services/news.ts";
+import { ingestQuotes } from "./services/quotes.ts";
+import { testMarketing } from "./services/marketing.ts";
+import { DEFAULT_ASSETS, NEWS_FEEDS, QUOTE_DISCLAIMER, isQuoteStale } from "@open-dot/core";
 
 type Handler = (ctx: Ctx, req: Request, params: Record<string, string>, ownerId: string | null) => Promise<Response>;
 
@@ -92,6 +96,7 @@ route("POST", "/api/session/dev", { auth: false }, async (ctx, req) => {
   if (ctx.env.APP_ENV !== "development" || !isLocalRequest(ctx, req)) return problem(403, "forbidden", "Entrada de desenvolvimento desativada.");
   const ownerId = await repo.upsertOwner(ctx.db, { sub: "dev-local", email: "dev@localhost", name: "Desenvolvimento local", now: ctx.now() });
   await repo.ensureEmailRoutine(ctx.db, ownerId, ctx.now());
+  await repo.ensureNewsRoutine(ctx.db, ownerId, ctx.now());
   const cookie = await startSession(ctx, req, ownerId);
   return json({ ok: true }, 200, { "set-cookie": cookie });
 });
@@ -100,20 +105,21 @@ route("POST", "/api/logout", { auth: false }, async (ctx, req) => json({ ok: tru
 
 // ---------------------------------------------------------------- OAuth Google (login e Gmail)
 
-async function beginGoogle(ctx: Ctx, purpose: "login" | "gmail", ownerId: string | null, loginHint?: string): Promise<string> {
+async function beginGoogle(ctx: Ctx, purpose: "login" | "gmail" | "gsc", ownerId: string | null, loginHint?: string): Promise<string> {
   if (!ctx.env.GOOGLE_CLIENT_ID) throw new ConnectorError("not_supported", "Google OAuth não configurado.");
   const state = randomToken();
   const verifier = randomToken(48);
   const nonce = randomToken(16);
   await repo.saveOAuthState(ctx.db, ctx.keys, { stateHash: await sha256Hex(state), ownerId, purpose, verifier, nonce, now: ctx.now() });
+  const scopes = purpose === "login" ? LOGIN_SCOPES : purpose === "gsc" ? GSC_READ_SCOPES : GMAIL_READ_SCOPES;
   return authUrl({
     clientId: ctx.env.GOOGLE_CLIENT_ID,
     redirectUri: redirectUri(ctx),
-    scopes: purpose === "login" ? LOGIN_SCOPES : GMAIL_READ_SCOPES,
+    scopes,
     state,
     codeChallenge: await pkceChallenge(verifier),
     nonce,
-    offline: purpose === "gmail",
+    offline: purpose !== "login",
     ...(loginHint ? { loginHint } : {}),
   });
 }
@@ -126,6 +132,11 @@ route("GET", "/api/auth/google/start", { auth: false }, async (ctx) => {
 route("POST", "/api/connections/gmail/start", { auth: true }, async (ctx, _req, _p, ownerId) => {
   if (!configured(ctx.env).google) return problem(409, "not_configured", "Configure GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET antes de conectar o Gmail.");
   return json({ url: await beginGoogle(ctx, "gmail", ownerId) });
+});
+
+route("POST", "/api/connections/gsc/start", { auth: true }, async (ctx, _req, _p, ownerId) => {
+  if (!configured(ctx.env).google) return problem(409, "not_configured", "Configure o cliente OAuth do Google antes de conectar o Search Console.");
+  return json({ url: await beginGoogle(ctx, "gsc", ownerId) });
 });
 
 route("GET", "/api/oauth/google/callback", { auth: false }, async (ctx, req, _p, sessionOwnerId) => {
@@ -150,13 +161,29 @@ route("GET", "/api/oauth/google/callback", { auth: false }, async (ctx, req, _p,
     }
     const ownerId = await repo.upsertOwner(ctx.db, { sub: claims.sub, email: claims.email, name: claims.name, now: ctx.now() });
     await repo.ensureEmailRoutine(ctx.db, ownerId, ctx.now());
+    await repo.ensureNewsRoutine(ctx.db, ownerId, ctx.now());
     const cookie = await startSession(ctx, req, ownerId);
     await repo.audit(ctx.db, { ownerId, actor: "user", action: "login", outcome: "ok", now: ctx.now() });
     return redirect("/", { "set-cookie": cookie });
   }
 
-  // Conexão do Gmail: precisa da mesma sessão que iniciou o fluxo.
   if (!st.ownerId || st.ownerId !== sessionOwnerId) return redirect("/?erro=sessao_trocada");
+
+  if (st.purpose === "gsc") {
+    if (!tokens.scope.includes("https://www.googleapis.com/auth/webmasters.readonly")) return redirect("/conexoes?erro=permissao_gsc_negada");
+    if (!tokens.refreshToken) return redirect("/conexoes?erro=sem_refresh_token");
+    const connId = await repo.upsertGscConnection(ctx.db, ctx.keys, {
+      ownerId: st.ownerId,
+      account: claims.email,
+      scopes: tokens.scope,
+      tokens: { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, expiresAt: tokens.expiresAt },
+      now: ctx.now(),
+    });
+    await repo.audit(ctx.db, { ownerId: st.ownerId, actor: "user", action: "gsc_connect", target: connId, outcome: "ok", detail: "scope=webmasters.readonly", now: ctx.now() });
+    return redirect("/conexoes?ok=gsc");
+  }
+
+  // Conexão do Gmail: precisa da mesma sessão que iniciou o fluxo.
   if (!tokens.scope.includes("https://www.googleapis.com/auth/gmail.readonly")) return redirect("/conexoes?erro=permissao_gmail_negada");
   if (!tokens.refreshToken) return redirect("/conexoes?erro=sem_refresh_token");
   const profile = await getProfile(ctx.fetch, tokens.accessToken, ctx.now());
@@ -168,18 +195,134 @@ route("GET", "/api/oauth/google/callback", { auth: false }, async (ctx, req, _p,
     now: ctx.now(),
   });
   await repo.ensureEmailRoutine(ctx.db, st.ownerId, ctx.now());
+  await repo.ensureNewsRoutine(ctx.db, st.ownerId, ctx.now());
   await repo.audit(ctx.db, { ownerId: st.ownerId, actor: "user", action: "gmail_connect", target: connId, outcome: "ok", detail: "scope=gmail.readonly", now: ctx.now() });
   return redirect("/conexoes?ok=gmail");
 });
 
 // ---------------------------------------------------------------- Conexões
 
+const EXTRA_AGENTS = ["noticias", "mercado", "marketing"] as const;
+
+async function extraAgentCards(ctx: Ctx, ownerId: string) {
+  const settings = await repo.listAgentSettings(ctx.db, ownerId);
+  const byId = new Map(settings.map((s) => [s.agent_id, s]));
+  const conns = await repo.listConnections(ctx.db, ownerId);
+  const cfg = configured(ctx.env);
+  const quotes = await repo.listQuotes(ctx.db, ownerId);
+  const gsc = conns.find((c) => c.provider === "gsc" && c.status === "connected");
+  const now = ctx.now();
+
+  const noticiasMissing: string[] = [];
+  const mercadoMissing: string[] = [];
+  if (!cfg.finnhub) mercadoMissing.push("Ações (PETR4.SA) pedem FINNHUB_API_KEY no setup:cloud (plano gratuito da Finnhub). Cripto e câmbio não precisam de chave.");
+  if (!quotes.length) mercadoMissing.push("Ainda sem cotação. Use Testar — nada é inventado.");
+  const marketingMissing: string[] = [];
+  if (!gsc) marketingMissing.push("Falta conectar o Google Search Console (só leitura).");
+  if (!cfg.vercel) marketingMissing.push("Falta token da Vercel no setup:cloud (deployments; visitas só se Web Analytics Hobby estiver ativo).");
+  marketingMissing.push("Redes sociais: planejadas, sem implementar.");
+
+  return EXTRA_AGENTS.map((id) => {
+    const s = byId.get(id);
+    const base = {
+      id,
+      name: AGENTS[id].name,
+      description: AGENTS[id].description,
+      enabled: s ? s.enabled === 1 : true,
+      lastTestAt: s?.last_test_at ?? null,
+      lastError: s?.last_error ?? null,
+    };
+    if (id === "noticias") {
+      return {
+        ...base,
+        sources: NEWS_FEEDS.map((f) => ({ id: f.id, label: `${f.outlet} · ${f.theme}`, detail: f.url })),
+        missing: noticiasMissing,
+        note: "Só feeds RSS/Atom da allowlist. Sem scraping de paywall.",
+      };
+    }
+    if (id === "mercado") {
+      return {
+        ...base,
+        sources: DEFAULT_ASSETS.map((a) => ({ id: a.symbol, label: `${a.label} (${a.symbol})`, detail: `${a.source} · alerta ±${a.alertAbsPct}%` })),
+        quotes: quotes.map((q) => ({
+          symbol: q.symbol,
+          price: q.price,
+          changePct: q.change_pct,
+          source: q.source,
+          quotedAt: q.quoted_at,
+          fetchedAt: q.fetched_at,
+          stale: isQuoteStale({ fetchedAt: q.fetched_at }, now),
+          disclaimer: QUOTE_DISCLAIMER,
+        })),
+        missing: mercadoMissing,
+        note: QUOTE_DISCLAIMER,
+      };
+    }
+    return {
+      ...base,
+      sources: [
+        ...(cfg.vercel ? [{ id: "vercel", label: "Vercel (leitura)", detail: "Deployments. Visitas só com Web Analytics Hobby ativo — sem número inventado." }] : []),
+        ...(gsc ? [{ id: "gsc", label: `Search Console · ${gsc.account_label ?? "conectado"}`, detail: "webmasters.readonly" }] : []),
+      ],
+      missing: marketingMissing,
+      note: "Ideias de post são rascunho. Publicar nunca é automático.",
+    };
+  });
+}
+
 route("GET", "/api/connections", { auth: true }, async (ctx, _r, _p, ownerId) => {
   const rows = await repo.listConnections(ctx.db, ownerId!);
   return json({
     configured: configured(ctx.env),
     connections: rows.map((c) => ({ id: c.id, provider: c.provider, status: c.status, accountLabel: c.account_label, scopes: JSON.parse(c.scopes) as string[], lastSyncAt: c.last_sync_at, lastError: c.last_error })),
+    agents: await extraAgentCards(ctx, ownerId!),
   });
+});
+
+route("POST", "/api/agents/:id/test", { auth: true }, async (ctx, _r, p, ownerId) => {
+  const id = p.id as AgentId;
+  if (!EXTRA_AGENTS.includes(id as (typeof EXTRA_AGENTS)[number])) return problem(404, "not_found", "Agente desconhecido.");
+  const settings = await repo.agentSettings(ctx.db, ownerId!, id);
+  if (settings && settings.enabled === 0) return problem(409, "disabled", `${AGENTS[id].name} está desativado.`);
+  if (id === "noticias") {
+    const r = await ingestNews(ctx, ownerId!, ctx.fetch, { maxFeeds: 4 });
+    const items = await listRecentNews(ctx.db, ownerId!, 8);
+    return json({ ok: true, agentId: id, fetched: r.fetched, stored: r.stored, failures: r.failures, sample: items.slice(0, 3).map((i) => ({ title: i.title, link: i.link, outlet: i.outlet })), published: false });
+  }
+  if (id === "mercado") {
+    const r = await ingestQuotes(ctx, ownerId!, ctx.fetch);
+    return json({
+      ok: true,
+      agentId: id,
+      quotes: r.quotes.map((q) => ({ ...q, stale: isQuoteStale(q, ctx.now()), disclaimer: QUOTE_DISCLAIMER })),
+      failures: r.failures,
+      disclaimer: QUOTE_DISCLAIMER,
+      traded: false,
+    });
+  }
+  const r = await testMarketing(ctx, ownerId!, ctx.fetch);
+  return json({ ok: true, agentId: id, ...r });
+});
+
+route("POST", "/api/agents/:id/disable", { auth: true }, async (ctx, _r, p, ownerId) => {
+  const id = p.id as AgentId;
+  if (!EXTRA_AGENTS.includes(id as (typeof EXTRA_AGENTS)[number])) return problem(404, "not_found", "Agente desconhecido.");
+  await repo.setAgentEnabled(ctx.db, ownerId!, id, false, ctx.now());
+  if (id === "noticias") await repo.setRoutineKindEnabled(ctx.db, ownerId!, "news_review", false, ctx.now());
+  await repo.audit(ctx.db, { ownerId, actor: "user", action: "agent_disable", target: id, outcome: "ok", now: ctx.now() });
+  return json({ ok: true, enabled: false });
+});
+
+route("POST", "/api/agents/:id/enable", { auth: true }, async (ctx, _r, p, ownerId) => {
+  const id = p.id as AgentId;
+  if (!EXTRA_AGENTS.includes(id as (typeof EXTRA_AGENTS)[number])) return problem(404, "not_found", "Agente desconhecido.");
+  await repo.setAgentEnabled(ctx.db, ownerId!, id, true, ctx.now());
+  if (id === "noticias") {
+    await repo.ensureNewsRoutine(ctx.db, ownerId!, ctx.now());
+    await repo.setRoutineKindEnabled(ctx.db, ownerId!, "news_review", true, ctx.now());
+  }
+  await repo.audit(ctx.db, { ownerId, actor: "user", action: "agent_enable", target: id, outcome: "ok", now: ctx.now() });
+  return json({ ok: true, enabled: true });
 });
 
 route("POST", "/api/connections/:id/disconnect", { auth: true }, async (ctx, _r, p, ownerId) => {
@@ -312,7 +455,7 @@ route("POST", "/api/ask", { auth: true }, async (ctx, req, _p, ownerId) => {
 route("GET", "/api/status", { auth: true }, async (ctx, _r, _p, ownerId) => {
   const runs = await repo.listRuns(ctx.db, ownerId!, 30);
   const conns = await repo.listConnections(ctx.db, ownerId!);
-  const agents: AgentId[] = ["dot", "correio", "codigo", "sentinela"];
+  const agents: AgentId[] = ["dot", "correio", "codigo", "sentinela", "noticias", "mercado", "marketing"];
   const out = agents.map((a) => {
     let semantic: SemanticState = "idle";
     let reason: string | null = null;

@@ -4,7 +4,17 @@ import { Icon, type IconName } from "./Icons.tsx";
 import { fmtDateTime, fmtTime, senderName } from "../format.ts";
 import { useApp } from "../store.tsx";
 
-const ICON: Record<FeedEntry["kind"], IconName> = { email_digest: "mail", site_incident: "globe", ci_failure: "code", deploy: "layers", notice: "alert", file_organized: "file" };
+const ICON: Record<FeedEntry["kind"], IconName> = {
+  email_digest: "mail",
+  site_incident: "globe",
+  ci_failure: "code",
+  deploy: "layers",
+  notice: "alert",
+  file_organized: "file",
+  news_digest: "globe",
+  quote_alert: "layers",
+  marketing_ideas: "sparkle",
+};
 
 export function FreshnessChip({ f }: { f: FeedEntry["freshness"] }) {
   if (f === "fresh") return null;
@@ -114,6 +124,39 @@ export function FeedRow({ item }: { item: FeedEntry }) {
           {item.title} <FreshnessChip f={item.freshness} />
         </h3>
         <p>{b.summary ?? b.headline}</p>
+        {b.disclaimer && <p className="tiny">{b.disclaimer}</p>}
+        {item.kind === "news_digest" && b.worldToday && (
+          <ul className="list" style={{ marginTop: 8 }}>
+            {b.worldToday.flatMap((s) =>
+              s.items.map((n) => (
+                <li key={n.link} className="mail">
+                  <span className="subj">
+                    {app.mode === "demo" ? (
+                      n.title
+                    ) : (
+                      <a href={n.link} target="_blank" rel="noreferrer noopener">
+                        {n.title} <Icon name="external" size={12} />
+                      </a>
+                    )}
+                  </span>
+                  <span className="why">
+                    {n.outlet} · {s.theme}
+                  </span>
+                </li>
+              )),
+            )}
+          </ul>
+        )}
+        {b.politics?.map((c) => (
+          <p key={c.topic} className="tiny">
+            {c.notice ?? c.eachSide.map((s) => `${s.outlet}: ${s.title}`).join(" · ")}
+          </p>
+        ))}
+        {b.drafts?.map((d, i) => (
+          <p key={i} className="tiny">
+            {d.text}
+          </p>
+        ))}
         {b.correlation && <p>{b.correlation}</p>}
         <div className="tiny" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <span>

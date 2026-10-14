@@ -13,9 +13,11 @@ export function Connections() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(() => {
     const p = new URLSearchParams(location.search);
     if (p.get("ok") === "gmail") return { ok: true, text: "Gmail conectado em modo leitura. A primeira revisão roda no próximo ciclo (até 5 min)." };
+    if (p.get("ok") === "gsc") return { ok: true, text: "Search Console conectado em modo leitura (webmasters.readonly)." };
     const err = p.get("erro");
     const map: Record<string, string> = {
       permissao_gmail_negada: "O Google não concedeu a permissão de leitura do Gmail. Nada foi conectado.",
+      permissao_gsc_negada: "O Google não concedeu a permissão de leitura do Search Console. Nada foi conectado.",
       sem_refresh_token: "O Google não enviou um token de renovação. Remova o acesso em myaccount.google.com/permissions e conecte de novo.",
       sessao_trocada: "A sessão mudou durante a conexão. Tente de novo.",
     };
@@ -116,6 +118,8 @@ export function Connections() {
         <p>Consulta a cada ~15 min. Sem redeploy ou rollback automático. Webhooks de conta da Vercel são Pro/Enterprise; aqui usamos consulta periódica.</p>
       </section>
 
+      <ExtraAgents demo={demo} cfgGoogle={Boolean(cfg?.google)} />
+
       <section className="card" style={{ marginTop: 16 }} aria-labelledby="c-ai">
         <div className="card-top">
           <Icon name="sparkle" size={14} /> IA remota
@@ -193,5 +197,111 @@ function Monitors() {
         </p>
       )}
     </section>
+  );
+}
+
+function ExtraAgents({ demo, cfgGoogle }: { demo: boolean; cfgGoogle: boolean }) {
+  const app = useApp();
+  const cards = app.snap?.agents ?? [];
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
+
+  const test = async (id: string) => {
+    setBusy(id);
+    try {
+      const r = await api.testAgent(id);
+      const extra = r.failures?.length ? r.failures.join(" ") : r.missing?.length ? r.missing.join(" ") : r.note ?? "Teste concluído.";
+      setMsg({ id, ok: true, text: extra });
+      await app.refresh();
+    } catch (e) {
+      setMsg({ id, ok: false, text: e instanceof ApiError ? e.message : "Não consegui testar." });
+    } finally {
+      setBusy(null);
+    }
+  };
+  const toggle = async (id: string, enabled: boolean) => {
+    setBusy(id);
+    try {
+      if (enabled) await api.disableAgent(id);
+      else await api.enableAgent(id);
+      await app.refresh();
+    } catch (e) {
+      setMsg({ id, ok: false, text: e instanceof ApiError ? e.message : "Não consegui alterar o agente." });
+    } finally {
+      setBusy(null);
+    }
+  };
+  const connectGsc = async () => {
+    setBusy("gsc");
+    try {
+      const { url } = await api.startGsc();
+      location.assign(url);
+    } catch (e) {
+      setMsg({ id: "marketing", ok: false, text: e instanceof ApiError ? e.message : "Não consegui iniciar o Search Console." });
+      setBusy(null);
+    }
+  };
+
+  return (
+    <>
+      {cards.map((a) => (
+        <section key={a.id} className="card" style={{ marginTop: 16 }} aria-labelledby={`c-${a.id}`}>
+          <div className="card-top">
+            {a.name}
+            <span className={`chip ${!a.enabled ? "" : a.lastError ? "warn" : a.lastTestAt ? "ok" : ""}`}>
+              {demo ? "Demonstração (fictício)" : !a.enabled ? "Desativado" : a.lastError ? "Falha parcial" : a.lastTestAt ? "Testado" : "Aguardando teste"}
+            </span>
+          </div>
+          <h3 id={`c-${a.id}`}>{a.name}</h3>
+          <p>{a.description}</p>
+          {a.sources.length > 0 && (
+            <ul className="list" style={{ marginBottom: 12 }}>
+              {a.sources.map((s) => (
+                <li key={s.id} className="mail">
+                  <span className="subj">{s.label}</span>
+                  <span className="why">{s.detail}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {a.quotes?.map((q) => (
+            <p key={q.symbol} className="tiny">
+              {q.symbol}: {q.price} ({q.changePct == null ? "sem variação" : `${q.changePct.toFixed(1)}%`}) · {q.source}
+              {q.stale ? " · desatualizado" : ""} · {q.disclaimer}
+            </p>
+          ))}
+          {a.missing.length > 0 && (
+            <p className="meta">
+              {a.missing.map((m) => (
+                <span key={m} style={{ display: "block" }}>
+                  {m}
+                </span>
+              ))}
+            </p>
+          )}
+          <p className="tiny">{a.note}</p>
+          {a.lastTestAt && <p className="tiny">Último teste: {fmtDateTime(a.lastTestAt)}</p>}
+          <div className="row-actions">
+            <button className="btn primary" disabled={demo || busy === a.id || !a.enabled} onClick={() => void test(a.id)}>
+              Testar
+            </button>
+            <button className="btn" disabled={demo || busy === a.id} onClick={() => void toggle(a.id, a.enabled)}>
+              {a.enabled ? "Desativar" : "Ativar"}
+            </button>
+            {a.id === "marketing" && !demo && (
+              <button className="btn" disabled={busy === "gsc" || !cfgGoogle} onClick={() => void connectGsc()}>
+                Conectar Search Console
+              </button>
+            )}
+            {demo && <span className="tiny">Indisponível na demonstração.</span>}
+          </div>
+          {msg?.id === a.id && (
+            <p role="status" className={`chip ${msg.ok ? "ok" : "err"}`} style={{ marginTop: 8, whiteSpace: "normal" }}>
+              {msg.text}
+            </p>
+          )}
+        </section>
+      ))}
+    </>
   );
 }
