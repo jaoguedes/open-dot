@@ -12,6 +12,7 @@
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
   --r-ctl: 12px; --r-card: 20px; --r-float: 22px; --r-pill: 999px;
   --ask-bar: 96px;
+  --dock: 0px;
   --sidebar: 260px; --context: 280px; --reading: 920px;
 
   --bg: #050608; --surface: #0E1014; --surface-2: #16181E; --text: #F3F4F7; --text-2: #9AA0AE; --text-3: #6B7181; --border: #1A1D24;

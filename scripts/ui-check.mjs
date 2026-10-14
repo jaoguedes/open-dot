@@ -101,11 +101,20 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
   await p.goto(BASE + "/?demo=1");
   await ready(p);
   await p.screenshot({ path: `${OUT}/demo-home-${label}.png`, fullPage: true });
-  // menu acessível no celular
-  if (w < 768) {
-    await p.getByRole("button", { name: "Abrir menu" }).click();
-    await p.getByRole("link", { name: "Rotinas" }).click();
-    check(`${label}: navegação pelo menu funciona`, p.url().includes("/rotinas"));
+  // navegação móvel: pílula flutuante (tela 02)
+  if (w < 760) {
+    await p.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Rotinas" }).click();
+    check(`${label}: navegação pelo dock funciona`, p.url().includes("/rotinas"));
+    await p.goto(BASE + "/aprovacao/demo-ap1?demo=1");
+    await ready(p);
+    check(`${label}: tela de aprovação`, await p.getByRole("heading", { name: "Posso enviar esta resposta?" }).isVisible());
+    await p.getByRole("button", { name: "Aprovar e enviar" }).click();
+    check(`${label}: aprovar não envia`, await p.getByText(/Envio ainda não habilitado/).count() > 0);
+    await p.getByRole("button", { name: "Editar" }).click();
+    check(`${label}: editar abre o texto`, await p.getByLabel("Texto da resposta").isVisible());
+    await p.getByRole("button", { name: "Cancelar edição" }).click();
+    await p.getByRole("button", { name: "Negar" }).click();
+    check(`${label}: negar na demonstração`, await p.getByText(/recusa fictícia/).count() > 0);
   }
   await ctx.close();
 }

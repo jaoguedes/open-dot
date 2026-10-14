@@ -571,11 +571,59 @@ export async function decideApproval(db: Db, p: { ownerId: string; id: string; d
   return "conflict";
 }
 
-export async function listApprovals(db: Db, ownerId: string) {
-  return db.query<{ id: string; action: string; payload_hash: string; status: string; version: number; expires_at: string; created_at: string }>(
-    "SELECT id, action, payload_hash, status, version, expires_at, created_at FROM od_approvals WHERE owner_id = ? ORDER BY created_at DESC LIMIT 50",
+export async function listApprovals(db: Db, keys: Keyring, ownerId: string) {
+  const rows = await db.query<{ id: string; action: string; proposal_enc: string; payload_hash: string; status: string; version: number; expires_at: string; created_at: string }>(
+    "SELECT id, action, proposal_enc, payload_hash, status, version, expires_at, created_at FROM od_approvals WHERE owner_id = ? ORDER BY created_at DESC LIMIT 50",
     [ownerId],
   );
+  const out = [];
+  for (const r of rows) {
+    let proposal: unknown = null;
+    try {
+      proposal = JSON.parse(await open(keys, r.proposal_enc, `appr:${r.id}`));
+    } catch {
+      proposal = null;
+    }
+    out.push({
+      id: r.id,
+      action: r.action,
+      payloadHash: r.payload_hash,
+      status: r.status,
+      version: r.version,
+      expiresAt: r.expires_at,
+      createdAt: r.created_at,
+      proposal,
+    });
+  }
+  return out;
+}
+
+export async function createApproval(
+  db: Db,
+  keys: Keyring,
+  p: { ownerId: string; action: string; proposal: object; payloadHash: string; now: number; ttlMs?: number },
+): Promise<string> {
+  const id = randomId("ap_");
+  await db.run(
+    "INSERT INTO od_approvals (id, owner_id, action, proposal_enc, payload_hash, status, version, expires_at, created_at) VALUES (?, ?, ?, ?, ?, 'pending', 1, ?, ?)",
+    [id, p.ownerId, p.action, await seal(keys, JSON.stringify(p.proposal), `appr:${id}`), p.payloadHash, iso(p.now + (p.ttlMs ?? 86_400_000)), iso(p.now)],
+  );
+  return id;
+}
+
+export async function editApproval(
+  db: Db,
+  keys: Keyring,
+  p: { ownerId: string; id: string; proposal: object; payloadHash: string; expectedVersion: number; now: number },
+): Promise<"ok" | "conflict" | "not_found"> {
+  const enc = await seal(keys, JSON.stringify(p.proposal), `appr:${p.id}`);
+  const r = await db.run(
+    "UPDATE od_approvals SET proposal_enc = ?, payload_hash = ?, version = version + 1 WHERE id = ? AND owner_id = ? AND version = ? AND status = 'pending'",
+    [enc, p.payloadHash, p.id, p.ownerId, p.expectedVersion],
+  );
+  if (r.changes === 1) return "ok";
+  const row = (await db.query<{ id: string }>("SELECT id FROM od_approvals WHERE id = ? AND owner_id = ?", [p.id, p.ownerId]))[0];
+  return row ? "conflict" : "not_found";
 }
 
 // ---------------- Monitores ----------------

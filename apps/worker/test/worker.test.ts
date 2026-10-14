@@ -226,6 +226,28 @@ test("aprovações concorrentes no banco: um único efeito", async () => {
   assert.equal(await repo.decideApproval(ctx.db, { ownerId: "outro", id: "ap1", decision: "approve", expectedVersion: 2, payloadHash: h, now: ctx.now() }), "not_found");
 });
 
+test("aprovação: editar gera hash novo; aprovar não envia", async () => {
+  const ctx = await makeCtx({ fetch: async () => new Response("gmail-write-nao-deve", { status: 500 }) });
+  const c = client(ctx);
+  await c.call("POST", "/api/session/dev");
+  const ownerId = (await ctx.db.query<{ id: string }>("SELECT id FROM od_owners"))[0]!.id;
+  const proposal = { action: "gmail.send", service: "gmail", account: "dev@localhost", resource: "t1", payload: { to: "a@b.com", subject: "Re", body: "oi" }, consequence: "teste" };
+  const h = await hashProposal(proposal);
+  const id = await repo.createApproval(ctx.db, ctx.keys, { ownerId, action: "gmail.send", proposal, payloadHash: h, now: ctx.now() });
+  const list = await c.call("GET", "/api/approvals");
+  assert.equal(list.json.canSend, false);
+  assert.equal(list.json.approvals[0].proposal.payload.body, "oi");
+  const edited = { ...proposal, payload: { ...proposal.payload, body: "oi, edição" } };
+  const ed = await c.call("POST", `/api/approvals/${id}/edit`, { expectedVersion: 1, proposal: edited });
+  assert.equal(ed.status, 200);
+  assert.notEqual(ed.json.payloadHash, h);
+  const dec = await c.call("POST", `/api/approvals/${id}/decision`, { decision: "approve", expectedVersion: 2, payloadHash: ed.json.payloadHash });
+  assert.equal(dec.status, 200);
+  assert.equal(dec.json.sent, false);
+  assert.equal(dec.json.executed, false);
+  assert.match(dec.json.note, /não habilitado/);
+});
+
 test("orçamento de IA no banco: reservas concorrentes no último saldo não estouram", async () => {
   const ctx = await makeCtx();
   const ledger = new repo.DbLedger(ctx.db, { ownerCalls: 3, ownerTokens: 1000, modelRequests: () => 100, modelTokens: () => 100_000 }, ctx.now);

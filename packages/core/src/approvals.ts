@@ -56,6 +56,9 @@ export async function decide(
   };
 }
 
+/** Gmail continua só leitura: aprovar registra a decisão, não envia. */
+export const GMAIL_CAN_SEND = false;
+
 /** Antes de executar: o payload atual ainda é exatamente o aprovado? */
 export async function stillMatches(a: Approval, current: ActionProposal): Promise<boolean> {
   return a.status === "approved" && (await hashProposal(current)) === a.payloadHash;

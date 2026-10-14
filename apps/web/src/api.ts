@@ -144,6 +144,26 @@ export interface Snapshot {
   monitors: Monitor[];
   status: Array<AgentVisual & { revision: number }>;
   agents: AgentCard[];
+  approvals: ApprovalView[];
+  canSend: boolean;
+}
+
+export interface ApprovalView {
+  id: string;
+  action: string;
+  payloadHash: string;
+  status: string;
+  version: number;
+  expiresAt: string;
+  createdAt: string;
+  proposal: {
+    action: string;
+    service: string;
+    account: string;
+    resource: string;
+    payload: Record<string, unknown>;
+    consequence: string;
+  } | null;
 }
 
 export class ApiError extends Error {
@@ -199,6 +219,11 @@ export const api = {
   runNow: (id: string) => req<{ ok: true; created: boolean; note: string }>(`/api/routines/${encodeURIComponent(id)}/run-now`, { method: "POST" }),
   addMonitor: (url: string, label: string) => req<{ id: string }>("/api/monitors", { method: "POST", body: JSON.stringify({ url, label }) }),
   ask: (question: string) => req<AskAnswer>("/api/ask", { method: "POST", body: JSON.stringify({ question }) }),
+  approvals: () => req<{ approvals: ApprovalView[]; canSend: boolean }>("/api/approvals"),
+  decideApproval: (id: string, body: { decision: "approve" | "reject"; expectedVersion: number; payloadHash: string }) =>
+    req<{ result: string; executed?: boolean; sent?: boolean; note?: string | null }>(`/api/approvals/${encodeURIComponent(id)}/decision`, { method: "POST", body: JSON.stringify(body) }),
+  editApproval: (id: string, body: { expectedVersion: number; proposal: NonNullable<ApprovalView["proposal"]> }) =>
+    req<{ result: string; payloadHash?: string; version?: number }>(`/api/approvals/${encodeURIComponent(id)}/edit`, { method: "POST", body: JSON.stringify(body) }),
   uploads: () => req<{ uploads: UploadView[] }>("/api/uploads"),
   upload: (id: string) => req<UploadView>(`/api/uploads/${encodeURIComponent(id)}`),
   processUpload: (id: string) => req<UploadView>(`/api/uploads/${encodeURIComponent(id)}/process`, { method: "POST" }),
@@ -272,7 +297,7 @@ export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Sn
       return fallback;
     }
   };
-  const [feed, conns, routines, runs, usage, monitors, status] = await Promise.all([
+  const [feed, conns, routines, runs, usage, monitors, status, approvals] = await Promise.all([
     settle("feed", api.feed(), { items: [], next: null }),
     settle("conexões", api.connections(), { configured: emptyConfigured, connections: [], agents: [] }),
     settle("rotinas", api.routines(), { routines: [] }),
@@ -280,9 +305,23 @@ export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Sn
     settle("uso", api.usage(), null),
     settle("monitores", api.monitors(), { monitors: [] }),
     settle("estado", api.status(), { agents: [] }),
+    settle("aprovações", api.approvals(), { approvals: [], canSend: false }),
   ]);
   return {
-    snap: { owner, feed: feed.items, connections: conns.connections, configured: conns.configured, routines: routines.routines, runs: runs.runs, usage, monitors: monitors.monitors, status: status.agents, agents: conns.agents ?? [] },
+    snap: {
+      owner,
+      feed: feed.items,
+      connections: conns.connections,
+      configured: conns.configured,
+      routines: routines.routines,
+      runs: runs.runs,
+      usage,
+      monitors: monitors.monitors,
+      status: status.agents,
+      agents: conns.agents ?? [],
+      approvals: approvals.approvals,
+      canSend: approvals.canSend,
+    },
     failures,
   };
 }

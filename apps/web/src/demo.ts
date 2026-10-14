@@ -74,6 +74,30 @@ export function demoSnapshot(): Snapshot {
         note: "Ideias de post são rascunho. Publicar nunca é automático.",
       },
     ],
+    canSend: false,
+    approvals: [
+      {
+        id: "demo-ap1",
+        action: "gmail.send",
+        payloadHash: "0".repeat(64),
+        status: "pending",
+        version: 1,
+        expiresAt: at(23),
+        createdAt: at(7, 12),
+        proposal: {
+          action: "gmail.send",
+          service: "gmail",
+          account: "exemplo@demo.local",
+          resource: "thread:t1",
+          payload: {
+            to: "entregas@lojaexemplo.com.br",
+            subject: "Re: Confirmação de entrega",
+            body: "Olá! Confirmo a entrega para amanhã, quinta, no período da tarde. Alguém estará em casa a partir das 13h.\n\nObrigado,\nJoão",
+          },
+          consequence: "A loja pediu confirmação até 14h. Usei o horário da sua agenda de amanhã. Exemplo fictício.",
+        },
+      },
+    ],
     feed: [
       {
         id: "demo-1",

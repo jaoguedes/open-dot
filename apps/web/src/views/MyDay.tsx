@@ -4,6 +4,7 @@ import { useApp } from "../store.tsx";
 import { FeedRow } from "../components/FeedViews.tsx";
 import { AgentDot } from "../dot/AgentDot.tsx";
 import { fmtTime, greeting, needYouLine } from "../format.ts";
+import { agentPresence } from "../presence.ts";
 import type { FeedEntry } from "../api.ts";
 
 type Filter = "all" | "need" | "sources";
@@ -40,6 +41,7 @@ export function MyDay() {
   })();
   const nextRoutines = (snap?.routines ?? []).filter((r) => r.enabled).slice(0, 3);
   const sources = digest?.body.top?.slice(0, 3) ?? [];
+  const pendingAp = snap?.approvals.find((a) => a.status === "pending")?.id;
 
   return (
     <>
@@ -61,6 +63,19 @@ export function MyDay() {
         <div className="hero-dot">
           <AgentDot visual={visual} accessory={app.accessoryFor(visual.agentId)} size={280} reducedMotion={app.reducedMotion} interactive antennaPulse={visual.agentId === "noticias" && items.some((f) => f.kind === "news_digest" && f.freshness === "fresh")} />
         </div>
+      </section>
+
+      <section className="agent-pills" aria-label="Agentes">
+        {(["correio", "codigo", "sentinela", "noticias", "mercado", "marketing"] as AgentId[]).map((a) => {
+          const pr = agentPresence(a, app.visualFor(a), snap?.feed ?? [], monitors);
+          return (
+            <button key={a} type="button" className={`agent-pill ${pr.tone === "working" || pr.tone === "need" ? "on" : ""}`} onClick={() => app.navigate(`/agente/${a}`)}>
+              <span className={`agent-dot-status ${pr.dotClass}`} aria-hidden="true" />
+              {AGENTS[a].name}
+              {pr.tone === "working" ? " · lendo" : ""}
+            </button>
+          );
+        })}
       </section>
 
       <section className="stats" aria-label="Resumo de hoje">
@@ -117,7 +132,11 @@ export function MyDay() {
             </div>
           ) : (
             shown.map((it) => (
-              <article key={it.id} className={`feed-card ${isNeed(it) ? "need" : ""}`}>
+              <article
+                key={it.id}
+                className={`feed-card ${isNeed(it) ? "need" : ""}`}
+                onClick={it.kind === "email_digest" && pendingAp ? () => app.navigate(`/aprovacao/${pendingAp}`) : undefined}
+              >
                 <div className="feed-kicker">
                   {AGENTS[it.agentId].name} · {fmtTime(it.createdAt)}
                   {isNeed(it) && it.kind !== "ci_failure" && <span className="chip warn" style={{ marginLeft: "auto" }}>Precisa de você</span>}

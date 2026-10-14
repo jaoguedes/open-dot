@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { authorizeTool } from "../src/agents.ts";
 import { sanitizeUntrusted, checkEvidenceRefs } from "../src/untrusted.ts";
-import { decide, hashProposal, stillMatches, type Approval, type ActionProposal } from "../src/approvals.ts";
+import { GMAIL_CAN_SEND, decide, hashProposal, stillMatches, type Approval, type ActionProposal } from "../src/approvals.ts";
 import { transition } from "../src/runs.ts";
 import { triageByRules, buildDigest, parseAiTriage, type EmailMeta } from "../src/email.ts";
 import { checkTarget, applySample, initialIncident, correlateDeploy } from "../src/monitor.ts";
@@ -15,6 +15,7 @@ test("supervisor: Correio não tem ferramenta de GitHub; envio exige aprovação
   assert.equal(authorizeTool({ ...base, agentId: "correio", tool: "gmail.draft", approvalValid: true }).allow, true);
   // gmail.send nem está no perfil do piloto
   assert.equal(authorizeTool({ ...base, agentId: "correio", tool: "gmail.send", approvalValid: true }).allow, false);
+  assert.equal(GMAIL_CAN_SEND, false);
 });
 
 test("supervisor: recurso de outro dono é negado mesmo com aprovação", () => {

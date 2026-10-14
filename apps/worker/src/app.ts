@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AGENTS, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, isValidTimeZone, nextSlot, parseHHMM, renderUntrusted, sanitizeUntrusted, sha256Hex, toVisual, type AgentId, type SemanticState } from "@open-dot/core";
+import { AGENTS, GMAIL_CAN_SEND, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, hashProposal, isValidTimeZone, nextSlot, parseHHMM, renderUntrusted, sanitizeUntrusted, sha256Hex, toVisual, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
 import { GMAIL_READ_SCOPES, GSC_READ_SCOPES, LOGIN_SCOPES, authUrl, exchangeCode, readIdToken, revoke } from "@open-dot/connectors/google.ts";
 import { getProfile } from "@open-dot/connectors/gmail.ts";
 import { normalizeEvent, verifySignature, isNewer } from "@open-dot/connectors/github.ts";
@@ -478,14 +478,39 @@ route("GET", "/api/status", { auth: true }, async (ctx, _r, _p, ownerId) => {
 
 const DecisionInput = z.object({ decision: z.enum(["approve", "reject"]), expectedVersion: z.number().int(), payloadHash: z.string().length(64) });
 
-route("GET", "/api/approvals", { auth: true }, async (ctx, _r, _p, ownerId) => json({ approvals: await repo.listApprovals(ctx.db, ownerId!) }));
+route("GET", "/api/approvals", { auth: true }, async (ctx, _r, _p, ownerId) => json({ approvals: await repo.listApprovals(ctx.db, ctx.keys, ownerId!), canSend: GMAIL_CAN_SEND }));
+
+const EditInput = z.object({
+  expectedVersion: z.number().int(),
+  proposal: z.object({
+    action: z.string(),
+    service: z.string(),
+    account: z.string(),
+    resource: z.string(),
+    payload: z.record(z.unknown()),
+    consequence: z.string(),
+  }),
+});
+
+route("POST", "/api/approvals/:id/edit", { auth: true }, async (ctx, req, p, ownerId) => {
+  const body = EditInput.parse(await req.json());
+  const proposal = body.proposal as ActionProposal;
+  const payloadHash = await hashProposal(proposal);
+  const r = await repo.editApproval(ctx.db, ctx.keys, { ownerId: ownerId!, id: p.id!, proposal, payloadHash, expectedVersion: body.expectedVersion, now: ctx.now() });
+  const status = r === "ok" ? 200 : r === "not_found" ? 404 : 409;
+  await repo.audit(ctx.db, { ownerId, actor: "user", action: "approval_edit", target: p.id!, outcome: r, now: ctx.now() });
+  return json({ result: r, payloadHash: r === "ok" ? payloadHash : undefined, version: r === "ok" ? body.expectedVersion + 1 : undefined }, status);
+});
 
 route("POST", "/api/approvals/:id/decision", { auth: true }, async (ctx, req, p, ownerId) => {
   const body = DecisionInput.parse(await req.json());
   const r = await repo.decideApproval(ctx.db, { ownerId: ownerId!, id: p.id!, ...body, now: ctx.now() });
   const status = r === "ok" ? 200 : r === "not_found" ? 404 : 409;
   await repo.audit(ctx.db, { ownerId, actor: "user", action: `approval_${body.decision}`, target: p.id!, outcome: r, now: ctx.now() });
-  return json({ result: r }, status);
+  if (body.decision === "approve" && r === "ok") {
+    return json({ result: r, executed: false, sent: false, note: GMAIL_CAN_SEND ? null : "Envio ainda não habilitado. O Gmail continua só leitura." }, status);
+  }
+  return json({ result: r, executed: false, sent: false }, status);
 });
 
 // ---------------------------------------------------------------- Absorção de arquivos

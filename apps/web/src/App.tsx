@@ -10,6 +10,7 @@ import { MyDay } from "./views/MyDay.tsx";
 import { Routines } from "./views/Routines.tsx";
 import { Connections } from "./views/Connections.tsx";
 import { Mascot } from "./views/Mascot.tsx";
+import { Approval } from "./views/Approval.tsx";
 import { ContextPanel } from "./components/ContextPanel.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
 import { agentPresence } from "./presence.ts";
@@ -104,8 +105,10 @@ export function App() {
   };
   const agentMatch = /^\/agente\/(\w+)$/.exec(app.path);
   const agentId = (agentMatch?.[1] && agentMatch[1] in AGENTS ? agentMatch[1] : null) as AgentId | null;
-  const route = agentId ? "agent" : isMyDayPath(app.path) ? "/meu-dia" : app.path;
+  const apprMatch = /^\/aprovacao\/([^/]+)$/.exec(app.path);
+  const route = agentId ? "agent" : apprMatch ? "approval" : isMyDayPath(app.path) ? "/meu-dia" : app.path;
   const showContext = route === "agent";
+  const hideDock = route === "approval";
 
   let view;
   switch (route) {
@@ -120,6 +123,9 @@ export function App() {
       break;
     case "/mascote":
       view = <Mascot />;
+      break;
+    case "approval":
+      view = <Approval id={decodeURIComponent(apprMatch![1]!)} />;
       break;
     case "agent":
       view = <Home agentId={agentId!} />;
@@ -189,6 +195,7 @@ export function App() {
           </div>
         </div>
       </div>
+      {!hideDock && <Dock go={go} current={app.path} onAsk={() => setPalette(true)} />}
       {palette && <Palette onClose={() => setPalette(false)} go={go} />}
       <div className="sr-only" aria-live="polite">
         {app.announcement}
@@ -261,6 +268,30 @@ function Sidebar({ open, go, current }: { open: boolean; go: (p: string) => void
           )}
         </div>
       </div>
+    </nav>
+  );
+}
+
+function Dock({ go, current, onAsk }: { go: (p: string) => void; current: string; onAsk: () => void }) {
+  const my = isMyDayPath(current);
+  return (
+    <nav className="dock" aria-label="Principal">
+      <a href="/meu-dia" className={`dock-item ${my ? "on" : ""}`} aria-current={my ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/meu-dia"))}>
+        <Icon name="home" />
+        <span>Meu dia</span>
+      </a>
+      <a href="/rotinas" className="dock-icon" aria-label="Rotinas" aria-current={current === "/rotinas" ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/rotinas"))}>
+        <Icon name="clock" />
+      </a>
+      <button type="button" className="dock-icon" aria-label="Perguntar ao Dot" onClick={onAsk}>
+        <Icon name="search" />
+      </button>
+      <a href="/conexoes" className="dock-icon" aria-label="Conexões" aria-current={current === "/conexoes" ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/conexoes"))}>
+        <Icon name="plug" />
+      </a>
+      <a href="/mascote" className="dock-icon" aria-label="Mascote" aria-current={current === "/mascote" ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/mascote"))}>
+        <Icon name="sparkle" />
+      </a>
     </nav>
   );
 }
