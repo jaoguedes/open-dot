@@ -18,6 +18,9 @@ _Atualizado em 14/10/2026 · motor SVG (D-014) no núcleo, testado · visual/PWA
 | Chapéus (livro HAT) | ✅ unidade | Copa/meridianos/sombra pelo contorno da superelipse (`hatCrown`/`hatOff`). Trabalho: boné, fone, antena, viseira, boina. Guarda-roupa: gorro de gatinho, bucket, coroa (`CROWN_UNLOCKED = false`). Antena pisca só com `antennaPulse`. Peças montadas uma vez; por quadro só `d`/transform/opacity. |
 | Agentes Notícias / Mercado / Marketing (D-017) | ✅ unidade · 🟡 contas reais | Núcleo aditivo + schema `0003`. RSS allowlist (termos 14/10/2026). Cotações CoinGecko/Frankfurter/Finnhub opcional. GSC `webmasters.readonly`. Sem rota de ordem e `MARKETING_CAN_PUBLISH = false`. Testes de dedupe, política ≥ 2 veículos, feed indisponível, cotação velha, ordem 404, marketing não publica. |
 | Fase 5 · celular + aprovação | ✅ unidade | Abaixo de 760 px: sidebar some, Dot no centro, pílulas de agentes, dock 44 px com safe-area. Tela `/aprovacao/:id`: texto exato, hash + CAS, editar gera hash novo. `GMAIL_CAN_SEND = false` — aprovar não envia. |
+| Fase 6 · PWA | ✅ unidade | `manifest.webmanifest` (Open Dot / opendot / standalone / #050608), ícones 192/512 e maskable a partir do poster do Dot, `apple-touch-icon`, SW só do shell (nunca `/api`). |
+| Fase 7 · GLB / desempenho | ✅ chave já existia · 🟡 GPU real | `DOT_RENDERER=engine` padrão; GLB atrás de `glb`. Medição de fps no Chromium headless (SwiftShader), não GPU real. Prints na sessão de `test:ui`. |
+| Parte C · IA (D-016) | ✅ registro · ⛔ chave | Inventário em `packages/core/src/ai/registry.ts`: Groq ligado; Workers AI / Gemini / outros desligados; Gemini `neverPrivate`; nenhuma rota paga habilitada. Sem chamada real à IA. |
 
 ## Legenda
 
@@ -88,7 +91,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Fase 6: PWA (manifest, service worker só do shell, offline). Depois GLB/desempenho/prints e Parte C da IA.
+Rodar `npm run test:ui` com o `npm run dev` recém-reiniciado. Conferir prints 1440 (tela 01) e 390 (tela 02) contra as referências. Sem deploy e sem push.
 
 ## Como retomar em outra sessão
 

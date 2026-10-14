@@ -125,3 +125,9 @@ test("código do worker não declara rota de ordem (checagem de texto)", () => {
   const app = readFileSync(new URL("../../../apps/worker/src/app.ts", import.meta.url), "utf8");
   assert.equal(/route\([^)]*(order|trade|buy|sell)/i.test(app), false);
 });
+
+test("PWA: o service worker não guarda /api", () => {
+  const sw = readFileSync(new URL("../../../apps/web/public/sw.js", import.meta.url), "utf8");
+  assert.match(sw, /pathname\.startsWith\("\/api\/"\)\) return/);
+  assert.match(sw, /open-dot-shell/);
+});

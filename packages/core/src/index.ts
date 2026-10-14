@@ -12,6 +12,7 @@ export * from "./untrusted.ts";
 export * from "./email.ts";
 export * from "./monitor.ts";
 export * from "./ai/config.ts";
+export * from "./ai/registry.ts";
 export * from "./ai/budget.ts";
 export * from "./ai/router.ts";
 export * from "./dot/index.ts";

@@ -153,3 +153,14 @@ test("segredo nunca é roteado para IA", () => {
   const r = new AiRouter({ providers: [provider("a", ["public", "personal", "private_email"])], ledger: ledger(), limits: DEFAULT_OWNER_LIMITS, env: { A_KEY: "1" }, fetch: async () => okBody() });
   assert.equal(r.candidates({ dataClass: "secret", capability: "answer" }).length, 0);
 });
+
+test("registro D-016: só Groq ligado; Gemini nunca privado; nenhuma rota paga", async () => {
+  const { PROVIDER_REGISTRY, enabledProviders, registryAllowsPaid } = await import("../src/ai/registry.ts");
+  assert.equal(registryAllowsPaid(), false);
+  assert.deepEqual(enabledProviders().map((p) => p.id), ["groq"]);
+  const gemini = PROVIDER_REGISTRY.find((p) => p.id === "gemini")!;
+  assert.equal(gemini.enabled, false);
+  assert.equal(gemini.neverPrivate, true);
+  assert.ok(!gemini.allowedData.includes("private_email"));
+  assert.ok(PROVIDER_REGISTRY.every((p) => p.billing !== "paid" || !p.enabled));
+});

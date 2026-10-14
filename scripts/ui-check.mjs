@@ -382,6 +382,25 @@ if (!ONLY || ONLY === "absorb") {
   await ctx.close();
 }
 
+{
+  const { p, ctx } = await page({ colorScheme: "dark" });
+  await p.goto(BASE + "/?demo=1");
+  await ready(p);
+  const man = await p.evaluate(async () => {
+    const r = await fetch("/manifest.webmanifest");
+    const j = await r.json();
+    return { ok: r.ok, name: j.name, short: j.short_name, display: j.display, theme: j.theme_color, icons: (j.icons ?? []).map((i) => i.purpose).join(",") };
+  });
+  check("manifest: Open Dot / opendot / standalone / #050608", man.ok && man.name === "Open Dot" && man.short === "opendot" && man.display === "standalone" && man.theme === "#050608" && /maskable/.test(man.icons), JSON.stringify(man));
+  await p.waitForTimeout(500);
+  const sw = await p.evaluate(async () => {
+    const reg = await navigator.serviceWorker.getRegistration();
+    return Boolean(reg);
+  });
+  check("service worker registrado", sw);
+  await ctx.close();
+}
+
 await browser.close();
 await browser2d.close();
 writeFileSync(`${OUT}/medicoes.json`, JSON.stringify({ at: new Date().toISOString(), note: "Medições em Chromium headless com SwiftShader (CPU). Não são metas nem números de GPU real.", ...measures }, null, 2));
