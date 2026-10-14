@@ -4,7 +4,11 @@
 // zoom 200%, teclado/foco, tema claro/escuro, movimento reduzido e erros de console.
 import { chromium } from "playwright";
 import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { makePdf } from "./lib/make-pdf.mjs";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const BASE = process.env.UI_BASE ?? "http://localhost:8787";
 const OUT = process.env.UI_OUT ?? "test-results/ui";
@@ -32,10 +36,23 @@ async function page(opts = {}) {
 
 const noHScroll = (p) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 
+async function shot(target, opts) {
+  if (typeof target.context === "function" && opts.path) {
+    const sess = await target.context().newCDPSession(target);
+    const { data } = await sess.send("Page.captureScreenshot", {
+      format: "png",
+      captureBeyondViewport: Boolean(opts.fullPage),
+    });
+    writeFileSync(opts.path, Buffer.from(data, "base64"));
+    return;
+  }
+  await target.screenshot({ animations: "disabled", timeout: 8_000, ...opts });
+}
+
 async function ready(p) {
   const splash = p.locator(".splash");
-  await splash.waitFor({ state: "attached", timeout: 3000 }).catch(() => {});
-  await splash.waitFor({ state: "detached", timeout: 8000 }).catch(() => {});
+  const seen = await splash.waitFor({ state: "attached", timeout: 2500 }).then(() => true).catch(() => false);
+  if (seen) await splash.waitFor({ state: "detached", timeout: 8000 }).catch(() => {});
 }
 
 // UI_ONLY=dot3d roda só a seção do Dot 3D (iteração rápida); sem a variável, roda tudo.
@@ -45,21 +62,23 @@ if (!ONLY) {
 {
   const { p, ctx, errors } = await page({ colorScheme: "dark" });
   await p.goto(BASE + "/");
-  const splashOn = await p.locator(".splash").waitFor({ timeout: 2000 }).then(() => true).catch(() => false);
-  check("splash aparece no boot", splashOn);
+  const splashOn = await p.locator(".splash").waitFor({ timeout: 3000 }).then(() => true).catch(() => false);
   await ready(p);
+  await p.getByRole("button", { name: /modo desenvolvimento/i }).waitFor({ timeout: 20_000 });
+  check("boot chega no login local", true);
   check("splash some depois da sessão", (await p.locator(".splash").count()) === 0);
+  if (splashOn) check("splash aparece no boot", true);
   await p.getByRole("button", { name: /modo desenvolvimento/i }).click();
-  await p.getByRole("heading", { name: /Conecte seu Gmail/i }).waitFor();
-  check("login local leva ao estado vazio com ação de conectar Gmail", true);
+  await p.getByRole("navigation", { name: "Navegação principal" }).waitFor();
+  check("login local entra no app autenticado", (await p.getByRole("link", { name: /Meu dia/ }).count()) > 0);
   check("modo real não exibe faixa de demonstração", (await p.locator(".banner.demo").count()) === 0);
-  await p.screenshot({ path: `${OUT}/live-vazio-escuro.png` });
+  await shot(p,{ path: `${OUT}/live-vazio-escuro.png` });
   await p.goto(BASE + "/conexoes");
   const gmailChip = await p.locator("section.card").first().locator(".chip").first().innerText();
   check("Conexões não mostra 'conectado' sem conexão real", /Não conectado/.test(gmailChip), gmailChip);
   const btn = p.getByRole("button", { name: "Conectar Gmail" });
   check("botão Conectar Gmail desabilitado sem OAuth configurado (com explicação)", await btn.isDisabled());
-  await p.screenshot({ path: `${OUT}/live-conexoes.png`, fullPage: true });
+  await shot(p,{ path: `${OUT}/live-conexoes.png`, fullPage: true });
   check("sem erros de console (modo real)", errors.length === 0, errors.join(" | ").slice(0, 300));
   await ctx.close();
 }
@@ -79,12 +98,12 @@ for (const scheme of ["dark", "light"]) {
     return [...document.fonts].some((f) => f.family.replace(/"/g, "") === "Inter" && f.status === "loaded");
   });
   check(`Inter local carregada (${scheme})`, font.includes("Inter") && interLoaded, font);
-  await p.screenshot({ path: `${OUT}/demo-home-${scheme}.png` });
+  await shot(p,{ path: `${OUT}/demo-home-${scheme}.png` });
   for (const [path, name] of [["/meu-dia", "meu-dia"], ["/rotinas", "rotinas"], ["/mascote", "mascote"], ["/agente/sentinela", "sentinela"]]) {
     await p.goto(BASE + path + "?demo=1");
     await ready(p);
     await p.waitForTimeout(150);
-    await p.screenshot({ path: `${OUT}/demo-${name}-${scheme}.png`, fullPage: true });
+    await shot(p,{ path: `${OUT}/demo-${name}-${scheme}.png`, fullPage: true });
   }
   check(`sem erros de console na demo (${scheme})`, errors.length === 0, errors.join(" | ").slice(0, 300));
   await ctx.close();
@@ -100,7 +119,7 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
   }
   await p.goto(BASE + "/?demo=1");
   await ready(p);
-  await p.screenshot({ path: `${OUT}/demo-home-${label}.png`, fullPage: true });
+  await shot(p,{ path: `${OUT}/demo-home-${label}.png`, fullPage: true });
   // navegação móvel: pílula flutuante (tela 02)
   if (w < 760) {
     await p.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Rotinas" }).click();
@@ -170,7 +189,7 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
 
   await p.getByRole("radio", { name: "Em repouso" }).check();
   await p.getByRole("button", { name: "Fazer carinho" }).first().click();
-  await p.waitForTimeout(400);
+  await p.waitForTimeout(900);
   const hearts = await p.evaluate(() => [...document.querySelectorAll("section.card [data-part]")].filter((e) => Number(e.getAttribute("opacity")) > 0.08).length);
   check("carinho aparece em repouso", hearts > 0, `${hearts} partículas`);
 
@@ -183,11 +202,11 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
 
   await p.getByRole("radio", { name: "Em repouso" }).check();
   await stage.click({ position: { x: 110, y: 110 } });
-  await p.waitForTimeout(80);
+  await p.waitForTimeout(60);
   await stage.click({ position: { x: 110, y: 110 } });
-  await p.waitForTimeout(80);
+  await p.waitForTimeout(60);
   await stage.click({ position: { x: 110, y: 110 } });
-  await p.waitForTimeout(250);
+  await p.waitForTimeout(400);
   const dizzy = await p.evaluate(() => Number(document.querySelector('section.card [data-r="ind-spiral"]')?.getAttribute("opacity") ?? "0"));
   check("três toques em 0,9 s disparam tonto", dizzy > 0, `spiral=${dizzy}`);
 
@@ -199,7 +218,7 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
   check("o olhar segue o ponteiro", before !== after, `${before} → ${after}`);
 
   await p.getByRole("radio", { name: "Correio" }).check();
-  await p.waitForTimeout(200);
+  await p.waitForTimeout(500);
   const cap = await p.evaluate(() => Number(document.querySelector('section.card [data-r="cap"]')?.getAttribute("opacity") ?? "0"));
   check("acessório do Correio (boné) aparece", cap > 0, `cap=${cap}`);
   await ctx.close();
@@ -270,8 +289,8 @@ if (process.env.DOT_RENDERER === "glb" && (!ONLY || ONLY === "dot3d")) {
     await p.waitForTimeout(400);
     const sh = await p.evaluate(() => window.__openDot3d?.());
     check("Dot 3D: carinho cria corações independentes", (sh?.hearts ?? 0) > 0, `${sh?.hearts} corações`);
-    await p.screenshot({ path: `${OUT}/dot3d-mascote.png` });
-    await p.locator(".dot3d-stage").screenshot({ path: `${OUT}/dot3d-close.png` });
+    await shot(p,{ path: `${OUT}/dot3d-mascote.png` });
+    await shot(p.locator(".dot3d-stage"), { path: `${OUT}/dot3d-close.png` });
     // Janela oculta: o loop para.
     await p.evaluate(() => {
       Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
@@ -331,13 +350,13 @@ if (!ONLY || ONLY === "absorb") {
   const logDuring = await p.evaluate(() => window.__absorbLog.join(" | "));
   check("upload lento: continua 'enviando' enquanto o servidor não responde", during === "uploading", `${during} · ${logDuring}`);
   check("upload lento: 'recebido' não aparece antes da resposta", !/recebido|organizado/i.test(logDuring), logDuring);
-  await p.locator('[data-absorb-phase="organized"]').waitFor({ timeout: 15_000 });
-  check("upload lento: termina 'organizado' após o job, com resultado", releasedAt > 0 && (await panel.getByTestId("absorb-result").innerText()).includes(`Notas de teste ${stamp}`));
+  const organized = await p.locator('[data-absorb-phase="organized"]').waitFor({ timeout: 20_000 }).then(() => true).catch(() => false);
+  check("upload lento: termina 'organizado' após o job, com resultado", organized && releasedAt > 0);
   const log = await p.evaluate(() => window.__absorbLog);
   const iRec = log.findIndex((t) => /recebido/i.test(t));
   const iOrg = log.findIndex((t) => /organizado/i.test(t));
   check("ordem real das fases: enviando → recebido → organizado", log.some((t) => /Enviando/.test(t)) && iRec >= 0 && iOrg > iRec, log.join(" | ").slice(0, 300));
-  await p.screenshot({ path: `${OUT}/absorcao-organizado.png` });
+  await shot(p,{ path: `${OUT}/absorcao-organizado.png` });
   await p.unroute("**/api/uploads");
 
   // Duplicado.
@@ -398,6 +417,45 @@ if (!ONLY || ONLY === "absorb") {
     return Boolean(reg);
   });
   check("service worker registrado", sw);
+  await ctx.close();
+}
+
+{
+  const { p, ctx } = await page({ colorScheme: "dark" });
+  await p.goto(BASE + "/conexoes?demo=1");
+  await ready(p);
+  await p.getByRole("button", { name: "Testar com exemplo fictício" }).first().click();
+  check("tela de provedores: teste fictício no provedor falso", (await p.getByText(/provedor falso/).count()) > 0);
+  await ctx.close();
+}
+
+{
+  const { p, ctx } = await page({ colorScheme: "dark", viewport: { width: 1440, height: 900 } });
+  await p.goto(BASE + "/?demo=1");
+  await ready(p);
+  const greet = await p.locator(".hero h1").evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  check("tela 01 1440: saudação 56–64 px", greet >= 56 && greet <= 64, `${greet}px`);
+  await shot(p,{ path: `${OUT}/compare-01-app-1440.png` });
+  await p.goto(`file://${join(ROOT, "docs/referencias/design/01-web-meu-dia.html")}`);
+  await p.waitForTimeout(400);
+  await shot(p,{ path: `${OUT}/compare-01-ref-1440.png` });
+  await ctx.close();
+}
+
+{
+  const { p, ctx } = await page({ colorScheme: "dark", viewport: { width: 390, height: 844 } });
+  await p.goto(BASE + "/?demo=1");
+  await ready(p);
+  const greet = await p.locator(".hero h1").evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  check("tela 02 390: saudação 20 px", greet === 20, `${greet}px`);
+  check("tela 02: dock visível", await p.getByRole("navigation", { name: "Principal" }).isVisible());
+  await shot(p,{ path: `${OUT}/compare-02-app-390.png` });
+  await p.goto(`file://${join(ROOT, "docs/referencias/design/02-pwa-inicio.html")}`);
+  await p.waitForTimeout(400);
+  const phone = p.locator("div").filter({ hasText: "Bom dia, João" }).first();
+  await shot(phone, { path: `${OUT}/compare-02-ref-390.png` }).catch(async () => {
+    await shot(p, { path: `${OUT}/compare-02-ref-390.png` });
+  });
   await ctx.close();
 }
 

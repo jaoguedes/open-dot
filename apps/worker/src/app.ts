@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AGENTS, GMAIL_CAN_SEND, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, hashProposal, isValidTimeZone, nextSlot, parseHHMM, renderUntrusted, sanitizeUntrusted, sha256Hex, toVisual, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
+import { AGENTS, GMAIL_CAN_SEND, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, hashProposal, isValidTimeZone, nextSlot, parseHHMM, providerCards, renderUntrusted, runFictitiousProviderTest, sanitizeUntrusted, sha256Hex, toVisual, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
 import { GMAIL_READ_SCOPES, GSC_READ_SCOPES, LOGIN_SCOPES, authUrl, exchangeCode, readIdToken, revoke } from "@open-dot/connectors/google.ts";
 import { getProfile } from "@open-dot/connectors/gmail.ts";
 import { normalizeEvent, verifySignature, isNewer } from "@open-dot/connectors/github.ts";
@@ -276,7 +276,14 @@ route("GET", "/api/connections", { auth: true }, async (ctx, _r, _p, ownerId) =>
     configured: configured(ctx.env),
     connections: rows.map((c) => ({ id: c.id, provider: c.provider, status: c.status, accountLabel: c.account_label, scopes: JSON.parse(c.scopes) as string[], lastSyncAt: c.last_sync_at, lastError: c.last_error })),
     agents: await extraAgentCards(ctx, ownerId!),
+    providers: providerCards({ groqConfigured: configured(ctx.env).ai, groqPrivate: configured(ctx.env).aiPrivate }),
   });
+});
+
+route("POST", "/api/ai/providers/:id/test", { auth: true }, async (_ctx, _r, p) => {
+  const r = runFictitiousProviderTest(p.id!);
+  if (!r.ok) return problem(409, "provider_disabled", "reason" in r ? r.reason : "Provedor recusado.");
+  return json(r);
 });
 
 route("POST", "/api/agents/:id/test", { auth: true }, async (ctx, _r, p, ownerId) => {

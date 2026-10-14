@@ -1,4 +1,4 @@
-import { toVisual } from "@open-dot/core";
+import { providerCards, toVisual } from "@open-dot/core";
 import type { AskAnswer, Snapshot } from "./api.ts";
 
 /**
@@ -74,6 +74,7 @@ export function demoSnapshot(): Snapshot {
         note: "Ideias de post são rascunho. Publicar nunca é automático.",
       },
     ],
+    providers: providerCards({ groqConfigured: false, groqPrivate: false, calls: 12, callLimit: 50 }),
     canSend: false,
     approvals: [
       {

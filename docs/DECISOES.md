@@ -73,7 +73,7 @@ Formato: contexto → decisão → consequência. Novas decisões entram no fim.
 ### D-016 · Camada de IA conforme a pesquisa de 14/10/2026
 - **Contexto:** `docs/referencias/Open_Dot_APIs_IA_Nuvem.pdf`. O brief chamava isto de D-013. Amplia o D-007 sem relaxar o custo R$ 0.
 - **Decisão:** Groq é o provedor ativo (`gpt-oss-20b` classifica; `gpt-oss-120b` resume e responde). Cloudflare Workers AI fica como fallback opcional (`env.AI`), desligado até passar na avaliação. Gemini, OpenRouter, Mistral, SambaNova e Z.ai ficam registrados e desligados; Gemini nunca recebe dado privado. GitHub Models (encerrado), Cerebras e Together não são tratados como gratuitos. Nenhuma rota paga, nenhum cartão, nenhuma recarga automática. Limites RPM/RPD/TPM/TPD saem do código e vêm da configuração da conta (vale o mais restritivo). 402 desliga a rota; 401/403 pausa a credencial; fallback só para política de dados igual ou mais restrita.
-- **Consequência:** sem rota elegível o feed mostra fontes, assuntos e a classificação por regras, com “Resumo por IA pendente”. Nunca um sucesso falso.
+- **Consequência:** sem rota elegível o feed mostra fontes, assuntos e a classificação por regras, com “Resumo por IA pendente”. Nunca um sucesso falso. Chamadas Groq usam `max_completion_tokens` e `reasoning_effort: low`. 402 desliga a rota. O botão “Testar com exemplo fictício” só fala com o provedor falso.
 
 ### D-017 · Agentes Notícias, Mercado e Marketing (14/10/2026)
 - **Contexto:** o brief pedia D-014 para estes agentes, mas D-014 já é o motor SVG. Custo R$ 0, só leitura.

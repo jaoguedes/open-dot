@@ -1,6 +1,6 @@
 # STATUS — Open Dot
 
-_Atualizado em 14/10/2026 · motor SVG (D-014) no núcleo, testado · visual/PWA/IA das telas aprovadas em andamento._
+_Atualizado em 14/10/2026 · A–C e fases 5–8 no núcleo; prints 1440/390 conferidos; sem deploy e sem push._
 
 ## Sessão autônoma 13→14/10 (em andamento)
 
@@ -20,7 +20,7 @@ _Atualizado em 14/10/2026 · motor SVG (D-014) no núcleo, testado · visual/PWA
 | Fase 5 · celular + aprovação | ✅ unidade | Abaixo de 760 px: sidebar some, Dot no centro, pílulas de agentes, dock 44 px com safe-area. Tela `/aprovacao/:id`: texto exato, hash + CAS, editar gera hash novo. `GMAIL_CAN_SEND = false` — aprovar não envia. |
 | Fase 6 · PWA | ✅ unidade | `manifest.webmanifest` (Open Dot / opendot / standalone / #050608), ícones 192/512 e maskable a partir do poster do Dot, `apple-touch-icon`, SW só do shell (nunca `/api`). |
 | Fase 7 · GLB / desempenho | ✅ chave já existia · 🟡 GPU real | `DOT_RENDERER=engine` padrão; GLB atrás de `glb`. Medição de fps no Chromium headless (SwiftShader), não GPU real. Prints na sessão de `test:ui`. |
-| Parte C · IA (D-016) | ✅ registro · ⛔ chave | Inventário em `packages/core/src/ai/registry.ts`: Groq ligado; Workers AI / Gemini / outros desligados; Gemini `neverPrivate`; nenhuma rota paga habilitada. Sem chamada real à IA. |
+| Parte C · IA (D-016) | ✅ unidade · ⛔ chave Groq | Registro + `max_completion_tokens`/`reasoning_effort: low` no Groq; 402 desliga a rota. Tela de provedores com “Testar com exemplo fictício” (só provedor falso). `npm run eval:ai`: dataset v1 100 casos, recall importantes 100%, JSON 100%, zero ação não autorizada, zero segredo no resultado, zero rota paga. Sem chamada real à Groq. |
 
 ## Legenda
 
@@ -42,14 +42,14 @@ _Atualizado em 14/10/2026 · motor SVG (D-014) no núcleo, testado · visual/PWA
 | Login | ✅ local (dev) · 🟡 Google | Login Google OIDC (PKCE, state, nonce, dono único). A entrada de desenvolvimento só funciona em localhost |
 | Gmail (somente leitura) | 🧪 testado com Google simulado · 🟡 real | OAuth com `gmail.readonly`, sync incremental (`historyId` como texto), dedupe, ressincronização após 404, lotes dentro do limite de subrequisições, renovação de token com lease, reconexão única quando revogado, resumo das 08h/17h com links para o Gmail |
 | Rotinas 08h/17h | ✅ | Chave única por slot; cron repetido não duplica; após dias offline gera um único resumo “atrasado”; mudar o horário cancela execuções futuras |
-| IA | ✅ lógica · ⛔ chave | Allowlist com o Groq; e-mail privado bloqueado até o ZDR ser confirmado; reserva atômica no banco; 429/Retry-After; timeout; circuit breaker; cancelamento; registro de consumo sem conteúdo. Sem chave, tudo cai para regras |
+| IA | ✅ lógica + eval falso · ⛔ chave | Allowlist Groq; ZDR para privado; 402 desliga; `max_completion_tokens`. Tela de provedores. Avaliação `scripts/eval-ai.ts` no provedor falso. Sem chave, resumo por regras |
 | GitHub | 🧪 webhook testado com eventos simulados · 🟡 GitHub App | Assinatura HMAC, dedupe por delivery, evento fora de ordem não regride, falha de CI vai para o feed. O token de instalação está implementado, sem teste real |
 | Vercel | 🟡 | Leitura de `/v7/deployments` a cada ~15 min; deploy com ERROR vai para o feed. Sem escrita. Web Analytics Hobby: sem visitas inventadas se a API não responder |
 | Notícias | ✅ unidade · 🟡 RSS reais | Allowlist RSS/Atom (BBC, NPR, Folha). Dedupe, política ≥ 2 veículos, “O mundo hoje” às 08h (máx. 3/tema). Sem scraping de paywall |
 | Mercado | ✅ unidade · 🟡 APIs reais | CoinGecko + Frankfurter sem chave; Finnhub Free opcional (`setup:cloud`). Alerta no limite. Sem corretora/ordem |
 | Marketing | ✅ unidade · 🟡 GSC/Vercel reais | Search Console só leitura; ideias de post = rascunho; redes sociais 📋. Não publica |
 | Sites (Sentinela) | ✅ | Até 3 URLs HTTPS; bloqueio de IP interno e de redirecionamento; incidente após 3 falhas e encerramento após 2 sucessos; correlação com deploy dita como “sinal, não causa” |
-| Interface web | ✅ | Tema escuro padrão (D-015), tokens únicos, Inter/Instrument Serif/JetBrains Mono locais, shell da tela 01, ilha preta no topo, ⌘K, demonstração isolada e rotulada. Claro continua. Layout móvel 02/03 ainda é o menu lateral (fase 5) |
+| Interface web | ✅ desktop · 🟡 arte móvel | Tema escuro (D-015), shell da tela 01 a 1440 px alinhado à referência (saudação 64 px, serif, Dot 280 px, 3 cartões, filtro, Meu dia em `aria-current`). Abaixo de 760 px: sidebar some, dock 44 px, saudação 20 px. Ainda difere da tela 02: faixa de demonstração, saudação no corpo (não no header) e pílulas/feed podem ficar abaixo da dobra |
 | Dot 2D (fallback) | ✅ | Sem boca, sem sobrancelhas, **tracinho de absorção preservado**, blush, acessórios removíveis, tinta por estado, carinho suprimido em erro/aprovação, movimento reduzido. Rotulado como “2D” |
 | Dot 3D (Blender) | ✅ técnico · 🟡 arte | `npm run blender:build` roda no Mac (Blender 4.5.14 LTS) e passa na validação: GLB base 164 KB, 3.500 triângulos, 19 clipes, 10 morphs dos olhos; 5 peças de 3–12 KB. Posters em `assets/dot/poster-*.png` (Cycles na CPU). **Aprovação artística pendente** (`ACOES_DO_JOAO.md`, grupo A). Validador Khronos não executado |
 | Dot 3D no app | ✅ Chromium/SwiftShader · 🟡 GPU real | `Dot3D.tsx` + `dot3d/DotScene.ts`: um único canvas, clipes `body_*`/`face_*` em camadas, olhar limitado (8°/5°), tom do agente/estado pelo resolvedor, acessório no socket, corações do `HeartEmitter`, crossfade de 200 ms, ≤ 30 fps, render sob demanda em repouso, pausa com a janela oculta, fallback 2D sem WebGL, com perda de contexto e com movimento reduzido. three.js num chunk carregado só quando o 3D aparece (página Mascote) |
@@ -64,10 +64,11 @@ Ambiente: workspace Linux na nuvem, Node 22.22, TypeScript 6.0.3, esbuild 0.28.2
 | Comando | Resultado |
 |---|---|
 | `npm run typecheck` | ✅ sem erros |
-| `npm test` | ✅ **67/67** (45 do núcleo, 18 de integração do worker com SQLite real, 4 do cliente Turso/Hrana) |
-| `npm run test:blender` | ✅ 5/5 (conversão de cor, validador de GLB com arquivos sintéticos) |
-| `npm run build` | ✅ JS da interface 254 KB, CSS 15 KB, fontes 77 KB; bundle do Worker com 135 KB e **sem APIs do Node** |
-| `npm run test:ui` | ✅ **36/36** no Chromium: login local → estado vazio real; demonstração rotulada; Inter carregada localmente; 320/390 px e zoom 200% sem rolagem horizontal; menu móvel; tab/skip link/foco visível; ⌘K; movimento reduzido sem animação; carinho não mascara aprovação; sem erros de console |
+| `npm test` | ✅ **121/121** (núcleo + worker SQLite + Hrana + notícias/mercado/marketing + eval-ai falso) |
+| `npm run test:blender` | ✅ 7/7 |
+| `npm run build` | ✅ app.js 320 KB, worker 176 KB, **sem APIs do Node** |
+| `npm run eval:ai` | ✅ provedor falso v1: 100 casos, recall importantes 100%, JSON 100%, unauthorized 0, paid false |
+| `npm run test:ui` | 🟡 parcial no Chromium local: login, demo rotulada, Meu dia em `aria-current`, 320/390 sem rolagem horizontal, dock, aprovação sem envio, ⌘K. Prints 1440 (h1 64 px) e 390 (h1 20 px, dock). Falhas sob carga: carinho/tonto/boné no Mascote e organize do upload (timeout). GPU real 🟡 |
 
 Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveitado, escopo negado, acesso revogado (uma única notificação), webhook com assinatura inválida, entrega duplicada, evento fora de ordem, 429 do Gmail, falha parcial de sincronização, cursor expirado, cron repetido, lease disputado, aprovações concorrentes, orçamento concorrente (memória e SQL), 429 em provedor privado sem envio a outro, timeout e circuit breaker, cancelamento, injeção de prompt, ID de evidência inventado, prioridade visual de erro, cancelamento independente de efeitos, movimento reduzido, segredos ausentes do banco e do health.
 
@@ -91,7 +92,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Rodar `npm run test:ui` com o `npm run dev` recém-reiniciado. Conferir prints 1440 (tela 01) e 390 (tela 02) contra as referências. Sem deploy e sem push.
+Ajustar a tela 02 para caber pílulas de agentes e o primeiro cartão do feed acima do dock (a referência 02 mostra isso; o app ainda deixa na dobra). Reexecutar o bloco Mascote/absorção do `test:ui` com o servidor folgado. Sem deploy e sem push. Conta Groq só quando o João pedir.
 
 ## Como retomar em outra sessão
 

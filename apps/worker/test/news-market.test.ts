@@ -98,3 +98,19 @@ test("código do worker: ingestQuotes não negocia", async () => {
   const order = await c.call("POST", "/api/orders", { symbol: "BTC", side: "buy" });
   assert.ok(order.status >= 400);
 });
+
+test("provedor de IA: teste fictício não chama a Groq; pago recusado", async () => {
+  const ctx = await makeCtx({ fetch: newsFetch });
+  const c = client(ctx);
+  await c.call("POST", "/api/session/dev");
+  const cards = (await c.call("GET", "/api/connections")).json.providers;
+  assert.ok(cards.some((p: { id: string; enabled: boolean }) => p.id === "groq" && p.enabled));
+  assert.ok(cards.some((p: { id: string; billing: string; enabled: boolean }) => p.id === "openrouter" && p.billing === "paid" && !p.enabled));
+  const t = await c.call("POST", "/api/ai/providers/groq/test");
+  assert.equal(t.status, 200);
+  assert.equal(t.json.used, "fake");
+  assert.equal(t.json.realCall, false);
+  assert.ok(!JSON.stringify(t.json).includes("gsk_"));
+  const paid = await c.call("POST", "/api/ai/providers/openrouter/test");
+  assert.equal(paid.status, 409);
+});

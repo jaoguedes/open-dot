@@ -24,7 +24,8 @@
     "worker:deploy": "npm run check && npx --yes wrangler@4 deploy",
     "worker:dev": "npx --yes wrangler@4 dev",
     "setup:cloud": "tsx scripts/setup-cloud.ts",
-    "test:blender": "python3 blender/test_spec.py"
+    "test:blender": "python3 blender/test_spec.py",
+    "eval:ai": "tsx scripts/eval-ai.ts"
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",

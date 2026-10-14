@@ -118,7 +118,11 @@ Sem isso, os resumos continuam funcionando por regras.
 3. **Liberar os e-mails para a IA**
    - Só depois do passo 2, troque `GROQ_ZDR_CONFIRMED` para `"true"` no `wrangler.jsonc` (ou no `.dev.vars`).
 
-- **Como verifico:** a página Conexões mostra “Groq · dados privados liberados (ZDR confirmado)” e o resumo passa a dizer “Classificado com IA”.
+4. **Conferir modelos e limites** no painel Free da Groq (gpt-oss-20b / 120b).
+5. **Teste fictício** em Conexões → Provedores → “Testar com exemplo fictício” (roda no provedor falso; não gasta a franquia).
+6. **Piloto de 7 dias só leitura** — só depois dos passos 1–5, quando você pedir.
+
+- **Como verifico:** a página Conexões lista Groq com estado, modelo e consumo do dia. “Conectado” depois do teste fictício **não** significa aprovação de privacidade. Sem ZDR, e-mail privado continua só por regras.
 
 ---
 

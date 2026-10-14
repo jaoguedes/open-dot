@@ -15,6 +15,8 @@ export * from "./ai/config.ts";
 export * from "./ai/registry.ts";
 export * from "./ai/budget.ts";
 export * from "./ai/router.ts";
+export * from "./ai/fictitious-test.ts";
+export * from "./ai/eval.ts";
 export * from "./dot/index.ts";
 export * from "./news-feeds.ts";
 export * from "./news.ts";

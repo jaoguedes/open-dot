@@ -334,3 +334,18 @@ details > summary::-webkit-details-marker { display: none; }
 .approval-actions { display: flex; flex-direction: column; gap: 10px; }
 .approval-split { display: flex; gap: 10px; }
 .approval-split .btn { flex: 1; }
+
+/* Depois das regras do hero (56–64 px), para o celular da tela 02 prevalecer. */
+@media (max-width: 759px) {
+  :root { --ask-bar: 24px; }
+  .hero { gap: 6px; margin-bottom: 8px; }
+  .hero-copy { gap: 6px; }
+  .hero h1 { font-size: 20px; letter-spacing: -0.03em; line-height: 1.15; }
+  .hero .serif { font-size: 34px; line-height: 1.05; }
+  .hero-dot svg { width: min(168px, 52vw); height: auto; }
+  .topbar .search { display: none; }
+  .topbar .top-date.hide-sm { display: block; }
+  .stats { display: none; }
+  .banner.demo { font-size: 12px; line-height: 16px; padding: 8px 12px; }
+  .agent-pills { display: flex !important; }
+}

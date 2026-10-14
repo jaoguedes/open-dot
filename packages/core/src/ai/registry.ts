@@ -151,3 +151,36 @@ export function enabledProviders(): ProviderSheet[] {
 export function registryAllowsPaid(): boolean {
   return PROVIDER_REGISTRY.some((p) => p.enabled && p.billing === "paid");
 }
+
+/** Cartão público para Conexões: nunca inclui chave. */
+export interface ProviderCard {
+  id: string;
+  label: string;
+  enabled: boolean;
+  billing: BillingClass;
+  models: string[];
+  allowedData: DataClass[];
+  neverPrivate: boolean;
+  note: string;
+  privacy: { retention: string; training: string; verifiedAt: string };
+  configured: boolean;
+  quota: { calls: number; limit: number } | null;
+  lastCheck: string | null;
+}
+
+export function providerCards(opts: { groqConfigured: boolean; groqPrivate: boolean; calls?: number; callLimit?: number }): ProviderCard[] {
+  return PROVIDER_REGISTRY.map((p) => ({
+    id: p.id,
+    label: p.label,
+    enabled: p.enabled && p.billing === "free_tier",
+    billing: p.billing,
+    models: p.models,
+    allowedData: p.allowedData,
+    neverPrivate: p.neverPrivate,
+    note: p.note,
+    privacy: p.privacy,
+    configured: p.id === "groq" ? opts.groqConfigured : false,
+    quota: p.id === "groq" && opts.callLimit != null ? { calls: opts.calls ?? 0, limit: opts.callLimit } : null,
+    lastCheck: null,
+  }));
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { providerCards, runFictitiousProviderTest, type ProviderCard } from "@open-dot/core";
 import { useApp } from "../store.tsx";
 import { api, ApiError } from "../api.ts";
 import { Icon } from "../components/Icons.tsx";
@@ -120,14 +121,7 @@ export function Connections() {
 
       <ExtraAgents demo={demo} cfgGoogle={Boolean(cfg?.google)} />
 
-      <section className="card" style={{ marginTop: 16 }} aria-labelledby="c-ai">
-        <div className="card-top">
-          <Icon name="sparkle" size={14} /> IA remota
-          <span className={`chip ${cfg?.ai ? "info" : ""}`}>{cfg?.ai ? (cfg.aiPrivate ? "Groq · dados privados liberados (ZDR confirmado)" : "Groq · só dados não privados") : "Não configurada"}</span>
-        </div>
-        <h3 id="c-ai">Sem IA, os resumos continuam por regras</h3>
-        <p>E-mails só vão para um provedor com retenção zero confirmada por você. Sem fallback pago. Ao acabar a cota diária, a IA pausa e o resumo por regras continua.</p>
-      </section>
+      <Providers demo={demo} />
     </>
   );
 }
@@ -302,6 +296,103 @@ function ExtraAgents({ demo, cfgGoogle }: { demo: boolean; cfgGoogle: boolean })
           )}
         </section>
       ))}
+    </>
+  );
+}
+
+function providerChip(p: ProviderCard, demo: boolean, cfgAi: boolean, cfgPrivate: boolean) {
+  if (demo) return { cls: "", text: "Demonstração (fictício)" };
+  if (!p.enabled) return { cls: "", text: p.billing === "paid" ? "Desligado · não é franquia gratuita" : "Desligado" };
+  if (!cfgAi && p.id === "groq") return { cls: "", text: "Chave ausente · resumo por regras" };
+  if (p.id === "groq" && cfgAi) return { cls: "info" as const, text: cfgPrivate ? "Teste OK · ZDR confirmado (não é aprovação de privacidade extra)" : "Teste OK · só dados não privados" };
+  return { cls: "", text: "Aguardando teste" };
+}
+
+function Providers({ demo }: { demo: boolean }) {
+  const app = useApp();
+  const cfg = app.snap?.configured;
+  const usage = app.snap?.usage;
+  const raw =
+    app.snap?.providers?.length
+      ? app.snap.providers
+      : providerCards({ groqConfigured: Boolean(cfg?.ai), groqPrivate: Boolean(cfg?.aiPrivate), calls: usage?.calls, callLimit: usage?.limits.calls });
+  const list = raw.map((p) => (p.id === "groq" && usage ? { ...p, quota: { calls: usage.calls, limit: usage.limits.calls } } : p));
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
+  const [cred, setCred] = useState<string | null>(null);
+
+  const test = async (id: string) => {
+    setBusy(id);
+    try {
+      const r = demo ? runFictitiousProviderTest(id) : await api.testProvider(id);
+      if (!r.ok) {
+        setMsg({ id, ok: false, text: "reason" in r ? r.reason : "Não consegui testar." });
+        return;
+      }
+      setMsg({ id, ok: true, text: `${r.note} Classificação do exemplo: ${r.result.category}.` });
+    } catch (e) {
+      setMsg({ id, ok: false, text: e instanceof ApiError ? e.message : "Não consegui testar." });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <>
+      <h2 style={{ margin: "28px 0 8px", fontSize: 17 }}>Provedores de IA</h2>
+      <p className="meta" style={{ marginBottom: 12 }}>
+        Sem IA, o feed mostra fontes, assuntos e a classificação por regras, com “Resumo por IA pendente”. Nenhuma rota paga. A chave nunca é digitada aqui.
+      </p>
+      {list.map((p) => {
+        const chip = providerChip(p, demo, Boolean(cfg?.ai), Boolean(cfg?.aiPrivate));
+        const exhausted = p.quota && p.quota.calls >= p.quota.limit;
+        return (
+          <section key={p.id} className="card" style={{ marginTop: 12 }} aria-labelledby={`p-${p.id}`}>
+            <div className="card-top">
+              {p.label}
+              <span className={`chip ${chip.cls}`}>{chip.text}</span>
+            </div>
+            <h3 id={`p-${p.id}`}>{p.label}</h3>
+            <p>
+              {p.models.length ? `Modelos: ${p.models.join(", ")}. ` : null}
+              Franquia: {p.billing === "free_tier" ? "camada gratuita" : p.billing === "paid" ? "paga (desligada)" : "encerrada"}. Classes: {p.allowedData.join(", ")}
+              {p.neverPrivate ? " · nunca recebe dado privado" : ""}.
+            </p>
+            {p.quota && (
+              <p className="tiny">
+                Consumo do dia: {p.quota.calls}/{p.quota.limit} chamadas
+                {exhausted ? " · cota esgotada: a tarefa fica pendente e o resumo por regras continua." : ""}.
+              </p>
+            )}
+            <p className="tiny">{p.note}</p>
+            <div className="row-actions">
+              <button className="btn primary" disabled={busy === p.id || !p.enabled} onClick={() => void test(p.id)}>
+                Testar com exemplo fictício
+              </button>
+              <button
+                className="btn"
+                disabled={!p.enabled}
+                onClick={() => setMsg({ id: p.id, ok: true, text: "Desativar o Groq: remova GROQ_API_KEY pelo npm run setup:cloud. A chave não é apagada daqui." })}
+              >
+                Desativar
+              </button>
+              <button className="btn" onClick={() => setCred(p.id)}>
+                Trocar credencial
+              </button>
+            </div>
+            {cred === p.id && (
+              <p className="meta" style={{ marginTop: 8 }}>
+                A chave não é digitada no app nem exibida. No terminal: <code>npm run setup:cloud</code> (docs/ACOES_DO_JOAO.md, grupo F).
+              </p>
+            )}
+            {msg?.id === p.id && (
+              <p role="status" className={`chip ${msg.ok ? "ok" : "err"}`} style={{ marginTop: 8, whiteSpace: "normal" }}>
+                {msg.text}
+              </p>
+            )}
+          </section>
+        );
+      })}
     </>
   );
 }

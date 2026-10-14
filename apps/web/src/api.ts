@@ -1,4 +1,4 @@
-import type { AgentId, AgentVisual } from "@open-dot/core";
+import type { AgentId, AgentVisual, ProviderCard } from "@open-dot/core";
 
 /** Tipos que a interface consome (espelham as rotas do worker). */
 
@@ -144,6 +144,7 @@ export interface Snapshot {
   monitors: Monitor[];
   status: Array<AgentVisual & { revision: number }>;
   agents: AgentCard[];
+  providers: ProviderCard[];
   approvals: ApprovalView[];
   canSend: boolean;
 }
@@ -203,7 +204,9 @@ export const api = {
   devLogin: () => req<{ ok: true }>("/api/session/dev", { method: "POST" }),
   logout: () => req<{ ok: true }>("/api/logout", { method: "POST" }),
   feed: () => req<{ items: FeedEntry[]; next: string | null }>("/api/feed"),
-  connections: () => req<{ configured: Configured; connections: Connection[]; agents: AgentCard[] }>("/api/connections"),
+  connections: () => req<{ configured: Configured; connections: Connection[]; agents: AgentCard[]; providers: ProviderCard[] }>("/api/connections"),
+  testProvider: (id: string) =>
+    req<{ ok: true; used: "fake"; realCall: false; note: string; result: { category: string; evidenceId: string } }>(`/api/ai/providers/${encodeURIComponent(id)}/test`, { method: "POST" }),
   startGsc: () => req<{ url: string }>("/api/connections/gsc/start", { method: "POST" }),
   testAgent: (id: string) => req<{ ok: true; failures?: string[]; missing?: string[]; published?: false; traded?: false; note?: string }>(`/api/agents/${encodeURIComponent(id)}/test`, { method: "POST" }),
   disableAgent: (id: string) => req<{ ok: true; enabled: false }>(`/api/agents/${encodeURIComponent(id)}/disable`, { method: "POST" }),
@@ -299,7 +302,7 @@ export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Sn
   };
   const [feed, conns, routines, runs, usage, monitors, status, approvals] = await Promise.all([
     settle("feed", api.feed(), { items: [], next: null }),
-    settle("conexões", api.connections(), { configured: emptyConfigured, connections: [], agents: [] }),
+    settle("conexões", api.connections(), { configured: emptyConfigured, connections: [], agents: [], providers: [] }),
     settle("rotinas", api.routines(), { routines: [] }),
     settle("execuções", api.runs(), { runs: [] }),
     settle("uso", api.usage(), null),
@@ -319,6 +322,7 @@ export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Sn
       monitors: monitors.monitors,
       status: status.agents,
       agents: conns.agents ?? [],
+      providers: conns.providers ?? [],
       approvals: approvals.approvals,
       canSend: approvals.canSend,
     },

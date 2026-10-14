@@ -154,6 +154,31 @@ test("segredo nunca é roteado para IA", () => {
   assert.equal(r.candidates({ dataClass: "secret", capability: "answer" }).length, 0);
 });
 
+test("Groq usa max_completion_tokens e reasoning low; 402 desliga a rota", async () => {
+  const bodies: string[] = [];
+  const groq = provider("groq", ["public", "personal"]);
+  groq.apiKeyEnv = "GROQ_API_KEY";
+  const r = new AiRouter({
+    providers: [groq],
+    ledger: ledger(),
+    limits: DEFAULT_OWNER_LIMITS,
+    env: { GROQ_API_KEY: "k" },
+    fetch: async (_url, init) => {
+      bodies.push(String(init?.body ?? ""));
+      return new Response("", { status: 402 });
+    },
+  });
+  const out = await r.run(task({ dataClass: "public" }));
+  assert.equal(out.status, "unavailable");
+  const payload = JSON.parse(bodies[0]!);
+  assert.equal(payload.max_completion_tokens, 100);
+  assert.equal(payload.reasoning_effort, "low");
+  assert.equal(payload.max_tokens, undefined);
+  const again = await r.run(task({ dataClass: "public" }));
+  assert.equal(again.status, "unavailable");
+  assert.equal(bodies.length, 1, "402 não tenta de novo na mesma instância");
+});
+
 test("registro D-016: só Groq ligado; Gemini nunca privado; nenhuma rota paga", async () => {
   const { PROVIDER_REGISTRY, enabledProviders, registryAllowsPaid } = await import("../src/ai/registry.ts");
   assert.equal(registryAllowsPaid(), false);

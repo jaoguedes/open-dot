@@ -174,6 +174,13 @@ export class AiRouter {
           await this.log(task, provider.id, model.id, "auth_error", 0, 0, latency, res.status);
           continue;
         }
+        if (res.kind === "payment_required") {
+          await this.deps.ledger.release(reservation.reservationId);
+          this.breaker(provider.id).disabled = true;
+          lastReason = "cobrança recusada (402): rota desligada";
+          await this.log(task, provider.id, model.id, "auth_error", 0, 0, latency, 402);
+          continue;
+        }
         // timeout / erro 5xx / resposta inválida: conta conservadoramente
         await this.deps.ledger.commit(reservation.reservationId, estimate);
         this.recordFailure(provider.id);
@@ -196,6 +203,7 @@ export class AiRouter {
     | { kind: "ok"; text: string; prompt: number; completion: number }
     | { kind: "rate_limited"; retryAfterMs: number | null }
     | { kind: "auth_error"; status: number }
+    | { kind: "payment_required"; status: number }
     | { kind: "timeout"; status?: number }
     | { kind: "error"; status?: number }
     | { kind: "cancelled"; sent: boolean }
@@ -213,13 +221,16 @@ export class AiRouter {
         body: JSON.stringify({
           model: model.id,
           messages: task.messages,
-          max_tokens: maxOut,
           temperature: 0.2,
+          ...(provider.id === "groq"
+            ? { max_completion_tokens: maxOut, reasoning_effort: "low" }
+            : { max_tokens: maxOut }),
           ...(task.jsonMode ? { response_format: { type: "json_object" } } : {}),
         }),
       });
       if (resp.status === 429) return { kind: "rate_limited", retryAfterMs: parseRetryAfter(resp.headers.get("retry-after"), this.now()) };
       if (resp.status === 401 || resp.status === 403) return { kind: "auth_error", status: resp.status };
+      if (resp.status === 402) return { kind: "payment_required", status: resp.status };
       if (!resp.ok) return { kind: "error", status: resp.status };
       const body = (await resp.json()) as {
         choices?: Array<{ message?: { content?: string } }>;
