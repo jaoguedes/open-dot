@@ -23,7 +23,7 @@ function fakeTurso(token: string) {
     const reader = /^\s*(select|pragma|with)/i.test(stmt.sql) || /returning/i.test(stmt.sql);
     if (reader) {
       const rows = st.all(...args) as Record<string, unknown>[];
-      const cols = rows[0] ? Object.keys(rows[0]).map((name) => ({ name })) : st.columns().map((c: any) => ({ name: c.name }));
+      const cols = rows[0] ? Object.keys(rows[0]).map((name) => ({ name })) : (st as unknown as { columns(): { name: string }[] }).columns().map((c) => ({ name: c.name }));
       return { cols, rows: rows.map((r) => cols.map((c) => fromVal(r[c.name]))), affected_row_count: 0 };
     }
     const r = st.run(...args);
