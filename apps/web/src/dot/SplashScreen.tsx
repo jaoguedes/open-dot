@@ -8,7 +8,9 @@ export function SplashScreen({ fading, reducedMotion }: { fading: boolean; reduc
       <div className="splash-inner">
         <AgentDot visual={visual} accessory="none" size={200} reducedMotion={reducedMotion} hello={!reducedMotion} label="Dot" />
         <span className="od-wordmark" aria-hidden="true">
-          open<span className="od-wordmark-dot" />dot
+          <span>open</span>
+          <b>dot</b>
+          <span className="od-wordmark-dot" />
         </span>
       </div>
     </div>

@@ -12,6 +12,11 @@ import { Connections } from "./views/Connections.tsx";
 import { Mascot } from "./views/Mascot.tsx";
 import { ContextPanel } from "./components/ContextPanel.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
+import { agentPresence } from "./presence.ts";
+
+function isMyDayPath(path: string): boolean {
+  return path === "/" || path === "/meu-dia";
+}
 
 function useSplash(loading: boolean, reduced: boolean): { show: boolean; fading: boolean } {
   const [show, setShow] = useState(true);
@@ -99,8 +104,8 @@ export function App() {
   };
   const agentMatch = /^\/agente\/(\w+)$/.exec(app.path);
   const agentId = (agentMatch?.[1] && agentMatch[1] in AGENTS ? agentMatch[1] : null) as AgentId | null;
-  const route = agentId ? "agent" : app.path;
-  const showContext = route === "/" || route === "agent";
+  const route = agentId ? "agent" : isMyDayPath(app.path) ? "/meu-dia" : app.path;
+  const showContext = route === "agent";
 
   let view;
   switch (route) {
@@ -163,15 +168,17 @@ export function App() {
               <div className="spacer" />
               <Island go={go} />
               <div className="spacer" />
-              <button className="search" onClick={() => setPalette(true)} aria-label="Pergunte ao Dot">
-                <Icon name="search" size={16} /> Pergunte ao Dot <kbd>⌘K</kbd>
-              </button>
-              {showContext && (
-                <button className="icon-btn" aria-label="Mostrar contexto" aria-expanded={ctxOpen} onClick={() => setCtxOpen((v) => !v)}>
-                  <Icon name="panel" />
+              <div className="top-actions">
+                <button className="search" onClick={() => setPalette(true)} aria-label="Pergunte ao Dot">
+                  <Icon name="search" size={16} /> Pergunte ao Dot <kbd>⌘K</kbd>
                 </button>
-              )}
-              <ThemeButton />
+                {showContext && (
+                  <button className="icon-btn" aria-label="Mostrar contexto" aria-expanded={ctxOpen} onClick={() => setCtxOpen((v) => !v)}>
+                    <Icon name="panel" />
+                  </button>
+                )}
+                <ThemeButton />
+              </div>
             </header>
           </div>
           <div className={`workspace ${showContext ? "" : "no-context"}`}>
@@ -195,26 +202,17 @@ function Sidebar({ open, go, current }: { open: boolean; go: (p: string) => void
   const pending = app.snap?.feed.filter((f) => f.kind !== "notice" && f.kind !== "file_organized").length ?? 0;
   const usage = app.snap?.usage;
   const pct = usage ? Math.min(100, Math.round((usage.calls / Math.max(1, usage.limits.calls)) * 100)) : 0;
-  const statusLine = (a: AgentId) => {
-    const v = app.visualFor(a);
-    if (v.reason) return v.reason;
-    if (a === "correio") {
-      const g = app.snap?.connections.find((c) => c.provider === "gmail" && c.status !== "disabled");
-      if (!g) return app.mode === "demo" ? "3 mensagens importantes (exemplo)" : "Gmail não conectado";
-    }
-    if (a === "codigo" && !app.snap?.configured.github) return app.mode === "demo" ? "1 workflow falhou (exemplo)" : "GitHub não configurado";
-    if (a === "sentinela" && !app.snap?.monitors.length) return app.mode === "demo" ? "Um site pede atenção (exemplo)" : "Nenhum site cadastrado";
-    return v.label;
-  };
+  const presenceOf = (a: AgentId) =>
+    agentPresence(a, app.visualFor(a), app.snap?.feed ?? [], app.snap?.monitors ?? []);
   return (
     <nav className={`sidebar ${open ? "open" : ""}`} aria-label="Navegação principal">
       <a className="brand" href="/meu-dia" onClick={(e) => (e.preventDefault(), go("/meu-dia"))}>
         <AgentDot visual={app.visualFor("dot")} accessory="none" size={30} animate={false} reducedMotion={app.reducedMotion} label="Open Dot" />
-        <span className="od-wordmark"><span>open</span><b>dot</b></span>
+        <span className="od-wordmark"><span>open</span><b>dot</b><span className="od-wordmark-dot" /></span>
       </a>
       <div className="nav">
         {NAV.map((n) => (
-          <a key={n.path} href={n.path} className="nav-item" aria-current={current === n.path ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(n.path))}>
+          <a key={n.path} href={n.path} className="nav-item" aria-current={(n.path === "/meu-dia" ? isMyDayPath(current) : current === n.path) ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(n.path))}>
             <Icon name={n.icon} /> {n.label}
             {n.path === "/meu-dia" && pending > 0 && <span className="count" aria-label={`${pending} itens`}>{pending}</span>}
           </a>
@@ -225,16 +223,15 @@ function Sidebar({ open, go, current }: { open: boolean; go: (p: string) => void
         {LIST_AGENTS.map((a) => {
           const path = `/agente/${a}`;
           const v = app.visualFor(a);
-          const feedHit = app.snap?.feed.some((f) => f.agentId === a && (f.kind === "ci_failure" || f.kind === "site_incident"));
-          const st = v.semantic === "error" || feedHit ? "err" : v.semantic === "working" || v.semantic === "thinking" ? "busy" : a === "sentinela" ? "ok" : "";
+          const p = presenceOf(a);
           return (
             <a key={a} href={path} className="nav-item agent-item" aria-current={current === path ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(path))}>
-              <AgentDot visual={v} accessory={app.accessoryFor(a)} size={38} animate={false} reducedMotion={app.reducedMotion} />
+              <AgentDot visual={v} accessory={app.accessoryFor(a)} size={44} animate={false} reducedMotion={app.reducedMotion} />
               <span className="lines">
                 <span>{AGENTS[a].name}</span>
-                <span>{statusLine(a)}</span>
+                <span>{p.label}</span>
               </span>
-              <span className={`agent-dot-status ${st}`} aria-hidden="true" />
+              <span className={`agent-dot-status ${p.dotClass}`} aria-hidden="true" />
             </a>
           );
         })}
@@ -301,7 +298,7 @@ function Island({ go }: { go: (p: string) => void }) {
         interactive
         onAffection={(r) => r === "suppressed" && app.announce("Carinho pausado: há algo que precisa da sua atenção.")}
       />
-      <button type="button" className="txt" role="status" onClick={() => go("/")} aria-label="Abrir conversa com o Dot">
+      <button type="button" className="txt" role="status" onClick={() => go("/agente/dot")} aria-label="Abrir conversa com o Dot">
         <span>{line1}</span>
         <span>{line2}</span>
       </button>
@@ -314,7 +311,7 @@ function Palette({ onClose, go }: { onClose: () => void; go: (p: string) => void
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => input.current?.focus(), []);
   const items = [
-    { label: "Conversa com o Dot", path: "/" },
+    { label: "Conversa com o Dot", path: "/agente/dot" },
     ...NAV.map((n) => ({ label: n.label, path: n.path })),
     { label: "Mascote & aparência", path: "/mascote" },
     ...SIDEBAR_AGENTS.filter((a) => a !== "dot").map((a) => ({ label: `Agente ${AGENTS[a].name}`, path: `/agente/${a}` })),

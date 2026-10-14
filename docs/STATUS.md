@@ -14,6 +14,7 @@ _Atualizado em 14/10/2026 · motor SVG (D-014) no núcleo, testado · visual/PWA
 | Motor SVG · vista | ✅ arte + ticker | `apps/web/src/dot`: DotView monta o SVG uma vez e atualiza atributos por refs; arte 2D (olhos em traço, selos, partículas); acessórios por geometria (sem innerHTML por quadro); um rAF para todas as instâncias, pausa com aba oculta. 2 testes (paths sem NaN; ticker para quando oculta). `npm run check` 98/98 |
 | Motor SVG · app | ✅ ligado | AgentDot no lugar do Dot2D (arquivo 2D/3D preservados). semantic → motor; success → react; anel da Sentinela só em working/thinking; carinho/poke/dizzy; absorção. Splash 1,2 s + fade 250 ms com “oi”. Build sem chunk three.js no caminho padrão. |
 | Visual D-015 | ✅ tokens + shell | Tema escuro padrão (#050608). Tokens em `theme.css`. Inter + Instrument Serif itálico + JetBrains Mono locais (OFL). Shell da tela 01: nav em pílula azul, ilha preta no topo, Meu dia com saudação em serif, 3 cartões com brilho e dados reais/demo rotulados. |
+| Tela 01 (correções) | ✅ unidade | `/` e `/?demo=1` = Meu dia (`aria-current`). Saudação 56–64 px / 600 / -0,045em; serif do estado real; DotView 280 px; 3 cartões com brilho; filtro Tudo / Precisa de você / Fontes. Status dos agentes: uma fonte (`presence.ts`) — âmbar / vermelho “N incidente” / azul / cinza, nunca “Em repouso” com incidente. Mini-Dots 44 px; `.lines { flex: 1 }`. Splash: “opendot” + pontinho depois. `--ask-bar` reserva a caixa de pergunta. Tema fica no grupo `.top-actions`. |
 
 ## Legenda
 
@@ -81,7 +82,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Fase 5 da sessão 14/10: layout móvel (<760 px, telas 02–03) e a tela de aprovação (hash + CAS; Gmail só leitura). Depois PWA (fase 6).
+Acessórios novos (chapéus do livro) e os três agentes Notícias / Mercado / Marketing (D-014). Depois Fase 5 (celular + aprovação).
 
 ## Como retomar em outra sessão
 

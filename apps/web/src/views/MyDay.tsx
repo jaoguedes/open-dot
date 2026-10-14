@@ -28,6 +28,7 @@ export function MyDay() {
   const monitors = snap?.monitors ?? [];
   const up = monitors.filter((m) => !m.incident?.open).length;
   const lastCheck = monitors.map((m) => m.lastCheckAt).filter(Boolean).sort().at(-1);
+  const gmail = snap?.connections.find((c) => c.provider === "gmail" && c.status !== "disabled");
   const visual = (() => {
     let best = app.visualFor("dot");
     for (const a of ["correio", "codigo", "sentinela"] as AgentId[]) {
@@ -58,7 +59,7 @@ export function MyDay() {
           )}
         </div>
         <div className="hero-dot">
-          <AgentDot visual={visual} accessory={app.accessoryFor(visual.agentId)} size={220} reducedMotion={app.reducedMotion} interactive />
+          <AgentDot visual={visual} accessory={app.accessoryFor(visual.agentId)} size={280} reducedMotion={app.reducedMotion} interactive />
         </div>
       </section>
 
@@ -99,8 +100,20 @@ export function MyDay() {
             <p className="meta">Carregando o dia…</p>
           ) : shown.length === 0 ? (
             <div className="state">
-              <h2>Nada neste filtro.</h2>
-              <p>Resultados aparecem depois das rotinas. Nada é marcado como concluído sem confirmação real.</p>
+              {!gmail && app.mode !== "demo" ? (
+                <>
+                  <h2>Conecte seu Gmail para a primeira revisão.</h2>
+                  <p>O Correio começa só com leitura. Ele não envia, apaga nem arquiva nada.</p>
+                  <button className="btn primary" onClick={() => app.navigate("/conexoes")}>
+                    Conectar Gmail
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h2>Nada neste filtro.</h2>
+                  <p>Resultados aparecem depois das rotinas. Nada é marcado como concluído sem confirmação real.</p>
+                </>
+              )}
             </div>
           ) : (
             shown.map((it) => (

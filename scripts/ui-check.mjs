@@ -71,6 +71,8 @@ for (const scheme of ["dark", "light"]) {
   await ready(p);
   await p.getByText("Demonstração", { exact: true }).waitFor();
   check(`demo rotulada (${scheme})`, (await p.locator(".banner.demo").count()) === 1);
+  const currentNav = await p.locator('nav[aria-label="Navegação principal"] a[aria-current="page"]').first().innerText();
+  check(`/?demo=1 marca Meu dia (${scheme})`, /Meu dia/.test(currentNav), currentNav);
   const font = await p.evaluate(() => getComputedStyle(document.body).fontFamily);
   const interLoaded = await p.evaluate(async () => {
     await document.fonts.ready;
@@ -290,6 +292,7 @@ if (!ONLY || ONLY === "absorb") {
   await p.goto(BASE + "/");
   await ready(p);
   await p.getByRole("button", { name: /modo desenvolvimento/i }).click();
+  await p.goto(BASE + "/agente/dot");
   const panel = p.getByRole("region", { name: "Absorver arquivo" });
   await panel.waitFor();
   const status = panel.getByTestId("absorb-status");
