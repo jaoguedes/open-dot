@@ -45,3 +45,17 @@ Formato: contexto → decisão → consequência. Novas decisões entram no fim.
 ### D-010 · Projeto em `~/open-dot`, separado de Mascot Desk e OpenMascot (13/10/2026)
 - **Decisão:** o Open Dot começa do zero, porque a base “v0.2” citada no PDF não existe no Mac. O “Dot” do Mascot Desk, com mãos e indicador flutuante, é outro personagem e não foi reaproveitado.
 - **Consequência:** nenhum arquivo dos outros projetos foi alterado.
+
+### D-011 · Posters do Dot com Cycles na CPU (13/10/2026)
+- **Contexto:** em `--background`, o EEVEE (GPU/Metal) levou ~4 min por poster com 64 amostras e travou de vez num render de 64 px, provavelmente com a tela do Mac bloqueada.
+- **Decisão:** os posters usam Cycles na CPU (32 amostras, denoise) e só três renders de 512 px; 160/64/32 px são reduções do poster de frente.
+- **Consequência:** build completo em ~3 min, sem depender da GPU. O GLB não muda: só o render de conferência.
+
+### D-012 · three.js sob demanda e um único canvas (13/10/2026)
+- **Contexto:** o three.js minificado tem ~620 KB; a maior parte das telas não mostra o Dot grande.
+- **Decisão:** o runtime 3D (`apps/web/src/dot3d/DotScene.ts`) é importado dinamicamente pelo `Dot3D.tsx` (esbuild com `splitting`). Só a página Mascote usa o 3D por enquanto; ícones da barra lateral, cabeçalho e ilha continuam no 2D. Um segundo `Dot3D` montado ao mesmo tempo cai para o 2D (“busy”).
+- **Consequência:** o bundle inicial não cresce. Levar o 3D para a ilha é uma decisão de produto posterior (custo de GPU contínuo).
+
+### D-013 · Repouso sem loop de render (13/10/2026)
+- **Decisão:** em repouso o Dot não renderiza continuamente: só desenha quando algo muda (estado, olhar, carinho, toque, redimensionamento) e numa piscada a cada 3–6 s. “Pensando” e “trabalhando” rodam a até 30 fps.
+- **Consequência:** a respiração `body_idle_breathe` só aparece durante transições. Se o João quiser respiração contínua, ela custa um loop de 30 fps (ou um modo de 10–15 fps a medir).

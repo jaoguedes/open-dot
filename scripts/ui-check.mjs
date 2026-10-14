@@ -3,7 +3,7 @@
 // Checa: login local, estados vazios, demo rotulada, 320 px sem rolagem horizontal,
 // zoom 200%, teclado/foco, tema claro/escuro, movimento reduzido e erros de console.
 import { chromium } from "playwright";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 
 const BASE = process.env.UI_BASE ?? "http://localhost:8787";
 const OUT = process.env.UI_OUT ?? "test-results/ui";
@@ -14,7 +14,11 @@ const check = (name, ok, detail = "") => {
   console.log(`${ok ? "ok  " : "FALHA"} ${name}${detail ? ` — ${detail}` : ""}`);
 };
 
-const browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {});
+const launch = process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {};
+const browser = await chromium.launch({ ...launch, args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"] });
+// Navegador sem WebGL para testar o fallback do Dot 3D.
+const browser2d = await chromium.launch({ ...launch, args: ["--disable-webgl", "--disable-3d-apis"] });
+const measures = {};
 
 async function page(opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, ...opts });
@@ -27,6 +31,9 @@ async function page(opts = {}) {
 
 const noHScroll = (p) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 
+// UI_ONLY=dot3d roda só a seção do Dot 3D (iteração rápida); sem a variável, roda tudo.
+const ONLY = process.env.UI_ONLY ?? "";
+if (!ONLY) {
 // 1) Login local e estado vazio real
 {
   const { p, ctx, errors } = await page({ colorScheme: "dark" });
@@ -115,10 +122,12 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
   await ctx.close();
 }
 
-// 6) Prioridade visual: carinho suprimido quando há aprovação/erro
+// 6) Prioridade visual: carinho suprimido quando há aprovação/erro (prévia 2D, movimento completo sem WebGL)
 {
-  const { p, ctx } = await page();
+  const ctx2 = await browser2d.newContext({ viewport: { width: 1440, height: 900 } });
+  const p = await ctx2.newPage();
   await p.goto(BASE + "/mascote?demo=1");
+  await p.locator('[data-dot-renderer="2d"]').waitFor();
   await p.getByRole("radio", { name: "Esperando seu OK" }).check();
   await p.getByRole("button", { name: "Fazer carinho" }).first().click();
   await p.waitForTimeout(200);
@@ -129,10 +138,100 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
   await p.getByRole("button", { name: "Fazer carinho" }).first().click();
   await p.waitForTimeout(250);
   check("carinho aparece em repouso", (await p.locator("section.card .hearts svg").count()) > 0);
+  await ctx2.close();
+}
+}
+
+// 7) Dot 3D: fallback sem WebGL e com movimento reduzido; com WebGL, um único canvas, render sob demanda e medição.
+{
+  const ctx2 = await browser2d.newContext();
+  const p = await ctx2.newPage();
+  await p.goto(BASE + "/mascote?demo=1");
+  const el = p.locator("[data-dot-renderer]").first();
+  await p.locator('[data-dot-renderer="2d"]').waitFor({ timeout: 10_000 });
+  check("sem WebGL: cai para o Dot 2D com motivo escrito", (await el.getAttribute("data-dot-fallback")) === "no-webgl" && (await p.getByText(/não oferece WebGL/).count()) === 1);
+  check("sem WebGL: nenhum canvas visível", (await p.locator("canvas:visible").count()) === 0);
+  await ctx2.close();
+}
+{
+  const { p, ctx, errors } = await page({ reducedMotion: "reduce" });
+  await p.goto(BASE + "/mascote?demo=1");
+  await p.locator('[data-dot-renderer="2d"]').waitFor({ timeout: 10_000 });
+  check("movimento reduzido: Dot 2D parado, sem WebGL", (await p.locator("[data-dot-renderer]").first().getAttribute("data-dot-fallback")) === "reduced-motion" && (await p.locator("canvas").count()) === 0);
+  check("movimento reduzido: sem erros de console", errors.length === 0, errors.join(" | ").slice(0, 300));
+  await ctx.close();
+}
+{
+  const { p, ctx, errors } = await page({ colorScheme: "light" });
+  await p.goto(BASE + "/mascote?demo=1");
+  const renderer = await p
+    .locator('[data-dot-renderer="3d"], [data-dot-renderer="2d"]')
+    .first()
+    .getAttribute("data-dot-renderer", { timeout: 20_000 })
+    .catch(() => "timeout");
+  const reason = await p.locator("[data-dot-renderer]").first().getAttribute("data-dot-fallback");
+  const manifest = await p.evaluate(() => fetch("/dot/manifest.json").then((r) => r.ok));
+  if (!manifest) {
+    check("Dot 3D: sem manifesto publicado, usa 2D com motivo", renderer === "2d" && reason === "manifest", `${renderer}/${reason}`);
+  } else {
+    check("Dot 3D carrega com WebGL (GLB do manifesto)", renderer === "3d", `${renderer}/${reason ?? ""}`);
+    check("Dot 3D: um único canvas na página", (await p.locator("canvas").count()) === 1);
+    await p.waitForTimeout(1500);
+    const s0 = await p.evaluate(() => window.__openDot3d?.());
+    await p.waitForTimeout(2000);
+    const s1 = await p.evaluate(() => window.__openDot3d?.());
+    // Repouso: só piscadas ocasionais. 2 s a 30 fps seriam 60 quadros.
+    const restFrames = s1 && s0 ? s1.rendered - s0.rendered : -1;
+    check("Dot 3D em repouso renderiza sob demanda (< 20 quadros em 2 s)", restFrames >= 0 && restFrames < 20, `${restFrames} quadros`);
+    await p.getByRole("radio", { name: "Trabalhando" }).check();
+    await p.waitForTimeout(300);
+    const w0 = await p.evaluate(() => ({ s: window.__openDot3d?.(), t: performance.now() }));
+    await p.waitForTimeout(2000);
+    const w1 = await p.evaluate(() => ({ s: window.__openDot3d?.(), t: performance.now() }));
+    const fps = w0.s && w1.s ? ((w1.s.rendered - w0.s.rendered) * 1000) / (w1.t - w0.t) : -1;
+    check("Dot 3D ativo fica em no máximo 30 fps", fps > 0 && fps <= 31, `${fps.toFixed(1)} fps (medição em Chromium headless/SwiftShader)`);
+    const mem = await p.evaluate(() => (performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : null));
+    measures.dot3d = { restFramesIn2s: restFrames, activeFps: Number(fps.toFixed(1)), jsHeapMB: mem, stats: w1.s };
+    await p.getByRole("radio", { name: "Com erro" }).check();
+    await p.waitForTimeout(400);
+    const se = await p.evaluate(() => window.__openDot3d?.());
+    check("Dot 3D: erro troca para body_error + face_squint", se?.body === "body_error" && se?.face === "face_squint", `${se?.body}/${se?.face}`);
+    await p.getByRole("radio", { name: "Código" }).check();
+    await p.waitForTimeout(600);
+    const sg = await p.evaluate(() => window.__openDot3d?.());
+    check("Dot 3D: acessório do Código (óculos) preso ao socket", sg?.accessory === "Prop_Glasses", String(sg?.accessory));
+    await p.getByRole("radio", { name: "Em repouso" }).check();
+    await p.getByRole("button", { name: "Fazer carinho" }).first().click();
+    await p.waitForTimeout(400);
+    const sh = await p.evaluate(() => window.__openDot3d?.());
+    check("Dot 3D: carinho cria corações independentes", (sh?.hearts ?? 0) > 0, `${sh?.hearts} corações`);
+    await p.screenshot({ path: `${OUT}/dot3d-mascote.png` });
+    await p.locator(".dot3d-stage").screenshot({ path: `${OUT}/dot3d-close.png` });
+    // Janela oculta: o loop para.
+    await p.evaluate(() => {
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    const h0 = await p.evaluate(() => window.__openDot3d?.()?.rendered ?? 0);
+    await p.getByRole("radio", { name: "Trabalhando" }).check();
+    await p.waitForTimeout(1000);
+    const h1 = await p.evaluate(() => window.__openDot3d?.()?.rendered ?? 0);
+    check("Dot 3D pausa com a janela oculta", h1 - h0 === 0, `${h1 - h0} quadros oculto`);
+    // Perda de contexto: volta para o 2D sozinho.
+    await p.evaluate(() => {
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => false });
+      document.querySelector("canvas")?.getContext("webgl2")?.getExtension("WEBGL_lose_context")?.loseContext();
+    });
+    await p.locator('[data-dot-renderer="2d"]').waitFor({ timeout: 5000 }).catch(() => {});
+    check("Dot 3D: perda de contexto cai para o 2D", (await p.locator("[data-dot-renderer]").first().getAttribute("data-dot-fallback")) === "context-lost");
+  }
+  check("Dot 3D: sem erros de console", errors.length === 0, errors.join(" | ").slice(0, 300));
   await ctx.close();
 }
 
 await browser.close();
+await browser2d.close();
+writeFileSync(`${OUT}/medicoes.json`, JSON.stringify({ at: new Date().toISOString(), note: "Medições em Chromium headless com SwiftShader (CPU). Não são metas nem números de GPU real.", ...measures }, null, 2));
 const failed = results.filter((r) => !r.ok);
 console.log(`\n${results.length - failed.length}/${results.length} verificações de interface passaram. Capturas em ${OUT}/`);
 process.exit(failed.length ? 1 : 0);

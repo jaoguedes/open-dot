@@ -6,11 +6,16 @@ Estão aqui só as tarefas que exigem sua conta, seu login ou uma decisão sua. 
 
 ---
 
-## A. Aprovar o modelo do Dot (5 minutos, quando o build do Blender rodar)
+## A. Aprovar o modelo do Dot (5 minutos) — **o build já rodou, falta só o seu olhar**
 
-- **O que fazer:** olhar `assets/dot/poster-frente-512.png`, `poster-tres-quartos-512.png` e `poster-lado-512.png`, e responder “aprovado” ou dizer o que ajustar (forma, olhos, tracinho).
+- **O que fazer:**
+  1. Abrir no Finder ou no Cursor: `assets/dot/poster-frente-512.png`, `poster-tres-quartos-512.png`, `poster-lado-512.png` e os pequenos `poster-frente-160/64/32.png`.
+  2. Ver o Dot girando no app: `npm run dev` → http://localhost:8787/mascote (entre pelo modo desenvolvimento). Troque agente e estado nos botões; passe o mouse para ver o olhar; clique para o “apertão”.
+  3. Responder “aprovado” ou dizer o que ajustar. Os ajustes mais prováveis são números em `blender/dot_spec.py`: proporção do corpo (`WIDTH/HEIGHT/DEPTH`, `EXP_*`), olhos (`EYE_X`, `EYE_Z`, `EYE_RX`, `EYE_RZ`), blush (`CHEEK_*`) e tracinho (`SLOT_Z`, `SLOT_HALF_W`, `SLOT_HALF_H`, cor `M_Slot`).
+- **O que já foi conferido por mim:** sem boca, sem sobrancelhas, tracinho visível acima dos olhos, blush na linha dos olhos, nenhum efeito ou acessório aparecendo fixo, olhos legíveis em 32 px.
+- **O que ainda não está bom (minha opinião):** o boné, os óculos e o fone são formas simples de conferência, não arte final. Os acessórios aparecem no app, mas não nos posters.
 - **Por que depende de você:** aprovação artística é decisão sua. O técnico já é validado pelos scripts.
-- **Como verifico:** registro sua resposta em `docs/DECISOES.md` e sigo para o runtime 3D.
+- **Como verifico:** registro sua resposta em `docs/DECISOES.md`. Depois disso copio `blender/out/<build>/dot_master.blend` para `blender/dot_master.blend` como fonte aprovada.
 
 ---
 

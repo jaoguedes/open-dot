@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AGENTS, toVisual, type AgentId, type SemanticState } from "@open-dot/core";
 import { useApp } from "../store.tsx";
-import { Dot2D } from "../components/Dot2D.tsx";
+import { Dot3D } from "../components/Dot3D.tsx";
 
 const STATES: Array<{ id: SemanticState; label: string }> = [
   { id: "idle", label: "Em repouso" },
@@ -26,18 +26,15 @@ export function Mascot() {
     <>
       <h1>Mascote & aparência</h1>
       <p className="meta" style={{ margin: "4px 0 16px" }}>
-        Prévia dos estados do Dot. Esta é a <b>versão 2D de fallback</b>: o modelo 3D do Blender ainda não foi exportado nem validado (veja docs/STATUS.md).
+        Prévia dos estados do Dot. O modelo 3D vem do Blender e ainda aguarda aprovação artística; sem WebGL ou com movimento reduzido, aparece a versão 2D.
       </p>
 
       <section className="card" aria-label="Prévia do Dot" style={{ display: "grid", placeItems: "center", gap: 16, padding: 24, background: "var(--hero), var(--bg)" }}>
-        <Dot2D
+        <Dot3D
           visual={visual}
           accessory={app.accessoryFor(agent)}
-          size={200}
-          animate
+          size={220}
           reducedMotion={app.reducedMotion}
-          interactive
-          showBadge
           affectionSignal={signal}
           onAffection={(r) => setNote(r === "ok" ? "" : r === "suppressed" ? "Carinho não aparece durante erro, aprovação ou desconexão." : r === "cooldown" ? "Aguarde um instante." : "")}
         />

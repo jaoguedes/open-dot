@@ -195,6 +195,12 @@ details > summary::-webkit-details-marker { display: none; }
 @keyframes squash { 0% { transform: scale(1,1); } 30% { transform: scale(1.06, .91); } 65% { transform: scale(.97, 1.04); } 100% { transform: scale(1,1); } }
 .hearts { position: absolute; inset: 0; pointer-events: none; }
 .hearts svg { position: absolute; left: 50%; top: 20%; width: 18%; overflow: visible; }
+.dot3d { position: relative; display: inline-flex; flex-direction: column; align-items: center; max-width: 100%; }
+.dot3d-stage { position: relative; max-width: 100%; cursor: pointer; touch-action: manipulation; }
+.dot3d-stage canvas { display: block; }
+.dot3d-loading { position: absolute; inset: 0; display: grid; place-items: center; }
+.dot3d-reason { margin-top: 6px; text-align: center; }
+.badge-3d { position: absolute; right: -4px; top: -2px; font: 600 10px/14px var(--font); padding: 1px 5px; border-radius: 6px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
 .badge-2d { position: absolute; right: -4px; top: -2px; font: 600 10px/14px var(--font); padding: 1px 5px; border-radius: 6px; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
 
 @media (prefers-reduced-motion: reduce) { .anim .dot-body { animation: none !important; } .skeleton { animation: none; } }

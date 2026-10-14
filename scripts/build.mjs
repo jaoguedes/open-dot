@@ -1,8 +1,9 @@
 // Build de produção: interface estática (apps/web/dist) + verificação do bundle do Worker.
 // Uso: npm run build
 import { build } from "esbuild";
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync, statSync, readdirSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync, statSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { copyDotAssets } from "./lib/dot-assets.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
 const web = join(root, "apps/web");
@@ -18,6 +19,8 @@ await build({
   outdir: join(dist, "assets"),
   bundle: true,
   format: "esm",
+  splitting: true,
+  chunkNames: "chunks/[name]-[hash]",
   minify: true,
   sourcemap: false,
   target: ["es2022", "safari16"],
@@ -28,6 +31,8 @@ await build({
   logLevel: "warning",
   legalComments: "external",
 });
+
+const dot = copyDotAssets(root, dist);
 
 // Cabeçalhos de segurança para os arquivos estáticos (Workers Static Assets lê _headers).
 writeFileSync(
@@ -43,6 +48,11 @@ writeFileSync(
     "  Cache-Control: public, max-age=3600",
     "/fonts/*",
     "  Cache-Control: public, max-age=31536000, immutable",
+    "/dot/*",
+    "  Cache-Control: public, max-age=31536000, immutable",
+    "/dot/manifest.json",
+    "  ! Cache-Control",
+    "  Cache-Control: no-cache",
     "",
   ].join("\n"),
 );
@@ -69,7 +79,10 @@ if (/from\s*["']node:|require\(["']node:/.test(workerCode)) {
 
 // Relatório de tamanho
 const sizes = {};
-for (const f of readdirSync(join(dist, "assets"))) sizes[`assets/${f}`] = statSync(join(dist, "assets", f)).size;
+for (const f of readdirSync(join(dist, "assets"))) if (f !== "chunks") sizes[`assets/${f}`] = statSync(join(dist, "assets", f)).size;
+for (const f of existsSync(join(dist, "assets/chunks")) ? readdirSync(join(dist, "assets/chunks")) : []) sizes[`assets/chunks/${f}`] = statSync(join(dist, "assets/chunks", f)).size;
+for (const f of dot.published ? readdirSync(join(dist, "dot")) : []) sizes[`dot/${f}`] = statSync(join(dist, "dot", f)).size;
+if (!dot.published) console.log("Aviso: assets/dot/manifest.json ausente; o app usa a prévia 2D.");
 for (const f of readdirSync(join(dist, "fonts"))) sizes[`fonts/${f}`] = statSync(join(dist, "fonts", f)).size;
 sizes["worker (min)"] = Buffer.byteLength(workerCode);
 const fmt = (n) => (n > 1024 ? `${(n / 1024).toFixed(1)} KB` : `${n} B`);

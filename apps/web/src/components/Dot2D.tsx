@@ -2,8 +2,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AGENTS, HeartEmitter, type Accessory, type AgentVisual, type EffectFrame } from "@open-dot/core";
 
 /**
- * PRÉVIA 2D do Dot — fallback do modelo 3D (Blender → GLB), que ainda não foi exportado.
- * Usada também quando WebGL estiver indisponível. Não substitui o modelo final.
+ * PRÉVIA 2D do Dot — fallback do modelo 3D (Blender → GLB, `Dot3D.tsx`).
+ * Usada sem WebGL, com perda de contexto, com movimento reduzido e nos ícones pequenos. Não substitui o modelo final.
  *
  * Anatomia (catálogo + correção do João): corpo marfim arredondado, olhos escuros baixos,
  * blush discreto, tracinho de absorção no alto da face frontal. Sem boca. Sem sobrancelhas.
@@ -196,7 +196,7 @@ export function Dot2D({ visual, accessory, size, animate, reducedMotion, showBad
           {frames.map((f) => <Heart key={f.id} f={f} />)}
         </div>
       )}
-      {showBadge && <span className="badge-2d" title="Prévia 2D. O modelo 3D do Blender ainda não foi exportado.">2D</span>}
+      {showBadge && <span className="badge-2d" title="Prévia 2D (fallback do modelo 3D).">2D</span>}
     </div>
   );
 }

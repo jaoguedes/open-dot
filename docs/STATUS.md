@@ -1,6 +1,14 @@
 # STATUS — Open Dot
 
-_Atualizado em 13/10/2026 · fases 1 a 3 concluídas · fases 4, 5, 6 e 8 implementadas, aguardando contas reais · fase 9 com pipeline pronto, sem rodar no Blender._
+_Atualizado em 13/10/2026 · fases 1 a 3 concluídas · fases 4, 5, 6 e 8 implementadas, aguardando contas reais · Dot 3D exportado no Blender e rodando no app, aguardando aprovação artística._
+
+## Sessão autônoma 13→14/10 (em andamento)
+
+| Fase | Estado | Validação |
+|---|---|---|
+| 0 · Base | ✅ | Node 24.21; `npm install` com lockfile; `npm run check` verde após corrigir um tipo no teste Hrana |
+| 1 · Dot no Blender | ✅ técnico · 🟡 arte | `npm run blender:build` → validação OK. Corrigido: acessórios exportavam o Dot inteiro (sem `window` em `--background`); efeitos apareciam nos posters; tracinho invisível; EEVEE travando. Validador agora recusa peça com corpo/clipes |
+| 2 · Dot 3D no app | ✅ | `npm run check` (74 testes) e `npm run test:ui` 50/50, incluindo fallback sem WebGL, movimento reduzido, perda de contexto, pausa oculta, ≤ 30 fps e repouso sob demanda |
 
 ## Legenda
 
@@ -28,7 +36,8 @@ _Atualizado em 13/10/2026 · fases 1 a 3 concluídas · fases 4, 5, 6 e 8 implem
 | Sites (Sentinela) | ✅ | Até 3 URLs HTTPS; bloqueio de IP interno e de redirecionamento; incidente após 3 falhas e encerramento após 2 sucessos; correlação com deploy dita como “sinal, não causa” |
 | Interface web | ✅ | Layout v0.2, Inter local, claro/escuro, ilha com glass e opção opaca, ⌘K, estados (carregando, vazio, offline, falha parcial, reconexão, cobertura parcial, configuração incompleta), demonstração isolada e rotulada |
 | Dot 2D (fallback) | ✅ | Sem boca, sem sobrancelhas, **tracinho de absorção preservado**, blush, acessórios removíveis, tinta por estado, carinho suprimido em erro/aprovação, movimento reduzido. Rotulado como “2D” |
-| Dot 3D (Blender) | 🟡 | `blender/build_dot.py` gera `.blend`, GLB base + peças, posters e relatório; o validador estrutural e o manifesto com hash estão testados (5 testes). **Ainda não rodou no Blender**: nenhum GLB exportado, nada aberto no runtime |
+| Dot 3D (Blender) | ✅ técnico · 🟡 arte | `npm run blender:build` roda no Mac (Blender 4.5.14 LTS) e passa na validação: GLB base 164 KB, 3.500 triângulos, 19 clipes, 10 morphs dos olhos; 5 peças de 3–12 KB. Posters em `assets/dot/poster-*.png` (Cycles na CPU). **Aprovação artística pendente** (`ACOES_DO_JOAO.md`, grupo A). Validador Khronos não executado |
+| Dot 3D no app | ✅ Chromium/SwiftShader · 🟡 GPU real | `Dot3D.tsx` + `dot3d/DotScene.ts`: um único canvas, clipes `body_*`/`face_*` em camadas, olhar limitado (8°/5°), tom do agente/estado pelo resolvedor, acessório no socket, corações do `HeartEmitter`, crossfade de 200 ms, ≤ 30 fps, render sob demanda em repouso, pausa com a janela oculta, fallback 2D sem WebGL, com perda de contexto e com movimento reduzido. three.js num chunk carregado só quando o 3D aparece (página Mascote) |
 | Desktop (Tauri) | 📋 | Fase 11 |
 | Ações externas com aprovação | 📋 | O núcleo existe (hash, CAS, supervisor); faltam fluxos reais (rascunho no Gmail etc.) |
 

@@ -17,6 +17,7 @@ import { parseEnv } from "../apps/worker/src/env.ts";
 import { handleApi } from "../apps/worker/src/app.ts";
 import { tick } from "../apps/worker/src/jobs.ts";
 import { loadMigrations } from "./lib/migrations.ts";
+import { copyDotAssets } from "./lib/dot-assets.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
 const demoOnly = process.argv.includes("--demo");
@@ -43,11 +44,14 @@ async function buildWeb() {
   mk(join(dist, "assets"), { recursive: true });
   cpSync(join(root, "apps/web/public"), dist, { recursive: true });
   cpSync(join(root, "apps/web/index.html"), join(dist, "index.html"));
+  copyDotAssets(root, dist);
   const ctx = await context({
     entryPoints: { app: join(root, "apps/web/src/main.tsx") },
     outdir: join(dist, "assets"),
     bundle: true,
     format: "esm",
+    splitting: true,
+    chunkNames: "chunks/[name]-[hash]",
     sourcemap: "linked",
     jsx: "automatic",
     external: ["/fonts/*"],
@@ -59,13 +63,15 @@ async function buildWeb() {
   await ctx.rebuild();
 }
 
-const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".woff": "font/woff", ".txt": "text/plain; charset=utf-8", ".map": "application/json" };
+const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".woff": "font/woff", ".txt": "text/plain; charset=utf-8", ".map": "application/json", ".json": "application/json", ".glb": "model/gltf-binary", ".png": "image/png", ".mjs": "text/javascript" };
 
-function serveStatic(pathname: string): { body: Buffer; type: string } {
+function serveStatic(pathname: string): { body: Buffer; type: string; status: number } {
   const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, "");
   let file = join(dist, safe);
-  if (!file.startsWith(dist) || !existsSync(file) || statSync(file).isDirectory()) file = join(dist, "index.html"); // SPA
-  return { body: readFileSync(file), type: MIME[extname(file)] ?? "application/octet-stream" };
+  const missing = !file.startsWith(dist) || !existsSync(file) || statSync(file).isDirectory();
+  if (missing && /^\/(assets|dot|fonts)\//.test(pathname)) return { body: Buffer.from("não encontrado"), type: "text/plain; charset=utf-8", status: 404 };
+  if (missing) file = join(dist, "index.html"); // SPA
+  return { body: readFileSync(file), type: MIME[extname(file)] ?? "application/octet-stream", status: 200 };
 }
 
 async function main() {
@@ -111,7 +117,7 @@ async function main() {
         return;
       }
       const f = serveStatic(url.pathname);
-      res.writeHead(200, { "content-type": f.type, "cache-control": "no-store" }).end(f.body);
+      res.writeHead(f.status, { "content-type": f.type, "cache-control": "no-store" }).end(f.body);
     } catch (e) {
       console.error(e);
       res.writeHead(500).end("erro interno");
