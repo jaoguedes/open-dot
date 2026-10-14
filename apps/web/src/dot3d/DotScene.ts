@@ -32,7 +32,10 @@ import { FrameGovernor, blendMs, clipsFor, gazeFromPointer, nextBlinkMs, tintCov
  * (HeartEmitter do núcleo, cada um com ciclo de vida próprio).
  */
 
-const PROP_FOR: Record<Accessory, string | null> = { none: null, mail_cap: "Prop_MailCap", glasses: "Prop_Glasses", headphones: "Prop_Headphones" };
+const PROP_FOR: Record<Accessory, string | null> = {
+  none: null, mail_cap: "Prop_MailCap", glasses: "Prop_Glasses", headphones: "Prop_Headphones",
+  antenna: null, visor: null, beret: null, beanie: null, bucket: null, crown: null,
+};
 const CONTINUOUS = new Set<AgentVisual["semantic"]>(["thinking", "working"]);
 const ASSET_BASE = "/dot/";
 

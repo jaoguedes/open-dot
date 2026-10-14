@@ -132,7 +132,24 @@ function accDefs(uid: string): string {
     `<radialGradient id="${uid}-aPlate" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#F2EDFF"/><stop offset="1" stop-color="#B49BF6"/></radialGradient>` +
     `<linearGradient id="${uid}-aCushL" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#F8F5FF"/><stop offset="1" stop-color="#C9BAF4"/></linearGradient>` +
     `<linearGradient id="${uid}-aCushR" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F8F5FF"/><stop offset="1" stop-color="#C9BAF4"/></linearGradient>` +
-    `<linearGradient id="${uid}-aRing" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D4FFF1"/><stop offset=".5" stop-color="#5FE8C5"/><stop offset="1" stop-color="#20B88E"/></linearGradient>`
+    `<linearGradient id="${uid}-aRing" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D4FFF1"/><stop offset=".5" stop-color="#5FE8C5"/><stop offset="1" stop-color="#20B88E"/></linearGradient>` +
+    hatShade(uid, "bn", "#E3EDFF", "#3F5FA8") +
+    hatShade(uid, "bk", "#E6F2E1", "#4D6A49") +
+    `<linearGradient id="${uid}-aVs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9CF0C4" stop-opacity=".95"/><stop offset="1" stop-color="#16B26A" stop-opacity=".9"/></linearGradient>` +
+    `<radialGradient id="${uid}-aBr" cx=".38" cy=".25" r=".85"><stop offset="0" stop-color="#FF9CBF"/><stop offset=".6" stop-color="#F0457F"/><stop offset="1" stop-color="#B92260"/></radialGradient>` +
+    `<radialGradient id="${uid}-aAnt" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFD9A8"/><stop offset="1" stop-color="#FF7A1F"/></radialGradient>` +
+    `<linearGradient id="${uid}-aGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4B8"/><stop offset=".45" stop-color="#FFD24D"/><stop offset="1" stop-color="#E8A317"/></linearGradient>` +
+    `<linearGradient id="${uid}-aGoldIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C98410"/><stop offset="1" stop-color="#A86A08"/></linearGradient>` +
+    `<radialGradient id="${uid}-aRuby" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFC2D8"/><stop offset="1" stop-color="#E23F7A"/></radialGradient>` +
+    `<radialGradient id="${uid}-aSap" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#C8F4FF"/><stop offset="1" stop-color="#2BA9E8"/></radialGradient>`
+  );
+}
+
+function hatShade(uid: string, key: string, lite: string, dark: string): string {
+  return (
+    `<radialGradient id="${uid}-h${key}k" cx=".3" cy=".18" r=".75"><stop offset="0" stop-color="${lite}" stop-opacity=".95"/><stop offset=".55" stop-color="${lite}" stop-opacity="0"/></radialGradient>` +
+    `<linearGradient id="${uid}-h${key}s" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${dark}" stop-opacity=".55"/><stop offset=".22" stop-color="${dark}" stop-opacity="0"/><stop offset=".72" stop-color="${dark}" stop-opacity="0"/><stop offset="1" stop-color="${dark}" stop-opacity=".7"/></linearGradient>` +
+    `<linearGradient id="${uid}-h${key}v" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" stop-color="${dark}" stop-opacity="0"/><stop offset="1" stop-color="${dark}" stop-opacity=".45"/></linearGradient>`
   );
 }
 

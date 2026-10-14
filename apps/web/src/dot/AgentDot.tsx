@@ -17,6 +17,7 @@ export interface AgentDotProps {
   label?: string;
   hello?: boolean;
   ring?: boolean;
+  antennaPulse?: boolean;
 }
 
 /** Ligação do app ao motor: semantic, acessório, anel da Sentinela, carinho e absorção. */

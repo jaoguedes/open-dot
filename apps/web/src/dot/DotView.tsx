@@ -1,11 +1,12 @@
 import { useEffect, useId, useRef, type PointerEvent, type KeyboardEvent } from "react";
 import { DotEngine, bodyPath, type Accessory, type AccessoryKind, type AgentVisual, type DotFrame, type DotStateKey, type ParticleFrame, type SemanticState } from "@open-dot/core";
 import { EYE, INK_COLOR, artDefs, badgeInner, heartPath, rgbCss, star4 } from "./art.ts";
-import { accLayout } from "./accessories.ts";
+import { CROWN_UNLOCKED, accLayout } from "./accessories.ts";
 import { subscribe, type TickerHandle } from "./ticker.ts";
 
 const ACC_MAP: Record<Accessory | "ring", AccessoryKind> = {
   none: "none", mail_cap: "cap", glasses: "glasses", headphones: "phones", ring: "ring",
+  beanie: "beanie", bucket: "bucket", crown: "crown", antenna: "antenna", visor: "visor", beret: "beret",
 };
 
 const STATE_MAP: Record<SemanticState, DotStateKey | "react-success"> = {
@@ -28,6 +29,98 @@ export interface DotViewProps {
   ring?: boolean;
   /** Reação "oi" na montagem (splash). Com movimento reduzido o motor ignora a linha do tempo. */
   hello?: boolean;
+  /** Antena: pisca só quando chega notícia importante. */
+  antennaPulse?: boolean;
+}
+
+function resolveAcc(a: Accessory | "ring"): AccessoryKind {
+  if (a === "crown" && !CROWN_UNLOCKED) return "none";
+  return ACC_MAP[a];
+}
+
+function applyHats(svg: SVGSVGElement, acc: ReturnType<typeof accLayout>, pulse: boolean): void {
+  set(q(svg, "cap-face"), "d", acc.cap.faceShadow);
+  set(q(svg, "cap-face"), "opacity", acc.cap.on ? 0.3 : 0);
+  set(q(svg, "bn"), "opacity", acc.beanie.on);
+  if (acc.beanie.on) {
+    set(q(svg, "bn-clip"), "d", acc.beanie.crown);
+    set(q(svg, "bn-bandClip"), "d", acc.beanie.band);
+    set(q(svg, "bn-face"), "d", acc.beanie.faceShadow);
+    set(q(svg, "bn-crown"), "d", acc.beanie.crown);
+    set(q(svg, "bn-ribs"), "d", acc.beanie.ribs);
+    set(q(svg, "bn-ribs2"), "d", acc.beanie.ribs);
+    set(q(svg, "bn-band"), "d", acc.beanie.band);
+    set(q(svg, "bn-bandBot"), "d", acc.beanie.bandBot);
+    set(q(svg, "bn-bandRibs"), "d", acc.beanie.bandRibs);
+    set(q(svg, "bn-bandRibs2"), "d", acc.beanie.bandRibs);
+    set(q(svg, "bn-bandHi"), "d", acc.beanie.bandHi);
+    acc.beanie.ears.forEach((ear, i) => {
+      set(q(svg, `bn-ear${i}`), "d", ear.d);
+      set(q(svg, `bn-earIn${i}`), "d", ear.inner);
+      set(q(svg, `bn-earSt${i}`), "d", ear.stitch);
+    });
+  }
+  set(q(svg, "bk"), "opacity", acc.bucket.on);
+  if (acc.bucket.on) {
+    set(q(svg, "bk-clip"), "d", acc.bucket.crown);
+    set(q(svg, "bk-fclip"), "d", acc.bucket.frontClip);
+    set(q(svg, "bk-crown"), "d", acc.bucket.crown);
+    set(q(svg, "bk-ribs"), "d", acc.bucket.ribs);
+    set(q(svg, "bk-ribs2"), "d", acc.bucket.ribs);
+    set(q(svg, "bk-front"), "d", acc.bucket.front);
+    set(q(svg, "bk-radial"), "d", acc.bucket.radial);
+    set(q(svg, "bk-rim"), "d", acc.bucket.rim);
+  }
+  set(q(svg, "vs"), "opacity", acc.visor.on);
+  if (acc.visor.on) {
+    set(q(svg, "vs-band"), "d", acc.visor.band);
+    set(q(svg, "vs-band2"), "d", acc.visor.band);
+    set(q(svg, "vs-visor"), "d", acc.visor.visor);
+    set(q(svg, "vs-visorU"), "d", acc.visor.visorUnder);
+    set(q(svg, "vs-hi"), "d", acc.visor.hi);
+    set(q(svg, "vs-face"), "d", acc.visor.faceShadow);
+  }
+  set(q(svg, "br"), "opacity", acc.beret.on);
+  if (acc.beret.on) {
+    set(q(svg, "br-dome"), "d", acc.beret.dome);
+    set(q(svg, "br-rim"), "d", acc.beret.rim);
+    set(q(svg, "br-stem"), "d", acc.beret.stem);
+    set(q(svg, "br-face"), "d", acc.beret.faceShadow);
+  }
+  const ant = q(svg, "antenna");
+  set(ant, "opacity", acc.antenna.on);
+  if (acc.antenna.on) {
+    set(q(svg, "ant-base"), "cx", acc.antenna.baseX);
+    set(q(svg, "ant-base"), "cy", acc.antenna.baseY + 1);
+    set(q(svg, "ant-base2"), "cx", acc.antenna.baseX);
+    set(q(svg, "ant-base2"), "cy", acc.antenna.baseY - 0.5);
+    set(q(svg, "ant-sh"), "cx", acc.antenna.baseX);
+    set(q(svg, "ant-sh"), "cy", acc.antenna.baseY + 4);
+    set(q(svg, "ant-stem"), "d", acc.antenna.stem);
+    set(q(svg, "ant-bulb"), "cx", acc.antenna.bulbX);
+    set(q(svg, "ant-bulb"), "cy", acc.antenna.bulbY);
+    set(q(svg, "ant-pulse"), "cx", acc.antenna.bulbX);
+    set(q(svg, "ant-pulse"), "cy", acc.antenna.bulbY);
+    ant.classList.toggle("pulse", pulse);
+  } else ant.classList.remove("pulse");
+  set(q(svg, "gold"), "opacity", acc.gold.on);
+  if (acc.gold.on) {
+    set(q(svg, "gold"), "transform", acc.gold.group);
+    set(q(svg, "gold-back"), "d", acc.gold.back);
+    set(q(svg, "gold-front"), "d", acc.gold.front);
+    set(q(svg, "gold-band"), "d", acc.gold.band);
+    set(q(svg, "gold-bandHi"), "d", acc.gold.bandHi);
+    acc.gold.tips.forEach((t, i) => {
+      set(q(svg, `gold-tip${i}`), "cx", t.cx);
+      set(q(svg, `gold-tip${i}`), "cy", t.cy);
+    });
+    acc.gold.gems.forEach((g, i) => {
+      set(q(svg, `gold-gem${i}`), "cx", g.cx);
+      set(q(svg, `gold-gem${i}`), "cy", g.cy);
+      set(q(svg, `gold-gem${i}`), "rx", g.rx);
+      set(q(svg, `gold-gem${i}`), "ry", g.ry);
+    });
+  }
 }
 
 function q(svg: SVGSVGElement, role: string): SVGElement {
@@ -38,7 +131,7 @@ function set(el: Element | null, attr: string, v: string | number): void {
   if (el) el.setAttribute(attr, String(v));
 }
 
-function apply(svg: SVGSVGElement, uid: string, f: DotFrame): void {
+function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean): void {
   svg.style.setProperty("--g", rgbCss(f.glow));
   svg.style.setProperty("--t", rgbCss(f.tint));
   svg.setAttribute("aria-label", f.ariaLabel);
@@ -160,6 +253,8 @@ function apply(svg: SVGSVGElement, uid: string, f: DotFrame): void {
       set(q(svg, `ph-plate${i}`), "cy", c.cy - 1);
     });
   }
+  applyHats(svg, acc, pulse);
+
   set(q(svg, "ringBack"), "opacity", acc.ring.on);
   set(q(svg, "ringFront"), "opacity", acc.ring.on);
   if (acc.ring.on) {
@@ -189,24 +284,26 @@ export function DotView(props: DotViewProps) {
   const lastAbs = useRef(false);
   const lastSem = useRef<SemanticState | null>(null);
   const tickRef = useRef<TickerHandle | null>(null);
+  const pulseRef = useRef(!!props.antennaPulse);
+  pulseRef.current = !!props.antennaPulse;
 
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
     const engine = new DotEngine({ reducedMotion: props.reducedMotion });
     eng.current = engine;
-    const acc = props.ring ? "ring" : ACC_MAP[props.accessory];
+    const acc = props.ring ? "ring" : resolveAcc(props.accessory);
     engine.setAccessory(acc);
     const map = STATE_MAP[props.visual.semantic];
     if (map === "react-success") engine.react("success");
     else engine.setState(map, true);
     lastSem.current = props.visual.semantic;
     if (props.hello) engine.react("oi");
-    apply(svg, uid, engine.frame());
+    apply(svg, uid, engine.frame(), pulseRef.current);
 
     const tick = subscribe((dt) => {
       engine.step(dt);
-      apply(svg, uid, engine.frame());
+      apply(svg, uid, engine.frame(), pulseRef.current);
       if (props.small && !engine.reaction) {
         const f = engine.frame();
         if (Math.abs(f.sx - 1) < 0.01 && Math.abs(f.m) < 0.02) tick.setActive(false);
@@ -239,7 +336,7 @@ export function DotView(props: DotViewProps) {
       if (map === "react-success") e.react("success");
       else e.setState(map);
     }
-    e.setAccessory(props.ring ? "ring" : ACC_MAP[props.accessory]);
+    e.setAccessory(props.ring ? "ring" : resolveAcc(props.accessory));
     tickRef.current?.setActive(true);
   }, [props.visual.semantic, props.accessory, props.ring]);
 
@@ -302,6 +399,10 @@ export function DotView(props: DotViewProps) {
         <defs>
           <g dangerouslySetInnerHTML={{ __html: artDefs(uid) }} />
           <clipPath id={`${uid}-clip`}><path data-r="clip" d={bodyPath(0)} /></clipPath>
+          <clipPath id={`${uid}-bnC`}><path data-r="bn-clip" /></clipPath>
+          <clipPath id={`${uid}-bnB`}><path data-r="bn-bandClip" /></clipPath>
+          <clipPath id={`${uid}-bkC`}><path data-r="bk-clip" /></clipPath>
+          <clipPath id={`${uid}-bkF`}><path data-r="bk-fclip" /></clipPath>
           <g id={`${uid}-p-heart`}><path d={heartPath()} fill={`url(#${uid}-gHeart)`} /></g>
           <g id={`${uid}-p-heartB`}><path d={heartPath()} fill={`url(#${uid}-gHeartBack)`} opacity="0.8" /></g>
           <g id={`${uid}-p-cloud1`}><circle cx="-5.5" cy="0" r="5" fill={`url(#${uid}-gCloud)`} /><circle cx=".5" cy="-4" r="5.2" fill={`url(#${uid}-gCloud)`} /><circle cx="6" cy="1" r="4.2" fill={`url(#${uid}-gCloud)`} /><circle cx="0" cy="3.2" r="4.6" fill={`url(#${uid}-gCloud)`} /></g>
@@ -384,6 +485,90 @@ export function DotView(props: DotViewProps) {
               <ellipse data-r="ph-plate0" rx="6.5" ry="14.5" fill={`url(#${uid}-aPlate)`} />
               <ellipse data-r="ph-plate1" rx="6.5" ry="14.5" fill={`url(#${uid}-aPlate)`} />
               <g data-r="ph-cup0" /><g data-r="ph-cup1" />
+            </g>
+            <path data-r="cap-face" fill="#2A2470" opacity="0.3" clipPath={`url(#${uid}-clip)`} />
+            <g data-r="bn" opacity="0">
+              <path data-r="bn-face" fill="#2A2470" opacity="0.45" clipPath={`url(#${uid}-clip)`} />
+              <path data-r="bn-ear0" fill="#8FB0E6" />
+              <path data-r="bn-earIn0" fill="#C9DAF7" />
+              <path data-r="bn-earSt0" fill="none" stroke="#3F5FA8" strokeOpacity="0.3" strokeWidth="1.4" />
+              <path data-r="bn-ear1" fill="#8FB0E6" />
+              <path data-r="bn-earIn1" fill="#C9DAF7" />
+              <path data-r="bn-earSt1" fill="none" stroke="#3F5FA8" strokeOpacity="0.3" strokeWidth="1.4" />
+              <path data-r="bn-crown" fill="#8FB0E6" />
+              <g clipPath={`url(#${uid}-bnC)`} fill="none" strokeLinecap="round">
+                <path data-r="bn-ribs" stroke="#ADC7F1" strokeWidth="3.4" />
+                <path data-r="bn-ribs2" stroke="#7397D6" strokeWidth="0.9" transform="translate(3.2 0)" />
+                <rect x="30" y="0" width="200" height="110" fill={`url(#${uid}-hbns)`} />
+                <rect x="30" y="0" width="200" height="110" fill={`url(#${uid}-hbnv)`} />
+                <rect x="30" y="0" width="200" height="110" fill={`url(#${uid}-hbnk)`} />
+              </g>
+              <path data-r="bn-bandBot" fill="none" stroke="#2A2470" strokeOpacity="0.28" strokeWidth="5" />
+              <path data-r="bn-band" fill="#8FB0E6" />
+              <g clipPath={`url(#${uid}-bnB)`} fill="none" strokeLinecap="round">
+                <path data-r="bn-bandRibs" stroke="#B4CCF3" strokeWidth="3.2" />
+                <path data-r="bn-bandRibs2" stroke="#6E92D2" strokeWidth="1" transform="translate(2.6 0)" />
+                <path data-r="bn-bandHi" stroke="#E3EDFF" strokeWidth="3" opacity="0.7" transform="translate(0 2)" />
+                <rect x="20" y="60" width="220" height="70" fill={`url(#${uid}-hbns)`} />
+                <rect x="20" y="60" width="220" height="70" fill={`url(#${uid}-hbnk)`} />
+              </g>
+            </g>
+            <g data-r="bk" opacity="0">
+              <ellipse cx="130" cy="84" rx="116" ry="20" fill="#6F8A6A" />
+              <ellipse cx="130" cy="80" rx="116" ry="20" fill="#A6BE9F" />
+              <ellipse cx="130" cy="80" rx="104" ry="16" fill="none" stroke="#7E9A78" strokeWidth="1.1" strokeDasharray="3 3" />
+              <path data-r="bk-crown" fill="#A6BE9F" />
+              <g clipPath={`url(#${uid}-bkC)`} fill="none" strokeLinecap="round">
+                <path data-r="bk-ribs" stroke="#C1D4BC" strokeWidth="2.4" />
+                <path data-r="bk-ribs2" stroke="#86A07F" strokeWidth="0.8" transform="translate(2.2 0)" />
+                <rect x="30" y="20" width="200" height="80" fill={`url(#${uid}-hbks)`} />
+                <rect x="30" y="20" width="200" height="80" fill={`url(#${uid}-hbkk)`} />
+              </g>
+              <ellipse cx="130" cy="98" rx="96" ry="14" fill="#1E3320" opacity="0.42" clipPath={`url(#${uid}-clip)`} />
+              <path data-r="bk-front" fill="none" stroke="#5D7759" strokeWidth="7" transform="translate(0 3)" />
+              <g clipPath={`url(#${uid}-bkF)`}>
+                <rect x="0" y="60" width="260" height="70" fill="#A6BE9F" />
+                <path data-r="bk-radial" fill="none" stroke="#C1D4BC" strokeWidth="2" />
+                <rect x="0" y="60" width="260" height="70" fill={`url(#${uid}-hbks)`} />
+                <rect x="0" y="60" width="260" height="70" fill={`url(#${uid}-hbkk)`} opacity="0.6" />
+              </g>
+              <path data-r="bk-rim" fill="none" stroke="#5D7759" strokeWidth="1.6" opacity="0.7" />
+            </g>
+            <g data-r="vs" opacity="0">
+              <path data-r="vs-face" fill="none" stroke="#0B4A2C" strokeWidth="12" opacity="0.3" transform="translate(0 7)" clipPath={`url(#${uid}-clip)`} />
+              <path data-r="vs-band" fill="none" stroke="#0F7A47" strokeWidth="7" strokeLinecap="round" />
+              <path data-r="vs-band2" fill="none" stroke="#2FCB7E" strokeWidth="4.5" strokeLinecap="round" />
+              <path data-r="vs-visorU" fill="#0F7A47" transform="translate(0 2.6)" />
+              <path data-r="vs-visor" fill={`url(#${uid}-aVs)`} />
+              <path data-r="vs-hi" fill="none" stroke="#D2FFE8" strokeWidth="1" strokeDasharray="2.4 2.4" opacity="0.8" />
+            </g>
+            <g data-r="br" opacity="0">
+              <path data-r="br-face" fill="none" stroke="#5A1036" strokeWidth="10" opacity="0.3" clipPath={`url(#${uid}-clip)`} />
+              <path data-r="br-dome" fill={`url(#${uid}-aBr)`} />
+              <path data-r="br-rim" fill="none" stroke="#B92260" strokeWidth="4" strokeLinecap="round" />
+              <path data-r="br-stem" fill="none" stroke="#B92260" strokeWidth="3.4" strokeLinecap="round" />
+            </g>
+            <g data-r="antenna" opacity="0">
+              <ellipse data-r="ant-sh" rx="12" ry="4" fill="#2A2470" opacity="0.3" clipPath={`url(#${uid}-clip)`} />
+              <ellipse data-r="ant-base" rx="9" ry="4" fill="#5B6070" />
+              <ellipse data-r="ant-base2" rx="9" ry="3.6" fill="#A3A9BC" />
+              <path data-r="ant-stem" fill="none" stroke="#5B6070" strokeWidth="3.2" strokeLinecap="round" />
+              <circle data-r="ant-pulse" r="11" fill="#FF7A1F" opacity="0" />
+              <circle data-r="ant-bulb" r="6.5" fill={`url(#${uid}-aAnt)`} />
+            </g>
+            <g data-r="gold" opacity="0">
+              <ellipse cx="150" cy="54" rx="34" ry="9" fill="#2A2470" opacity="0.3" />
+              <path data-r="gold-back" fill={`url(#${uid}-aGoldIn)`} />
+              <path data-r="gold-front" fill={`url(#${uid}-aGold)`} stroke="#D4920F" strokeWidth="1.2" strokeLinejoin="round" />
+              <path data-r="gold-band" fill="none" stroke="#E8A317" strokeWidth="5" />
+              <path data-r="gold-bandHi" fill="none" stroke="#FFF1A8" strokeWidth="1.2" opacity="0.9" />
+              <circle data-r="gold-tip0" r="2.6" fill="#FFE27A" stroke="#D4920F" strokeWidth="0.8" />
+              <circle data-r="gold-tip1" r="2.6" fill="#FFE27A" stroke="#D4920F" strokeWidth="0.8" />
+              <circle data-r="gold-tip2" r="2.6" fill="#FFE27A" stroke="#D4920F" strokeWidth="0.8" />
+              <circle data-r="gold-tip3" r="2.6" fill="#FFE27A" stroke="#D4920F" strokeWidth="0.8" />
+              <ellipse data-r="gold-gem0" fill={`url(#${uid}-aRuby)`} />
+              <ellipse data-r="gold-gem1" fill={`url(#${uid}-aSap)`} />
+              <ellipse data-r="gold-gem2" fill={`url(#${uid}-aSap)`} />
             </g>
           </g>
         </g>

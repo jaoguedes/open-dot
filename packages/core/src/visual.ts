@@ -51,7 +51,7 @@ export const STATE_COLORS = {
 
 export type Expression = "neutral" | "look_up" | "focused" | "attentive" | "happy" | "eyes_low" | "sleep" | "surprised";
 export type BodyClip = "idle_breathe" | "think" | "work" | "wait_ok" | "success" | "error" | "sleep_idle";
-export type Accessory = "none" | "mail_cap" | "glasses" | "headphones";
+export type Accessory = "none" | "mail_cap" | "glasses" | "headphones" | "antenna" | "visor" | "beret" | "beanie" | "bucket" | "crown";
 
 export const DEFAULT_ACCESSORY: Record<AgentId, Accessory> = {
   dot: "none",

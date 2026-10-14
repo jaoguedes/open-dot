@@ -1,7 +1,7 @@
 import type { DotStateKey, EyePair, IndKind } from "./states.ts";
 
 export type ReactionName = "oi" | "success" | "surprised" | "love" | "dizzy" | "poke" | "slap" | "absorb";
-export type AccessoryKind = "none" | "cap" | "glasses" | "phones" | "ring";
+export type AccessoryKind = "none" | "cap" | "glasses" | "phones" | "ring" | "beanie" | "bucket" | "crown" | "antenna" | "visor" | "beret";
 export type EyeShape = "open" | "focused" | "attentive" | "big" | "serious" | "half" | "happy" | "closed" | "gt" | "lt" | "angryL" | "angryR" | "spiralL" | "spiralR";
 export type ParticleKind = "heart" | "cloud" | "spark" | "square" | "z" | "spiral" | "ray" | "ryellow" | "wave" | "drop";
 export type ReactResult = "ok" | "bloqueado" | "cooldown";

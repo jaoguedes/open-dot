@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { AGENTS, toVisual, type AgentId, type SemanticState } from "@open-dot/core";
+import { AGENTS, toVisual, type Accessory, type AgentId, type SemanticState } from "@open-dot/core";
 import { useApp } from "../store.tsx";
 import { AgentDot } from "../dot/AgentDot.tsx";
+import { CROWN_UNLOCKED } from "../dot/accessories.ts";
 
 const STATES: Array<{ id: SemanticState; label: string }> = [
   { id: "idle", label: "Em repouso" },
@@ -21,7 +22,10 @@ export function Mascot() {
   const [state, setState] = useState<SemanticState>("idle");
   const [signal, setSignal] = useState(0);
   const [note, setNote] = useState("");
+  const [hat, setHat] = useState<Accessory | "agent">("agent");
+  const [newsPulse, setNewsPulse] = useState(false);
   const visual = toVisual(agent, state);
+  const accessory = hat === "agent" ? app.accessoryFor(agent) : hat;
 
   return (
     <>
@@ -33,7 +37,8 @@ export function Mascot() {
       <section className="card" aria-label="Prévia do Dot" style={{ display: "grid", placeItems: "center", gap: 16, padding: 24, background: "var(--hero), var(--bg)" }}>
         <AgentDot
           visual={visual}
-          accessory={app.accessoryFor(agent)}
+          accessory={accessory}
+          antennaPulse={newsPulse}
           size={220}
           reducedMotion={app.reducedMotion}
           interactive
@@ -60,11 +65,39 @@ export function Mascot() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginTop: 16 }}>
         <fieldset className="card">
           <legend className="tiny">Agente (cor e acessório)</legend>
-          {(["dot", "correio", "codigo", "sentinela"] as AgentId[]).map((a) => (
+          {(["dot", "correio", "codigo", "sentinela", "foco"] as AgentId[]).map((a) => (
             <label key={a} style={{ display: "flex", gap: 8, alignItems: "center", minHeight: 36 }}>
               <input type="radio" name="agent" checked={agent === a} onChange={() => setAgent(a)} /> {AGENTS[a].name}
             </label>
           ))}
+        </fieldset>
+        <fieldset className="card">
+          <legend className="tiny">Guarda-roupa (peças pelo contorno da cabeça)</legend>
+          {([
+            ["agent", "Do agente"],
+            ["beanie", "Gorro de gatinho"],
+            ["bucket", "Bucket"],
+            ["antenna", "Antena (Notícias)"],
+            ["visor", "Viseira (Mercado)"],
+            ["beret", "Boina (Marketing)"],
+            ["crown", "Coroa (conquista)"],
+          ] as const).map(([id, lab]) => (
+            <label key={id} style={{ display: "flex", gap: 8, alignItems: "center", minHeight: 36 }}>
+              <input
+                type="radio"
+                name="hat"
+                checked={hat === id}
+                disabled={id === "crown" && !CROWN_UNLOCKED}
+                onChange={() => setHat(id)}
+              />
+              {lab}
+              {id === "crown" && !CROWN_UNLOCKED ? " — desligada até existir a regra" : ""}
+            </label>
+          ))}
+          <label style={{ display: "flex", gap: 8, alignItems: "center", minHeight: 36 }}>
+            <input type="checkbox" checked={newsPulse} onChange={(e) => setNewsPulse(e.target.checked)} />
+            Notícia importante (antena pisca)
+          </label>
         </fieldset>
         <fieldset className="card">
           <legend className="tiny">Estado (prioridade: erro &gt; aprovação &gt; conexão &gt; execução)</legend>
