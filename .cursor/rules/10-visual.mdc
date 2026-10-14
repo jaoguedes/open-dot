@@ -3,22 +3,20 @@ description: Direção visual da interface e do mascote Dot
 globs: apps/web/**,blender/**,assets/dot/**
 alwaysApply: false
 ---
-# Direção visual
+# Direção visual (D-015 · telas em docs/referencias/design/)
 
-- Preserve o layout aprovado (v0.2): barra lateral ~224 px, conversa com leitura ≤ 720 px, painel de contexto 262 px, ilha do Dot embaixo.
-- Inter local (`apps/web/public/fonts`), pesos 400/500/600. Sem CDN de fonte.
-- Tokens em `apps/web/src/styles.css` (cap. 37 do PDF): corpo 15/22, metadados 12–13, títulos 24–28; raios 10/16; borda 1 px.
-- Glass só na ilha, menus e modal, com alternativa opaca ("Reduzir transparência"). Gradiente só no topo/área do Dot, 6–10%.
-- Um botão primário por bloco. Detalhes sob demanda (`<details>`). Resultado → evidência → detalhes técnicos.
-- Cor nunca é o único sinal: todo estado tem texto. Teste 320 px, zoom 200%, teclado e movimento reduzido.
+- Tema **escuro como padrão**: fundo #050608, superfícies #0E1014, borda #1A1D24, texto #F3F4F7 / #9AA0AE / #6B7181.
+- Estado: ação #3361FF, âmbar #FFB627 = precisa do seu OK, erro #FF4D6A, pronto #2BD47F.
+- Agentes: Correio #5B8CFF, Código #8C6BFF, Sentinela #45E2BE, Foco #A98BFF.
+- Tipografia local (sem CDN): Inter na interface (títulos 600, tracking negativo); Instrument Serif itálico só na segunda linha da saudação; JetBrains Mono em rótulos, horários e fontes.
+- Navegação em pílula com o item ativo azul. Botão principal branco em pílula; secundário escuro com borda. Cartões 20–22 px. Brilho radial só nos 3 cartões de resumo. Ilha preta do Dot no topo.
+- Tokens num único arquivo de tema. Nenhuma cor solta nos componentes. Tema claro derivado dos mesmos tokens.
+- Cor nunca é o único sinal: todo estado tem texto. Teste 320/390 px, zoom 200%, teclado e movimento reduzido.
 
-# Dot
-- Corpo marfim arredondado e macio; olhos escuros ovais e baixos; blush discreto.
-- **Sem boca e sem sobrancelhas** em qualquer estado.
-- **Tracinho de absorção** no alto da face frontal: é a entrada de arquivos, não uma boca. Não remova.
-- Acessórios removíveis (boné Correio, óculos Código, fone Foco). Sem badge permanente acima da cabeça.
-- Cores: Correio azul #64B5F6, Código lavanda #AA96EF, Sentinela ciano #59CFC6; erro vermelho #EB6470 (com texto), aprovação âmbar #E9B75E, sucesso menta #79C9A5 breve.
-- Prioridade: erro > aprovação > desconectado > execução > pensando > sucesso > carinho > repouso. Evento antigo não sobrescreve estado novo.
-- Separe camadas: corpo, expressão, olhar, cor do agente, estado, acessório, efeitos. Cada coração tem ciclo de vida próprio.
+# Dot (D-014 · fonte docs/referencias/dot_motor.html)
+- Motor em código (SVG). Superelipse n = 2,7 (4,5 na absorção), largura ≈ 1,3 × altura. Corpo com cara de 3D; rosto/símbolos/partículas são arte 2D em degradê, sem pontos de brilho.
+- **Sem boca e sem sobrancelhas.** Mãos só no “oi”. Tracinho só durante a absorção. Símbolos em selo redondo no alto à esquerda, só enquanto o estado dura.
+- Acessórios pela geometria do corpo (assentam, giram com o olhar, amassam, sombra de contato). Anel da Sentinela só enquanto ela verifica.
+- Prioridade: erro > aprovação > pergunta > desconectado > execução > pensando > sucesso > carinho > repouso. Evento antigo não sobrescreve estado novo.
 - Absorção: seleção ≠ envio ≠ recebido (persistido) ≠ organizado (job concluído). Só comemore "organizado".
-- A prévia 2D (`Dot2D.tsx`) é fallback rotulado; o modelo final vem do Blender (`blender/`).
+- Padrão `DOT_RENDERER=engine`. O GLB/three.js (`dot3d/`, `blender/`) não é apagado; só sai do caminho padrão.

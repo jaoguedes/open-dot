@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AGENTS, type AgentId } from "@open-dot/core";
+import { AGENTS, SEMANTIC_PRIORITY, type AgentId } from "@open-dot/core";
 import { useApp } from "./store.tsx";
 import { Icon, type IconName } from "./components/Icons.tsx";
 import { Dot2D } from "./components/Dot2D.tsx";
@@ -267,8 +267,7 @@ function Island({ go }: { go: (p: string) => void }) {
     let best = app.visualFor("dot");
     for (const a of SIDEBAR_AGENTS) {
       const v = app.visualFor(a);
-      const pr = { error: 100, waiting: 90, disconnected: 80, working: 70, thinking: 60, success: 50, idle: 10, sleep: 5 } as const;
-      if (pr[v.semantic] > pr[best.semantic]) best = v;
+      if (SEMANTIC_PRIORITY[v.semantic] > SEMANTIC_PRIORITY[best.semantic]) best = v;
     }
     return best;
   }, [app]);

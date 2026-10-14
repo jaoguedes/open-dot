@@ -11,6 +11,6 @@ alwaysApply: false
 - Banco do Open Dot é separado. Nunca rode migração em banco com tabelas de outro projeto.
 - Execução: chave única por dono+rotina+slot; lease + compare-and-set; estado terminal não é sobrescrito; resultado incerto não é repetido às cegas.
 - Workers Free: 10 ms de CPU e 50 subrequisições por invocação. Use `SubrequestBudget`; quebre trabalho em tiques.
-- IA: só via `AiRouter` (allowlist, privacidade por tipo de dado, reserva atômica, 429/Retry-After, timeout, circuit breaker). Sem provedor permitido → resumo por regras. Registro de uso sem conteúdo.
+- IA (D-016): só via `AiRouter`. Groq ativo (`gpt-oss-20b` classifica, `gpt-oss-120b` resume/responde). Workers AI é fallback opcional desligado. Gemini/OpenRouter/Mistral/SambaNova/Z.ai registrados e desligados; Gemini nunca recebe dado privado. GitHub Models, Cerebras e Together não contam como gratuitos. Sem rota paga, cartão ou recarga. 402 desliga a rota; 401/403 pausa a credencial; 429 respeita Retry-After; fallback só para política igual ou mais restrita. Sem provedor permitido → “Resumo por IA pendente” e classificação por regras. Registro de uso sem conteúdo.
 - Links de fonte são montados pelo conector a partir de IDs, nunca aceitos da resposta do modelo.
 - Teste os riscos (isolamento, OAuth revogado, assinatura inválida, duplicado/fora de ordem, 429/timeout, falha parcial, concorrência, injeção) — não testes que só repetem a implementação.

@@ -12,6 +12,7 @@ export type SemanticState =
   | "thinking"
   | "working"
   | "waiting" // aprovação pendente
+  | "question" // perguntando (abaixo de waiting)
   | "success" // transitório
   | "error" // erro confirmado
   | "disconnected" // conexão indisponível
@@ -21,6 +22,7 @@ export type SemanticState =
 export const SEMANTIC_PRIORITY: Record<SemanticState, number> = {
   error: 100,
   waiting: 90,
+  question: 85,
   disconnected: 80,
   working: 70,
   thinking: 60,
@@ -104,6 +106,7 @@ const LABELS: Record<SemanticState, string> = {
   thinking: "Pensando",
   working: "Trabalhando",
   waiting: "Esperando seu OK",
+  question: "Perguntando",
   success: "Concluído",
   error: "Com erro",
   disconnected: "Sem conexão",
@@ -115,6 +118,7 @@ const EXPRESSION: Record<SemanticState, Expression> = {
   thinking: "look_up",
   working: "focused",
   waiting: "attentive",
+  question: "look_up",
   success: "happy",
   error: "eyes_low",
   disconnected: "neutral",
@@ -126,6 +130,7 @@ const CLIP: Record<SemanticState, BodyClip> = {
   thinking: "think",
   working: "work",
   waiting: "wait_ok",
+  question: "think",
   success: "success",
   error: "error",
   disconnected: "idle_breathe",

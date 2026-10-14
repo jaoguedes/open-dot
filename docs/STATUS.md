@@ -1,6 +1,6 @@
 # STATUS — Open Dot
 
-_Atualizado em 13/10/2026 · fases 1 a 3 concluídas · fases 4, 5, 6 e 8 implementadas, aguardando contas reais · Dot 3D exportado no Blender e rodando no app, aguardando aprovação artística._
+_Atualizado em 14/10/2026 · motor SVG (D-014) no núcleo, testado · visual/PWA/IA das telas aprovadas em andamento._
 
 ## Sessão autônoma 13→14/10 (em andamento)
 
@@ -9,7 +9,8 @@ _Atualizado em 13/10/2026 · fases 1 a 3 concluídas · fases 4, 5, 6 e 8 implem
 | 0 · Base | ✅ | Node 24.21; `npm install` com lockfile; `npm run check` verde após corrigir um tipo no teste Hrana |
 | 1 · Dot no Blender | ✅ técnico · 🟡 arte | `npm run blender:build` → validação OK. Corrigido: acessórios exportavam o Dot inteiro (sem `window` em `--background`); efeitos apareciam nos posters; tracinho invisível; EEVEE travando. Validador agora recusa peça com corpo/clipes |
 | 2 · Dot 3D no app | ✅ | `npm run check` (74 testes) e `npm run test:ui` 50/50, incluindo fallback sem WebGL, movimento reduzido, perda de contexto, pausa oculta, ≤ 30 fps e repouso sob demanda |
-| 3 · Absorção de arquivos | ✅ local | `npm run check` (89 testes: 6 de integração do upload, 4 de extração com pdf.js real, 5 do organizador) e `npm run test:ui` 61/61 (11 novos: upload lento, PDF escaneado, PDF com texto no Web Worker, grande, duplicado, tipo errado, ordem real das fases) |
+| 3 · Absorção de arquivos | ✅ local | `npm run check` (89 testes) e `npm run test:ui` 61/61 |
+| Motor SVG (D-014) | ✅ núcleo | `packages/core/src/dot`: geometria superelipse, molas 120 Hz, estados/reações do protótipo, RNG com semente. 7 testes (10 mil passos sem NaN, bloqueios, absorção m→0, ≤18 partículas, semente, `question`). `npm run check` 96/96 |
 
 ## Legenda
 
@@ -39,6 +40,7 @@ _Atualizado em 13/10/2026 · fases 1 a 3 concluídas · fases 4, 5, 6 e 8 implem
 | Dot 2D (fallback) | ✅ | Sem boca, sem sobrancelhas, **tracinho de absorção preservado**, blush, acessórios removíveis, tinta por estado, carinho suprimido em erro/aprovação, movimento reduzido. Rotulado como “2D” |
 | Dot 3D (Blender) | ✅ técnico · 🟡 arte | `npm run blender:build` roda no Mac (Blender 4.5.14 LTS) e passa na validação: GLB base 164 KB, 3.500 triângulos, 19 clipes, 10 morphs dos olhos; 5 peças de 3–12 KB. Posters em `assets/dot/poster-*.png` (Cycles na CPU). **Aprovação artística pendente** (`ACOES_DO_JOAO.md`, grupo A). Validador Khronos não executado |
 | Dot 3D no app | ✅ Chromium/SwiftShader · 🟡 GPU real | `Dot3D.tsx` + `dot3d/DotScene.ts`: um único canvas, clipes `body_*`/`face_*` em camadas, olhar limitado (8°/5°), tom do agente/estado pelo resolvedor, acessório no socket, corações do `HeartEmitter`, crossfade de 200 ms, ≤ 30 fps, render sob demanda em repouso, pausa com a janela oculta, fallback 2D sem WebGL, com perda de contexto e com movimento reduzido. three.js num chunk carregado só quando o 3D aparece (página Mascote) |
+| Absorção de arquivos | ✅ local · 🟡 Cloudflare | Painel na conversa do Dot: arrastar ou “Escolher arquivo” (PDF com texto, TXT, MD, até 5 MB). Texto extraído **no navegador** num Web Worker (pdf.js 6, carregado só para PDF); o arquivo original não sai da máquina. Servidor confere tamanho, tipo/extensão, SHA-256 do texto, texto vazio/escaneado/longo, duplicata por dono e 30/dia; grava nome e texto cifrados (AES-GCM) e o run `file_organize` na mesma transação. “Recebido” só após o 201; “Organizado” só após o run concluir (pedido do app ou cron, com CAS — dois processamentos simultâneos = um efeito). Organização **por regras, sem IA** (título, seções, termos, tempo de leitura). Animação de entrada pelo tracinho no Dot 2D (folha descendo + brilho; com movimento reduzido só o brilho). Apagar remove texto, resultado e aviso do feed. Sem OCR: PDF escaneado é recusado com mensagem. Indisponível na demonstração |
 | Desktop (Tauri) | 📋 | Fase 11 |
 | Ações externas com aprovação | 📋 | O núcleo existe (hash, CAS, supervisor); faltam fluxos reais (rascunho no Gmail etc.) |
 
@@ -63,7 +65,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 1. Rodar `npm run blender:build` no Mac, revisar os posters e iterar a forma e os clipes até o validador passar (relatório em `blender/out/*/build-report.json`).
 2. Runtime 3D no app: three.js + `GLTFLoader`, um único canvas, fallback para o 2D sem WebGL, pausa com a janela oculta e medição de memória/CPU.
 3. Contas reais (grupos B, C e D em `ACOES_DO_JOAO.md`), primeiro deploy, medição da CPU do cron e teste real do Gmail por 7 dias.
-4. Upload e absorção de arquivos (extração no navegador): o núcleo está pronto, falta a interface e o servidor.
+4. ~~Upload e absorção de arquivos~~ feito na sessão de 13→14/10 (testado localmente; falta rodar no Cloudflare e medir a CPU do `POST /api/uploads` com texto de 200 mil caracteres). O 3D (`body_absorb_receive`) ainda não é usado no painel, que fica fora da página Mascote (um canvas só, D-012).
 5. Rascunho de resposta (`gmail.compose`) com aprovação do conteúdo exato.
 6. GitHub App e token da Vercel (fase 7).
 7. Fixar o lockfile com o primeiro `npm install` com rede e anexar o relatório de licenças transitivas.
@@ -76,13 +78,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-No terminal do Cursor, dentro de `~/open-dot`:
-
-```bash
-npm install && npm run check && npm run blender:build
-```
-
-Depois: abrir os `assets/dot/poster-*.png` (ou o relatório de erro) e seguir a pendência 1. Se o build passar, a próxima fatia é a pendência 2 (runtime 3D).
+Fase 2 da sessão 14/10: `apps/web/src/dot` (DotView, arte 2D, acessórios por geometria), um único rAF, sem innerHTML por quadro. Depois ligar ao app + splash (fase 3).
 
 ## Como retomar em outra sessão
 

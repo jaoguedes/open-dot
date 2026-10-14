@@ -60,6 +60,7 @@ const SEMANTIC_TO_MANIFEST: Record<SemanticState, string> = {
   thinking: "thinking",
   working: "working",
   waiting: "waiting",
+  question: "thinking",
   success: "success",
   error: "error",
   disconnected: "idle",

@@ -8,6 +8,7 @@ const STATES: Array<{ id: SemanticState; label: string }> = [
   { id: "thinking", label: "Pensando" },
   { id: "working", label: "Trabalhando" },
   { id: "waiting", label: "Esperando seu OK" },
+  { id: "question", label: "Perguntando" },
   { id: "success", label: "Concluído" },
   { id: "error", label: "Com erro" },
   { id: "disconnected", label: "Sem conexão" },

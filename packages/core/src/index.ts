@@ -14,3 +14,4 @@ export * from "./monitor.ts";
 export * from "./ai/config.ts";
 export * from "./ai/budget.ts";
 export * from "./ai/router.ts";
+export * from "./dot/index.ts";
