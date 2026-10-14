@@ -11,6 +11,7 @@ _Atualizado em 14/10/2026 · motor SVG (D-014) no núcleo, testado · visual/PWA
 | 2 · Dot 3D no app | ✅ | `npm run check` (74 testes) e `npm run test:ui` 50/50, incluindo fallback sem WebGL, movimento reduzido, perda de contexto, pausa oculta, ≤ 30 fps e repouso sob demanda |
 | 3 · Absorção de arquivos | ✅ local | `npm run check` (89 testes) e `npm run test:ui` 61/61 |
 | Motor SVG (D-014) | ✅ núcleo | `packages/core/src/dot`: geometria superelipse, molas 120 Hz, estados/reações do protótipo, RNG com semente. 7 testes (10 mil passos sem NaN, bloqueios, absorção m→0, ≤18 partículas, semente, `question`). `npm run check` 96/96 |
+| Motor SVG · vista | ✅ arte + ticker | `apps/web/src/dot`: DotView monta o SVG uma vez e atualiza atributos por refs; arte 2D (olhos em traço, selos, partículas); acessórios por geometria (sem innerHTML por quadro); um rAF para todas as instâncias, pausa com aba oculta. 2 testes (paths sem NaN; ticker para quando oculta). `npm run check` 98/98 |
 
 ## Legenda
 
@@ -78,7 +79,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Fase 2 da sessão 14/10: `apps/web/src/dot` (DotView, arte 2D, acessórios por geometria), um único rAF, sem innerHTML por quadro. Depois ligar ao app + splash (fase 3).
+Fase 3 da sessão 14/10: ligar o DotView ao app (semantic → motor, success → react, acessórios, anel da Sentinela, carinho/poke/dizzy, absorção) e o SplashScreen com “oi” e mãos. O GLB continua no repositório, fora do caminho padrão.
 
 ## Como retomar em outra sessão
 
