@@ -1,3 +1,5 @@
+import { SourcePill } from "./SourcePill.tsx";
+import { gmailWebHref } from "@open-dot/connectors/gmail.ts";
 import { AGENTS } from "@open-dot/core";
 import type { FeedEntry } from "../api.ts";
 import { Icon, type IconName } from "./Icons.tsx";
@@ -46,6 +48,7 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
           <article key={it.origem} className="card mt-12">
             <div className="card-top">{it.categoria} · {fmtWhen(it.quando)}</div>
             <h3>{it.de ?? "Remetente"}</h3>
+            <SourcePill agentId="correio" origin={it.de ?? "Remetente"} href={it.href ?? gmailWebHref(it.origem, it.rfc822)} />
             <p>{it.titulo}</p>
             <p className="meta">{it.o_que_aconteceu}</p>
             <p>{it.o_que_fazer}</p>
@@ -173,7 +176,7 @@ export function FeedRow({ item }: { item: FeedEntry }) {
                     )}
                   </span>
                   <span className="why">
-                    {n.outlet} · {s.theme}
+                    <SourcePill agentId="noticias" origin={n.outlet} href={n.link} /> {s.theme}
                   </span>
                 </li>
               )),
