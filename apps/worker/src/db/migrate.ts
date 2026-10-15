@@ -8,7 +8,12 @@ export interface Migration {
 }
 
 /** Versão de schema que este código exige. Atualize ao criar nova migração. */
-export const REQUIRED_SCHEMA = "0005";
+export const REQUIRED_SCHEMA = "0006";
+
+/** Schema mais novo que o código continua ok (expandir, publicar, contrair depois). */
+export function schemaCompatible(version: string | null | undefined, required: string): boolean {
+  return typeof version === "string" && version >= required;
+}
 
 const META = `CREATE TABLE IF NOT EXISTS od_schema_migrations (
   version TEXT PRIMARY KEY,

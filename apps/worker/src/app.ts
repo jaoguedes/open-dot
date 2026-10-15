@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AGENTS, GMAIL_CAN_SEND, OPEN_DOT_HEALTH_URL, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, displayNameFor, hashProposal, isValidTimeZone, nextSlot, parseHHMM, providerCards, renderUntrusted, runFictitiousProviderTest, sanitizeUntrusted, sha256Hex, toVisual, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
+import { AGENTS, GMAIL_CAN_SEND, OPEN_DOT_HEALTH_URL, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, countsAsAgentError, displayNameFor, hashProposal, isValidTimeZone, localParts, nextSlot, parseHHMM, providerCards, renderUntrusted, runFictitiousProviderTest, sanitizeUntrusted, sha256Hex, toVisual, zonedTimeToUtc, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
 import { GMAIL_READ_SCOPES, GSC_READ_SCOPES, LOGIN_SCOPES, authUrl, exchangeCode, readIdToken, revoke } from "@open-dot/connectors/google.ts";
 import { getProfile } from "@open-dot/connectors/gmail.ts";
 import { normalizeEvent, verifySignature, isNewer } from "@open-dot/connectors/github.ts";
@@ -8,7 +8,7 @@ import { ConnectorError } from "@open-dot/connectors/errors.ts";
 import { BudgetExhausted, SubrequestBudget, type Ctx } from "./context.ts";
 import { safeReason } from "./reasons.ts";
 import { configured } from "./env.ts";
-import { REQUIRED_SCHEMA, currentSchema } from "./db/migrate.ts";
+import { REQUIRED_SCHEMA, currentSchema, schemaCompatible } from "./db/migrate.ts";
 import { pkceChallenge, randomToken } from "./crypto.ts";
 import { csrfOk, currentOwner, endSession, json, problem, redirect, SECURITY_HEADERS, startSession } from "./http.ts";
 import * as repo from "./repo.ts";
@@ -45,7 +45,12 @@ export async function handleApi(ctx: Ctx, req: Request): Promise<Response> {
     if (r.method !== req.method) continue;
     const m = r.pattern.exec(url.pathname);
     if (!m) continue;
-    const params = Object.fromEntries(r.keys.map((k, i) => [k, decodeURIComponent(m[i + 1]!)]));
+    let params: Record<string, string>;
+    try {
+      params = Object.fromEntries(r.keys.map((k, i) => [k, decodeURIComponent(m[i + 1]!)]));
+    } catch {
+      return withHeaders(problem(400, "invalid_input", "Endereço inválido."));
+    }
     if (r.csrf && !csrfOk(ctx, req)) return withHeaders(problem(403, "csrf", "Requisição recusada (origem ou cabeçalho ausente)."));
     let ownerId: string | null = null;
     try {
@@ -57,7 +62,8 @@ export async function handleApi(ctx: Ctx, req: Request): Promise<Response> {
     try {
       return withHeaders(await r.handler(ctx, req, params, ownerId));
     } catch (e) {
-      if (e instanceof z.ZodError) return withHeaders(problem(400, "invalid_input", "Dados inválidos."));
+      const badInput = e instanceof z.ZodError || e instanceof SyntaxError || (e instanceof Error && (e.name === "InvalidCharacterError" || e.name === "URIError"));
+      if (badInput) return withHeaders(problem(400, "invalid_input", "Dados inválidos."));
       const reason = safeReason(e);
       console.error(JSON.stringify({ at: new Date(ctx.now()).toISOString(), route: url.pathname, reason }));
       return withHeaders(problem(500, "internal", "Algo deu errado. Nada foi enviado ou alterado fora do Open Dot.", reason));
@@ -79,7 +85,7 @@ const redirectUri = (ctx: Ctx) => `${ctx.env.APP_ORIGIN}/api/oauth/google/callba
 route("GET", "/api/health", { auth: false }, async (ctx) => {
   const { version, error } = await currentSchema(ctx.db);
   return json({
-    ok: version === REQUIRED_SCHEMA,
+    ok: schemaCompatible(version, REQUIRED_SCHEMA),
     schema: version,
     schemaError: error ?? null,
     requiredSchema: REQUIRED_SCHEMA,
@@ -384,7 +390,12 @@ route("POST", "/api/connections/:id/disconnect", { auth: true }, async (ctx, _r,
 route("GET", "/api/feed", { auth: true }, async (ctx, req, _p, ownerId) => {
   const u = new URL(req.url);
   const cursor = u.searchParams.get("before");
-  const before = cursor ? (JSON.parse(atob(cursor)) as { createdAt: string; id: string }) : null;
+  let before: { createdAt: string; id: string } | null = null;
+  if (cursor) {
+    const parsed = z.object({ createdAt: z.string().min(1), id: z.string().min(1) }).safeParse(JSON.parse(atob(cursor)));
+    if (!parsed.success) return problem(400, "invalid_input", "Página inválida.");
+    before = parsed.data;
+  }
   const items = await repo.listFeed(ctx.db, ctx.keys, ownerId!, { before, limit: 20, now: ctx.now() });
   const last = items.at(-1);
   return json({ items, next: items.length === 20 && last ? btoa(JSON.stringify({ createdAt: last.createdAt, id: last.id })) : null });
@@ -541,9 +552,10 @@ route("GET", "/api/status", { auth: true }, async (ctx, _r, _p, ownerId) => {
       const age = ctx.now() - Date.parse(latest.updated_at);
       const active = latest.state === "running" || latest.state === "queued" || latest.state === "retry_scheduled";
       if (active && age <= 10 * 60_000) semantic = "working";
-      else if (active) ((semantic = "error"), (reason = "stale_run"));
-      else if (latest.state === "waiting_approval") semantic = "waiting";
-      else if (latest.state === "failed" || latest.state === "uncertain") ((semantic = "error"), (reason = latest.error_code || "unknown"));
+      else if (countsAsAgentError({ state: latest.state, errorCode: latest.error_code, ageMs: age })) {
+        semantic = "error";
+        reason = latest.error_code || (active ? "stale_run" : "unknown");
+      } else if (latest.state === "waiting_approval") semantic = "waiting";
     }
     if (a === "correio") {
       const g = conns.find((c) => c.provider === "gmail" && c.status !== "disabled");
@@ -556,6 +568,25 @@ route("GET", "/api/status", { auth: true }, async (ctx, _r, _p, ownerId) => {
     return { ...toVisual(a, semantic, latest?.id ?? null, reason), revision: latest ? Date.parse(latest.updated_at) : 0 };
   });
   return json({ agents: out });
+});
+
+route("POST", "/api/feed/:id/done", { auth: true }, async (ctx, _req, p, ownerId) => {
+  const ok = await repo.setFeedState(ctx.db, ownerId!, p.id!, "done", ctx.now(), null);
+  if (!ok) return problem(404, "not_found", "Item não encontrado.");
+  await repo.audit(ctx.db, { ownerId: ownerId!, actor: "user", action: "feed_done", target: p.id!, outcome: "ok", now: ctx.now() });
+  return json({ ok: true });
+});
+
+route("POST", "/api/feed/:id/snooze", { auth: true }, async (ctx, _req, p, ownerId) => {
+  const owner = await repo.getOwner(ctx.db, ownerId!);
+  const tz = owner?.time_zone || "America/Sao_Paulo";
+  const parts = localParts(ctx.now(), tz);
+  const day = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + 1));
+  const until = zonedTimeToUtc({ year: day.getUTCFullYear(), month: day.getUTCMonth() + 1, day: day.getUTCDate() }, "08:00", tz);
+  const ok = await repo.setFeedState(ctx.db, ownerId!, p.id!, "snoozed", ctx.now(), new Date(until).toISOString());
+  if (!ok) return problem(404, "not_found", "Item não encontrado.");
+  await repo.audit(ctx.db, { ownerId: ownerId!, actor: "user", action: "feed_snooze", target: p.id!, outcome: "ok", now: ctx.now() });
+  return json({ ok: true, until: new Date(until).toISOString() });
 });
 
 // ---------------------------------------------------------------- Aprovações
@@ -733,6 +764,12 @@ route("POST", "/api/webhooks/github", { auth: false, csrf: false }, async (ctx, 
     "INSERT INTO od_github_resources (owner_id, resource_key, kind, repo, title, state, conclusion, url, head_sha, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(owner_id, resource_key) DO UPDATE SET title = excluded.title, state = excluded.state, conclusion = excluded.conclusion, url = excluded.url, head_sha = excluded.head_sha, updated_at = excluded.updated_at",
     [inst.owner_id, ev.resourceKey, ev.kind, ev.repo, ev.title, ev.state, ev.conclusion, ev.url, ev.headSha, ev.updatedAt],
   );
+  if (ev.kind === "workflow" && ev.conclusion === "success") {
+    await ctx.db.run(
+      "UPDATE od_feed_items SET state = 'done', resolved_at = ? WHERE owner_id = ? AND kind = 'ci_failure' AND state = 'open' AND title = ?",
+      [new Date(ctx.now()).toISOString(), inst.owner_id, `Workflow falhou em ${ev.repo}`],
+    );
+  }
   if (ev.kind === "workflow" && ev.conclusion === "failure") {
     await repo.insertFeed(ctx.db, ctx.keys, {
       ownerId: inst.owner_id,

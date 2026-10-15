@@ -17,6 +17,13 @@ const ALLOWED: Record<RunState, readonly RunState[]> = {
   cancelled: [],
 };
 
+export function countsAsAgentError(input: { state: string; errorCode: string | null; ageMs: number }): boolean {
+  if (input.errorCode === "stale_run" && input.ageMs > 30 * 60_000) return false;
+  if (input.state === "failed" || input.state === "uncertain") return true;
+  const active = input.state === "running" || input.state === "queued" || input.state === "retry_scheduled";
+  return active && input.ageMs > 10 * 60_000;
+}
+
 export function canTransition(from: RunState, to: RunState): boolean {
   return ALLOWED[from].includes(to);
 }

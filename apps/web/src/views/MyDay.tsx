@@ -5,6 +5,7 @@ import { AgentDot } from "../dot/AgentDot.tsx";
 import { fmtTime, greeting, needYouLine } from "../format.ts";
 import { agentConnected, agentPresence, type ConnectionFacts } from "../presence.ts";
 import type { FeedEntry } from "../api.ts";
+import { api } from "../api.ts";
 import { GmailOpen } from "../components/GmailOpen.tsx";
 
 type Filter = "all" | "need" | "sources";
@@ -24,8 +25,9 @@ export function MyDay() {
   const digest = snap?.feed.find((f) => f.kind === "email_digest");
   const items = (snap?.feed ?? []).filter((f) => f.kind !== "notice");
   const shown = items.filter((it) => (filter === "all" ? true : filter === "need" ? isNeed(it) : Boolean(it.body.href) || it.kind === "email_digest" || it.kind === "news_digest"));
-  const mailNeed = digest?.body.itens?.length ?? digest?.body.counts?.important ?? 0;
-  const need = mailNeed || items.filter((it) => it.kind !== "email_digest" && isNeed(it)).length;
+  const mailNeed = digest && digest.state !== "done" && digest.state !== "snoozed" ? (digest.body.itens?.length ?? digest.body.counts?.important ?? 0) : 0;
+  const otherNeed = items.filter((it) => it.kind !== "email_digest" && isNeed(it) && it.state !== "done" && it.state !== "snoozed").length;
+  const need = mailNeed + otherNeed;
   const reviewed = digest?.body.total ?? 0;
   const monitors = snap?.monitors ?? [];
   const up = monitors.filter((m) => !m.incident?.open).length;
@@ -151,6 +153,12 @@ export function MyDay() {
                   {it.kind === "ci_failure" && <span className="chip err" style={{ marginLeft: "auto" }}>Falhou</span>}
                 </div>
                 <FeedCardBody item={it} pendingAp={pendingAp} />
+                {isNeed(it) && it.state !== "done" && it.state !== "snoozed" && app.mode === "live" && (
+                  <div className="row-actions">
+                    <button className="btn" type="button" onClick={() => void api.feedDone(it.id).then(() => app.refresh())}>Feito</button>
+                    <button className="btn ghost" type="button" onClick={() => void api.feedSnooze(it.id).then(() => app.refresh())}>Adiar</button>
+                  </div>
+                )}
               </article>
             ))
           )}

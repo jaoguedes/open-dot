@@ -496,15 +496,31 @@ export async function listFeed(db: Db, keys: Keyring, ownerId: string, p: { befo
     args.push(p.before.createdAt, p.before.createdAt, p.before.id);
   }
   args.push(Math.min(p.limit, 50));
-  const rows = await db.query<{ id: string; agent_id: string; run_id: string | null; kind: string; title: string; body_enc: string; freshness: string; coverage: string | null; created_at: string }>(
-    `SELECT id, agent_id, run_id, kind, title, body_enc, freshness, coverage, created_at FROM od_feed_items WHERE ${where} ORDER BY created_at DESC, id DESC LIMIT ?`,
+  const rows = await db.query<{ id: string; agent_id: string; run_id: string | null; kind: string; title: string; body_enc: string; freshness: string; coverage: string | null; created_at: string; state: string; resolved_at: string | null; snooze_until: string | null }>(
+    `SELECT id, agent_id, run_id, kind, title, body_enc, freshness, coverage, created_at, state, resolved_at, snooze_until FROM od_feed_items WHERE ${where} ORDER BY created_at DESC, id DESC LIMIT ?`,
     args,
   );
   const out = [];
   for (const r of rows) {
-    out.push({ id: r.id, agentId: r.agent_id, runId: r.run_id, kind: r.kind, title: r.title, body: JSON.parse(await open(keys, r.body_enc, `feed:${ownerId}`)), freshness: r.freshness, coverage: r.coverage ? JSON.parse(r.coverage) : null, createdAt: r.created_at });
+    const awake = r.state === "snoozed" && r.snooze_until && Date.parse(r.snooze_until) <= p.now;
+    out.push({ id: r.id, agentId: r.agent_id, runId: r.run_id, kind: r.kind, title: r.title, body: JSON.parse(await open(keys, r.body_enc, `feed:${ownerId}`)), freshness: r.freshness, coverage: r.coverage ? JSON.parse(r.coverage) : null, createdAt: r.created_at, state: awake ? "open" : (r.state || "open"), resolvedAt: r.resolved_at, snoozeUntil: r.snooze_until });
   }
   return out;
+}
+
+export async function setFeedState(db: Db, ownerId: string, id: string, state: "done" | "snoozed" | "open", now: number, snoozeUntil: string | null): Promise<boolean> {
+  const res = await db.run(
+    "UPDATE od_feed_items SET state = ?, resolved_at = ?, snooze_until = ? WHERE id = ? AND owner_id = ?",
+    [state, state === "done" ? iso(now) : null, snoozeUntil, id, ownerId],
+  );
+  return res.changes === 1;
+}
+
+export async function markFeedDone(db: Db, ownerId: string, kind: string, runLike: string, now: number): Promise<void> {
+  await db.run(
+    "UPDATE od_feed_items SET state = 'done', resolved_at = ? WHERE owner_id = ? AND kind = ? AND state = 'open' AND run_id LIKE ?",
+    [iso(now), ownerId, kind, runLike],
+  );
 }
 
 // ---------------- Orçamento de IA (reserva atômica em SQL) ----------------

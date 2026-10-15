@@ -83,9 +83,9 @@ const DICT: Record<string, Omit<ErrorExplanation, "code">> = {
     acao: "O arquivo continua na lista. Toque em Tentar de novo.",
   },
   offline: {
-    frase: "Sem conexão com o servidor. Nada foi enviado.",
-    causa: "O aparelho não alcançou o Open Dot.",
-    acao: "Quando a rede voltar, toque em Tentar de novo.",
+    frase: "Não consegui falar com o servidor.",
+    causa: "A primeira carga não alcançou a API.",
+    acao: "Toque em Tentar de novo. A demonstração só abre se você pedir.",
   },
   internal: {
     frase: "Algo deu errado. Nada foi enviado ou alterado fora do Open Dot.",
@@ -161,6 +161,11 @@ const DICT: Record<string, Omit<ErrorExplanation, "code">> = {
     frase: "O arquivo 3D do Dot não passou na checagem.",
     causa: "O manifesto do GLB não está ok.",
     acao: "Sigo no motor 2D.",
+  },
+  b3_fora_do_plano: {
+    frase: "Ações da B3 não estão no plano gratuito desta fonte.",
+    causa: "A fonte gratuita usada para ações não cobre a B3.",
+    acao: "Cripto e câmbio seguem. A Petrobras não entra como falha.",
   },
   missing_key: {
     frase: "Falta a chave opcional desta fonte.",
