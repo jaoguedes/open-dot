@@ -12,8 +12,10 @@ export function json(data: unknown, status = 200, headers: Record<string, string
   });
 }
 
-export function problem(status: number, code: string, message: string): Response {
-  return json({ error: { code, message } }, status);
+export function problem(status: number, code: string, message: string, reason?: string): Response {
+  const error: { code: string; message: string; reason?: string } = { code, message };
+  if (reason) error.reason = reason;
+  return json({ error }, status);
 }
 
 export function redirect(location: string, headers: Record<string, string> = {}): Response {
