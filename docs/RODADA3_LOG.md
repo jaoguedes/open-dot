@@ -166,3 +166,16 @@ Feito e testado (não publicado):
 - Retorno do dono: `POST /api/correio/feedback`, `GET /api/correio/silenced`, `POST /api/correio/silenced/:hash/undo`; domínio só como hash + cifrado (`od_triage_feedback`, migração 0007); revisão seguinte trata silenciados como ruído. `apps/worker/test/fase-g.test.ts` (rotas não existiam antes → falhava). Botões “Era importante”/“Não importa” nos itens do resumo (`TriageButtons`).
 
 Não feito: lista “Remetentes silenciados” em Conexões (a rota existe, a tela não); “abertura e contagens só com itens abertos” no `DigestBlock`/ilha; teste de navegador da G; `eval:correio` no `check`/CI; auditorias 1–3; deploy final das fases D–G; atualização de STATUS/DECISOES/ACOES_DO_JOAO.
+
+## Continuação — Parte 1: fechar a fase G (15/10/2026)
+
+Base conferida: `65c05bb`, árvore limpa, `npm run check` verde (249 testes), lint 0 erros.
+
+| Item | Mudança | Teste (antes → depois) |
+|---|---|---|
+| a) Remetentes silenciados | Cartão em Conexões: lista, “Voltar a avisar”, vazio e erro em português. Voltar a avisar também limpa as marcas “Não importa” dos itens daquele remetente. | `ui:fase-g` (2 cenários) falhavam no build de `65c05bb` → passam |
+| b) Só itens abertos | A revisão grava em cada item o **hash** do domínio (`remetente`); o snapshot traz os silenciados. `openDigestItems` tira Feito/Adiado (resumo inteiro), remetente silenciado e item “Não importa”; “Era importante” sobe o item. Abertura (`aberturaFor`), contagem do Meu dia, chip “Precisa de você”, `DigestBlock` e a ilha usam isso. O aviso “Silenciei X / Desfazer” foi para uma faixa no topo (o item some da lista). Limite: as marcas por item ficam neste navegador; resumos antigos sem `remetente` não somem por silêncio. | `apps/web/test/digest-open.test.ts` (novo); `apps/worker/test/fase-g.test.ts` +1 (item traz hash, nunca o domínio) |
+| c) Navegador da G | `scripts/ui-fase-g.mjs` (`npm run ui:fase-g`, no deploy e na CI). | build de `65c05bb`: **1/4** (só “Feito zera a contagem” já funcionava) → **4/4** |
+| d) `eval:correio` no check | Entra em `npm run check` e na CI; limiar 90% / 95%. Cabeçalho do script e `docs/DOT_COMPORTAMENTO.md` dizem que é regressão, não medida real. `packages/core/test/fixtures/correio-holdout/README.md` (conjunto cego, vazio). | `tests/eval-correio-gate.test.ts` 0/2 → 2/2 |
+| e) Contato público | `/api/legal` usa o valor salvo em Conexões → Contato público (e-mail ou link https); sem ele, o `CONTACT_EMAIL` do ambiente. Aviso quando é o e-mail de login. Segredo de produção **não** alterado. | `apps/worker/test/contato.test.ts` 0/1 → 1/1 |
+| f) Docs | `STATUS.md`, `DECISOES.md` (D-021), `ACOES_DO_JOAO.md` (seção 0). | — |

@@ -96,3 +96,8 @@ Formato: contexto → decisão → consequência. Novas decisões entram no fim.
 - **Consequência:** rollback para um Worker antigo depois de uma migração nova não derruba o cron, desde que o schema remoto seja mais novo que o código. O id de rollback desta publicação é `da21bebf-d11a-4fdc-abad-c87022130c56`. O Worker no ar é `4d1dbc6e-b55d-475f-8e27-ec36659eb036`, app `75ea1683146c`.
 
 
+
+### D-021 · Rodada 3: segurança, snapshot, acessibilidade e Correio (15/10/2026)
+- **Contexto:** a rodada 3 (docs/PROMPT_RODADA_3.md) pediu correções, privacidade, desempenho, acessibilidade, sons e qualidade do resumo, a custo zero.
+- **Decisão:** cookie `__Host-` e sessões listáveis; health público só `{ok}`; uma rota `/api/snapshot` com ETag no lugar de dez; leitura do banco com uma nova tentativa (escrita nunca); primeira tela ≤ 400 KB (meta 350) com telas pouco usadas sob demanda; diálogos com fundo `inert`; registro único de agentes; fila de aprovações; sons desligados por padrão; schema `0007` (estado do sistema e retorno da triagem). O retorno “Era importante/Não importa” guarda só o hash do domínio (e o domínio cifrado para a lista de silenciados). As marcas por item ficam no navegador (`localStorage`); o silêncio do remetente fica no servidor.
+- **Consequência:** `npm run check` inclui `eval:correio`, que é regressão e **não** medida real (o conjunto foi ajustado junto com as regras). Contato público passa a ser editável em Conexões, com o ambiente como reserva.

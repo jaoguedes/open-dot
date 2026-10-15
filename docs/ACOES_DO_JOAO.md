@@ -6,6 +6,17 @@ Estão aqui só as tarefas que exigem sua conta, seu login ou uma decisão sua. 
 
 ---
 
+## 0. Agora (rodada 3, 15/10/2026)
+
+1. **Contato público (decisão sua).** Hoje `/privacidade` e `/api/legal` mostram, **sem login**, o seu Gmail pessoal: ele está no segredo `CONTACT_EMAIL` de produção. Recomendo um alias (ex.: `contato@seudominio`) ou um link de issues (`https://github.com/…/issues`). Para trocar não precisa de código nem de terminal: Conexões → **Contato público** → Salvar (o valor salvo ali vale antes do segredo). Para tirar de vez o Gmail do ambiente: `npx wrangler secret delete CONTACT_EMAIL`. Eu não mudei nada em produção.
+2. **Testar no iPhone:** sons (Mascote → Sons do Dot → Ouvir; depois ligar e abrir a busca), ícones novos (remova o app da tela inicial e adicione de novo para o iOS pegar o ícone), “Abrir no app do Gmail” (abre a caixa de entrada, não a mensagem).
+3. **IA privada (Groq):** só depois de confirmar que a conta tem Zero Data Retention. Até lá `GROQ_ZDR_CONFIRMED` fica `"false"` e o resumo do Correio é só por regras.
+4. **Rastreio (PacoteVício):** ligar só quando você aceitar os termos e quiser; `PACOTEVICIO_TERMS_CONFIRMED` fica `"false"`.
+5. **CoinGecko:** só crie a chave Demo se o Mercado voltar a mostrar 403 (hoje responde 200 sem chave).
+6. **Conjunto cego do Correio:** se quiser um número real de qualidade do resumo, peça a alguém (ou a uma sessão que não leia as regras) para escrever ≥ 40 e-mails sintéticos rotulados em `packages/core/test/fixtures/correio-holdout/` (instruções no README de lá).
+
+---
+
 ## A. Aprovar o modelo do Dot (5 minutos) — **o build já rodou, falta só o seu olhar**
 
 - **O que fazer:**
