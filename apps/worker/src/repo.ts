@@ -1,6 +1,7 @@
 import { randomId, type BudgetLedger, type ReserveInput, type ReserveResult, type UsageRecord } from "@open-dot/core";
 import { open, seal, type Keyring } from "./crypto.ts";
 import type { Db, SqlValue, Stmt } from "./db/types.ts";
+import { scrubSecrets } from "./reasons.ts";
 
 /**
  * Acesso a dados. Toda função de leitura/escrita de dados do usuário recebe ownerId
@@ -37,6 +38,18 @@ export async function createSession(db: Db, p: { ownerId: string; idHash: string
 export async function sessionOwner(db: Db, idHash: string, now: number): Promise<string | null> {
   const r = await db.query<{ owner_id: string }>("SELECT owner_id FROM od_sessions WHERE id_hash = ? AND expires_at > ?", [idHash, iso(now)]);
   return r[0]?.owner_id ?? null;
+}
+
+export async function listSessions(db: Db, ownerId: string, now: number) {
+  return db.query<{ id_hash: string; created_at: string; expires_at: string; user_agent: string | null }>(
+    "SELECT id_hash, created_at, expires_at, user_agent FROM od_sessions WHERE owner_id = ? AND expires_at > ? ORDER BY created_at DESC LIMIT 20",
+    [ownerId, iso(now)],
+  );
+}
+
+export async function deleteOwnerSessions(db: Db, ownerId: string): Promise<number> {
+  const r = await db.run("DELETE FROM od_sessions WHERE owner_id = ?", [ownerId]);
+  return r.changes;
 }
 
 export async function deleteSession(db: Db, idHash: string) {
@@ -173,7 +186,7 @@ export async function releaseRefreshLease(db: Db, connectionId: string) {
 }
 
 export async function markConnection(db: Db, ownerId: string, id: string, status: string, error: string | null, now: number) {
-  await db.run("UPDATE od_connections SET status = ?, last_error = ?, version = version + 1, updated_at = ? WHERE id = ? AND owner_id = ?", [status, error, iso(now), id, ownerId]);
+  await db.run("UPDATE od_connections SET status = ?, last_error = ?, version = version + 1, updated_at = ? WHERE id = ? AND owner_id = ?", [status, error === null ? null : scrubSecrets(error).slice(0, 300), iso(now), id, ownerId]);
 }
 
 export async function setCursor(db: Db, ownerId: string, id: string, cursor: string, now: number) {
@@ -361,7 +374,7 @@ export async function claimRun(db: Db, run: RunRow, now: number, leaseMs = 4 * 6
 export async function finishRun(db: Db, run: RunRow, p: { state: "succeeded" | "failed" | "waiting_quota" | "retry_scheduled" | "uncertain" | "waiting_approval"; errorCode?: string; errorMessage?: string; nextAttemptAt?: number; now: number }): Promise<boolean> {
   const r = await db.run(
     "UPDATE od_runs SET state = ?, version = version + 1, lease_until = NULL, error_code = ?, error_message = ?, next_attempt_at = ?, updated_at = ? WHERE id = ? AND version = ? AND state = 'running'",
-    [p.state, p.errorCode ?? null, p.errorMessage?.slice(0, 300) ?? null, p.nextAttemptAt ? iso(p.nextAttemptAt) : null, iso(p.now), run.id, run.version],
+    [p.state, p.errorCode ?? null, p.errorMessage ? scrubSecrets(p.errorMessage).slice(0, 300) : null, p.nextAttemptAt ? iso(p.nextAttemptAt) : null, iso(p.now), run.id, run.version],
   );
   return r.changes === 1;
 }
@@ -725,7 +738,7 @@ export async function recordDelivery(db: Db, p: { provider: string; deliveryId: 
 }
 
 export async function audit(db: Db, p: { ownerId: string | null; actor: "user" | "routine" | "system"; action: string; target?: string | null; outcome: string; detail?: string | null; now: number }) {
-  await db.run("INSERT INTO od_audit_events (owner_id, at, actor, action, target, outcome, detail) VALUES (?, ?, ?, ?, ?, ?, ?)", [p.ownerId, iso(p.now), p.actor, p.action, p.target ?? null, p.outcome, p.detail?.slice(0, 300) ?? null]);
+  await db.run("INSERT INTO od_audit_events (owner_id, at, actor, action, target, outcome, detail) VALUES (?, ?, ?, ?, ?, ?, ?)", [p.ownerId, iso(p.now), p.actor, p.action, p.target ?? null, p.outcome, p.detail ? scrubSecrets(p.detail).slice(0, 300) : null]);
 }
 
 /** Retenção: apaga o que venceu (evidências 7 dias, resumos 30, auditoria 90). */

@@ -1,16 +1,16 @@
 import { z } from "zod";
-import { AGENTS, GMAIL_CAN_SEND, OPEN_DOT_HEALTH_URL, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, countsAsAgentError, displayNameFor, hashProposal, isValidTimeZone, localParts, nextSlot, parseHHMM, providerCards, renderUntrusted, runFictitiousProviderTest, sanitizeUntrusted, sha256Hex, toVisual, zonedTimeToUtc, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
+import { AGENTS, GMAIL_CAN_SEND, selfHealthUrl, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, countsAsAgentError, displayNameFor, hashProposal, isValidTimeZone, localParts, nextSlot, parseHHMM, providerCards, renderUntrusted, runFictitiousProviderTest, sanitizeUntrusted, sha256Hex, toVisual, zonedTimeToUtc, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
 import { GMAIL_READ_SCOPES, GSC_READ_SCOPES, LOGIN_SCOPES, authUrl, exchangeCode, readIdToken, revoke } from "@open-dot/connectors/google.ts";
 import { getProfile } from "@open-dot/connectors/gmail.ts";
 import { normalizeEvent, verifySignature, isNewer } from "@open-dot/connectors/github.ts";
 import { checkTarget } from "@open-dot/core";
 import { ConnectorError } from "@open-dot/connectors/errors.ts";
 import { BudgetExhausted, SubrequestBudget, type Ctx } from "./context.ts";
-import { safeReason } from "./reasons.ts";
+import { logSafe, safeReason } from "./reasons.ts";
 import { configured } from "./env.ts";
 import { REQUIRED_SCHEMA, currentSchema, schemaCompatible } from "./db/migrate.ts";
 import { pkceChallenge, randomToken } from "./crypto.ts";
-import { csrfOk, currentOwner, endSession, json, problem, redirect, SECURITY_HEADERS, startSession } from "./http.ts";
+import { csrfOk, currentOwner, currentSessionHash, endSession, json, problem, redirect, SECURITY_HEADERS, startSession, sessionCookie, withSessionCookie } from "./http.ts";
 import * as repo from "./repo.ts";
 import { makeRouter, runEmailReview } from "./services/email-review.ts";
 import { syncGmail } from "./services/gmail.ts";
@@ -65,7 +65,7 @@ export async function handleApi(ctx: Ctx, req: Request): Promise<Response> {
       const badInput = e instanceof z.ZodError || e instanceof SyntaxError || (e instanceof Error && (e.name === "InvalidCharacterError" || e.name === "URIError"));
       if (badInput) return withHeaders(problem(400, "invalid_input", "Dados inválidos."));
       const reason = safeReason(e);
-      console.error(JSON.stringify({ at: new Date(ctx.now()).toISOString(), route: url.pathname, reason }));
+      logSafe("error", { at: new Date(ctx.now()).toISOString(), route: url.pathname.replace(/\/[^/]*\d[^/]*(?=\/|$)/g, "/:id"), reason });
       return withHeaders(problem(500, "internal", "Algo deu errado. Nada foi enviado ou alterado fora do Open Dot.", reason));
     }
   }
@@ -109,7 +109,7 @@ route("GET", "/api/session", { auth: false }, async (ctx, req, _p, ownerId) => {
   const local = isLocalRequest(ctx, req);
   if (!ownerId) return json({ authenticated: false, devLoginAvailable: ctx.env.APP_ENV === "development" && local, googleLoginAvailable: configured(ctx.env).google && configured(ctx.env).owner });
   const owner = await repo.getOwner(ctx.db, ownerId);
-  return json({ authenticated: true, owner: owner && { email: owner.email, name: displayNameFor(owner.email, owner.display_name, owner.name_custom === 1), timeZone: owner.time_zone } });
+  return json({ authenticated: true, owner: owner && { email: owner.email, name: displayNameFor(owner.email, owner.display_name, owner.name_custom === 1, ctx.env.OWNER_NAME ?? ""), timeZone: owner.time_zone } });
 });
 
 function isLocalRequest(ctx: Ctx, req: Request): boolean {
@@ -125,10 +125,32 @@ route("POST", "/api/session/dev", { auth: false }, async (ctx, req) => {
   await repo.ensureEmailRoutine(ctx.db, ownerId, ctx.now());
   await repo.ensureNewsRoutine(ctx.db, ownerId, ctx.now());
   const cookie = await startSession(ctx, req, ownerId);
-  return json({ ok: true }, 200, { "set-cookie": cookie });
+  return withSessionCookie(ctx, json({ ok: true }), cookie);
 });
 
-route("POST", "/api/logout", { auth: false }, async (ctx, req) => json({ ok: true }, 200, { "set-cookie": await endSession(ctx, req) }));
+route("POST", "/api/logout", { auth: false }, async (ctx, req) => withSessionCookie(ctx, json({ ok: true }), await endSession(ctx, req)));
+
+/** Aparelhos com sessão aberta. Só o agente do navegador e as datas; o token nunca sai. */
+route("GET", "/api/sessions", { auth: true }, async (ctx, req, _p, ownerId) => {
+  const current = await currentSessionHash(ctx, req);
+  const rows = await repo.listSessions(ctx.db, ownerId!, ctx.now());
+  return json({
+    sessions: rows.map((r, i) => ({ id: `s${i + 1}`, device: describeUserAgent(r.user_agent), createdAt: r.created_at, expiresAt: r.expires_at, current: r.id_hash === current })),
+  });
+});
+
+route("POST", "/api/sessions/logout-all", { auth: true }, async (ctx, _req, _p, ownerId) => {
+  const removed = await repo.deleteOwnerSessions(ctx.db, ownerId!);
+  await repo.audit(ctx.db, { ownerId, actor: "user", action: "logout_all", outcome: "ok", detail: `sessoes=${removed}`, now: ctx.now() });
+  return withSessionCookie(ctx, json({ ok: true, removed }), sessionCookie(ctx, "", 0));
+});
+
+function describeUserAgent(ua: string | null): string {
+  if (!ua) return "Aparelho desconhecido";
+  const os = /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad" : /Android/.test(ua) ? "Android" : /Mac OS X|Macintosh/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : /Linux/.test(ua) ? "Linux" : "Outro sistema";
+  const browser = /Edg\//.test(ua) ? "Edge" : /CriOS|Chrome\//.test(ua) ? "Chrome" : /FxiOS|Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "navegador";
+  return `${browser} no ${os}`;
+}
 
 const DisplayNameInput = z.object({
   name: z
@@ -182,7 +204,22 @@ route("POST", "/api/connections/gsc/start", { auth: true }, async (ctx, _req, _p
   return json({ url: await beginGoogle(ctx, "gsc", ownerId) });
 });
 
-route("GET", "/api/oauth/google/callback", { auth: false }, async (ctx, req, _p, sessionOwnerId) => {
+/**
+ * Qualquer falha na troca do código, no id_token ou no perfil volta para a tela com um
+ * código conhecido. O navegador nunca vê JSON cru nem a mensagem do Google.
+ */
+route("GET", "/api/oauth/google/callback", { auth: false }, async (ctx, req, p, sessionOwnerId) => {
+  try {
+    return await oauthCallback(ctx, req, p, sessionOwnerId);
+  } catch (e) {
+    const reason = safeReason(e);
+    logSafe("error", { at: new Date(ctx.now()).toISOString(), route: "/api/oauth/google/callback", reason });
+    await repo.audit(ctx.db, { ownerId: sessionOwnerId, actor: "user", action: "oauth_callback", outcome: "failed", detail: reason, now: ctx.now() }).catch(() => undefined);
+    return redirect(sessionOwnerId ? "/conexoes?erro=callback_invalido" : "/?erro=callback_invalido");
+  }
+});
+
+const oauthCallback: Handler = async (ctx, req, _p, sessionOwnerId) => {
   const url = new URL(req.url);
   const state = url.searchParams.get("state");
   const code = url.searchParams.get("code");
@@ -202,12 +239,12 @@ route("GET", "/api/oauth/google/callback", { auth: false }, async (ctx, req, _p,
       await repo.audit(ctx.db, { ownerId: null, actor: "user", action: "login", outcome: "denied", now: ctx.now() });
       return redirect("/?erro=conta_nao_autorizada");
     }
-    const ownerId = await repo.upsertOwner(ctx.db, { sub: claims.sub, email: claims.email, name: "João", now: ctx.now() });
+    const ownerId = await repo.upsertOwner(ctx.db, { sub: claims.sub, email: claims.email, name: ctx.env.OWNER_NAME ?? null, now: ctx.now() });
     await repo.ensureEmailRoutine(ctx.db, ownerId, ctx.now());
     await repo.ensureNewsRoutine(ctx.db, ownerId, ctx.now());
     const cookie = await startSession(ctx, req, ownerId);
     await repo.audit(ctx.db, { ownerId, actor: "user", action: "login", outcome: "ok", now: ctx.now() });
-    return redirect("/", { "set-cookie": cookie });
+    return withSessionCookie(ctx, redirect("/"), cookie);
   }
 
   if (!st.ownerId || st.ownerId !== sessionOwnerId) return redirect("/?erro=sessao_trocada");
@@ -241,7 +278,7 @@ route("GET", "/api/oauth/google/callback", { auth: false }, async (ctx, req, _p,
   await repo.ensureNewsRoutine(ctx.db, st.ownerId, ctx.now());
   await repo.audit(ctx.db, { ownerId: st.ownerId, actor: "user", action: "gmail_connect", target: connId, outcome: "ok", detail: "scope=gmail.readonly", now: ctx.now() });
   return redirect("/conexoes?ok=gmail");
-});
+};
 
 // ---------------------------------------------------------------- Conexões
 
@@ -720,7 +757,8 @@ route("GET", "/api/monitors", { auth: true }, async (ctx, _r, _p, ownerId) => {
 });
 
 route("POST", "/api/monitors/self", { auth: true }, async (ctx, _r, _p, ownerId) => {
-  const url = OPEN_DOT_HEALTH_URL;
+  const url = selfHealthUrl(ctx.env.APP_ORIGIN);
+  if (!url) return problem(409, "local_origin", "Vigiar o próprio Open Dot só funciona na versão publicada.");
   const rows = await repo.listMonitors(ctx.db, ownerId!);
   const existing = rows.find((m) => m.url === url);
   if (existing) return json({ id: existing.id, created: false });

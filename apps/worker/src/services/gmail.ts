@@ -4,6 +4,7 @@ import { getMetadata, getProfile, listHistory, listRecentIds } from "@open-dot/c
 import type { Ctx } from "../context.ts";
 import { BudgetExhausted } from "../context.ts";
 import * as repo from "../repo.ts";
+import { scrubSecrets } from "../reasons.ts";
 
 /**
  * Sincronização incremental do Gmail (somente leitura).
@@ -115,7 +116,7 @@ export async function syncGmail(ctx: Ctx, conn: repo.ConnectionRow, fetchImpl: t
       return report;
     }
     if (e instanceof ConnectorError) {
-      report.error = e.message;
+      report.error = scrubSecrets(e.message);
       if (e.code === "reauth_required" || e.code === "forbidden_scope") {
         report.status = "reauth_required";
         // Uma notificação de reconexão; o sync para até o usuário reconectar.

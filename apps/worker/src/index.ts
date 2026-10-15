@@ -7,6 +7,7 @@ import { loadKeyring, type Keyring } from "./crypto.ts";
 import { HranaDb } from "./db/hrana.ts";
 import { parseEnv } from "./env.ts";
 import { tick } from "./jobs.ts";
+import { logSafe } from "./reasons.ts";
 import type { Ctx } from "./context.ts";
 
 interface Bindings extends Record<string, unknown> {
@@ -54,7 +55,8 @@ export default {
     if (url.pathname.startsWith("/api/")) {
       const ctx = await buildCtx(bindings);
       if ("error" in ctx) {
-        return new Response(JSON.stringify({ error: { code: "not_configured", message: "Configuração incompleta do servidor.", missing: ctx.error } }), { status: 503, headers: { "content-type": "application/json" } });
+        logSafe("error", { api: "not_configured", missing: ctx.error });
+        return new Response(JSON.stringify({ error: { code: "not_configured", message: "Configuração incompleta do servidor." } }), { status: 503, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
       }
       return handleApi(ctx, req);
     }
@@ -63,8 +65,9 @@ export default {
     }
     if (bindings.ASSETS) return bindings.ASSETS.fetch(req);
     return new Response("Interface não publicada.", { status: 404 });
-    } catch {
-      return new Response(JSON.stringify({ error: { code: "internal", message: "Não consegui falar com o servidor." } }), { status: 500, headers: { "content-type": "application/json; charset=utf-8" } });
+    } catch (e) {
+      logSafe("error", { api: "fatal", reason: e instanceof Error ? e.name : "unknown" });
+      return new Response(JSON.stringify({ error: { code: "internal", message: "Não consegui falar com o servidor." } }), { status: 500, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
     }
   },
 
@@ -72,13 +75,13 @@ export default {
     try {
     const ctx = await buildCtx(bindings);
     if ("error" in ctx) {
-      console.error(JSON.stringify({ cron: "skipped", missing: ctx.error }));
+      logSafe("error", { cron: "skipped", missing: ctx.error });
       return;
     }
     const report = await tick(ctx);
-    console.log(JSON.stringify({ cron: "tick", ...report }));
+    logSafe("log", { cron: "tick", ...report });
     } catch (e) {
-      console.error(JSON.stringify({ cron: "error", reason: e instanceof Error ? e.name : "unknown" }));
+      logSafe("error", { cron: "error", reason: e instanceof Error ? e.name : "unknown" });
     }
   },
 };

@@ -3,6 +3,8 @@ import { listGscSites } from "@open-dot/connectors/gsc.ts";
 import { webAnalyticsHint } from "@open-dot/connectors/vercel.ts";
 import type { Ctx } from "../context.ts";
 import * as repo from "../repo.ts";
+import { scrubSecrets } from "../reasons.ts";
+import { ConnectorError } from "@open-dot/connectors/errors.ts";
 import { listRecentNews } from "./news.ts";
 
 /** Teste do Marketing: rascunhos + leitura. Nunca publica. */
@@ -33,7 +35,7 @@ export async function testMarketing(
         sites.push(...listed.map((s) => s.siteUrl));
       }
     } catch (e) {
-      missing.push(e instanceof Error ? e.message : "Falha ao listar sites do Search Console.");
+      missing.push(e instanceof ConnectorError ? scrubSecrets(e.message) : "Falha ao listar sites do Search Console.");
     }
   } else {
     missing.push("Falta conectar o Google Search Console (só leitura, webmasters.readonly).");
