@@ -107,3 +107,23 @@ Prova: worktree em `e0de064` (último commit antes de qualquer correção da fas
 | A10 Polling com 500 vira faixa “desatualizado”, clique com falha mostra o Dot | falha: o Dot de erro apareceu pelo polling | **falhava também no publicado**: o clique em “Feito” com 500 deixava promessa rejeitada sem tratamento. Corrigido (`FeedActions` em `MyDay.tsx`, um clique por vez, aviso no cartão). |
 
 Resultado: 0/12 → 12/12. Saída completa do “antes” guardada nesta sessão; para repetir: `git worktree add /tmp/antes e0de064 && ln -s $PWD/node_modules /tmp/antes/ && (cd /tmp/antes && node scripts/build.mjs) && node scripts/ui-fase-a.mjs --dist /tmp/antes/apps/web/dist`.
+
+## Fase D (15/10/2026)
+
+`scripts/ui-fase-d.mjs` (`npm run ui:fase-d`, também no deploy) usa o mesmo harness da A (`scripts/lib/ui-harness.mjs`). Prova: build de `95c22ed` (antes da fase D) → **0/11**; atual → **11/11**.
+
+| Item | Antes (o que o teste viu em `95c22ed`) | Mudança | Teste |
+|---|---|---|---|
+| D1 busca | diálogo “Ir para” só navegava; nada de perguntar | `CommandPalette` (carrega sob demanda): destinos, agentes e “Perguntar ao Dot: …” com resposta e fontes no diálogo; combobox + listbox, ↑↓ Enter, Esc, foco preso e devolvido; no celular ocupa a tela com o campo no topo. | ui D1 + `npm run test:ui`/`ui:mobile` atualizados para o nome novo |
+| D2 sino | “sino sem indicação de novidade” (não fazia nada) | `NotificationBell` + `CenterPanel`: últimos 20 eventos (execuções, falhas com frase do dicionário, incidentes, itens, aprovações), ponto no sino, “Marcar tudo como visto” (`localStorage`). | ui D2 + `apps/web/test/events.test.ts` |
+| D3 feed | sem paginação; filtro “Fontes”; abas sem setas | `Mostrar mais` com o cursor (páginas antigas sobrevivem ao polling); `fmtWhen` (“ontem 17:00”, “seg 09:30”, “30 set 09:30”); “Com link”; abas com ←/→/Home/End e `tabpanel`. No celular a barra de filtros continua escondida (decisão anterior do layout). | ui D3 (desktop) + `apps/web/test/format.test.ts` |
+| D4 a11y | axe: `color-contrast` em 6–7 nós (`--text-3` 3,6–4,2:1, link `#3361FF` no escuro, âmbar no claro); fontes de 10,5–11,5 px; ilha `role=status`; nada prendia o foco | `--text-3` escuro `#80869A`, claro `#5F6673`; `--link` `#6E95FF`/`#2F56E0`; `--warn`/`--ok` claros escurecidos; mínimo 12 px; `icon-btn` e abas 44 px; `useDialog` (fundo `inert`, Tab em ciclo, Esc, foco volta) na paleta, na central e no painel de contexto (< 1200 px); ilha com `aria-live=off` e anúncio só de erro/“esperando você”. Achado: o botão de menu (`menu-btn`) está escondido em todas as larguras, então não há gaveta de menu; a “gaveta” real é o painel de contexto. | ui D4 ×5 (axe nos dois temas, 12 px/44 px, painel, ilha) |
+| D5 estilo | 104 `style={{}}` | 61 trocados por classes utilitárias com tokens nos 7 arquivos tocados; restam 45 em arquivos não tocados e 1 largura dinâmica do medidor. | inspeção (`grep`) |
+| D6 ícones | `maskable-512` = `icon-512` (mesmo sha); `apple-touch-icon` 192×192; ícones e favicon com o **tracinho permanente** (contra D-014) | `scripts/icons/make-icons.mjs` fotografa o Dot do motor (movimento reduzido, sem acessório) e compõe: comum 98%, maskable 70% (corpo dentro do círculo de 80%), apple 180×180. Favicon redesenhado sem tracinho. | `apps/web/test/icons.test.ts` (decodifica o PNG; fora do círculo de 80% só fundo): 1/4 → 4/4 |
+| D7 caixa | no toque Enter enviava | `composerEnter`: toque = nova linha e a seta envia; teclado = Enter envia, Shift+Enter quebra; ignora `isComposing`/229; até 5 linhas; última resposta em `sessionStorage`; “Limpar”. | ui D7 ×2 + `apps/web/test/ask.test.ts`. O D7 de teclado só falhava antes por causa do seletor novo (o comportamento de desktop já era o certo). |
+| D8 fuso | `Home` com `America/Sao_Paulo` fixo | `setOwnerTimeZone` a partir do snapshot; todas as datas usam o fuso do dono. | ui D8 (relógio fixo, dono em Tóquio → “16 de outubro”) |
+
+Também: a ilha e o painel de contexto mostravam `not_connected` cru; agora `islandReason` usa o dicionário (`apps/web/test/presence-reason.test.ts`).
+Primeira tela: 344,8 KB (paleta, central, aprovação, sobre/privacidade e absorção sob demanda).
+`ui:mobile`: a regra “botão coberto pela caixa” passou a falhar em botão inteiro escondido na primeira vista ou qualquer sobreposição depois de rolar até o fim (a caixa é fixa e o conteúdo rola por baixo; antes falhava com o “Copiar detalhes” parcialmente visível em Código/Sentinela).
+`npm run check`: 215 testes, 0 falhas.
