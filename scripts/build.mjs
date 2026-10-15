@@ -1,5 +1,7 @@
 // Build de produção: interface estática (apps/web/dist) + verificação do bundle do Worker.
 // Uso: npm run build
+import { checkAppJs, initialBytes } from "./lib/bundle-budget.mjs";
+import { staticHeaders } from "./lib/static-headers.mjs";
 import { build } from "esbuild";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync, statSync, readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -38,27 +40,7 @@ stampBuild(dist);
 const dot = copyDotAssets(root, dist);
 
 // Cabeçalhos de segurança para os arquivos estáticos (Workers Static Assets lê _headers).
-writeFileSync(
-  join(dist, "_headers"),
-  [
-    "/*",
-    "  X-Content-Type-Options: nosniff",
-    "  Referrer-Policy: no-referrer",
-    "  X-Frame-Options: DENY",
-    "  Permissions-Policy: camera=(), microphone=(), geolocation=()",
-    "  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'; media-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
-    "/assets/*",
-    "  Cache-Control: public, max-age=3600",
-    "/fonts/*",
-    "  Cache-Control: public, max-age=31536000, immutable",
-    "/dot/*",
-    "  Cache-Control: public, max-age=31536000, immutable",
-    "/dot/manifest.json",
-    "  ! Cache-Control",
-    "  Cache-Control: no-cache",
-    "",
-  ].join("\n"),
-);
+writeFileSync(join(dist, "_headers"), staticHeaders());
 
 // Verificação do Worker: o mesmo código que o wrangler empacota, sem APIs do Node.
 const worker = await build({
@@ -93,3 +75,8 @@ console.log("Build concluído:");
 for (const [k, v] of Object.entries(sizes)) console.log(`  ${k.padEnd(28)} ${fmt(v)}`);
 const html = readFileSync(join(dist, "index.html"), "utf8");
 if (!html.includes("/assets/app.js")) process.exit(1);
+const initial = initialBytes(join(dist, "assets/app.js"));
+console.log(`  primeira tela (app.js + ${initial.files - 1} chunks estáticos) ${fmt(initial.bytes)}`);
+const budget = checkAppJs(initial.bytes);
+if (budget.message) console.log(budget.message);
+if (!budget.ok) process.exit(1);

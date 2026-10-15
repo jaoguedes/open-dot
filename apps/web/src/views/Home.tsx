@@ -2,7 +2,6 @@ import { AGENTS, TOOL_KIND, toVisual, type AgentId } from "@open-dot/core";
 import { useState } from "react";
 import { useApp } from "../store.tsx";
 import { ApiError, api, type AskAnswer } from "../api.ts";
-import { demoAsk } from "../demo.ts";
 import { DigestBlock, FeedRow } from "../components/FeedViews.tsx";
 import { Icon } from "../components/Icons.tsx";
 import { AgentDot } from "../dot/AgentDot.tsx";
@@ -217,7 +216,7 @@ function Composer() {
     setBusy(true);
     setError(null);
     try {
-      const r = app.mode === "demo" && app.snap ? demoAsk(question, app.snap) : await api.ask(question);
+      const r = app.mode === "demo" && app.snap ? (await import("../demo.ts")).demoAsk(question, app.snap) : await api.ask(question);
       setAnswer({ ...r, question });
       setQ("");
       app.announce(r.answer);

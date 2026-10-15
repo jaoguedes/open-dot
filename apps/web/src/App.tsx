@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { markSplashSeen, readSplashSeen, splashPlan } from "./splash-policy.ts";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AGENTS, SEMANTIC_PRIORITY, toVisual, versionChanged, type AgentId } from "@open-dot/core";
 import { useApp } from "./store.tsx";
 import { Icon, type IconName } from "./components/Icons.tsx";
@@ -6,15 +7,18 @@ import { AgentDot } from "./dot/AgentDot.tsx";
 import { SplashScreen } from "./dot/SplashScreen.tsx";
 import { api } from "./api.ts";
 import { Home } from "./views/Home.tsx";
-import { Entregas } from "./views/Entregas.tsx";
+
 import { MyDay } from "./views/MyDay.tsx";
-import { Routines } from "./views/Routines.tsx";
-import { Connections } from "./views/Connections.tsx";
-import { Mascot } from "./views/Mascot.tsx";
 import { Approval } from "./views/Approval.tsx";
 import { About } from "./views/About.tsx";
 import { Privacy } from "./views/Privacy.tsx";
 import { ContextPanel } from "./components/ContextPanel.tsx";
+
+// Telas menos visitadas carregam sob demanda (C5): a primeira tela baixa menos.
+const Entregas = lazy(() => import("./views/Entregas.tsx").then((m) => ({ default: m.Entregas })));
+const Routines = lazy(() => import("./views/Routines.tsx").then((m) => ({ default: m.Routines })));
+const Connections = lazy(() => import("./views/Connections.tsx").then((m) => ({ default: m.Connections })));
+const Mascot = lazy(() => import("./views/Mascot.tsx").then((m) => ({ default: m.Mascot })));
 import { DotTrouble, type TroubleInfo } from "./components/DotTrouble.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
 import { agentConnected, agentPresence, islandLine, sortAgents } from "./presence.ts";
@@ -28,13 +32,24 @@ function isPublicPath(path: string): boolean {
 }
 
 function useSplash(loading: boolean, reduced: boolean): { show: boolean; fading: boolean } {
-  const [show, setShow] = useState(true);
+  const plan = useRef(splashPlan(readSplashSeen())).current;
+  const [show, setShow] = useState(plan.showAtStart);
   const [fading, setFading] = useState(false);
-  const t0 = useRef(performance.now());
+  const shownAt = useRef<number | null>(plan.showAtStart ? performance.now() : null);
+  useEffect(() => {
+    if (!loading || show) return;
+    const t = window.setTimeout(() => {
+      shownAt.current = performance.now();
+      setShow(true);
+    }, plan.delayMs);
+    return () => window.clearTimeout(t);
+  }, [loading, show, plan]);
   useEffect(() => {
     if (loading) return;
+    markSplashSeen();
+    if (!show || shownAt.current === null) return;
     let fadeT = 0;
-    const wait = Math.max(0, 1200 - (performance.now() - t0.current));
+    const wait = Math.max(0, plan.minMs - (performance.now() - shownAt.current));
     const showT = window.setTimeout(() => {
       setFading(true);
       fadeT = window.setTimeout(() => setShow(false), reduced ? 0 : 250);
@@ -43,7 +58,7 @@ function useSplash(loading: boolean, reduced: boolean): { show: boolean; fading:
       window.clearTimeout(showT);
       if (fadeT) window.clearTimeout(fadeT);
     };
-  }, [loading, reduced]);
+  }, [loading, reduced, show, plan]);
   return { show, fading };
 }
 
@@ -113,6 +128,8 @@ export function App() {
   if (app.mode === "loading" && splash.show) {
     return <SplashScreen fading={splash.fading} reducedMotion={app.reducedMotion} />;
   }
+  // Abertura repetida na mesma sessão: fundo liso pelos primeiros 400 ms, sem splash.
+  if (app.mode === "loading") return <div className="boot-blank" aria-busy="true" />;
   if (app.mode === "unreachable") {
     return (
       <main className="reading" style={{ padding: 24 }}>
@@ -264,7 +281,7 @@ export function App() {
                     {route === "agent" && agentId && <AgentRail current={agentId} go={go} />}
                   </div>
                 )}
-                {view}
+                <Suspense fallback={<p className="meta" role="status">Carregando…</p>}>{view}</Suspense>
               </div>
             </main>
             {showContext && <ContextPanel open={ctxOpen} onClose={() => setCtxOpen(false)} agentId={agentId ?? "dot"} />}

@@ -408,3 +408,4 @@ details > summary::-webkit-details-marker { display: none; }
 .plain-list { list-style: none; margin: 8px 0 12px; padding: 0; display: grid; gap: 8px; }
 .chip-gap { margin-left: 8px; }
 .block { display: block; }
+.boot-blank { min-height: 100dvh; background: var(--bg); }
