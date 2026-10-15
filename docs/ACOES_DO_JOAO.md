@@ -90,7 +90,7 @@ Os seus bancos atuais, como o do SafeWear, **não serão tocados**.
    - Não cole no chat. O `npm run setup:cloud` pede a URL e o token e aplica as migrações.
    - Se o banco tiver tabelas de outro projeto, o script recusa e não altera nada.
 
-- **Como verifico:** o setup mostra “Migrações aplicadas: 0001, 0002, 0003, 0004” (ou “já atualizado”) e o `/api/health` mostra `"schema": "0004"`.
+- **Como verifico:** o setup mostra “Migrações aplicadas: 0001, 0002, 0003, 0004, 0005” (ou “já atualizado”) e o `/api/health` mostra `"schema": "0005"`. A `0005` já foi aplicada no Turso em 15/10/2026.
 
 ---
 
@@ -156,7 +156,16 @@ npm run setup:cloud -- --from-dev-vars
 
 O comando pergunta antes de publicar. A flag de termos não é segredo: ela fica no `wrangler.jsonc`.
 
-- **Como verifico:** em Entregas, o aviso de “desligado” some e, abaixo de uma encomenda consultada, aparece o link “Rastreamento por PacoteVício” para https://pacotevicio.dev. Ao chegar em 900 consultas no mês, as consultas param e a tela avisa.
+- **Como verifico:** em Entregas, o aviso de “desligado” some e, abaixo de uma encomenda consultada, aparece o link “Rastreamento por PacoteVício” para https://pacotevicio.dev. Ao chegar em 900 consultas no mês, as consultas param e a tela avisa. Eu não ligo essa flag por você.
+
+---
+
+## J. Ainda do seu lado, depois da rodada 2
+
+1. **Groq:** `GROQ_ZDR_CONFIRMED` continua `"false"`. Sem a retenção zero confirmada por você, o resumo do Correio fica nas regras. Não mude a flag no chat; faça no `wrangler.jsonc` e no `.dev.vars` quando a ZDR estiver ligada no painel.
+2. **PacoteVício:** a chave pode existir no `.dev.vars`, mas a flag de termos em produção continua `"false"`. O cartão em Conexões mostra o estado. Para ligar, o passo I.
+3. **Gmail no iPhone:** “Abrir no app do Gmail” abre a caixa de entrada, não a mensagem. Ainda não foi testado num aparelho. “Abrir na web” usa o Message-Id quando ele existe.
+4. **Login real** no Google continua pendente se a URI de produção ainda não foi conferida no console.
 
 ---
 

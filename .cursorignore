@@ -1,0 +1,8 @@
+# Segredos: o agente do Cursor não lê nem indexa
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+!.env.example
+*.pem
+*.key

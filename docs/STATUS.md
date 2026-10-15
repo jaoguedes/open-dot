@@ -1,6 +1,25 @@
 # STATUS — Open Dot
 
-_Atualizado em 15/10/2026 · Health de produção `ok:true`, schema `0004`, rastreio automático desligado._
+_Atualizado em 15/10/2026, rodada 2. Migração `0005` já aplicada no Turso (coluna `rfc822_id`). O Worker publicado ainda exige `0004`, então `/api/health` de produção está `ok:false` até o deploy desta rodada. Rollback do Worker anterior: `e065a2e9-70dc-479d-9fd7-f44bf2e6cc4d` (`wrangler rollback`). Rastreio automático continua desligado._
+
+## Rodada 2 (15/10/2026)
+
+| Item | Estado | Validação |
+|---|---|---|
+| Deploy com build obrigatório | ✅ script · 🟡 publicação desta rodada | `npm run deploy` faz build, `check`, `test:workerd`, `ui:mobile` e só então `wrangler deploy`. Não usar `worker:deploy` para esta publicação. |
+| Tela preta / service worker | ✅ unidade + celular | Causa: cache `open-dot-shell-v1` era cache-first para sempre; o chunk com hash no nome faltava e o fallback de SPA devolvia `index.html` como se fosse JavaScript. Agora o nome do cache leva o hash do build, navegação é network-first com fallback, assets são stale-while-revalidate, e `/assets/*` e `/chunks/*` inexistentes devolvem 404 de verdade. Falha de chunk limpa o cache e recarrega uma vez. |
+| Versão | ✅ | `GET /api/version` devolve o hash do app e o id do Worker, sem segredos. Se diferir da meta `open-dot-build`, a tela mostra “Nova versão disponível” e o botão “Atualizar”. |
+| Dot de erro | ✅ unidade + celular 390×844 | Dicionário fixo em pt-BR (`packages/core/src/errors-pt.ts`). Sem IA. Código desconhecido diz que ainda não sabe. Detalhes passam por `sanitizeDetail`. ErrorBoundary no topo. Teste de cobertura falha se um `reason` do worker ou do app não está no dicionário. |
+| Busca no celular | ✅ 390×844 | O diálogo não usa mais a classe `island` (escondida abaixo de 760 px). Classe `palette`, foco no campo, fecha ao tocar fora. |
+| Notícias e subrequisições | ✅ unidade (SQLite em memória) | Causa real: cada `db.run` no Turso é uma subrequisição HTTP. Vários feeds com dezenas de itens passavam de 50. Agora o insert é um `db.batch`, no máximo 15 itens por feed, e o orçamento conta banco + HTTP com teto 44. O teste de 4 feeds × 30 itens roda em `npm test`, não no Turso de produção. |
+| Execuções presas | ✅ unidade | Exceção no meio da execução marca `failed` com código. `running` parado há mais de 10 min vira `failed`. `queued` cujo horário e atualização já passaram de 10 min vira `uncertain`. Slot futuro na fila não é cancelado. |
+| Erro com causa | ✅ | O 500 mantém “Algo deu errado…” e acrescenta `reason` (`subrequest_limit`, `db_error`, `upstream_timeout`, `upstream_http_NNN`, `invalid_feed`, `schema_mismatch`, `unknown`). Notícias e Mercado listam a fonte e a explicação do dicionário. |
+| Celular | ✅ `ui:mobile` | 390×844: Meu dia, Rotinas, Busca, Conexões, cada agente e Entregas. Sem rolagem horizontal, sem botão coberto pela caixa de perguntas, sem erro no console. A caixa fica fixa acima do dock. |
+| Estado vazio | ✅ | No máximo duas linhas e “Abrir conexões”. O texto técnico fica em “Sobre o agente e permissões”. |
+| Entregas no Meu dia | ✅ demo | A pílula aparece mesmo “Não conectado”, esmaecida. Conexões mostra o cartão do PacoteVício (desligado / sem chave / termos / ligado) e o contador do mês. O provedor não foi ligado. |
+| Atribuição | ✅ no bundle | Abaixo da encomenda consultada pelo PacoteVício: “Rastreamento por PacoteVício” → https://pacotevicio.dev. A URL está no cliente. O primeiro evento sintético do plano Básico não é apagado. |
+| Resumo do Correio | ✅ fixtures | JSON `{abertura, itens[], sem_acao[], ruido}`. Sem IA, o motivo é uma frase (“Aviso de segurança”), nunca “Menciona 'confirme'”. Códigos de login e cartão não saem no texto. Corpo do e-mail não é persistido. |
+| Abrir no Gmail | ✅ unidade · 🟡 aparelho | “Abrir no app do Gmail” usa `googlegmail://` no toque e abre a caixa de entrada, não a mensagem. “Abrir na web” usa `rfc822msgid` quando o Message-Id existe, senão `#all/<id>`. Não foi testado num iPhone. |
 
 ## Sessão autônoma 13→14/10 (em andamento)
 
@@ -38,8 +57,8 @@ _Atualizado em 15/10/2026 · Health de produção `ok:true`, schema `0004`, rast
 | Revisão do PDF | ✅ | `docs/REVISAO_DO_PDF.md`: 46 pontos com página, decisão, motivo, impacto, fonte oficial (conferida em 13/10/2026) e critério de aceite |
 | Repositório, regras e docs | ✅ | `.cursor/rules/*.mdc` no formato atual, `CLAUDE.md`, `AGENTS.md`, `.env.example`, decisões, licenças, guia do Cursor |
 | Núcleo (`packages/core`) | ✅ | Estados de execução, resolvedor visual com prioridade e revisão, corações independentes, absorção (selecionado → enviado → recebido → organizado), agenda por fuso IANA, aprovações por hash e CAS, supervisor de ferramentas, triagem por regras, resumo com cobertura, monitor anti-SSRF, roteador de IA |
-| Persistência | ✅ SQLite · ✅ Turso (Worker) | Migrações `0001`–`0004` com prefixo `od_`. `0004` acrescenta encomendas, orçamento mensal de rastreio e `name_custom`. `HranaDb` não guarda o `fetch` global cru: o workerd lança `Illegal invocation` se `fetch` for chamado como método. `currentSchema` devolve código curto em `schemaError`. Teste simula o workerd. |
-| API / Worker | ✅ local (workerd) · ✅ Cloudflare | https://open-dot.jpguedesbarbieri.workers.dev (Workers Free), versão `e065a2e9-70dc-479d-9fd7-f44bf2e6cc4d`. `/api/health` produção: `ok:true`, `schema:"0004"`, `schemaError:null`, `configured.tracking:false` (provedor desligado). **`npm run dev` roda em Node e não reproduz o workerd; use `npx wrangler dev --local --port 8799` e confira `/api/health` antes de publicar** (`npm run test:workerd`). |
+| Persistência | ✅ SQLite · ✅ Turso (Worker) | Migrações `0001`–`0005` com prefixo `od_`. `0004` acrescenta encomendas. `0005` acrescenta `od_email_messages.rfc822_id` (aditiva; aplicada no Turso em 15/10/2026). `HranaDb` não guarda o `fetch` global cru. |
+| API / Worker | ✅ local (workerd) · 🟡 produção até o deploy da rodada 2 | https://open-dot.jpguedesbarbieri.workers.dev (Workers Free). Versão publicada antes desta rodada: `e065a2e9-70dc-479d-9fd7-f44bf2e6cc4d` (exige schema `0004`). O Turso já está em `0005`, então o health de produção fica `ok:false` até publicar o Worker que exige `0005`. `npm run dev` não reproduz o workerd; use `npm run test:workerd`. |
 | Login | ✅ start em produção · 🟡 OAuth real | `GET /api/auth/google/start` em produção redireciona para `accounts.google.com`. `redirect_uri` = `https://open-dot.jpguedesbarbieri.workers.dev/api/oauth/google/callback`. Escopos do login: `openid email` (sem `profile`). Um segundo e-mail é recusado no teste (comparação com `OWNER_EMAIL`). Nome de exibição inicial “João”, editável em Configurações da barra (`PATCH /api/profile`). Gmail `gmail.readonly` continua na conexão à parte. Entrada de desenvolvimento só em localhost. |
 | Gmail (somente leitura) | 🧪 testado com Google simulado · 🟡 real | OAuth com `gmail.readonly`, sync incremental (`historyId` como texto), dedupe, ressincronização após 404, lotes dentro do limite de subrequisições, renovação de token com lease, reconexão única quando revogado, resumo das 08h/17h com links para o Gmail |
 | Rotinas 08h/17h | ✅ | Chave única por slot; cron repetido não duplica; após dias offline gera um único resumo “atrasado”; mudar o horário cancela execuções futuras |
@@ -70,8 +89,9 @@ Ambiente: workspace Linux na nuvem, Node 22.22, TypeScript 6.0.3, esbuild 0.28.2
 | `npm run build` | ✅ app.js 320 KB, worker 176 KB, **sem APIs do Node** |
 | `npm run eval:ai` | ✅ provedor falso v1: 100 casos, recall importantes 100%, JSON 100%, unauthorized 0, paid false |
 | `npm run test:ui` | ✅ 83/83 no Chromium (login, demo rotulada, Meu dia, 320/390, dock, aprovação sem envio, carinho, upload, PWA) |
-| `npx wrangler dev --local --port 8799` + `GET /api/health` | ✅ `ok:true`, `schema:"0004"` |
-| `https://open-dot.jpguedesbarbieri.workers.dev/api/health` | ✅ `ok:true`, `schema:"0004"`, `configured.tracking:false` (15/10/2026, versão `e065a2e9-70dc-479d-9fd7-f44bf2e6cc4d`) |
+| `npm run test:workerd` | ✅ `ok:true`, `schema:"0005"`, `schemaError:null` (15/10/2026, workerd local no Turso já migrado) |
+| `npm run ui:mobile` | ✅ 390×844: páginas, busca, erro de render, reason, chunk e aviso de versão |
+| `https://open-dot.jpguedesbarbieri.workers.dev/api/health` | 🟡 `ok:false`, `schema:"0005"`, `requiredSchema:"0004"` às 15:42 UTC de 15/10/2026, porque a migração adiantou o banco. O deploy desta rodada corrige. `configured.tracking:false`. |
 
 Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveitado, escopo negado, acesso revogado (uma única notificação), webhook com assinatura inválida, entrega duplicada, evento fora de ordem, 429 do Gmail, falha parcial de sincronização, cursor expirado, cron repetido, lease disputado, aprovações concorrentes, orçamento concorrente (memória e SQL), 429 em provedor privado sem envio a outro, timeout e circuit breaker, cancelamento, injeção de prompt, ID de evidência inventado, prioridade visual de erro, cancelamento independente de efeitos, movimento reduzido, segredos ausentes do banco e do health.
 
@@ -95,12 +115,12 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Cadastrar no Google a URI `https://open-dot.jpguedesbarbieri.workers.dev/api/oauth/google/callback` e completar um login real (ainda não seguido). Antes de qualquer publish: `npm run test:workerd` (`npx wrangler dev --local --port 8799` + `/api/health`).
+Publicar com `npm run deploy` (um deploy, sem `--force`). Depois, conferir `/api/health` com `ok:true` e `schema:"0005"`. O João ainda liga o PacoteVício e a Groq, se quiser (`docs/ACOES_DO_JOAO.md`). Não testar o link `googlegmail://` como se já tivesse passado num iPhone.
 
 ## Como retomar em outra sessão
 
 1. Leia `CLAUDE.md`, este arquivo e `docs/REVISAO_DO_PDF.md`.
 2. Rode `npm run check` para confirmar a base.
 3. Use `npm run dev` e abra http://localhost:8787 (entrada local de desenvolvimento; Node, não workerd).
-4. Antes de publicar: `npx wrangler dev --local --port 8799` e confira `GET /api/health` (`ok:true`, `schema:"0004"`), ou `npm run test:workerd`.
+4. Antes de publicar: `npm run test:workerd` (`ok:true`, `schema:"0005"`). Publicar só com `npm run deploy`.
 5. Continue pela “Próxima ação exata” e atualize este arquivo ao terminar.
