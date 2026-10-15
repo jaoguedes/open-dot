@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_ACCESSORY, toVisual, type Accessory, type AgentId, type AgentVisual } from "@open-dot/core";
-import { ApiError, api, loadSnapshot, type Snapshot } from "./api.ts";
-import { demoSnapshot } from "./demo.ts";
+import { ApiError, api, fetchSnapshot, loadSnapshot, type Snapshot } from "./api.ts";
+import { shouldRefresh, type RefreshTrigger } from "./refresh-policy.ts";
 import { apiFailureMode } from "./failure-mode.ts";
 
 export type Mode = "loading" | "live" | "demo" | "login" | "setup" | "unreachable";
@@ -81,6 +81,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [navDepth, setNavDepth] = useState(0);
   const [announcement, setAnnouncement] = useState("");
   const [activity, setActivity] = useState<AgentVisual | null>(null);
+  const [feedNext, setFeedNext] = useState<string | null>(null);
 
   const sysDark = useMedia("(prefers-color-scheme: dark)");
   const sysReduced = useMedia("(prefers-reduced-motion: reduce)");
@@ -105,23 +106,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  /** A demonstração carrega sob demanda: o bundle inicial não leva os dados fictícios. */
   const enterDemo = useCallback((reason: string) => {
-    setDemoReason(reason);
-    setSnap(demoSnapshot());
-    setFailures([]);
-    setMode("demo");
-    setLast(Date.now());
+    void import("./demo.ts")
+      .then(({ demoSnapshot }) => {
+        setDemoReason(reason);
+        setSnap(demoSnapshot());
+        setFailures([]);
+        setMode("demo");
+        setLast(Date.now());
+      })
+      .catch(() => setMode("unreachable"));
   }, []);
 
-  const refresh = useCallback(async () => {
-    if (new URLSearchParams(location.search).has("demo")) return enterDemo("Você abriu o modo demonstração.");
+  const etagRef = useRef<string | null>(null);
+  const lastTryRef = useRef<number | null>(null);
+  const inFlight = useRef<Promise<void> | null>(null);
+
+  const showLogin = useCallback(async () => {
+    etagRef.current = null;
     try {
       const s = await api.session();
-      if (!s.authenticated) {
-        setLogin({ dev: Boolean(s.devLoginAvailable), google: Boolean(s.googleLoginAvailable) });
-        setMode("login");
+      setLogin({ dev: Boolean(s.devLoginAvailable), google: Boolean(s.googleLoginAvailable) });
+    } catch {
+      /* sem opções de login: a tela mostra a entrada padrão */
+    }
+    setMode("login");
+  }, []);
+
+  const load = useCallback(async () => {
+    if (new URLSearchParams(location.search).has("demo")) return enterDemo("Você abriu o modo demonstração.");
+    lastTryRef.current = Date.now();
+    try {
+      const r = await fetchSnapshot(snap ? etagRef.current : null);
+      if (r.kind === "same") {
+        setFailures([]);
+        setMode("live");
+        setLast(Date.now());
         return;
       }
+      if (r.kind === "fresh") {
+        etagRef.current = r.etag;
+        setSnap(r.snap);
+        setFeedNext(r.next);
+        setFailures(r.failures);
+        setMode("live");
+        setLast(Date.now());
+        return;
+      }
+      // Worker antigo (rollback): rotas separadas.
+      const s = await api.session();
+      if (!s.authenticated) return showLogin();
       const { snap: data, failures: f } = await loadSnapshot(s.owner ?? null);
       setSnap(data);
       setFailures(f);
@@ -132,7 +167,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setSetupMissing(e.missing ?? []);
         setMode("setup");
       } else if (e instanceof ApiError && e.status === 401) {
-        setMode("login");
+        await showLogin();
       } else {
         const next = apiFailureMode(location.hostname, mode === "live" || Boolean(snap));
         if (next === "keep") setFailures(["servidor"]);
@@ -140,7 +175,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
         else enterDemo(e instanceof ApiError && e.code === "offline" ? "Servidor indisponível." : "A API do Open Dot não está rodando aqui.");
       }
     }
-  }, [enterDemo, mode]);
+  }, [enterDemo, mode, snap, showLogin]);
+
+  /** Uma busca por vez; gatilhos automáticos respeitam aba visível, 60 s e 15 s no foco. */
+  const refreshFor = useCallback(
+    (trigger: RefreshTrigger): Promise<void> => {
+      if (inFlight.current) return inFlight.current;
+      if (!shouldRefresh(trigger, lastTryRef.current, Date.now(), typeof document !== "undefined" && document.hidden)) return Promise.resolve();
+      const p = load().finally(() => {
+        inFlight.current = null;
+      });
+      inFlight.current = p;
+      return p;
+    },
+    [load],
+  );
+  const refresh = useCallback(() => refreshFor("manual"), [refreshFor]);
 
   useEffect(() => {
     void refresh();
@@ -150,11 +200,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const on = () => setOnline(true);
     const off = () => setOnline(false);
-    const focus = () => mode === "live" && void refresh();
+    const focus = () => mode === "live" && void refreshFor("focus");
+    const visible = () => mode === "live" && !document.hidden && void refreshFor("visible");
     window.addEventListener("online", on);
     window.addEventListener("offline", off);
     window.addEventListener("focus", focus);
-    const t = window.setInterval(() => mode === "live" && !document.hidden && void refresh(), 60_000);
+    document.addEventListener("visibilitychange", visible);
+    const t = window.setInterval(() => mode === "live" && void refreshFor("interval"), 15_000);
     const pop = () => {
       setPath(location.pathname);
       setNavDepth((d) => Math.max(0, d - 1));
@@ -164,10 +216,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("online", on);
       window.removeEventListener("offline", off);
       window.removeEventListener("focus", focus);
+      document.removeEventListener("visibilitychange", visible);
       window.removeEventListener("popstate", pop);
       window.clearInterval(t);
     };
-  }, [mode, refresh]);
+  }, [mode, refreshFor]);
 
   const navigate = useCallback((p: string) => {
     if (p === location.pathname) {

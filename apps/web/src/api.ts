@@ -1,3 +1,4 @@
+import { SNAPSHOT_PART_LABEL } from "./refresh-policy.ts";
 import type { AgentId, AgentVisual, ProviderCard } from "@open-dot/core";
 
 /** Tipos que a interface consome (espelham as rotas do worker). */
@@ -200,13 +201,35 @@ function noteTrouble(code: string) {
   window.dispatchEvent(new CustomEvent("od-trouble", { detail: { code } }));
 }
 
+const CLIENT_TIMEOUT_MS = 8_000;
+const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/**
+ * fetch com timeout de 8 s. Leitura (GET) tem UMA nova tentativa em 5xx, 429 ou falha
+ * de rede, respeitando Retry-After (até 3 s). Escrita nunca repete sozinha (C2).
+ */
+export async function fetchWithRetry(path: string, init: RequestInit, sleep: (ms: number) => Promise<void> = pause): Promise<Response> {
+  const read = !init.method || init.method === "GET";
+  const once = () => fetch(path, { ...init, credentials: "same-origin", signal: AbortSignal.timeout(CLIENT_TIMEOUT_MS) });
+  let res: Response | null = null;
+  try {
+    res = await once();
+  } catch (e) {
+    if (!read) throw e;
+  }
+  if (!read || (res && res.status !== 429 && res.status < 500)) return res!;
+  const after = Number(res?.headers.get("retry-after") ?? NaN);
+  await sleep(Number.isFinite(after) && after >= 0 ? Math.min(3_000, after * 1000) : 400);
+  return once();
+}
+
 async function req<T>(path: string, init: RequestInit = {}, quiet = false): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.method && init.method !== "GET") headers.set("x-open-dot", "1");
   if (init.body) headers.set("content-type", "application/json");
   let res: Response;
   try {
-    res = await fetch(path, { ...init, headers, credentials: "same-origin" });
+    res = await fetchWithRetry(path, { ...init, headers });
   } catch {
     throw new ApiError(0, "offline", "Sem conexão com o servidor.");
   }
@@ -334,6 +357,59 @@ export function sendUpload(body: UploadBody, onProgress: (loaded: number, total:
     signal?.addEventListener("abort", () => xhr.abort(), { once: true });
     xhr.send(JSON.stringify(body));
   });
+}
+
+export type SnapshotFetch =
+  | { kind: "same" }
+  | { kind: "fresh"; snap: Snapshot; failures: string[]; etag: string | null; next: string | null }
+  | { kind: "legacy" };
+
+/**
+ * Uma requisição com If-None-Match (C1). 304 = nada mudou. 404 = Worker antigo sem a
+ * rota (rollback): quem chama volta às rotas separadas.
+ */
+export async function fetchSnapshot(etag: string | null): Promise<SnapshotFetch> {
+  let res: Response;
+  try {
+    res = await fetchWithRetry("/api/snapshot", { headers: etag ? { "if-none-match": etag } : {} });
+  } catch {
+    throw new ApiError(0, "offline", "Sem conexão com o servidor.");
+  }
+  if (res.status === 304) return { kind: "same" };
+  const text = await res.text();
+  let data: any = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    throw new ApiError(res.status, "not_api", "O servidor não respondeu como a API do Open Dot.");
+  }
+  if (res.status === 404 && data?.error?.code === "not_found") return { kind: "legacy" };
+  if (!res.ok) throw new ApiError(res.status, data?.error?.code ?? "error", data?.error?.message ?? `Erro ${res.status}`, data?.error?.missing, data?.error?.reason);
+  const failures = Array.isArray(data.failures) ? data.failures.map((f: { part?: string }) => SNAPSHOT_PART_LABEL[f.part ?? ""] ?? "servidor") : [];
+  const conns = data.connections ?? { configured: emptyConfigured, connections: [], agents: [], providers: [] };
+  const approvals = data.approvals ?? { approvals: [], canSend: false };
+  return {
+    kind: "fresh",
+    etag: res.headers.get("etag"),
+    failures,
+    next: data.feed?.next ?? null,
+    snap: {
+      owner: data.owner ?? null,
+      feed: data.feed?.items ?? [],
+      connections: conns.connections,
+      configured: conns.configured,
+      routines: data.routines?.routines ?? [],
+      runs: data.runs?.runs ?? [],
+      usage: data.usage ?? null,
+      monitors: data.monitors?.monitors ?? [],
+      status: data.status?.agents ?? [],
+      agents: conns.agents ?? [],
+      providers: conns.providers ?? [],
+      approvals: approvals.approvals,
+      canSend: approvals.canSend,
+      shipments: data.shipments ?? emptyShipments,
+    },
+  };
 }
 
 export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Snapshot; failures: string[] }> {

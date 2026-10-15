@@ -430,6 +430,58 @@ route("POST", "/api/connections/:id/disconnect", { auth: true }, async (ctx, _r,
   return json({ ok: true, revokedAtProvider: revoked });
 });
 
+// ---------------------------------------------------------------- Snapshot único (C1)
+
+/** Partes do snapshot: as mesmas rotas GET que o app chamava uma a uma. */
+const SNAPSHOT_PARTS = [
+  ["feed", "/api/feed"],
+  ["connections", "/api/connections"],
+  ["routines", "/api/routines"],
+  ["runs", "/api/runs"],
+  ["usage", "/api/usage"],
+  ["monitors", "/api/monitors"],
+  ["status", "/api/status"],
+  ["approvals", "/api/approvals"],
+  ["shipments", "/api/shipments"],
+] as const;
+
+async function internalGet(ctx: Ctx, req: Request, path: string, ownerId: string): Promise<unknown> {
+  const r = routes.find((x) => x.method === "GET" && x.pattern.test(path));
+  if (!r) throw new Error("rota interna ausente");
+  const sub = new Request(new URL(path, req.url), { method: "GET", headers: req.headers });
+  const res = await r.handler(ctx, sub, {}, ownerId);
+  if (!res.ok) throw new Error(`parte respondeu ${res.status}`);
+  return res.json();
+}
+
+/**
+ * Uma requisição no lugar de dez. Cada parte falha sozinha (vai para `failures` com
+ * o motivo seguro) e as outras seguem. ETag fraca sobre o corpo: 304 quando nada mudou.
+ */
+route("GET", "/api/snapshot", { auth: true }, async (ctx, req, _p, ownerId) => {
+  const owner = await repo.getOwner(ctx.db, ownerId!);
+  const parts: Record<string, unknown> = {};
+  const failures: Array<{ part: string; reason: string }> = [];
+  for (const [name, path] of SNAPSHOT_PARTS) {
+    try {
+      parts[name] = await internalGet(ctx, req, path, ownerId!);
+    } catch (e) {
+      if (e instanceof BudgetExhausted) throw e;
+      failures.push({ part: name, reason: safeReason(e) });
+      parts[name] = null;
+    }
+  }
+  const body = JSON.stringify({
+    owner: owner && { email: owner.email, name: displayNameFor(owner.email, owner.display_name, owner.name_custom === 1, ctx.env.OWNER_NAME ?? ""), timeZone: owner.time_zone },
+    ...parts,
+    failures,
+  });
+  const etag = `W/"${(await sha256Hex(body)).slice(0, 32)}"`;
+  const headers = { etag, "cache-control": "private, no-cache" };
+  if (req.headers.get("if-none-match") === etag) return new Response(null, { status: 304, headers });
+  return new Response(body, { status: 200, headers: { "content-type": "application/json; charset=utf-8", ...headers } });
+});
+
 // ---------------------------------------------------------------- Feed, rotinas, execuções
 
 route("GET", "/api/feed", { auth: true }, async (ctx, req, _p, ownerId) => {
