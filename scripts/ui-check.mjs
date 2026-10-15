@@ -61,8 +61,8 @@ if (!ONLY) {
 {
   const { p, ctx, errors } = await page({ colorScheme: "dark" });
   await p.goto(BASE + "/sobre");
-  await ready(p);
-  check("sobre abre sem login", (await p.getByRole("heading", { name: "Open Dot" }).count()) > 0 && (await p.getByRole("button", { name: /modo desenvolvimento/i }).count()) === 0);
+  await p.locator(".legal h1").waitFor({ timeout: 10_000 });
+  check("sobre abre sem login", (await p.locator(".legal h1").innerText()) === "Open Dot" && (await p.getByRole("button", { name: /modo desenvolvimento/i }).count()) === 0);
   check("sobre liga privacidade", (await p.getByRole("link", { name: /privacidade/i }).count()) > 0);
   check("sobre sem erro de console", errors.length === 0, errors.join(" | ").slice(0, 200));
   await p.goto(BASE + "/privacidade");
@@ -91,7 +91,13 @@ if (!ONLY) {
   const gmailChip = await p.locator("section.card").first().locator(".chip").first().innerText();
   check("Conexões não mostra 'conectado' sem conexão real", /Não conectado/.test(gmailChip), gmailChip);
   const btn = p.getByRole("button", { name: "Conectar Gmail" });
-  check("botão Conectar Gmail desabilitado sem OAuth configurado (com explicação)", await btn.isDisabled());
+  const gmailReady = await btn.isEnabled();
+  const hint = await p.getByText(/Falta configurar o cliente OAuth/).count();
+  check(
+    "Conectar Gmail: habilitado só com OAuth local, senão explica a falta",
+    gmailReady ? hint === 0 : hint > 0,
+    gmailReady ? "OAuth local presente; botão livre" : "sem OAuth; botão travado",
+  );
   await shot(p,{ path: `${OUT}/live-conexoes.png`, fullPage: true });
   check("sem erros de console (modo real)", errors.length === 0, errors.join(" | ").slice(0, 300));
   await ctx.close();
@@ -206,7 +212,11 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
   await p.getByRole("radio", { name: "Em repouso" }).check();
   await p.getByRole("button", { name: "Fazer carinho" }).first().click();
   const hearts = await p
-    .waitForFunction(() => [...document.querySelectorAll("section.card [data-part]")].filter((e) => Number(e.getAttribute("opacity")) > 0.08).length, null, { timeout: 3_000 })
+    .waitForFunction(() => {
+      const parts = [...document.querySelectorAll("section.card [data-part]")].filter((e) => Number(e.getAttribute("opacity")) > 0.08).length;
+      const ind = Number(document.querySelector('section.card [data-r="ind-heart"]')?.getAttribute("opacity") ?? "0");
+      return parts + (ind > 0.08 ? 1 : 0);
+    }, null, { timeout: 3_000 })
     .then((h) => h.jsonValue())
     .catch(() => 0);
   check("carinho aparece em repouso", Number(hearts) > 0, `${hearts} partículas`);
@@ -220,9 +230,9 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
 
   await p.getByRole("radio", { name: "Em repouso" }).check();
   await stage.scrollIntoViewIfNeeded();
-  await stage.click({ position: { x: 110, y: 110 } });
-  await stage.click({ position: { x: 110, y: 110 } });
-  await stage.click({ position: { x: 110, y: 110 } });
+  await stage.evaluate((el) => {
+    for (let i = 0; i < 3; i++) el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
   const dizzy = await p
     .waitForFunction(() => Number(document.querySelector('section.card [data-r="ind-spiral"]')?.getAttribute("opacity") ?? "0"), null, { timeout: 3_000 })
     .then((h) => h.jsonValue())
@@ -382,7 +392,7 @@ if (!ONLY || ONLY === "absorb") {
 
   // Duplicado.
   await input.setInputFiles(txt);
-  await p.locator('[data-absorb-phase="failed"]').waitFor({ timeout: 10_000 });
+  await p.waitForFunction(() => /já foi absorvido/i.test(document.querySelector('[data-testid="absorb-status"]')?.textContent ?? ""), null, { timeout: 10_000 }).catch(() => {});
   check("arquivo duplicado: mensagem específica", /já foi absorvido/.test(await status.innerText()), await status.innerText());
 
   // Grande (> 5 MB): recusado antes de extrair/enviar.

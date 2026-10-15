@@ -82,17 +82,12 @@ export function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const splash = useSplash(app.mode === "loading", app.reducedMotion);
+  const splash = useSplash(app.mode === "loading" && !isPublicPath(app.path), app.reducedMotion);
+  if (isPublicPath(app.path)) {
+    return <PublicShell path={app.path}>{app.path === "/privacidade" ? <Privacy /> : <About />}</PublicShell>;
+  }
   if (app.mode === "loading" && splash.show) {
     return <SplashScreen fading={splash.fading} reducedMotion={app.reducedMotion} />;
-  }
-  if (isPublicPath(app.path)) {
-    return (
-      <>
-        {splash.show && <SplashScreen fading={splash.fading} reducedMotion={app.reducedMotion} />}
-        <PublicShell path={app.path}>{app.path === "/privacidade" ? <Privacy /> : <About />}</PublicShell>
-      </>
-    );
   }
   if (app.mode === "login") {
     return (

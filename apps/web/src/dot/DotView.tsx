@@ -337,6 +337,7 @@ export function DotView(props: DotViewProps) {
       else e.setState(map);
     }
     e.setAccessory(props.ring ? "ring" : resolveAcc(props.accessory));
+    clicks.current = [];
     tickRef.current?.setVisible(true);
     tickRef.current?.setActive(true);
     const svg = svgRef.current;
@@ -352,6 +353,7 @@ export function DotView(props: DotViewProps) {
     if (r === "ok") {
       tickRef.current?.setVisible(true);
       tickRef.current?.setActive(true);
+      e.step(0.3);
       const svg = svgRef.current;
       if (svg) apply(svg, uid, e.frame(), pulseRef.current);
     }
@@ -390,6 +392,7 @@ export function DotView(props: DotViewProps) {
     }
     tickRef.current?.setVisible(true);
     tickRef.current?.setActive(true);
+    e.step(1 / 60);
     const svg = svgRef.current;
     if (svg) apply(svg, uid, e.frame(), pulseRef.current);
   };
