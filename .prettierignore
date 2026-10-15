@@ -7,3 +7,4 @@ apps/web/public
 docs/referencias
 package-lock.json
 *.md
+assets

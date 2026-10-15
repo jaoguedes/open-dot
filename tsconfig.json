@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": [
-      "ES2023",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
@@ -20,29 +16,13 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "paths": {
-      "@open-dot/core": [
-        "./packages/core/src/index.ts"
-      ],
-      "@open-dot/core/*": [
-        "./packages/core/src/*"
-      ],
-      "@open-dot/connectors/*": [
-        "./packages/connectors/src/*"
-      ]
+      "@open-dot/core": ["./packages/core/src/index.ts"],
+      "@open-dot/core/*": ["./packages/core/src/*"],
+      "@open-dot/connectors/*": ["./packages/connectors/src/*"]
     }
   },
-  "include": [
-    "packages",
-    "apps",
-    "tests",
-    "scripts"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/dist"
-  ]
+  "include": ["packages", "apps", "tests", "scripts"],
+  "exclude": ["node_modules", "**/dist"]
 }

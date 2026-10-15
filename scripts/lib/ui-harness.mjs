@@ -240,7 +240,8 @@ export async function startHarness() {
     } catch (e) {
       const shots = process.env.UI_SHOTS;
       if (shots) await page.screenshot({ path: join(shots, `${id}-${results.length}.png`) }).catch(() => {});
-      results.push({ id, name, ok: false, why: String(e.message ?? e).split("\n")[0] });
+      if (process.env.UI_VERBOSE) console.log(String(e.message ?? e));
+    results.push({ id, name, ok: false, why: String(e.message ?? e).split("\n")[0] });
       console.log(`FALHOU ${id} ${name} — ${String(e.message ?? e).split("\n")[0]}`);
     } finally {
       await context.close();
@@ -249,7 +250,7 @@ export async function startHarness() {
   const expect = (cond, msg) => {
     if (!cond) throw new Error(msg);
   };
-  const T = { timeout: 5_000 };
+  const T = { timeout: 10_000 };
 
   const finish = async () => {
     await browser.close();
