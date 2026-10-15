@@ -5,3 +5,9 @@ Os formatos e os dígitos verificadores seguem trycom/tracking_number_data
 (fork de jkeen/tracking_number_data), licença MIT.
 Este repositório não inclui o corpus JSON original; só a regra usada no código.
 https://github.com/trycom/tracking_number_data
+
+Ideias de arquitetura do projeto Coucou (licença MIT, segundo o brief da rodada 3)
+Inspiraram o formato do motor do Dot (superelipse e molas), o registro único de
+agentes, a fila de aprovações, o cartão de progresso e as pílulas de fonte.
+Nenhum código, nome, personagem, som ou imagem do Coucou está neste repositório.
+Endereço e autoria a confirmar.

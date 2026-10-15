@@ -112,7 +112,7 @@ export async function startHarness() {
     usage: null,
     monitors: { monitors: [] },
     status: { agents: [] },
-    approvals: { approvals: [], canSend: false },
+    approvals: { approvals: state.approvals ?? [], canSend: false },
     shipments,
   });
   const defaultOwner = { email: "dono@example.com", name: "Bia", timeZone: "America/Sao_Paulo" };
