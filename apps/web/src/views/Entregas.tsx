@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AGENTS } from "@open-dot/core";
+import { AGENTS, PACOTEVICIO_ATTRIBUTION } from "@open-dot/core";
 import { ApiError, api, type ShipmentSnapshot, type ShipmentView } from "../api.ts";
 import { useApp } from "../store.tsx";
 import { fmtTime } from "../format.ts";
@@ -153,8 +153,8 @@ function ShipmentRow({ row, onChanged, onError }: { row: ShipmentView; onChanged
           Remover
         </button>
       </div>
-      {row.attribution && (
-        <a href={row.attribution.href} target="_blank" rel="noreferrer">{row.attribution.label}</a>
+      {(row.provider === "pacotevicio" || row.attribution) && (
+        <a href={PACOTEVICIO_ATTRIBUTION.href} target="_blank" rel="noreferrer">{PACOTEVICIO_ATTRIBUTION.label}</a>
       )}
     </li>
   );
