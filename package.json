@@ -32,7 +32,11 @@
     "ui:fase-a": "node scripts/ui-fase-a.mjs",
     "ui:fase-d": "node scripts/ui-fase-d.mjs",
     "icons": "node scripts/icons/make-icons.mjs",
-    "ui:fase-e": "node scripts/ui-fase-e.mjs"
+    "ui:fase-e": "node scripts/ui-fase-e.mjs",
+    "scan:secrets": "node scripts/scan-secrets.mjs",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",
@@ -43,6 +47,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
+    "@eslint/js": "9.39.5",
     "@fontsource/instrument-serif": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@types/node": "22.15.30",
@@ -50,8 +55,14 @@
     "@types/react-dom": "19.3.0",
     "@types/three": "0.186.0",
     "esbuild": "0.28.2",
+    "eslint": "9.39.5",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
     "playwright": "1.64.0",
+    "prettier": "3.9.10",
     "tsx": "4.23.12",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.2"
   }
 }

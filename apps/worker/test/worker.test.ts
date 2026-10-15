@@ -295,7 +295,7 @@ test("orçamento de IA no banco: reservas concorrentes no último saldo não est
 });
 
 test("webhook GitHub: assinatura inválida, entrega duplicada e evento fora de ordem", async () => {
-  const ctx = await makeCtx({ env: { GITHUB_WEBHOOK_SECRET: "segredo-webhook" } });
+  const ctx = await makeCtx({ env: { GITHUB_WEBHOOK_SECRET: "segredo-webhook" } }); // scan-secrets: teste
   const owner = await repo.upsertOwner(ctx.db, { sub: "s", email: "e@x.com", name: null, now: ctx.now() });
   await ctx.db.run("INSERT INTO od_github_installations (installation_id, owner_id, active, updated_at) VALUES (42, ?, 1, ?)", [owner, new Date().toISOString()]);
   const sign = async (body: string) => {
@@ -346,7 +346,7 @@ test("monitor: SSRF recusado no cadastro; incidente só após 3 falhas e com cor
 });
 
 test("health não expõe segredos", async () => {
-  const ctx = await makeCtx({ env: { GROQ_API_KEY: "gsk_super_secreta" } });
+  const ctx = await makeCtx({ env: { GROQ_API_KEY: "gsk_super_secreta" } }); // scan-secrets: teste
   const r = await client(ctx).call("GET", "/api/health");
   assert.equal(r.status, 200);
   assert.equal(r.json.ok, true);
@@ -392,7 +392,7 @@ test("health com tabela ausente expõe só schemaError curto", async () => {
 });
 
 test("legal público: contato do ambiente, sem login e sem segredo", async () => {
-  const ctx = await makeCtx({ env: { GROQ_API_KEY: "gsk_super_secreta" } });
+  const ctx = await makeCtx({ env: { GROQ_API_KEY: "gsk_super_secreta" } }); // scan-secrets: teste
   const r = await client(ctx).call("GET", "/api/legal");
   assert.equal(r.status, 200);
   assert.equal(r.json.contact, null);
