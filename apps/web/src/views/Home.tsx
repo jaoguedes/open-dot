@@ -4,6 +4,7 @@ import { lazy, Suspense, useRef, useState } from "react";
 const AbsorbPanel = lazy(() => import("../components/AbsorbPanel.tsx").then((m) => ({ default: m.AbsorbPanel })));
 import { askDot, composerEnter, composerRows, isTouchPrimary, readLastAnswer, saveLastAnswer, type SavedAnswer } from "../ask.ts";
 import { AnswerView } from "../components/AnswerView.tsx";
+import { sound } from "../sound.ts";
 import { useApp } from "../store.tsx";
 import { ApiError, api, type AskAnswer } from "../api.ts";
 import { DigestBlock, FeedRow } from "../components/FeedViews.tsx";
@@ -27,7 +28,7 @@ export function Home({ agentId }: { agentId: AgentId }) {
       <div className="day-sep">Hoje, {today}</div>
       {agentId !== "dot" && <AgentAbout agentId={agentId} />}
       {app.visualFor(agentId).semantic === "error" && (
-        <DotTrouble info={{ code: app.visualFor(agentId).reason && /^[a-z0-9_]+$/.test(app.visualFor(agentId).reason ?? "") ? app.visualFor(agentId).reason! : "unknown", route: app.path }} reducedMotion={app.reducedMotion} onRetry={() => void app.refresh()} />
+        <DotTrouble info={{ code: app.visualFor(agentId).reason && /^[a-z0-9_]+$/.test(app.visualFor(agentId).reason ?? "") ? app.visualFor(agentId).reason! : "unknown", route: app.path }} reducedMotion={app.reducedMotion} onRetry={() => void app.refresh()} onDismiss={() => (app.dismissError(agentId), app.announce("Erro dispensado até a próxima execução."))} />
       )}
       <AgentActions agentId={agentId} />
       <div className="msg-head">
@@ -84,9 +85,11 @@ function AgentActions({ agentId }: { agentId: AgentId }) {
             setBusy(true);
             setNote(null);
             app.setActivity(toVisual("correio", "working", null, "Lendo e-mails. Nada é enviado."));
+            sound.play("dot-think");
             void api.reviewNow().then(
               async (r) => {
                 app.setActivity(toVisual("correio", "success"));
+                if (r.ok) sound.play("dot-done");
                 setNote(r.note);
                 app.announce(r.note);
                 await app.refresh();
@@ -224,8 +227,10 @@ function Composer() {
     setBusy(true);
     setError(null);
     try {
+      sound.play("dot-send");
       const r = await askDot(question, app.mode === "demo" ? app.snap : null);
       const saved = { ...r, question };
+      sound.play("dot-receive");
       setAnswer(saved);
       saveLastAnswer(saved);
       setQ("");

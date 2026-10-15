@@ -30,11 +30,14 @@ export function DotTrouble({
   agentId = "dot",
   reducedMotion,
   onRetry,
+  onDismiss,
 }: {
   info: TroubleInfo;
   agentId?: AgentId;
   reducedMotion: boolean;
   onRetry?: () => void;
+  /** "Dispensar": some até a próxima execução do mesmo agente (A2). */
+  onDismiss?: () => void;
 }) {
   const explained = explainError(info.code);
   const primary = useRef<HTMLButtonElement>(null);
@@ -76,6 +79,11 @@ export function DotTrouble({
         <button className="btn ghost" type="button" onClick={() => void copy()}>
           Copiar detalhes
         </button>
+        {onDismiss && (
+          <button className="btn ghost" type="button" onClick={onDismiss}>
+            Dispensar
+          </button>
+        )}
       </div>
       <details>
         <summary>Detalhes técnicos</summary>

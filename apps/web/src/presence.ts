@@ -1,4 +1,4 @@
-import { explainError, AGENTS, type AgentId, type AgentVisual, type SemanticState } from "@open-dot/core";
+import { explainError, toVisual, AGENTS, SEMANTIC_PRIORITY, type AgentId, type AgentVisual, type SemanticState } from "@open-dot/core";
 import type { FeedEntry, Monitor } from "./api.ts";
 
 export type PresenceTone = "need" | "error" | "working" | "idle" | "off";
@@ -120,4 +120,33 @@ export function islandReason(reason: string | null | undefined): string | null {
   if (!reason) return null;
   if (/^[a-z][a-z0-9_]*$/.test(reason)) return explainError(reason).frase;
   return reason;
+}
+
+/**
+ * Quem aparece no Dot da ilha e no Dot grande do Meu dia (E4). Regra única: maior
+ * prioridade semântica vence (erro > esperando você > pergunta > sem conexão > trabalhando
+ * > pensando > concluído > repouso). Empate: o primeiro da lista (ordem do registro).
+ */
+export function dominantVisual(visuals: readonly AgentVisual[]): AgentVisual {
+  let best = visuals[0]!;
+  for (const v of visuals) if (SEMANTIC_PRIORITY[v.semantic] > SEMANTIC_PRIORITY[best.semantic]) best = v;
+  return best;
+}
+
+/** Erro dispensado pelo dono: vira repouso até chegar uma execução nova (revisão diferente). */
+export function applyDismiss<V extends AgentVisual & { revision?: number }>(v: V, dismissedRevision: number | undefined): V | AgentVisual {
+  if (v.semantic !== "error" || dismissedRevision === undefined || v.revision !== dismissedRevision) return v;
+  return { ...toVisual(v.agentId, "idle"), revision: v.revision } as AgentVisual;
+}
+
+/**
+ * Progresso de uma execução a partir do estado REAL dela (E5): na fila → executando →
+ * concluída. Sem etapas inventadas. Execução parada há mais de 10 min não conta.
+ */
+export function runProgress(run: { state: string; updatedAt: string } | null | undefined, now = Date.now()): { step: number; steps: number; label: string } | null {
+  if (!run) return null;
+  if (now - Date.parse(run.updatedAt) > 10 * 60_000) return null;
+  if (run.state === "queued" || run.state === "retry_scheduled") return { step: 1, steps: 3, label: run.state === "queued" ? "na fila" : "nova tentativa agendada" };
+  if (run.state === "running") return { step: 2, steps: 3, label: "executando" };
+  return null;
 }
