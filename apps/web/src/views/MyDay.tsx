@@ -1,10 +1,10 @@
 import { useRef, useState } from "react";
-import { AGENTS, type AgentId } from "@open-dot/core";
+import { AGENTS, agentsInPlace, approvalQueue, type AgentId } from "@open-dot/core";
 import { useApp } from "../store.tsx";
 import { AgentDot } from "../dot/AgentDot.tsx";
 import { fmtTime, fmtWhen, greeting, needYouLine } from "../format.ts";
-import { agentConnected, agentPresence, type ConnectionFacts } from "../presence.ts";
-import type { FeedEntry } from "../api.ts";
+import { agentConnected, agentPresence, dominantVisual, type ConnectionFacts } from "../presence.ts";
+import type { ApprovalView, FeedEntry } from "../api.ts";
 import { ApiError, api } from "../api.ts";
 import { GmailOpen } from "../components/GmailOpen.tsx";
 
@@ -33,17 +33,10 @@ export function MyDay() {
   const up = monitors.filter((m) => !m.incident?.open).length;
   const lastCheck = monitors.map((m) => m.lastCheckAt).filter(Boolean).sort().at(-1);
   const gmail = snap?.connections.find((c) => c.provider === "gmail" && c.status !== "disabled");
-  const visual = (() => {
-    let best = app.visualFor("dot");
-    for (const a of ["correio", "codigo", "sentinela", "noticias", "mercado", "marketing"] as AgentId[]) {
-      const v = app.visualFor(a);
-      if (v.semantic === "error" || v.semantic === "waiting") return v;
-      if (v.semantic === "working") best = v;
-    }
-    return best;
-  })();
+  // Só erro, "esperando você" e trabalho mudam o humor do Dot grande; o desempate é o da ilha.
+  const visual = dominantVisual([app.visualFor("dot"), ...agentsInPlace("mood").map((a) => app.visualFor(a)).filter((v) => v.semantic === "error" || v.semantic === "waiting" || v.semantic === "working")]);
   const nextRoutines = (snap?.routines ?? []).filter((r) => r.enabled).slice(0, 3);
-  const pendingAp = snap?.approvals.find((a) => a.status === "pending")?.id;
+  const apQueue = approvalQueue(snap?.approvals ?? [], Date.now());
 
   return (
     <>
@@ -66,7 +59,7 @@ export function MyDay() {
       </section>
 
       <section className="agent-pills" aria-label="Agentes">
-        {(["correio", "codigo", "sentinela", "noticias", "mercado", "marketing", "entregas"] as AgentId[]).map((a) => {
+        {agentsInPlace("pills").map((a) => {
           const facts: ConnectionFacts = {
             demo: app.mode === "demo",
             gmail: Boolean(gmail && gmail.status === "connected"),
@@ -119,6 +112,7 @@ export function MyDay() {
             <h2 id="h-feed">Recentes</h2>
             <FilterTabs value={filter} onChange={setFilter} />
           </div>
+          {apQueue.total > 0 && <ApprovalQueueCard queue={apQueue} />}
           <div role="tabpanel" id="feed-panel" aria-labelledby={`tab-${filter}`}>
           {!snap ? (
             <p className="meta">Carregando o dia…</p>
@@ -147,7 +141,7 @@ export function MyDay() {
                   {isNeed(it) && it.kind !== "ci_failure" && <span className="chip warn chip-push">Precisa de você</span>}
                   {it.kind === "ci_failure" && <span className="chip err chip-push">Falhou</span>}
                 </div>
-                <FeedCardBody item={it} pendingAp={pendingAp} />
+                <FeedCardBody item={it} />
                 {isNeed(it) && it.state !== "done" && it.state !== "snoozed" && app.mode === "live" && <FeedActions id={it.id} />}
               </article>
             ))
@@ -176,7 +170,7 @@ export function MyDay() {
   );
 }
 
-function FeedCardBody({ item, pendingAp }: { item: FeedEntry; pendingAp?: string }) {
+function FeedCardBody({ item }: { item: FeedEntry }) {
   const app = useApp();
   if (item.kind === "email_digest" && item.body.itens?.length) {
     return (
@@ -207,11 +201,6 @@ function FeedCardBody({ item, pendingAp }: { item: FeedEntry; pendingAp?: string
       {item.body.correlation && <p className="meta m-0">{item.body.correlation}</p>}
       {item.kind === "email_digest" && (
         <div className="row-actions">
-          {pendingAp && (
-            <button type="button" className="btn primary" onClick={() => app.navigate(`/aprovacao/${pendingAp}`)}>
-              Revisar resposta
-            </button>
-          )}
           {app.mode !== "demo" && gmailOk ? (
             <a className="btn" href={href} target="_blank" rel="noreferrer noopener">
               Abrir no Gmail
@@ -325,5 +314,34 @@ function MoreFeed() {
       </button>
       {error && <p className="tiny err-text" role="status">{error}</p>}
     </div>
+  );
+}
+
+/** Fila de aprovações (E2): uma por vez, ordem de chegada, até 5 visíveis e "mais N". */
+function ApprovalQueueCard({ queue }: { queue: ReturnType<typeof approvalQueue<ApprovalView>> }) {
+  const app = useApp();
+  const first = queue.visible[0]!;
+  return (
+    <section className="card need approval-queue mb-12" aria-labelledby="h-fila">
+      <div className="feed-kicker">
+        Aprovações <span className="chip warn chip-push">{queue.total === 1 ? "1 esperando" : `${queue.total} esperando`}</span>
+      </div>
+      <h3 id="h-fila" className="feed-title">{queue.total === 1 ? "Uma ação espera seu OK." : `${queue.total} ações esperam seu OK.`}</h3>
+      <ol className="queue-list">
+        {queue.visible.map((a, i) => (
+          <li key={a.id}>
+            <a href={`/aprovacao/${encodeURIComponent(a.id)}`} onClick={(e) => (e.preventDefault(), app.navigate(`/aprovacao/${encodeURIComponent(a.id)}`))}>
+              {i + 1}. {String(a.proposal?.payload.subject ?? a.proposal?.consequence ?? "Aprovação")}
+            </a>
+          </li>
+        ))}
+      </ol>
+      {queue.more > 0 && <p className="tiny">e mais {queue.more}</p>}
+      <div className="row-actions">
+        <button type="button" className="btn primary" onClick={() => app.navigate(`/aprovacao/${encodeURIComponent(first.id)}`)}>
+          Revisar resposta (1 de {queue.total})
+        </button>
+      </div>
+    </section>
   );
 }

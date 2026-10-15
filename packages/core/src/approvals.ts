@@ -63,3 +63,42 @@ export const GMAIL_CAN_SEND = false;
 export async function stillMatches(a: Approval, current: ActionProposal): Promise<boolean> {
   return a.status === "approved" && (await hashProposal(current)) === a.payloadHash;
 }
+
+// ------------------------------------------------------------------ Fila (E2)
+
+export interface QueueItem {
+  id: string;
+  status: string;
+  payloadHash: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface ApprovalQueue<T extends QueueItem> {
+  /** Ordem de chegada, sem duplicatas nem vencidas; no máximo `max`. */
+  visible: T[];
+  /** Quantas pendentes ficaram fora dos `max` visíveis ("mais N"). */
+  more: number;
+  total: number;
+}
+
+/**
+ * Uma aprovação por vez, em ordem de chegada. Só pendentes e não vencidas. A mesma
+ * proposta (mesmo hash) pedida duas vezes aparece uma vez (a mais antiga).
+ */
+export function approvalQueue<T extends QueueItem>(items: readonly T[], now: number, max = 5): ApprovalQueue<T> {
+  const seen = new Set<string>();
+  const live = items
+    .filter((a) => a.status === "pending" && Date.parse(a.expiresAt) > now)
+    .slice()
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
+    .filter((a) => (seen.has(a.payloadHash) ? false : (seen.add(a.payloadHash), true)));
+  return { visible: live.slice(0, max), more: Math.max(0, live.length - max), total: live.length };
+}
+
+/** "1 de N" para a aprovação aberta; null se ela não está na fila. */
+export function queuePosition(queue: ApprovalQueue<QueueItem>, id: string): { index: number; label: string; next: string | null } | null {
+  const i = queue.visible.findIndex((a) => a.id === id);
+  if (i < 0) return null;
+  return { index: i, label: `${i + 1} de ${queue.total}`, next: queue.visible[i + 1]?.id ?? null };
+}

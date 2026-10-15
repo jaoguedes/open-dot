@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { toVisual } from "@open-dot/core";
+import { approvalQueue, queuePosition, toVisual } from "@open-dot/core";
 import { useApp } from "../store.tsx";
 import { api, ApiError } from "../api.ts";
 import { AgentDot } from "../dot/AgentDot.tsx";
@@ -10,6 +10,9 @@ export function Approval({ id }: { id: string }) {
   const app = useApp();
   const demo = app.mode === "demo";
   const item = (app.snap?.approvals ?? []).find((a) => a.id === id);
+  const queue = approvalQueue(app.snap?.approvals ?? [], Date.now());
+  const pos = queuePosition(queue, id);
+  const nextId = pos?.next ?? queue.visible.find((a) => a.id !== id)?.id ?? null;
   const [draft, setDraft] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -80,17 +83,20 @@ export function Approval({ id }: { id: string }) {
   return (
     <div className="approval">
       <header className="approval-head">
-        <button className="icon-btn" aria-label="Voltar" onClick={() => app.navigate("/meu-dia")}>
-          <Icon name="arrow" />
-        </button>
         <span className="mono aside-h">Aprovação · Correio</span>
+        {pos && (
+          <span className="chip" aria-label={`Aprovação ${pos.label}`}>
+            {pos.label}
+            {queue.more > 0 ? ` · mais ${queue.more}` : ""}
+          </span>
+        )}
       </header>
 
       <section className="approval-hero" aria-label="Pedido">
         <AgentDot visual={waiting} accessory={app.accessoryFor("correio")} size={120} reducedMotion={app.reducedMotion} />
         <div>
           <h1>Posso enviar esta resposta?</h1>
-          <p className="serif" style={{ color: "var(--warn)", fontSize: 19 }}>
+          <p className="serif approval-sub">
             nada sai sem o seu OK
           </p>
         </div>
@@ -119,9 +125,14 @@ export function Approval({ id }: { id: string }) {
       </section>
 
       {msg && (
-        <p role="status" className={`chip ${msg.ok ? "ok" : "err"}`} style={{ whiteSpace: "normal" }}>
+        <p role="status" className={`chip ws-normal ${msg.ok ? "ok" : "err"}`}>
           {msg.text}
         </p>
+      )}
+      {msg && item.status !== "pending" && nextId && (
+        <button className="btn" type="button" onClick={() => (setMsg(null), setDraft(null), app.navigate(`/aprovacao/${encodeURIComponent(nextId)}`))}>
+          Próxima aprovação
+        </button>
       )}
 
       <div className="approval-actions">
