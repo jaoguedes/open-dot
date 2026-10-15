@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.ts";
 
-/** Política pública — o e-mail de contato vem do ambiente, nunca do código. */
+/** Política pública — o contato vem de Conexões (ou do ambiente), nunca do código. */
 export function Privacy() {
   const [contact, setContact] = useState<string | null>(null);
+  const [kind, setKind] = useState<"email" | "url" | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     void api
       .legal()
-      .then((r) => setContact(r.contact))
+      .then((r) => (setContact(r.contact), setKind(r.contactKind ?? (r.contact ? "email" : null))))
       .catch(() => setContact(null))
       .finally(() => setLoaded(true));
   }, []);
@@ -45,10 +46,17 @@ export function Privacy() {
       <p>
         {loaded && contact ? (
           <>
-            Dúvidas: <a href={`mailto:${contact}`}>{contact}</a>
+            Dúvidas:{" "}
+            {kind === "url" ? (
+              <a href={contact} target="_blank" rel="noreferrer noopener">
+                {contact}
+              </a>
+            ) : (
+              <a href={`mailto:${contact}`}>{contact}</a>
+            )}
           </>
         ) : loaded ? (
-          "O e-mail do dono está no ambiente do servidor (OWNER_EMAIL) e não é escrito no código."
+          "Contato ainda não configurado."
         ) : (
           "Carregando o contato…"
         )}

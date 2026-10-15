@@ -213,7 +213,9 @@ export interface Diagnostics {
 export const api = {
   session: () => req<{ authenticated: boolean; owner?: Snapshot["owner"]; devLoginAvailable?: boolean; googleLoginAvailable?: boolean }>("/api/session"),
   version: () => req<{ app: string; worker: string }>("/api/version"),
-  legal: () => req<{ contact: string | null }>("/api/legal"),
+  legal: () => req<{ contact: string | null; contactKind?: "email" | "url" | null }>("/api/legal"),
+  contactSettings: () => req<{ value: string | null; kind: "email" | "url" | null; source: "app" | "ambiente" | "nenhum"; isLoginEmail: boolean }>("/api/settings/contact"),
+  saveContact: (value: string) => req<{ value: string | null; kind: "email" | "url" | null; source: "app" | "ambiente" | "nenhum" }>("/api/settings/contact", { method: "PUT", body: JSON.stringify({ value }) }),
   devLogin: () => req<{ ok: true }>("/api/session/dev", { method: "POST" }),
   logout: () => req<{ ok: true }>("/api/logout", { method: "POST" }),
   sessions: () => req<{ sessions: SessionView[] }>("/api/sessions"),

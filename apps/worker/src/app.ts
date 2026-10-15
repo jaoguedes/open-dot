@@ -130,7 +130,43 @@ route("GET", "/api/health", { auth: false }, async (ctx, req) => {
   });
 });
 
-route("GET", "/api/legal", { auth: false }, async (ctx) => json({ contact: ctx.env.CONTACT_EMAIL ?? null }));
+/**
+ * Contato público da página de Privacidade. O valor salvo pelo dono em Conexões vale primeiro;
+ * sem ele, o CONTACT_EMAIL do ambiente. Pode ser e-mail ou link https (ex.: issues).
+ */
+async function publicContact(ctx: Ctx): Promise<{ value: string | null; source: "app" | "ambiente" | "nenhum" }> {
+  const saved = await repo.getSystemState(ctx.db, "public_contact").catch(() => null);
+  if (saved?.value) return { value: saved.value, source: "app" };
+  if (ctx.env.CONTACT_EMAIL) return { value: ctx.env.CONTACT_EMAIL, source: "ambiente" };
+  return { value: null, source: "nenhum" };
+}
+const contactKind = (v: string | null) => (v === null ? null : v.startsWith("https://") ? "url" : "email");
+
+route("GET", "/api/legal", { auth: false }, async (ctx) => {
+  const c = await publicContact(ctx);
+  return json({ contact: c.value, contactKind: contactKind(c.value) });
+});
+
+route("GET", "/api/settings/contact", { auth: true }, async (ctx, _r, _p, ownerId) => {
+  const c = await publicContact(ctx);
+  const owner = await repo.getOwner(ctx.db, ownerId!);
+  return json({ value: c.value, kind: contactKind(c.value), source: c.source, isLoginEmail: Boolean(c.value && owner && c.value.toLowerCase() === owner.email.toLowerCase()) });
+});
+
+const ContactInput = z.object({
+  value: z.union([z.literal(""), z.string().trim().email().max(120), z.string().trim().url().max(300).refine((u) => u.startsWith("https://"), "Use um link https.")]),
+});
+
+route("PUT", "/api/settings/contact", { auth: true }, async (ctx, req, _p, ownerId) => {
+  const parsed = ContactInput.safeParse(await req.json());
+  if (!parsed.success) return problem(400, "invalid_input", "Use um e-mail ou um link que comece com https://.");
+  const value = parsed.data.value.trim();
+  if (value) await repo.setSystemState(ctx.db, "public_contact", value, ctx.now());
+  else await ctx.db.run("DELETE FROM od_system_state WHERE key = ?", ["public_contact"]);
+  await repo.audit(ctx.db, { ownerId, actor: "user", action: "public_contact", outcome: value ? "saved" : "cleared", now: ctx.now() });
+  const c = await publicContact(ctx);
+  return json({ value: c.value, kind: contactKind(c.value), source: c.source });
+});
 
 route("GET", "/api/session", { auth: false }, async (ctx, req, _p, ownerId) => {
   const local = isLocalRequest(ctx, req);

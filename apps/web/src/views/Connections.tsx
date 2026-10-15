@@ -136,6 +136,8 @@ export function Connections() {
 
       <SilencedSenders demo={demo} />
 
+      <PublicContact demo={demo} />
+
       <Sessions demo={demo} />
 
       <DiagnosticsCard demo={demo} />
@@ -760,6 +762,71 @@ function SilencedSenders({ demo }: { demo: boolean }) {
             </li>
           ))}
         </ul>
+      )}
+    </section>
+  );
+}
+
+/** Contato público da página de Privacidade (visível sem login). Muda aqui, sem código. */
+function PublicContact({ demo }: { demo: boolean }) {
+  const [info, setInfo] = useState<{ value: string | null; source: string; isLoginEmail: boolean } | null>(null);
+  const [draft, setDraft] = useState("");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (demo) return;
+    api
+      .contactSettings()
+      .then((r) => (setInfo(r), setDraft(r.source === "app" ? (r.value ?? "") : "")))
+      .catch((e) => setMsg({ ok: false, text: e instanceof ApiError ? e.message : "Não consegui ler o contato." }));
+  }, [demo]);
+  const save = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const r = await api.saveContact(draft.trim());
+      setInfo({ value: r.value, source: r.source, isLoginEmail: false });
+      setMsg({ ok: true, text: r.value ? `Contato público: ${r.value}` : "Contato público removido." });
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof ApiError ? e.message : "Não consegui salvar." });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="card section-gap" aria-labelledby="c-contato">
+      <div className="card-top">
+        <Icon name="mail" size={14} /> Privacidade
+      </div>
+      <h3 id="c-contato">Contato público</h3>
+      {demo ? (
+        <p>Indisponível na demonstração.</p>
+      ) : (
+        <>
+          <p>
+            Aparece em <a href="/privacidade">/privacidade</a> para qualquer pessoa, sem login.{" "}
+            {info?.value ? (
+              <>
+                Hoje: <b>{info.value}</b> ({info.source === "app" ? "definido aqui" : "do ambiente do servidor"}).
+              </>
+            ) : (
+              "Hoje: nenhum."
+            )}
+          </p>
+          {info?.isLoginEmail && <p className="banner err">Este é o seu e-mail de login. Prefira um alias ou um link de issues.</p>}
+          <label htmlFor="contact-input">E-mail ou link https</label>
+          <input id="contact-input" type="text" value={draft} placeholder="contato@seudominio.com ou https://github.com/…/issues" onChange={(e) => setDraft(e.target.value)} autoComplete="off" />
+          <div className="row-actions">
+            <button className="btn" type="button" disabled={busy} onClick={() => void save()}>
+              Salvar contato
+            </button>
+          </div>
+          {msg && (
+            <p role="status" className={`chip ws-normal ${msg.ok ? "ok" : "err"}`}>
+              {msg.text}
+            </p>
+          )}
+        </>
       )}
     </section>
   );
