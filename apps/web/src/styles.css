@@ -243,7 +243,8 @@ details > summary::-webkit-details-marker { display: none; }
     color: var(--text-2); text-decoration: none !important;
     border: 0; background: transparent; cursor: pointer; padding: 0 8px;
   }
-  .dock-item { grid-auto-flow: column; gap: 7px; font-size: 13.5px; font-weight: 600; }
+  .dock-item { grid-auto-flow: column; gap: 7px; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+  .dock-item span { white-space: nowrap; }
   .dock-item.on, .dock-icon[aria-current="page"] { background: var(--accent); color: var(--on-accent); }
 }
 @media (prefers-reduced-motion: reduce) { .sidebar { transition: none; } }
@@ -312,9 +313,11 @@ details > summary::-webkit-details-marker { display: none; }
 .seg { display: flex; gap: 4px; padding: 3px; border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--border); }
 .seg button { border: 0; background: transparent; color: var(--text-2); border-radius: var(--r-pill); padding: 7px 12px; font-size: 12.5px; cursor: pointer; min-height: 32px; }
 .seg button[aria-selected="true"] { background: var(--btn-primary-bg); color: var(--btn-primary-fg); font-weight: 600; }
+.feed-toolbar { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .feed-card { border-radius: var(--r-card); padding: 18px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
 .feed-card.need { border-color: var(--need-border); }
 .feed-kicker { display: flex; align-items: center; gap: 10px; font: 500 11px/1 var(--font-mono); letter-spacing: .08em; color: var(--text-2); text-transform: uppercase; }
+.feed-title { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; }
 .aside-h { font: 500 10.5px/1 var(--font-mono); letter-spacing: .1em; color: var(--text-3); }
 .table-scroll { overflow-x: auto; }
 
@@ -338,14 +341,21 @@ details > summary::-webkit-details-marker { display: none; }
 /* Depois das regras do hero (56–64 px), para o celular da tela 02 prevalecer. */
 @media (max-width: 759px) {
   :root { --ask-bar: 24px; }
-  .hero { gap: 6px; margin-bottom: 8px; }
-  .hero-copy { gap: 6px; }
-  .hero h1 { font-size: 20px; letter-spacing: -0.03em; line-height: 1.15; }
-  .hero .serif { font-size: 34px; line-height: 1.05; }
-  .hero-dot svg { width: min(168px, 52vw); height: auto; }
+  .hero { gap: 4px; margin-bottom: 10px; }
+  .hero-copy { flex: 0 0 auto !important; width: 100%; align-items: center; text-align: center; gap: 4px; }
+  .hero-copy > .meta { display: none; }
+  .hero h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.15; text-align: center; }
+  .hero .serif { font-size: 33px; line-height: 1.05; text-align: center; }
+  .hero-dot { flex: none; width: 200px; }
+  .hero-dot .dot-view, .hero-dot svg { width: 200px; height: auto; }
   .topbar .search { display: none; }
   .topbar .top-date.hide-sm { display: block; }
   .stats { display: none; }
-  .banner.demo { font-size: 12px; line-height: 16px; padding: 8px 12px; }
-  .agent-pills { display: flex !important; }
+  .feed-toolbar { display: none; }
+  .banner.demo { font-size: 12px; line-height: 16px; padding: 6px 12px; }
+  .agent-pills { display: flex !important; padding-bottom: 12px; }
+  .feed-card { padding: 14px 16px; gap: 8px; }
+}
+@media (max-width: 359px) {
+  .dock-item span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }

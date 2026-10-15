@@ -1,6 +1,6 @@
 # STATUS — Open Dot
 
-_Atualizado em 14/10/2026 · A–C e fases 5–8 no núcleo; prints 1440/390 conferidos; sem deploy e sem push._
+_Atualizado em 14/10/2026 · Etapa 1 visual (tela 02, feed, demo, ilha) no núcleo; etapas 2–4 em seguida._
 
 ## Sessão autônoma 13→14/10 (em andamento)
 
@@ -49,7 +49,7 @@ _Atualizado em 14/10/2026 · A–C e fases 5–8 no núcleo; prints 1440/390 con
 | Mercado | ✅ unidade · 🟡 APIs reais | CoinGecko + Frankfurter sem chave; Finnhub Free opcional (`setup:cloud`). Alerta no limite. Sem corretora/ordem |
 | Marketing | ✅ unidade · 🟡 GSC/Vercel reais | Search Console só leitura; ideias de post = rascunho; redes sociais 📋. Não publica |
 | Sites (Sentinela) | ✅ | Até 3 URLs HTTPS; bloqueio de IP interno e de redirecionamento; incidente após 3 falhas e encerramento após 2 sucessos; correlação com deploy dita como “sinal, não causa” |
-| Interface web | ✅ desktop · 🟡 arte móvel | Tema escuro (D-015), shell da tela 01 a 1440 px alinhado à referência (saudação 64 px, serif, Dot 280 px, 3 cartões, filtro, Meu dia em `aria-current`). Abaixo de 760 px: sidebar some, dock 44 px, saudação 20 px. Ainda difere da tela 02: faixa de demonstração, saudação no corpo (não no header) e pílulas/feed podem ficar abaixo da dobra |
+| Interface web | ✅ desktop · 🟡 arte móvel (tela 02 no núcleo) | Tema escuro (D-015). Abaixo de 760 px: data em mono + sino/tema, Dot ~200 px sem vão, saudação 20 px + serif 33 px, pílulas e 1º cartão acima do dock (asserção Playwright). Cartão com um cabeçalho só. Ilha: “está lendo…” / “concluído” só depois. E-mail: Revisar resposta + Abrir no Gmail. Demo: Sentinela → “Lento”; Código → “1 build falhou”; status derivado do tipo do item. |
 | Dot 2D (fallback) | ✅ | Sem boca, sem sobrancelhas, **tracinho de absorção preservado**, blush, acessórios removíveis, tinta por estado, carinho suprimido em erro/aprovação, movimento reduzido. Rotulado como “2D” |
 | Dot 3D (Blender) | ✅ técnico · 🟡 arte | `npm run blender:build` roda no Mac (Blender 4.5.14 LTS) e passa na validação: GLB base 164 KB, 3.500 triângulos, 19 clipes, 10 morphs dos olhos; 5 peças de 3–12 KB. Posters em `assets/dot/poster-*.png` (Cycles na CPU). **Aprovação artística pendente** (`ACOES_DO_JOAO.md`, grupo A). Validador Khronos não executado |
 | Dot 3D no app | ✅ Chromium/SwiftShader · 🟡 GPU real | `Dot3D.tsx` + `dot3d/DotScene.ts`: um único canvas, clipes `body_*`/`face_*` em camadas, olhar limitado (8°/5°), tom do agente/estado pelo resolvedor, acessório no socket, corações do `HeartEmitter`, crossfade de 200 ms, ≤ 30 fps, render sob demanda em repouso, pausa com a janela oculta, fallback 2D sem WebGL, com perda de contexto e com movimento reduzido. three.js num chunk carregado só quando o 3D aparece (página Mascote) |
@@ -92,7 +92,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Ajustar a tela 02 para caber pílulas de agentes e o primeiro cartão do feed acima do dock (a referência 02 mostra isso; o app ainda deixa na dobra). Reexecutar o bloco Mascote/absorção do `test:ui` com o servidor folgado. Sem deploy e sem push. Conta Groq só quando o João pedir.
+Etapa 2: páginas públicas `/sobre` e `/privacidade`. Depois Etapa 3 (setup:cloud --from-dev-vars + deploy Workers Free) e Etapa 4 (GitHub privado). Corrigir a causa dos timeouts Mascote/absorção no `test:ui` antes de publicar.
 
 ## Como retomar em outra sessão
 

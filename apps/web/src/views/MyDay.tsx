@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { AGENTS, type AgentId } from "@open-dot/core";
 import { useApp } from "../store.tsx";
-import { FeedRow } from "../components/FeedViews.tsx";
 import { AgentDot } from "../dot/AgentDot.tsx";
 import { fmtTime, greeting, needYouLine } from "../format.ts";
 import { agentPresence } from "../presence.ts";
@@ -101,7 +100,7 @@ export function MyDay() {
 
       <div className="day-grid">
         <section className="day-feed" aria-labelledby="h-feed">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+          <div className="feed-toolbar">
             <h2 id="h-feed">Hoje</h2>
             <div className="seg" role="tablist" aria-label="Filtrar o feed">
               {([["all", "Tudo"], ["need", "Precisa de você"], ["sources", "Fontes"]] as const).map(([id, lab]) => (
@@ -132,24 +131,13 @@ export function MyDay() {
             </div>
           ) : (
             shown.map((it) => (
-              <article
-                key={it.id}
-                className={`feed-card ${isNeed(it) ? "need" : ""}`}
-                onClick={it.kind === "email_digest" && pendingAp ? () => app.navigate(`/aprovacao/${pendingAp}`) : undefined}
-              >
+              <article key={it.id} className={`feed-card ${isNeed(it) ? "need" : ""}`}>
                 <div className="feed-kicker">
                   {AGENTS[it.agentId].name} · {fmtTime(it.createdAt)}
                   {isNeed(it) && it.kind !== "ci_failure" && <span className="chip warn" style={{ marginLeft: "auto" }}>Precisa de você</span>}
                   {it.kind === "ci_failure" && <span className="chip err" style={{ marginLeft: "auto" }}>Falhou</span>}
                 </div>
-                {it.kind === "email_digest" ? (
-                  <>
-                    <div style={{ fontSize: 16, fontWeight: 600 }}>{it.body.top?.[0]?.subject ?? it.title}</div>
-                    <p className="meta" style={{ margin: 0 }}>{it.body.top?.[0]?.reason ?? it.body.headline}</p>
-                  </>
-                ) : (
-                  <FeedRow item={it} />
-                )}
+                <FeedCardBody item={it} pendingAp={pendingAp} />
               </article>
             ))
           )}
@@ -184,6 +172,40 @@ export function MyDay() {
           {app.mode === "demo" && <span className="tiny">Dados de exemplo.</span>}
         </aside>
       </div>
+    </>
+  );
+}
+
+function FeedCardBody({ item, pendingAp }: { item: FeedEntry; pendingAp?: string }) {
+  const app = useApp();
+  const title = item.kind === "email_digest" ? (item.body.top?.[0]?.subject ?? item.title) : item.title;
+  const text = item.kind === "email_digest" ? (item.body.top?.[0]?.reason ?? item.body.headline) : (item.body.summary ?? item.body.headline);
+  const href = item.body.top?.[0]?.href;
+  const gmailOk = Boolean(href?.startsWith("https://mail.google.com/"));
+  return (
+    <>
+      <div className="feed-title">{title}</div>
+      {text && <p className="meta" style={{ margin: 0 }}>{text}</p>}
+      {item.body.disclaimer && <p className="tiny">{item.body.disclaimer}</p>}
+      {item.body.correlation && <p className="meta" style={{ margin: 0 }}>{item.body.correlation}</p>}
+      {item.kind === "email_digest" && (
+        <div className="row-actions">
+          {pendingAp && (
+            <button type="button" className="btn primary" onClick={() => app.navigate(`/aprovacao/${pendingAp}`)}>
+              Revisar resposta
+            </button>
+          )}
+          {app.mode !== "demo" && gmailOk ? (
+            <a className="btn" href={href} target="_blank" rel="noreferrer noopener">
+              Abrir no Gmail
+            </a>
+          ) : (
+            <span className="btn" aria-disabled="true" title={app.mode === "demo" ? "Demonstração: sem conta conectada" : undefined}>
+              Abrir no Gmail
+            </span>
+          )}
+        </div>
+      )}
     </>
   );
 }

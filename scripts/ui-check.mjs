@@ -449,6 +449,15 @@ if (!ONLY || ONLY === "absorb") {
   const greet = await p.locator(".hero h1").evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
   check("tela 02 390: saudação 20 px", greet === 20, `${greet}px`);
   check("tela 02: dock visível", await p.getByRole("navigation", { name: "Principal" }).isVisible());
+  const fold = await p.evaluate(() => {
+    const card = document.querySelector(".feed-card");
+    const dock = document.querySelector(".dock");
+    if (!card || !dock) return { ok: false, reason: "faltou cartão ou dock" };
+    const c = card.getBoundingClientRect();
+    const d = dock.getBoundingClientRect();
+    return { ok: c.bottom < d.top, cardBottom: Math.round(c.bottom), dockTop: Math.round(d.top) };
+  });
+  check("tela 02: 1º cartão acima do dock", fold.ok, JSON.stringify(fold));
   await shot(p,{ path: `${OUT}/compare-02-app-390.png` });
   await p.goto(`file://${join(ROOT, "docs/referencias/design/02-pwa-inicio.html")}`);
   await p.waitForTimeout(400);

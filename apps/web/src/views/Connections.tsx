@@ -157,7 +157,9 @@ function Monitors() {
           {list.map((m) => (
             <li key={m.id} className="mail">
               <span className="subj">{m.label}</span>
-              <span className={`chip ${m.incident.open ? "err" : m.lastCheckAt ? "ok" : ""}`}>{m.incident.open ? "Com problema" : m.lastCheckAt ? "Respondendo" : "Aguardando 1ª verificação"}</span>
+              <span className={`chip ${m.incident.open ? (m.incident.kind === "slow" ? "warn" : "err") : m.lastCheckAt ? "ok" : ""}`}>
+                {m.incident.open ? (m.incident.kind === "slow" ? "Lento" : "Com problema") : m.lastCheckAt ? "Respondendo" : "Aguardando 1ª verificação"}
+              </span>
               <span className="why">
                 {m.url} · última verificação {fmtDateTime(m.lastCheckAt)}
               </span>

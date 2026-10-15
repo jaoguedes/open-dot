@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toVisual } from "@open-dot/core";
 import type { FeedEntry, Monitor } from "../src/api.ts";
-import { agentPresence } from "../src/presence.ts";
+import { agentPresence, islandLine, semanticFromItems } from "../src/presence.ts";
+import { demoSnapshot } from "../src/demo.ts";
 
 function entry(partial: Partial<FeedEntry> & Pick<FeedEntry, "agentId" | "kind">): FeedEntry {
   return {
@@ -31,17 +32,18 @@ test("presença: uma fonte da verdade, incidente nunca é 'Em repouso'", () => {
   const fail = entry({ agentId: "codigo", kind: "ci_failure", title: "Workflow falhou" });
   const code = agentPresence("codigo", toVisual("codigo", "idle"), [fail], []);
   assert.equal(code.tone, "error");
-  assert.equal(code.label, "1 incidente");
+  assert.equal(code.label, "1 build falhou");
   assert.equal(code.dotClass, "err");
   assert.notEqual(code.label, "Em repouso");
+  assert.notEqual(code.label, "1 incidente");
 
   const site = entry({ agentId: "sentinela", kind: "site_incident", title: "Lento" });
   const monitors: Monitor[] = [
-    { id: "m1", url: "https://exemplo.com", label: "exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: null },
+    { id: "m1", url: "https://exemplo.com", label: "exemplo.com", enabled: true, incident: { open: true, kind: "slow" }, lastCheckAt: null },
   ];
   const sent = agentPresence("sentinela", toVisual("sentinela", "idle"), [site], monitors);
   assert.equal(sent.tone, "error");
-  assert.equal(sent.label, "1 incidente");
+  assert.equal(sent.label, "Lento");
 
   const work = agentPresence("foco", toVisual("foco", "working"), [], []);
   assert.equal(work.tone, "working");
@@ -51,4 +53,20 @@ test("presença: uma fonte da verdade, incidente nunca é 'Em repouso'", () => {
   assert.equal(rest.tone, "idle");
   assert.equal(rest.label, "Em repouso");
   assert.equal(rest.dotClass, "");
+});
+
+test("demo: status vem do tipo do item; ilha não diz concluído enquanto lê", () => {
+  const snap = demoSnapshot();
+  const lento = snap.monitors.find((m) => m.incident.open);
+  assert.equal(lento?.incident.kind, "slow");
+  assert.equal(semanticFromItems("codigo", snap.feed, snap.monitors), "error");
+  assert.equal(semanticFromItems("correio", snap.feed, snap.monitors), "working");
+  assert.equal(semanticFromItems("sentinela", snap.feed, snap.monitors), "error");
+  const codigo = snap.status.find((s) => s.agentId === "codigo");
+  assert.equal(codigo?.semantic, "error");
+  assert.equal(agentPresence("codigo", codigo!, snap.feed, snap.monitors).label, "1 build falhou");
+  const mail = snap.status.find((s) => s.agentId === "correio");
+  assert.equal(islandLine(mail!), "Correio está lendo…");
+  assert.notEqual(islandLine(toVisual("correio", "working")), "Correio concluído");
+  assert.equal(islandLine(toVisual("correio", "success")), "Correio concluído");
 });

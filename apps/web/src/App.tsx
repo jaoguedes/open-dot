@@ -13,7 +13,7 @@ import { Mascot } from "./views/Mascot.tsx";
 import { Approval } from "./views/Approval.tsx";
 import { ContextPanel } from "./components/ContextPanel.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
-import { agentPresence } from "./presence.ts";
+import { agentPresence, islandLine } from "./presence.ts";
 
 function isMyDayPath(path: string): boolean {
   return path === "/" || path === "/meu-dia";
@@ -183,6 +183,9 @@ export function App() {
                     <Icon name="panel" />
                   </button>
                 )}
+                <button className="icon-btn" aria-label="Notificações" type="button">
+                  <Icon name="bell" />
+                </button>
                 <ThemeButton />
               </div>
             </header>
@@ -276,7 +279,7 @@ function Dock({ go, current, onAsk }: { go: (p: string) => void; current: string
   const my = isMyDayPath(current);
   return (
     <nav className="dock" aria-label="Principal">
-      <a href="/meu-dia" className={`dock-item ${my ? "on" : ""}`} aria-current={my ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/meu-dia"))}>
+      <a href="/meu-dia" className={`dock-item ${my ? "on" : ""}`} aria-label="Meu dia" aria-current={my ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/meu-dia"))}>
         <Icon name="home" />
         <span>Meu dia</span>
       </a>
@@ -310,14 +313,16 @@ function Island({ go }: { go: (p: string) => void }) {
   const app = useApp();
   const dom = useMemo(() => {
     let best = app.visualFor("dot");
+    let working = null as typeof best | null;
     for (const a of SIDEBAR_AGENTS) {
       const v = app.visualFor(a);
+      if (v.semantic === "working" || v.semantic === "thinking") working = v;
       if (SEMANTIC_PRIORITY[v.semantic] > SEMANTIC_PRIORITY[best.semantic]) best = v;
     }
-    return best;
+    return working ?? best;
   }, [app]);
   const digest = app.snap?.feed.find((f) => f.kind === "email_digest");
-  const line1 = `${AGENTS[dom.agentId].name} ${dom.label.toLowerCase()}`;
+  const line1 = islandLine(dom);
   const line2 = dom.reason ?? (digest ? `${digest.body.counts?.important ?? 0} mensagens desde as 17h` : "Nada pendente agora");
   return (
     <aside className="island" aria-label="Ilha do Dot">

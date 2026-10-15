@@ -1,5 +1,6 @@
-import { providerCards, toVisual } from "@open-dot/core";
+import { providerCards, toVisual, type AgentId } from "@open-dot/core";
 import type { AskAnswer, Snapshot } from "./api.ts";
+import { semanticFromItems } from "./presence.ts";
 
 /**
  * DADOS DE DEMONSTRAÇÃO — fictícios, isolados neste arquivo e sempre exibidos com
@@ -13,28 +14,133 @@ const at = (h: number, m = 0) => {
   return d.toISOString();
 };
 
+const DEMO_AGENTS: AgentId[] = ["dot", "correio", "codigo", "sentinela", "noticias", "mercado", "marketing"];
+
 export function demoSnapshot(): Snapshot {
+  const monitors: Snapshot["monitors"] = [
+    { id: "m1", url: "https://exemplo.com", label: "exemplo.com", enabled: true, incident: { open: true, kind: "slow" }, lastCheckAt: at(7, 58) },
+    { id: "m2", url: "https://loja.exemplo.com", label: "loja.exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
+    { id: "m3", url: "https://docs.exemplo.com", label: "docs.exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
+  ];
+  const feed: Snapshot["feed"] = [
+    {
+      id: "demo-1",
+      agentId: "correio",
+      runId: "demo-run",
+      kind: "email_digest",
+      title: "Sua revisão das 08h",
+      freshness: "fresh",
+      createdAt: at(8, 2),
+      coverage: { analyzed: 20, available: 20, syncedUntil: at(7, 59), fieldsRead: ["remetente", "assunto", "trecho curto do provedor", "rótulos"], partial: false },
+      body: {
+        headline: "20 mensagens analisadas • 3 precisam de atenção",
+        counts: { important: 3, review: 2, low: 15 },
+        total: 20,
+        aiUsed: false,
+        aiNote: "Exemplo classificado por regras.",
+        top: [
+          { messageId: "e1", threadId: "t1", from: "Loja Exemplo <pedidos@exemplo.com>", subject: "Confirme a entrega de amanhã", reason: "Pede confirmação até amanhã às 14h.", receivedAt: at(7, 12), category: "important", href: "#exemplo" },
+          { messageId: "e2", threadId: "t2", from: "Faculdade <secretaria@exemplo.edu>", subject: "Prazo de rematrícula", reason: "Menciona “prazo”.", receivedAt: at(6, 40), category: "important", href: "#exemplo" },
+          { messageId: "e3", threadId: "t3", from: "Ana <ana@exemplo.com>", subject: "Você consegue revisar o documento?", reason: "Mensagem direta com pergunta para você.", receivedAt: at(6, 5), category: "important", href: "#exemplo" },
+        ],
+        rest: [
+          { messageId: "e4", threadId: "t4", from: "Banco <aviso@exemplo.com>", subject: "Extrato disponível", reason: "Aviso automático sem pedido de ação.", receivedAt: at(5), category: "low", href: "#exemplo" },
+          { messageId: "e5", threadId: "t5", from: "Newsletter <news@exemplo.com>", subject: "Novidades da semana", reason: "Lista, newsletter ou promoção.", receivedAt: at(4), category: "low", href: "#exemplo" },
+        ],
+      },
+    },
+    {
+      id: "demo-2",
+      agentId: "sentinela",
+      runId: null,
+      kind: "site_incident",
+      title: "Seu site respondeu mais devagar",
+      freshness: "fresh",
+      createdAt: at(7, 40),
+      coverage: null,
+      body: { summary: "Três verificações acima de 1,5 s. Ainda sem diagnóstico de causa.", correlation: "Houve um deploy 12 min antes (a1b2c3d). Ainda não há evidência de que seja a causa." },
+    },
+    {
+      id: "demo-3",
+      agentId: "codigo",
+      runId: null,
+      kind: "ci_failure",
+      title: "Workflow falhou em exemplo/app",
+      freshness: "fresh",
+      createdAt: at(7, 20),
+      coverage: null,
+      body: { summary: "CI terminou com falha no commit a1b2c3d. Os logs não foram baixados automaticamente." },
+    },
+    {
+      id: "demo-news",
+      agentId: "noticias",
+      runId: null,
+      kind: "news_digest",
+      title: "O mundo hoje (exemplo fictício)",
+      freshness: "fresh",
+      createdAt: at(8, 5),
+      coverage: { analyzed: 4, available: 4, syncedUntil: at(8), fieldsRead: ["título", "link", "veículo"], partial: false },
+      body: {
+        headline: "O mundo hoje",
+        summary: "Exemplo fictício. Títulos de feeds públicos; o Dot não opina.",
+        worldToday: [
+          {
+            theme: "tecnologia",
+            items: [{ title: "Chip experimental reduz consumo (exemplo)", link: "https://example.com/tech", outlet: "BBC News", publishedAt: at(7) }],
+          },
+          {
+            theme: "politica",
+            items: [{ title: "Congresso discute orçamento (exemplo)", link: "https://example.com/pol", outlet: "NPR", publishedAt: at(6, 30) }],
+          },
+        ],
+        politics: [
+          {
+            topic: "Congresso discute orçamento (exemplo)",
+            eachSide: [
+              { outlet: "BBC News", title: "Congresso discute orçamento (exemplo BBC)", link: "https://example.com/pol-bbc" },
+              { outlet: "NPR", title: "Congresso discute orçamento (exemplo NPR)", link: "https://example.com/pol-npr" },
+            ],
+            notice: null,
+          },
+        ],
+      },
+    },
+    {
+      id: "demo-quote",
+      agentId: "mercado",
+      runId: null,
+      kind: "quote_alert",
+      title: "BTC passou do limite (exemplo fictício)",
+      freshness: "stale",
+      createdAt: at(8, 6),
+      coverage: null,
+      body: { summary: "Bitcoin variou 9,2% (fonte CoinGecko, exemplo). Só informativo, não é recomendação.", disclaimer: "Só informativo, não é recomendação" },
+    },
+    {
+      id: "demo-mkt",
+      agentId: "marketing",
+      runId: null,
+      kind: "marketing_ideas",
+      title: "Ideias de post (rascunho, exemplo fictício)",
+      freshness: "fresh",
+      createdAt: at(8, 7),
+      coverage: null,
+      body: {
+        summary: "Rascunho a partir da notícia de exemplo. Nada foi publicado.",
+        published: false,
+        drafts: [{ text: "Chip experimental reduz consumo — rascunho (exemplo fictício). Nada foi publicado.", sources: [{ title: "Chip experimental", link: "https://example.com/tech", outlet: "BBC News" }], status: "draft", publish: false }],
+      },
+    },
+  ];
   return {
     owner: { email: "exemplo@demo.local", name: "João", timeZone: "America/Sao_Paulo" },
     configured: { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false },
     connections: [],
-    monitors: [
-      { id: "m1", url: "https://exemplo.com", label: "exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
-      { id: "m2", url: "https://loja.exemplo.com", label: "loja.exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
-      { id: "m3", url: "https://docs.exemplo.com", label: "docs.exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
-    ],
+    monitors,
     usage: { day: today.toISOString().slice(0, 10), calls: 12, tokens: 24_000, limits: { calls: 50, tokens: 100_000 }, aiConfigured: false, privateAllowed: false },
     routines: [{ id: "demo-rt", agentId: "correio", kind: "email_review", times: ["08:00", "17:00"], timeZone: "America/Sao_Paulo", weekdays: [], enabled: true, nextRunAt: at(17) }],
     runs: [{ id: "demo-run", agentId: "correio", kind: "email_review", state: "succeeded", scheduledAt: at(8), late: false, attempt: 1, errorCode: null, errorMessage: null, updatedAt: at(8, 2) }],
-    status: [
-      { ...toVisual("dot", "idle"), revision: 1 },
-      { ...toVisual("correio", "success"), revision: 1 },
-      { ...toVisual("codigo", "idle"), revision: 1 },
-      { ...toVisual("sentinela", "idle"), revision: 1 },
-      { ...toVisual("noticias", "idle"), revision: 1 },
-      { ...toVisual("mercado", "idle"), revision: 1 },
-      { ...toVisual("marketing", "idle"), revision: 1 },
-    ],
+    status: DEMO_AGENTS.map((a) => ({ ...toVisual(a, semanticFromItems(a, feed, monitors)), revision: 1 })),
     agents: [
       {
         id: "noticias",
@@ -99,116 +205,7 @@ export function demoSnapshot(): Snapshot {
         },
       },
     ],
-    feed: [
-      {
-        id: "demo-1",
-        agentId: "correio",
-        runId: "demo-run",
-        kind: "email_digest",
-        title: "Sua revisão das 08h",
-        freshness: "fresh",
-        createdAt: at(8, 2),
-        coverage: { analyzed: 20, available: 20, syncedUntil: at(7, 59), fieldsRead: ["remetente", "assunto", "trecho curto do provedor", "rótulos"], partial: false },
-        body: {
-          headline: "20 mensagens analisadas • 3 precisam de atenção",
-          counts: { important: 3, review: 2, low: 15 },
-          total: 20,
-          aiUsed: false,
-          aiNote: "Exemplo classificado por regras.",
-          top: [
-            { messageId: "e1", threadId: "t1", from: "Loja Exemplo <pedidos@exemplo.com>", subject: "Confirme a entrega de amanhã", reason: "Pede confirmação até amanhã às 14h.", receivedAt: at(7, 12), category: "important", href: "#exemplo" },
-            { messageId: "e2", threadId: "t2", from: "Faculdade <secretaria@exemplo.edu>", subject: "Prazo de rematrícula", reason: "Menciona “prazo”.", receivedAt: at(6, 40), category: "important", href: "#exemplo" },
-            { messageId: "e3", threadId: "t3", from: "Ana <ana@exemplo.com>", subject: "Você consegue revisar o documento?", reason: "Mensagem direta com pergunta para você.", receivedAt: at(6, 5), category: "important", href: "#exemplo" },
-          ],
-          rest: [
-            { messageId: "e4", threadId: "t4", from: "Banco <aviso@exemplo.com>", subject: "Extrato disponível", reason: "Aviso automático sem pedido de ação.", receivedAt: at(5), category: "low", href: "#exemplo" },
-            { messageId: "e5", threadId: "t5", from: "Newsletter <news@exemplo.com>", subject: "Novidades da semana", reason: "Lista, newsletter ou promoção.", receivedAt: at(4), category: "low", href: "#exemplo" },
-          ],
-        },
-      },
-      {
-        id: "demo-2",
-        agentId: "sentinela",
-        runId: null,
-        kind: "site_incident",
-        title: "Seu site respondeu mais devagar",
-        freshness: "fresh",
-        createdAt: at(7, 40),
-        coverage: null,
-        body: { summary: "Três verificações acima de 1,5 s. Ainda sem diagnóstico de causa.", correlation: "Houve um deploy 12 min antes (a1b2c3d). Ainda não há evidência de que seja a causa." },
-      },
-      {
-        id: "demo-3",
-        agentId: "codigo",
-        runId: null,
-        kind: "ci_failure",
-        title: "Workflow falhou em exemplo/app",
-        freshness: "fresh",
-        createdAt: at(7, 20),
-        coverage: null,
-        body: { summary: "CI terminou com falha no commit a1b2c3d. Os logs não foram baixados automaticamente." },
-      },
-      {
-        id: "demo-news",
-        agentId: "noticias",
-        runId: null,
-        kind: "news_digest",
-        title: "O mundo hoje (exemplo fictício)",
-        freshness: "fresh",
-        createdAt: at(8, 5),
-        coverage: { analyzed: 4, available: 4, syncedUntil: at(8), fieldsRead: ["título", "link", "veículo"], partial: false },
-        body: {
-          headline: "O mundo hoje",
-          summary: "Exemplo fictício. Títulos de feeds públicos; o Dot não opina.",
-          worldToday: [
-            {
-              theme: "tecnologia",
-              items: [{ title: "Chip experimental reduz consumo (exemplo)", link: "https://example.com/tech", outlet: "BBC News", publishedAt: at(7) }],
-            },
-            {
-              theme: "politica",
-              items: [{ title: "Congresso discute orçamento (exemplo)", link: "https://example.com/pol", outlet: "NPR", publishedAt: at(6, 30) }],
-            },
-          ],
-          politics: [
-            {
-              topic: "Congresso discute orçamento (exemplo)",
-              eachSide: [
-                { outlet: "BBC News", title: "Congresso discute orçamento (exemplo BBC)", link: "https://example.com/pol-bbc" },
-                { outlet: "NPR", title: "Congresso discute orçamento (exemplo NPR)", link: "https://example.com/pol-npr" },
-              ],
-              notice: null,
-            },
-          ],
-        },
-      },
-      {
-        id: "demo-quote",
-        agentId: "mercado",
-        runId: null,
-        kind: "quote_alert",
-        title: "BTC passou do limite (exemplo fictício)",
-        freshness: "stale",
-        createdAt: at(8, 6),
-        coverage: null,
-        body: { summary: "Bitcoin variou 9,2% (fonte CoinGecko, exemplo). Só informativo, não é recomendação.", disclaimer: "Só informativo, não é recomendação" },
-      },
-      {
-        id: "demo-mkt",
-        agentId: "marketing",
-        runId: null,
-        kind: "marketing_ideas",
-        title: "Ideias de post (rascunho, exemplo fictício)",
-        freshness: "fresh",
-        createdAt: at(8, 7),
-        coverage: null,
-        body: {
-          summary: "Rascunho a partir da notícia de exemplo. Nada foi publicado.",
-          published: false,
-          drafts: [{ text: "Chip experimental reduz consumo — rascunho (exemplo fictício). Nada foi publicado.", sources: [{ title: "Chip experimental", link: "https://example.com/tech", outlet: "BBC News" }], status: "draft", publish: false }],
-        },
-      },
-    ],
+    feed,
   };
 }
 

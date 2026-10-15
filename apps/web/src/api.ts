@@ -122,7 +122,7 @@ export interface Monitor {
   url: string;
   label: string;
   enabled: boolean;
-  incident: { open?: boolean; consecutiveFailures?: number };
+  incident: { open?: boolean; consecutiveFailures?: number; kind?: "slow" | "down" };
   lastCheckAt: string | null;
 }
 
