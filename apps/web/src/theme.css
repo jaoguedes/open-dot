@@ -15,8 +15,8 @@
   --dock: 0px;
   --sidebar: 260px; --context: 280px; --reading: 920px;
 
-  --bg: #050608; --surface: #0E1014; --surface-2: #16181E; --text: #F3F4F7; --text-2: #9AA0AE; --text-3: #6B7181; --border: #1A1D24;
-  --accent: #3361FF; --accent-soft: rgba(51, 97, 255, 0.16); --on-accent: #FFFFFF;
+  --bg: #050608; --surface: #0E1014; --surface-2: #16181E; --text: #F3F4F7; --text-2: #9AA0AE; --text-3: #80869A; --border: #1A1D24;
+  --accent: #3361FF; --accent-soft: rgba(51, 97, 255, 0.16); --on-accent: #FFFFFF; --link: #6E95FF;
   --ok: #2BD47F; --warn: #FFB627; --err: #FF4D6A; --info: #5B8CFF; --muted: #6B7181;
   --agent-correio: #5B8CFF; --agent-codigo: #8C6BFF; --agent-sentinela: #45E2BE; --agent-foco: #A98BFF;
   --agent-noticias: #FF7A1F; --agent-mercado: #16B26A; --agent-marketing: #F0457F; --agent-entregas: #C9862A;
@@ -34,9 +34,9 @@
 }
 
 :root[data-theme="light"] {
-  --bg: #F4F5F8; --surface: #FFFFFF; --surface-2: #ECEEF3; --text: #12141A; --text-2: #5C6370; --text-3: #7A8190; --border: #D8DCE6;
-  --accent: #3361FF; --accent-soft: rgba(51, 97, 255, 0.10); --on-accent: #FFFFFF;
-  --ok: #1A9A5A; --warn: #B57900; --err: #C22745; --info: #3361FF; --muted: #5C6370;
+  --bg: #F4F5F8; --surface: #FFFFFF; --surface-2: #ECEEF3; --text: #12141A; --text-2: #5C6370; --text-3: #5F6673; --border: #D8DCE6;
+  --accent: #3361FF; --accent-soft: rgba(51, 97, 255, 0.10); --on-accent: #FFFFFF; --link: #2F56E0;
+  --ok: #117044; --warn: #8A5C00; --err: #C22745; --info: #3361FF; --muted: #5C6370;
   --glass: #FFFFFF; --glass-border: #D8DCE6;
   --shadow: 0 8px 28px rgba(18,20,26,.08);
   --focus: #2748C7;
