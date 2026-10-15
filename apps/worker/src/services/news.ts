@@ -1,4 +1,4 @@
-import { NEWS_FEEDS, dedupeNews, groupPolitics, normalizeTitle, parseFeedXml, randomId, worldToday, type NewsItem } from "@open-dot/core";
+import { NEWS_FEEDS, dedupeNews, feedStartIndex, groupPolitics, normalizeTitle, parseFeedXml, randomId, worldToday, type NewsItem } from "@open-dot/core";
 import { BudgetExhausted, type Ctx } from "../context.ts";
 import type { Db } from "../db/types.ts";
 import * as repo from "../repo.ts";
@@ -11,27 +11,57 @@ export interface SourceFailure {
 
 const PER_FEED = 15;
 
+async function readLimited(res: Response, max: number): Promise<string> {
+  const reader = res.body?.getReader();
+  if (!reader) return (await res.text()).slice(0, max);
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (total < max) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    total += value.byteLength;
+    if (total >= max) break;
+  }
+  const buf = new Uint8Array(Math.min(total, max));
+  let o = 0;
+  for (const c of chunks) {
+    const take = Math.min(c.byteLength, buf.length - o);
+    buf.set(c.subarray(0, take), o);
+    o += take;
+    if (o >= buf.length) break;
+  }
+  return new TextDecoder().decode(buf);
+}
+
 export async function ingestNews(ctx: Ctx, ownerId: string, fetchImpl: typeof fetch, opts: { feedIds?: string[]; maxFeeds?: number } = {}): Promise<{ fetched: number; stored: number; failures: SourceFailure[] }> {
   const settings = await repo.agentSettings(ctx.db, ownerId, "noticias");
   if (settings && settings.enabled === 0) return { fetched: 0, stored: 0, failures: [{ source: "Notícias", reason: "disabled" }] };
   const now = ctx.now();
   const allowed = opts.feedIds?.length ? NEWS_FEEDS.filter((f) => opts.feedIds!.includes(f.id)) : NEWS_FEEDS;
   const max = opts.maxFeeds ?? 4;
-  const minute = new Date(now).getUTCMinutes();
-  const start = minute % Math.max(1, allowed.length);
+  const start = feedStartIndex(allowed.length, now);
   const slice = [...allowed.slice(start), ...allowed.slice(0, start)].slice(0, max);
   const got: NewsItem[] = [];
   const failures: SourceFailure[] = [];
   let fetched = 0;
   for (const spec of slice) {
     try {
-      const res = await fetchImpl(spec.url, { headers: { accept: "application/rss+xml, application/atom+xml, application/xml, text/xml" } });
+      const res = await fetchImpl(spec.url, {
+        headers: { accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*", "user-agent": "OpenDot/1.0 (uso pessoal)" },
+        signal: AbortSignal.timeout(10_000),
+      });
       fetched++;
       if (!res.ok) {
         failures.push({ source: spec.outlet, reason: `upstream_http_${res.status}` });
         continue;
       }
-      const xml = await res.text();
+      const kind = res.headers.get("content-type") ?? "";
+      if (kind && !/xml|rss|atom|text\/plain|octet-stream/i.test(kind)) {
+        failures.push({ source: spec.outlet, reason: "invalid_feed" });
+        continue;
+      }
+      const xml = await readLimited(res, 1_000_000);
       const parsed = parseFeedXml(xml, spec.id);
       if (parsed.error) failures.push({ source: spec.outlet, reason: "invalid_feed" });
       got.push(...parsed.items.slice(0, PER_FEED));

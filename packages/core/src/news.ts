@@ -34,46 +34,113 @@ export function normalizeLink(link: string): string {
 }
 
 function decodeXml(s: string): string {
+  const ch = (n: number) => (n > 0 && n < 0x110000 && n !== 0xfffe && n !== 0xffff ? String.fromCodePoint(n) : "");
   return s
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-    .replace(/&amp;/g, "&")
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => ch(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, n) => ch(parseInt(n, 10)))
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
+    .replace(/&apos;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&");
+}
+
+function innerText(raw: string): string {
+  const cdata = /<!\[CDATA\[([\s\S]*?)\]\]>/.exec(raw);
+  const plain = cdata ? cdata[1]! : raw.replace(/<[^>]+>/g, "");
+  return decodeXml(plain).replace(/\s+/g, " ").trim();
 }
 
 function tag(block: string, name: string): string | null {
-  const m = new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`, "i").exec(block);
-  if (!m) {
-    const a = new RegExp(`<${name}[^>]+href=["']([^"']+)["']`, "i").exec(block);
-    return a ? decodeXml(a[1]!).trim() : null;
+  const m = new RegExp(`<(?:[a-z0-9]+:)?${name}(?:\\s[^>]*)?>([\\s\\S]*?)</(?:[a-z0-9]+:)?${name}>`, "i").exec(block);
+  if (!m) return null;
+  return innerText(m[1]!) || null;
+}
+
+function hostOk(feedId: string, host: string): boolean {
+  const h = host.toLowerCase();
+  if (feedId.startsWith("bbc")) return h === "bbc.com" || h.endsWith(".bbc.com") || h.endsWith("bbc.co.uk") || h.endsWith("bbci.co.uk");
+  if (feedId.startsWith("npr")) return h === "npr.org" || h.endsWith(".npr.org");
+  if (feedId.startsWith("folha")) return h.endsWith("folha.uol.com.br") || h.endsWith(".uol.com.br");
+  return false;
+}
+
+function toHttps(raw: string, feedId: string): string | null {
+  const star = raw.lastIndexOf("*http");
+  const trimmed = decodeXml(star >= 0 ? raw.slice(star + 1) : raw).trim();
+  let u: URL;
+  try {
+    u = new URL(trimmed);
+  } catch {
+    return null;
   }
-  return decodeXml(m[1]!.replace(/<[^>]+>/g, "")).trim() || null;
+  if (u.protocol === "http:") u.protocol = "https:";
+  if (u.protocol !== "https:") return null;
+  if (!hostOk(feedId, u.hostname)) return null;
+  return u.toString();
+}
+
+function itemLink(block: string, feedId: string): string | null {
+  const about = /\brdf:about=["']([^"']+)["']/i.exec(block);
+  const hrefs = [...block.matchAll(/<link\b([^>]*)\/?>/gi)].map((m) => {
+    const attrs = m[1] ?? "";
+    const href = /href=["']([^"']+)["']/i.exec(attrs)?.[1];
+    const rel = /rel=["']([^"']+)["']/i.exec(attrs)?.[1] ?? "";
+    return href ? { href, rel } : null;
+  }).filter((x): x is { href: string; rel: string } => x !== null);
+  const alternate = hrefs.find((l) => l.rel.split(/\s+/).includes("alternate")) ?? hrefs.find((l) => !l.rel);
+  const textLink = tag(block, "link");
+  const guid = /<guid\b[^>]*>([\s\S]*?)<\/guid>/i.exec(block);
+  const perma = guid && !/isPermaLink=["']false["']/i.test(guid[0]);
+  const candidates = [about?.[1], alternate?.href, textLink, perma ? innerText(guid![1]!) : null];
+  for (const c of candidates) {
+    if (!c) continue;
+    const url = toHttps(c, feedId);
+    if (url) return url;
+  }
+  return null;
 }
 
 /** RSS 2.0 ou Atom. Feed indisponível/ilegível vira falha parcial (items vazios + error). */
+function publishedOf(block: string): string | null {
+  return tag(block, "pubDate") ?? tag(block, "updated") ?? tag(block, "published") ?? tag(block, "date");
+}
+
+function stamp(s: string | null): number {
+  const t = s ? Date.parse(s) : NaN;
+  return Number.isFinite(t) ? t : 0;
+}
+
+export function feedStartIndex(count: number, now: number): number {
+  if (count <= 0) return 0;
+  return Math.floor(now / 300_000) % count;
+}
+
+/** RSS 2.0, RSS 0.91, RSS 1.0/RDF ou Atom. */
 export function parseFeedXml(xml: string, feedId: string): ParseFeedResult {
   const spec = NEWS_FEEDS.find((f) => f.id === feedId);
   if (!spec) return { items: [], error: `fonte ${feedId} fora da allowlist` };
-  if (!xml || !xml.includes("<")) return { items: [], error: "feed indisponível ou vazio" };
-  const chunks = xml.match(/<(item|entry)\b[\s\S]*?<\/\1>/gi) ?? [];
+  const body = xml.replace(/^\uFEFF/, "");
+  if (!body || !body.includes("<")) return { items: [], error: "feed indisponível ou vazio" };
+  const chunks = body.match(/<(?:[a-z0-9]+:)?(item|entry)\b[\s\S]*?<\/(?:[a-z0-9]+:)?\1>/gi) ?? [];
   if (!chunks.length) return { items: [], error: "feed sem itens reconhecíveis" };
   const items: NewsItem[] = [];
   for (const block of chunks) {
     const title = tag(block, "title");
-    const link = tag(block, "link") ?? tag(block, "id");
-    if (!title || !link || !/^https:\/\//i.test(link)) continue;
-    const publishedAt = tag(block, "pubDate") ?? tag(block, "updated") ?? tag(block, "published");
+    const link = itemLink(block, feedId);
+    if (!title || !link) continue;
     items.push({
       title: title.slice(0, 280),
       link: normalizeLink(link),
       outlet: spec.outlet,
       theme: spec.theme,
-      publishedAt,
+      publishedAt: publishedOf(block),
       feedId,
     });
   }
+  items.sort((a, b) => stamp(b.publishedAt) - stamp(a.publishedAt));
   return items.length ? { items } : { items: [], error: "nenhum item com título e link https" };
 }
 
@@ -156,6 +223,8 @@ export function worldToday(items: NewsItem[], maxPerTheme = 3): WorldTodaySectio
     theme,
     items: items
       .filter((i) => i.theme === theme)
+      .slice()
+      .sort((a, b) => stamp(b.publishedAt) - stamp(a.publishedAt))
       .slice(0, maxPerTheme)
       .map((i) => ({ title: i.title, link: i.link, outlet: i.outlet, publishedAt: i.publishedAt })),
   })).filter((s) => s.items.length > 0);

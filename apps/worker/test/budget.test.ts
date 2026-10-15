@@ -25,7 +25,11 @@ test("4 feeds com 30 itens ficam abaixo de 45 subrequisições", async () => {
 });
 
 test("exceção no meio das notícias encerra a execução como failed", async () => {
-  const fetchImpl: typeof fetch = async (input) => new Response(rss(2, new URL(String(input)).hostname), { headers: { "content-type": "application/rss+xml" } });
+  const fetchImpl: typeof fetch = async (input) => {
+    const host = new URL(String(input)).hostname;
+    const link = host.includes("npr") ? "https://www.npr.org/boom" : host.includes("folha") ? "https://www1.folha.uol.com.br/boom" : "https://www.bbc.com/news/boom";
+    return new Response(`<?xml version="1.0"?><rss><channel><item><title>Nota</title><link>${link}</link></item></channel></rss>`, { headers: { "content-type": "application/rss+xml" } });
+  };
   const ctx = await makeCtx({ fetch: fetchImpl });
   const c = (await import("./harness.ts")).client(ctx);
   assert.equal((await c.call("POST", "/api/session/dev")).status, 200);
