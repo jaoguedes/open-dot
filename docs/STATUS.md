@@ -92,7 +92,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Etapa 4: backup, varredura de segredos, reescrever autor e push no GitHub privado. Health de produção ainda com schema null — sem redeploy.
+Código no GitHub privado https://github.com/jaoguedes/open-dot (main). Health de produção ainda com schema null — sem redeploy. Próximo: cadastrar a URI OAuth e investigar o Turso no Worker.
 
 ## Como retomar em outra sessão
 
