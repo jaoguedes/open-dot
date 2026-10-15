@@ -19,6 +19,7 @@ export interface FeedEntry {
   runId: string | null;
   kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice" | "file_organized" | "news_digest" | "quote_alert" | "marketing_ideas" | "shipment";
   title: string;
+  state?: "open" | "done" | "snoozed";
   body: {
     headline?: string;
     summary?: string;
@@ -187,7 +188,19 @@ export class ApiError extends Error {
   }
 }
 
-async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
+const troubleAt = new Map<string, number>();
+let quietTrouble = false;
+
+function noteTrouble(code: string) {
+  if (quietTrouble) return;
+  const now = Date.now();
+  const prev = troubleAt.get(code) ?? 0;
+  if (now - prev < 5 * 60_000) return;
+  troubleAt.set(code, now);
+  window.dispatchEvent(new CustomEvent("od-trouble", { detail: { code } }));
+}
+
+async function req<T>(path: string, init: RequestInit = {}, quiet = false): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.method && init.method !== "GET") headers.set("x-open-dot", "1");
   if (init.body) headers.set("content-type", "application/json");
@@ -206,7 +219,7 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   if (!res.ok) {
     const reason = typeof data?.error?.reason === "string" ? data.error.reason : undefined;
-    if (reason || res.status >= 500) window.dispatchEvent(new CustomEvent("od-trouble", { detail: { code: reason || "internal" } }));
+    if (!quiet && !quietTrouble && (reason || res.status >= 500)) noteTrouble(reason || "internal");
     throw new ApiError(res.status, data?.error?.code ?? "error", data?.error?.message ?? `Erro ${res.status}`, data?.error?.missing, reason);
   }
   return data as T;
@@ -223,7 +236,7 @@ export const api = {
   testProvider: (id: string) =>
     req<{ ok: true; used: "fake"; realCall: false; note: string; result: { category: string; evidenceId: string } }>(`/api/ai/providers/${encodeURIComponent(id)}/test`, { method: "POST" }),
   startGsc: () => req<{ url: string }>("/api/connections/gsc/start", { method: "POST" }),
-  testAgent: (id: string) => req<{ ok: true; failures?: string[]; missing?: string[]; published?: false; traded?: false; note?: string }>(`/api/agents/${encodeURIComponent(id)}/test`, { method: "POST" }),
+  testAgent: (id: string) => req<{ ok: true; failures?: Array<string | { source?: string; reason?: string }>; missing?: string[]; published?: false; traded?: false; note?: string }>(`/api/agents/${encodeURIComponent(id)}/test`, { method: "POST" }),
   disableAgent: (id: string) => req<{ ok: true; enabled: false }>(`/api/agents/${encodeURIComponent(id)}/disable`, { method: "POST" }),
   enableAgent: (id: string) => req<{ ok: true; enabled: true }>(`/api/agents/${encodeURIComponent(id)}/enable`, { method: "POST" }),
   routines: () => req<{ routines: Routine[] }>("/api/routines"),
@@ -253,6 +266,8 @@ export const api = {
   addShipment: (code: string, carrier?: string) => req<ShipmentSnapshot & { created: boolean; shipment: ShipmentView | null }>("/api/shipments", { method: "POST", body: JSON.stringify({ code, ...(carrier ? { carrier } : {}) }) }),
   confirmShipmentCarrier: (id: string, carrier: string) => req<ShipmentSnapshot>(`/api/shipments/${encodeURIComponent(id)}/carrier`, { method: "POST", body: JSON.stringify({ carrier }) }),
   deleteShipment: (id: string) => req<{ ok: true }>(`/api/shipments/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  feedDone: (id: string) => req<{ ok: true }>(`/api/feed/${encodeURIComponent(id)}/done`, { method: "POST" }),
+  feedSnooze: (id: string) => req<{ ok: true; until: string }>(`/api/feed/${encodeURIComponent(id)}/snooze`, { method: "POST" }),
 };
 
 export interface UploadView {
@@ -313,6 +328,8 @@ export function sendUpload(body: UploadBody, onProgress: (loaded: number, total:
 
 export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Snapshot; failures: string[] }> {
   const failures: string[] = [];
+  quietTrouble = true;
+  try {
   const settle = async <T,>(name: string, p: Promise<T>, fallback: T): Promise<T> => {
     try {
       return await p;
@@ -352,6 +369,9 @@ export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Sn
     },
     failures,
   };
+  } finally {
+    quietTrouble = false;
+  }
 }
 
 export interface ShipmentView {

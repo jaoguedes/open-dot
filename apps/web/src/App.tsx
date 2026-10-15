@@ -113,6 +113,20 @@ export function App() {
   if (app.mode === "loading" && splash.show) {
     return <SplashScreen fading={splash.fading} reducedMotion={app.reducedMotion} />;
   }
+  if (app.mode === "unreachable") {
+    return (
+      <main className="reading" style={{ padding: 24 }}>
+        <DotTrouble
+          info={{ code: "offline", route: app.path }}
+          reducedMotion={app.reducedMotion}
+          onRetry={() => void app.refresh()}
+        />
+        <button className="btn" type="button" onClick={() => app.enterDemo("Você pediu a demonstração.")}>
+          Ver demonstração
+        </button>
+      </main>
+    );
+  }
   if (app.mode === "login") {
     return (
       <>
@@ -157,14 +171,22 @@ export function App() {
     case "/mascote":
       view = <Mascot />;
       break;
-    case "approval":
-      view = <Approval id={decodeURIComponent(apprMatch![1]!)} />;
+    case "approval": {
+      let approvalId = "";
+      try {
+        approvalId = decodeURIComponent(apprMatch![1]!);
+      } catch {
+        view = <MissingPage title="Endereço inválido" go={go} />;
+        break;
+      }
+      view = <Approval id={approvalId} />;
       break;
+    }
     case "agent":
       view = agentId === "entregas" ? <Entregas /> : <Home agentId={agentId!} />;
       break;
     default:
-      view = <Home agentId="dot" />;
+      view = <MissingPage title="Não achei essa página" go={go} />;
   }
 
   return (
@@ -233,7 +255,17 @@ export function App() {
           </div>
           <div className={`workspace ${showContext ? "" : "no-context"}`}>
             <main id="conteudo" className="content" tabIndex={-1}>
-              <div className="reading">{view}</div>
+              <div className="reading">
+                {(route === "agent" || route === "approval") && (
+                  <div className="agent-tools">
+                    <button type="button" className="btn back-btn" aria-label="Voltar" onClick={() => app.goBack()}>
+                      ← Voltar
+                    </button>
+                    {route === "agent" && agentId && <AgentRail current={agentId} go={go} />}
+                  </div>
+                )}
+                {view}
+              </div>
             </main>
             {showContext && <ContextPanel open={ctxOpen} onClose={() => setCtxOpen(false)} agentId={agentId ?? "dot"} />}
           </div>
@@ -245,6 +277,43 @@ export function App() {
         {app.announcement}
       </div>
     </>
+  );
+}
+
+function MissingPage({ title, go }: { title: string; go: (p: string) => void }) {
+  return (
+    <div className="state">
+      <h1>{title}</h1>
+      <p>Esse caminho não existe no Open Dot.</p>
+      <button className="btn primary" type="button" onClick={() => go("/meu-dia")}>
+        Meu dia
+      </button>
+    </div>
+  );
+}
+
+function AgentRail({ current, go }: { current: AgentId; go: (p: string) => void }) {
+  const app = useApp();
+  const ref = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    ref.current?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, [current]);
+  return (
+    <div className="agent-rail" role="navigation" aria-label="Trocar de agente">
+      {LIST_AGENTS.map((a) => (
+        <button
+          key={a}
+          ref={a === current ? ref : undefined}
+          type="button"
+          className={`agent-pill ${a === current ? "on" : ""}`}
+          aria-current={a === current ? "true" : undefined}
+          onClick={() => go(`/agente/${a}`)}
+        >
+          <AgentDot visual={app.visualFor(a)} accessory="none" size={22} animate={false} reducedMotion={app.reducedMotion} />
+          {AGENTS[a].name}
+        </button>
+      ))}
+    </div>
   );
 }
 

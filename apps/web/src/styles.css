@@ -108,6 +108,10 @@ details > summary::-webkit-details-marker { display: none; }
 .sources { font-size: 12px; color: var(--text-2); margin-top: var(--s4); }
 .answer { border-left: 2px solid var(--accent); padding-left: var(--s3); margin: var(--s4) 0; }
 
+.back-btn { min-height: 44px; min-width: 44px; margin: 0 0 12px; }
+.agent-tools { display: block; }
+.agent-rail { display: flex; gap: 8px; overflow-x: auto; padding: 0 0 12px; scroll-snap-type: x proximity; }
+.agent-rail button { min-height: 44px; scroll-snap-align: center; }
 .composer { position: sticky; bottom: 16px; margin: var(--s6) auto 0; max-width: var(--reading); border: 1px solid var(--border); border-radius: var(--r-float); background: var(--surface); padding: var(--s3); display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--s2); align-items: end; z-index: 3; }
 .composer textarea { border: 0; background: transparent; resize: none; min-height: 44px; padding: 8px; width: 100%; }
 .composer textarea:focus-visible { outline: none; }
@@ -209,6 +213,9 @@ details > summary::-webkit-details-marker { display: none; }
   .palette { display: flex; }
   .content, .reading, .workspace, .card, .mail, .why, .subj { min-width: 0; max-width: 100%; }
   .reading { position: static; }
+  .agent-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .agent-tools .back-btn { margin: 0; flex: none; }
+  .agent-tools .agent-rail { flex: 1; min-width: 0; padding-bottom: 0; }
   .why, .subj, .card p, .banner, .chip.wrap { overflow-wrap: anywhere; }
   .row-actions { flex-wrap: wrap; }
   .row-actions .chip, .chip.wrap { white-space: normal; max-width: 100%; height: auto; }

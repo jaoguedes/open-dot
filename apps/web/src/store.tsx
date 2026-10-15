@@ -2,8 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { DEFAULT_ACCESSORY, toVisual, type Accessory, type AgentId, type AgentVisual } from "@open-dot/core";
 import { ApiError, api, loadSnapshot, type Snapshot } from "./api.ts";
 import { demoSnapshot } from "./demo.ts";
+import { apiFailureMode } from "./failure-mode.ts";
 
-export type Mode = "loading" | "live" | "demo" | "login" | "setup";
+export type Mode = "loading" | "live" | "demo" | "login" | "setup" | "unreachable";
 
 export interface Prefs {
   theme: "system" | "light" | "dark";
@@ -32,6 +33,7 @@ interface AppState {
   setActivity: (v: AgentVisual | null) => void;
   path: string;
   navigate: (p: string) => void;
+  goBack: () => void;
   announce: (msg: string) => void;
   announcement: string;
 }
@@ -76,6 +78,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [login, setLogin] = useState({ dev: false, google: false });
   const [prefs, setPrefsState] = useState<Prefs>(readPrefs);
   const [path, setPath] = useState(() => location.pathname);
+  const [navDepth, setNavDepth] = useState(0);
   const [announcement, setAnnouncement] = useState("");
   const [activity, setActivity] = useState<AgentVisual | null>(null);
 
@@ -130,11 +133,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setMode("setup");
       } else if (e instanceof ApiError && e.status === 401) {
         setMode("login");
-      } else if (mode === "live") {
-        // Mantém os últimos dados, marcados como desatualizados.
-        setFailures(["servidor"]);
       } else {
-        enterDemo(e instanceof ApiError && e.code === "offline" ? "Servidor indisponível." : "A API do Open Dot não está rodando aqui.");
+        const next = apiFailureMode(location.hostname, mode === "live" || Boolean(snap));
+        if (next === "keep") setFailures(["servidor"]);
+        else if (next === "unreachable") setMode("unreachable");
+        else enterDemo(e instanceof ApiError && e.code === "offline" ? "Servidor indisponível." : "A API do Open Dot não está rodando aqui.");
       }
     }
   }, [enterDemo, mode]);
@@ -152,7 +155,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     window.addEventListener("offline", off);
     window.addEventListener("focus", focus);
     const t = window.setInterval(() => mode === "live" && !document.hidden && void refresh(), 60_000);
-    const pop = () => setPath(location.pathname);
+    const pop = () => {
+      setPath(location.pathname);
+      setNavDepth((d) => Math.max(0, d - 1));
+    };
     window.addEventListener("popstate", pop);
     return () => {
       window.removeEventListener("online", on);
@@ -164,11 +170,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [mode, refresh]);
 
   const navigate = useCallback((p: string) => {
-    if (p === location.pathname) return;
+    if (p === location.pathname) {
+      document.getElementById("conteudo")?.scrollTo({ top: 0 });
+      return;
+    }
     history.pushState(null, "", p + (new URLSearchParams(location.search).has("demo") ? "?demo=1" : ""));
+    setNavDepth((d) => d + 1);
     setPath(p);
     requestAnimationFrame(() => document.getElementById("conteudo")?.focus());
   }, []);
+  const goBack = useCallback(() => {
+    if (navDepth > 0) history.back();
+    else navigate("/meu-dia");
+  }, [navDepth, navigate]);
 
   const visualFor = useCallback(
     (a: AgentId): AgentVisual => {
@@ -185,8 +199,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AppState>(
-    () => ({ mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, setActivity, path, navigate, announce, announcement }),
-    [mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, path, navigate, announce, announcement],
+    () => ({ mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, setActivity, path, navigate, goBack, announce, announcement }),
+    [mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, path, navigate, goBack, announce, announcement],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
