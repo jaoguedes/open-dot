@@ -38,6 +38,15 @@ export function demoSnapshot(): Snapshot {
         total: 20,
         aiUsed: false,
         aiNote: "Exemplo classificado por regras.",
+        abertura: "3 coisas pedem você.",
+        itens: [
+          { categoria: "prazo", titulo: "Prazo de rematrícula", quando: at(6, 40), o_que_aconteceu: "Há um prazo nesta mensagem.", o_que_fazer: "Veja a data no original.", origem: "e2", sensivel: false, de: "Faculdade" },
+          { categoria: "resposta", titulo: "Você consegue revisar o documento?", quando: at(6, 5), o_que_aconteceu: "Ana fez uma pergunta.", o_que_fazer: "Responda se fizer sentido.", origem: "e3", sensivel: false, de: "Ana" },
+          { categoria: "encomenda", titulo: "Confirme a entrega de amanhã", quando: at(7, 12), o_que_aconteceu: "Um código de rastreio chegou.", o_que_fazer: "Acompanhe em Entregas.", origem: "e1", sensivel: false, de: "Loja Exemplo" },
+        ],
+        sem_acao: ["e4"],
+        ruido: { contagem: 1 },
+        anexos: "Anexos não são lidos.",
         top: [
           { messageId: "e1", threadId: "t1", from: "Loja Exemplo <pedidos@exemplo.com>", subject: "Confirme a entrega de amanhã", reason: "Pede confirmação até amanhã às 14h.", receivedAt: at(7, 12), category: "important", href: "#exemplo" },
           { messageId: "e2", threadId: "t2", from: "Faculdade <secretaria@exemplo.edu>", subject: "Prazo de rematrícula", reason: "Menciona “prazo”.", receivedAt: at(6, 40), category: "important", href: "#exemplo" },
@@ -134,7 +143,7 @@ export function demoSnapshot(): Snapshot {
   ];
   return {
     owner: { email: "exemplo@demo.local", name: "João", timeZone: "America/Sao_Paulo" },
-    configured: { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false, tracking: false },
+    configured: { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false, tracking: false, trackingState: "desligado" },
     connections: [],
     monitors,
     usage: { day: today.toISOString().slice(0, 10), calls: 12, tokens: 24_000, limits: { calls: 50, tokens: 100_000 }, aiConfigured: false, privateAllowed: false },

@@ -23,3 +23,5 @@ export * from "./news.ts";
 export * from "./quotes.ts";
 export * from "./marketing.ts";
 export * from "./tracking.ts";
+export * from "./errors-pt.ts";
+export * from "./correio.ts";

@@ -1,18 +1,16 @@
 import {
   AiRouter,
-  DEFAULT_RULES,
   UNTRUSTED_SYSTEM_RULES,
-  buildDigest,
+  buildCorreioResumo,
+  correioForModel,
   defaultProviders,
   localParts,
-  parseAiTriage,
+  parseCorreioAi,
   renderUntrusted,
   sanitizeUntrusted,
-  triageByRules,
   validateProviders,
-  type Triage,
 } from "@open-dot/core";
-import { messageLink } from "@open-dot/connectors/gmail.ts";
+import { gmailWebHref } from "@open-dot/connectors/gmail.ts";
 import type { Ctx } from "../context.ts";
 import * as repo from "../repo.ts";
 
@@ -59,15 +57,13 @@ export async function runEmailReview(ctx: Ctx, run: repo.RunRow, fetchImpl: type
   const pendingLeft = await repo.countPending(ctx.db, run.owner_id);
   const syncedUntil = conns.map((c) => c.last_sync_at).filter(Boolean).sort().at(-1) ?? null;
 
-  // 1) Regras determinísticas (sempre).
-  const byRules = new Map<string, Triage>(messages.map((m) => [m.id, triageByRules(m, DEFAULT_RULES)]));
   let aiUsed = false;
-  let aiNote: string | null = null;
+  let aiNote: string | null = "Aviso por regras. A IA privada não entrou nesta revisão.";
+  let resumo = buildCorreioResumo(messages);
 
-  // 2) IA opcional, só se houver provedor aprovado para e-mail privado.
   if (messages.length) {
     const router = makeRouter(ctx, fetchImpl);
-    const blocks = messages.map((m) => sanitizeUntrusted(m.id, `De: ${m.from}\nAssunto: ${m.subject}\nTrecho: ${m.snippet}`, 600));
+    const blocks = messages.map((m) => sanitizeUntrusted(m.id, correioForModel(m), 500));
     const out = await router.run({
       ownerId: run.owner_id,
       kind: "email_triage",
@@ -78,63 +74,63 @@ export async function runEmailReview(ctx: Ctx, run: repo.RunRow, fetchImpl: type
       messages: [
         {
           role: "system",
-          content: `${UNTRUSTED_SYSTEM_RULES}\nClassifique cada mensagem como important, review ou low. Responda JSON {"items":[{"id":"...","category":"...","reason":"frase curta em português"}]}. Use apenas os ids fornecidos.`,
+          content: `${UNTRUSTED_SYSTEM_RULES}\nDevolva só JSON {abertura, itens:[{categoria, titulo, quando, o_que_aconteceu, o_que_fazer, origem, sensivel}], sem_acao:[], ruido:{contagem}}. categoria: seguranca|pagamento|prazo|encomenda|resposta|outro. o_que_fazer começa com Confira, Pague, Veja, Responda, Acompanhe, Abra ou Guarde. Não invente código, link, número ou fato ausente do texto.`,
         },
         { role: "user", content: renderUntrusted(blocks) },
       ],
     });
     if (out.status === "ok") {
-      const parsed = parseAiTriage(out.text, new Set(messages.map((m) => m.id)));
-      for (const t of parsed.ok) byRules.set(t.messageId, t);
-      aiUsed = parsed.ok.length > 0;
-      aiNote = parsed.rejected ? `${parsed.rejected} classificações da IA foram descartadas por não citarem uma mensagem válida.` : null;
-    } else if (out.status === "waiting_quota") {
-      aiNote = `Resumo por regras: IA sem cota agora (${out.reason}).`;
-    } else if (out.status === "unavailable") {
-      aiNote = `Resumo por regras. ${out.reason}`;
-    }
+      const parsed = parseCorreioAi(out.text, new Set(messages.map((m) => m.id)));
+      if (parsed) {
+        resumo = parsed;
+        aiUsed = true;
+        aiNote = null;
+      } else aiNote = "A IA respondeu fora do formato. Usei as regras.";
+    } else if (out.status === "waiting_quota") aiNote = "Aviso por regras. A cota de IA acabou.";
+    else aiNote = "Aviso por regras. A IA privada não está disponível.";
   }
 
   const slotLabel = run.scheduled_at && run.slot_key && !run.slot_key.includes(":manual:") ? `${String(localParts(Date.parse(run.scheduled_at), tz).hour).padStart(2, "0")}h` : "agora";
-  const digest = buildDigest({
-    slotLabel,
-    messages,
-    triage: [...byRules.values()],
-    syncedUntil,
-    available: messages.length + pendingLeft,
-    ...(reauth ? { partialReason: "Gmail precisa ser reconectado; mostrando apenas o que já tinha sido sincronizado." } : pendingLeft ? { partialReason: `${pendingLeft} mensagens ainda sendo baixadas.` } : {}),
-    aiUsed,
-    aiNote,
-  });
-
-  const accountFor = new Map(conns.map((c) => [c.id, c.account_label ?? ""]));
-  const link = (messageId: string, threadId: string) => {
-    const m = messages.find((x) => x.id === messageId);
-    return messageLink(accountFor.get(m?.connectionId ?? "") ?? "", threadId);
+  const nome = (from: string) => {
+    const n = from.split("<")[0]?.trim().replace(/^"|"$/g, "") ?? "";
+    return !n || n.includes("@") ? "Remetente" : n.slice(0, 80);
   };
   const body = {
-    headline: digest.headline,
-    counts: digest.counts,
-    total: digest.total,
+    abertura: resumo.abertura,
+    itens: resumo.itens.map((i) => {
+      const m = messages.find((x) => x.id === i.origem);
+      return { ...i, de: m ? nome(m.from) : "Remetente", href: gmailWebHref(i.origem, i.rfc822 ?? m?.rfc822Id) };
+    }),
+    sem_acao: resumo.sem_acao,
+    ruido: resumo.ruido,
+    anexos: resumo.anexos,
+    headline: resumo.abertura,
+    total: messages.length,
     late: run.late === 1,
-    top: digest.top.map((i) => ({ ...i, href: link(i.messageId, i.threadId) })),
-    rest: digest.rest.map((i) => ({ ...i, href: link(i.messageId, i.threadId) })),
-    aiUsed: digest.aiUsed,
-    aiNote: digest.aiNote,
-    actions: [{ kind: "open_source", label: "Abrir e-mail" }],
+    aiUsed,
+    aiNote,
+    counts: { important: resumo.itens.length, review: resumo.sem_acao.length, low: resumo.ruido.contagem },
   };
+  const partial = Boolean(reauth) || pendingLeft > 0;
   const feedId = await repo.insertFeed(ctx.db, ctx.keys, {
     ownerId: run.owner_id,
     agentId: "correio",
     runId: run.id,
     kind: "email_digest",
-    title: run.late === 1 ? `${digest.title} (atrasada)` : digest.title,
+    title: `Sua revisão das ${slotLabel}${run.late === 1 ? " (atrasada)" : ""}`,
     body,
-    freshness: digest.coverage.partial ? "partial" : "fresh",
-    coverage: digest.coverage,
+    freshness: partial ? "partial" : "fresh",
+    coverage: {
+      analyzed: messages.length,
+      available: messages.length + pendingLeft,
+      syncedUntil,
+      fieldsRead: ["remetente", "assunto", "trecho curto"],
+      partial,
+      ...(partial ? { partialReason: reauth ? "Gmail precisa ser reconectado." : `${pendingLeft} mensagens ainda sendo baixadas.` } : {}),
+    },
     now: ctx.now(),
     markMessages: { runId: run.id, ids: messages.map((m) => m.id) },
   });
-  await repo.audit(ctx.db, { ownerId: run.owner_id, actor: "routine", action: "email_review", target: run.id, outcome: "published", detail: `total=${digest.total} ai=${aiUsed}`, now: ctx.now() });
+  await repo.audit(ctx.db, { ownerId: run.owner_id, actor: "routine", action: "email_review", target: run.id, outcome: "published", detail: `itens=${resumo.itens.length} ai=${aiUsed}`, now: ctx.now() });
   return { state: "succeeded", feedId };
 }

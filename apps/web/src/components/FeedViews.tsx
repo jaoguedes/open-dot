@@ -3,6 +3,7 @@ import type { FeedEntry } from "../api.ts";
 import { Icon, type IconName } from "./Icons.tsx";
 import { fmtDateTime, fmtTime, senderName } from "../format.ts";
 import { useApp } from "../store.tsx";
+import { GmailOpen } from "./GmailOpen.tsx";
 
 const ICON: Record<FeedEntry["kind"], IconName> = {
   email_digest: "mail",
@@ -36,6 +37,37 @@ function MailLink({ href, children }: { href: string; children: React.ReactNode 
 export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: boolean }) {
   const app = useApp();
   const b = item.body;
+  if (b.itens) {
+    return (
+      <section aria-labelledby={`h-${item.id}`}>
+        <h2 id={`h-${item.id}`}>{item.title}</h2>
+        <p className="lead">{b.abertura ?? b.headline}</p>
+        {b.itens.map((it) => (
+          <article key={it.origem} className="card" style={{ marginTop: 12 }}>
+            <div className="card-top">{it.categoria} · {fmtTime(it.quando)}</div>
+            <h3>{it.de ?? "Remetente"}</h3>
+            <p>{it.titulo}</p>
+            <p className="meta">{it.o_que_aconteceu}</p>
+            <p>{it.o_que_fazer}</p>
+            {it.sensivel && <p className="tiny">Confira o original.</p>}
+            <div className="row-actions">
+              <GmailOpen gmailId={it.origem} rfc822={it.rfc822} demo={app.mode === "demo"} />
+            </div>
+          </article>
+        ))}
+        {(b.sem_acao?.length || b.ruido?.contagem) ? (
+          <details style={{ marginTop: 12 }}>
+            <summary>
+              {b.sem_acao?.length ? `Sem ação (${b.sem_acao.length})` : ""}
+              {b.sem_acao?.length && b.ruido?.contagem ? " · " : ""}
+              {b.ruido?.contagem ? `Promoções e newsletters: ${b.ruido.contagem}` : ""}
+            </summary>
+          </details>
+        ) : null}
+        {b.anexos && <p className="tiny">{b.anexos}</p>}
+      </section>
+    );
+  }
   const first = b.top?.[0];
   const others = b.top?.slice(1) ?? [];
   const isDemo = app.mode === "demo";

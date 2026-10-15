@@ -5,12 +5,13 @@ import { AgentDot } from "../dot/AgentDot.tsx";
 import { fmtTime, greeting, needYouLine } from "../format.ts";
 import { agentConnected, agentPresence, type ConnectionFacts } from "../presence.ts";
 import type { FeedEntry } from "../api.ts";
+import { GmailOpen } from "../components/GmailOpen.tsx";
 
 type Filter = "all" | "need" | "sources";
 
 function isNeed(it: FeedEntry): boolean {
   if (it.kind === "ci_failure" || it.kind === "site_incident" || it.kind === "quote_alert") return true;
-  if (it.kind === "email_digest") return (it.body.counts?.important ?? 0) > 0;
+  if (it.kind === "email_digest") return (it.body.itens?.length ?? it.body.counts?.important ?? 0) > 0;
   return false;
 }
 
@@ -23,7 +24,8 @@ export function MyDay() {
   const digest = snap?.feed.find((f) => f.kind === "email_digest");
   const items = (snap?.feed ?? []).filter((f) => f.kind !== "notice");
   const shown = items.filter((it) => (filter === "all" ? true : filter === "need" ? isNeed(it) : Boolean(it.body.href) || it.kind === "email_digest" || it.kind === "news_digest"));
-  const need = digest?.body.counts?.important ?? items.filter(isNeed).length;
+  const mailNeed = digest?.body.itens?.length ?? digest?.body.counts?.important ?? 0;
+  const need = mailNeed || items.filter((it) => it.kind !== "email_digest" && isNeed(it)).length;
   const reviewed = digest?.body.total ?? 0;
   const monitors = snap?.monitors ?? [];
   const up = monitors.filter((m) => !m.incident?.open).length;
@@ -39,7 +41,6 @@ export function MyDay() {
     return best;
   })();
   const nextRoutines = (snap?.routines ?? []).filter((r) => r.enabled).slice(0, 3);
-  const sources = digest?.body.top?.slice(0, 3) ?? [];
   const pendingAp = snap?.approvals.find((a) => a.status === "pending")?.id;
 
   return (
@@ -53,9 +54,7 @@ export function MyDay() {
           <p className="serif">{needYouLine(need)}</p>
           {digest && (
             <p className="meta">
-              Revisei {reviewed} {reviewed === 1 ? "mensagem" : "mensagens"}
-              {app.mode === "demo" ? " do exemplo" : ""} desde a última revisão. {digest.body.counts?.important ?? 0} merecem atenção
-              {monitors.length ? `, ${up}/${monitors.length} sites no ar` : ""}.
+              {digest.body.abertura ?? digest.body.headline} {monitors.length ? `${up}/${monitors.length} sites no ar.` : ""}
             </p>
           )}
         </div>
@@ -82,7 +81,7 @@ export function MyDay() {
             pendingShipments: snap?.shipments.shipments.filter((s) => s.needsCarrier).length ?? 0,
           });
           return (
-            <button key={a} type="button" className={`agent-pill ${pr.tone === "working" || pr.tone === "need" ? "on" : ""}`} onClick={() => app.navigate(`/agente/${a}`)}>
+            <button key={a} type="button" className={`agent-pill ${pr.tone === "off" ? "is-off" : ""} ${pr.tone === "working" || pr.tone === "need" ? "on" : ""}`} onClick={() => app.navigate(`/agente/${a}`)} aria-label={pr.tone === "off" ? `${AGENTS[a].name}, não conectado` : AGENTS[a].name}>
               <span className={`agent-dot-status ${pr.dotClass}`} aria-hidden="true" />
               {AGENTS[a].name}
               {pr.tone === "working" ? " · lendo" : ""}
@@ -170,19 +169,6 @@ export function MyDay() {
               ))
             )}
           </div>
-          <div className="card">
-            <div className="aside-h">Fontes do resumo</div>
-            {sources.length === 0 ? (
-              <p className="meta">As fontes aparecem quando houver revisão.</p>
-            ) : (
-              sources.map((s) => (
-                <div key={s.messageId} style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 13.5 }}>
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.subject}</span>
-                  <span className="mono" style={{ color: "var(--text-3)" }}>Gmail</span>
-                </div>
-              ))
-            )}
-          </div>
           {app.mode === "demo" && <span className="tiny">Dados de exemplo.</span>}
         </aside>
       </div>
@@ -192,9 +178,26 @@ export function MyDay() {
 
 function FeedCardBody({ item, pendingAp }: { item: FeedEntry; pendingAp?: string }) {
   const app = useApp();
-  const title = item.kind === "email_digest" ? (item.body.top?.[0]?.subject ?? item.title) : item.title;
+  if (item.kind === "email_digest" && item.body.itens?.length) {
+    return (
+      <>
+        {item.body.itens.map((it) => (
+          <article key={it.origem} style={{ display: "grid", gap: 4, marginTop: 8 }}>
+            <div className="tiny">{it.categoria} · {fmtTime(it.quando)}</div>
+            <div className="feed-title">{it.de ?? "Remetente"} — {it.titulo}</div>
+            <p className="meta" style={{ margin: 0 }}>{it.o_que_aconteceu}</p>
+            <p style={{ margin: 0 }}>{it.o_que_fazer}</p>
+            <div className="row-actions">
+              <GmailOpen gmailId={it.origem} rfc822={it.rfc822} demo={app.mode === "demo"} />
+            </div>
+          </article>
+        ))}
+      </>
+    );
+  }
+  const title = item.kind === "email_digest" ? (item.body.top?.[0]?.subject ?? item.body.abertura ?? item.title) : item.title;
   const text = item.kind === "email_digest" ? (item.body.top?.[0]?.reason ?? item.body.headline) : (item.body.summary ?? item.body.headline);
-  const href = item.body.top?.[0]?.href;
+  const href = item.body.top?.[0]?.href ?? item.body.itens?.[0]?.href;
   const gmailOk = Boolean(href?.startsWith("https://mail.google.com/"));
   return (
     <>
