@@ -5,13 +5,29 @@ import { CROWN_UNLOCKED, accLayout } from "./accessories.ts";
 import { subscribe, type TickerHandle } from "./ticker.ts";
 
 const ACC_MAP: Record<Accessory | "ring", AccessoryKind> = {
-  none: "none", mail_cap: "cap", glasses: "glasses", headphones: "phones", ring: "ring",
-  beanie: "beanie", bucket: "bucket", crown: "crown", antenna: "antenna", visor: "visor", beret: "beret",
+  none: "none",
+  mail_cap: "cap",
+  glasses: "glasses",
+  headphones: "phones",
+  ring: "ring",
+  beanie: "beanie",
+  bucket: "bucket",
+  crown: "crown",
+  antenna: "antenna",
+  visor: "visor",
+  beret: "beret",
 };
 
 const STATE_MAP: Record<SemanticState, DotStateKey | "react-success"> = {
-  idle: "idle", thinking: "thinking", working: "working", waiting: "waiting", question: "question",
-  error: "error", disconnected: "disconnected", sleep: "sleep", success: "react-success",
+  idle: "idle",
+  thinking: "thinking",
+  working: "working",
+  waiting: "waiting",
+  question: "question",
+  error: "error",
+  disconnected: "disconnected",
+  sleep: "sleep",
+  success: "react-success",
 };
 
 export interface DotViewProps {
@@ -151,12 +167,19 @@ function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean): vo
   set(q(svg, "slot"), "opacity", f.slotOpacity);
   set(q(svg, "spec"), "cx", f.specCx);
   set(q(svg, "spec2"), "cx", f.spec2Cx);
-  if (f.grey) { q(svg, "fig").setAttribute("filter", `url(#${uid}-odGrey)`); q(svg, "fig").setAttribute("opacity", "0.75"); }
-  else { q(svg, "fig").removeAttribute("filter"); q(svg, "fig").setAttribute("opacity", "1"); }
+  if (f.grey) {
+    q(svg, "fig").setAttribute("filter", `url(#${uid}-odGrey)`);
+    q(svg, "fig").setAttribute("opacity", "0.75");
+  } else {
+    q(svg, "fig").removeAttribute("filter");
+    q(svg, "fig").setAttribute("opacity", "1");
+  }
 
   f.eyes.forEach((eye, i) => {
-    const ga = q(svg, `eyeA${i}`), gb = q(svg, `eyeB${i}`);
-    const pa = q(svg, `eyeAd${i}`), pb = q(svg, `eyeBd${i}`);
+    const ga = q(svg, `eyeA${i}`),
+      gb = q(svg, `eyeB${i}`);
+    const pa = q(svg, `eyeAd${i}`),
+      pb = q(svg, `eyeBd${i}`);
     const trA = `translate(${eye.x} ${eye.y}) scale(${eye.fx} ${eye.blink}) rotate(${eye.spinDeg})`;
     const trB = `translate(${eye.x} ${eye.y}) scale(${eye.fx} 1) rotate(${eye.spinDeg})`;
     set(ga, "transform", trA);
@@ -168,7 +191,10 @@ function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean): vo
   });
   f.cheeks.forEach((c, i) => {
     const el = q(svg, `cheek${i}`);
-    set(el, "cx", c.x); set(el, "cy", c.y); set(el, "rx", c.rx); set(el, "opacity", c.opacity);
+    set(el, "cx", c.x);
+    set(el, "cy", c.y);
+    set(el, "rx", c.rx);
+    set(el, "opacity", c.opacity);
   });
 
   const ind = q(svg, "ind");
@@ -201,7 +227,10 @@ function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean): vo
   const pool = svg.querySelectorAll("[data-part]");
   pool.forEach((el, i) => {
     const p = f.particles[i];
-    if (!p) { set(el, "opacity", 0); return; }
+    if (!p) {
+      set(el, "opacity", 0);
+      return;
+    }
     set(el, "transform", `translate(${p.x} ${p.y}) rotate(${p.rot}) scale(${p.sc})`);
     set(el, "opacity", p.opacity);
     const use = el.querySelector("use");
@@ -301,19 +330,20 @@ export function DotView(props: DotViewProps) {
     if (props.hello) engine.react("oi");
     apply(svg, uid, engine.frame(), pulseRef.current);
 
-    const tick = subscribe((dt) => {
-      engine.step(dt);
-      apply(svg, uid, engine.frame(), pulseRef.current);
-      if (props.small && !engine.reaction) {
-        const f = engine.frame();
-        if (Math.abs(f.sx - 1) < 0.01 && Math.abs(f.m) < 0.02) tick.setActive(false);
-      }
-    }, { small: props.small });
+    const tick = subscribe(
+      (dt) => {
+        engine.step(dt);
+        apply(svg, uid, engine.frame(), pulseRef.current);
+        if (props.small && !engine.reaction) {
+          const f = engine.frame();
+          if (Math.abs(f.sx - 1) < 0.01 && Math.abs(f.m) < 0.02) tick.setActive(false);
+        }
+      },
+      { small: props.small },
+    );
     tickRef.current = tick;
 
-    const io = wrap.current && "IntersectionObserver" in window
-      ? new IntersectionObserver((ents) => tick.setVisible(!!ents[0]?.isIntersecting), { threshold: 0.01 })
-      : null;
+    const io = wrap.current && "IntersectionObserver" in window ? new IntersectionObserver((ents) => tick.setVisible(!!ents[0]?.isIntersecting), { threshold: 0.01 }) : null;
     if (io && wrap.current) io.observe(wrap.current);
 
     return () => {
@@ -348,7 +378,10 @@ export function DotView(props: DotViewProps) {
     const e = eng.current;
     if (!e || props.affectionSignal === undefined || props.affectionSignal === lastAff.current) return;
     lastAff.current = props.affectionSignal;
-    if (!props.visual.allowCosmetic) { props.onAffection?.("suppressed"); return; }
+    if (!props.visual.allowCosmetic) {
+      props.onAffection?.("suppressed");
+      return;
+    }
     const r = e.react("love");
     if (r === "ok") {
       tickRef.current?.setVisible(true);
@@ -371,9 +404,11 @@ export function DotView(props: DotViewProps) {
   }, [props.absorbing]);
 
   const onMove = (ev: PointerEvent<HTMLDivElement>) => {
-    const e = eng.current, box = wrap.current?.getBoundingClientRect();
+    const e = eng.current,
+      box = wrap.current?.getBoundingClientRect();
     if (!e || !box || !props.interactive) return;
-    const cx = box.left + box.width / 2, cy = box.top + box.height * 0.55;
+    const cx = box.left + box.width / 2,
+      cy = box.top + box.height * 0.55;
     const x = Math.max(-1, Math.min(1, (ev.clientX - cx) / (box.width * 0.55))) * 0.3;
     const y = Math.max(-1, Math.min(1, -(ev.clientY - cy) / (box.height * 0.6))) * 0.18;
     e.look(x, y);
@@ -406,33 +441,94 @@ export function DotView(props: DotViewProps) {
       style={{ width: props.size, cursor: props.interactive ? "pointer" : undefined, touchAction: "manipulation" }}
       onPointerMove={onMove}
       onClick={props.interactive ? onTap : undefined}
-      onKeyDown={props.interactive ? (ev: KeyboardEvent<HTMLDivElement>) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); onTap(); } } : undefined}
+      onKeyDown={
+        props.interactive
+          ? (ev: KeyboardEvent<HTMLDivElement>) => {
+              if (ev.key === "Enter" || ev.key === " ") {
+                ev.preventDefault();
+                onTap();
+              }
+            }
+          : undefined
+      }
       role={props.interactive ? "button" : undefined}
       tabIndex={props.interactive ? 0 : undefined}
     >
-      <svg ref={svgRef} className="dot-svg" data-small={props.small ? "1" : "0"} viewBox="0 0 260 220" width={props.size} height={(props.size * 220) / 260} role="img" aria-label={label} style={{ overflow: "visible", display: "block" }}>
+      <svg
+        ref={svgRef}
+        className="dot-svg"
+        data-small={props.small ? "1" : "0"}
+        viewBox="0 0 260 220"
+        width={props.size}
+        height={(props.size * 220) / 260}
+        role="img"
+        aria-label={label}
+        style={{ overflow: "visible", display: "block" }}
+      >
         <defs>
           <g dangerouslySetInnerHTML={{ __html: artDefs(uid) }} />
-          <clipPath id={`${uid}-clip`}><path data-r="clip" d={bodyPath(0)} /></clipPath>
-          <clipPath id={`${uid}-bnC`}><path data-r="bn-clip" /></clipPath>
-          <clipPath id={`${uid}-bnB`}><path data-r="bn-bandClip" /></clipPath>
-          <clipPath id={`${uid}-bkC`}><path data-r="bk-clip" /></clipPath>
-          <clipPath id={`${uid}-bkF`}><path data-r="bk-fclip" /></clipPath>
-          <g id={`${uid}-p-heart`}><path d={heartPath()} fill={`url(#${uid}-gHeart)`} /></g>
-          <g id={`${uid}-p-heartB`}><path d={heartPath()} fill={`url(#${uid}-gHeartBack)`} opacity="0.8" /></g>
-          <g id={`${uid}-p-cloud1`}><circle cx="-5.5" cy="0" r="5" fill={`url(#${uid}-gCloud)`} /><circle cx=".5" cy="-4" r="5.2" fill={`url(#${uid}-gCloud)`} /><circle cx="6" cy="1" r="4.2" fill={`url(#${uid}-gCloud)`} /><circle cx="0" cy="3.2" r="4.6" fill={`url(#${uid}-gCloud)`} /></g>
-          <g id={`${uid}-p-cloud2`}><circle cx="-6" cy="1" r="4.6" fill={`url(#${uid}-gCloud)`} /><circle cx="0" cy="-3.4" r="5.6" fill={`url(#${uid}-gCloud)`} /><circle cx="6" cy="-.4" r="4.8" fill={`url(#${uid}-gCloud)`} /><circle cx="1" cy="3" r="4.4" fill={`url(#${uid}-gCloud)`} /></g>
+          <clipPath id={`${uid}-clip`}>
+            <path data-r="clip" d={bodyPath(0)} />
+          </clipPath>
+          <clipPath id={`${uid}-bnC`}>
+            <path data-r="bn-clip" />
+          </clipPath>
+          <clipPath id={`${uid}-bnB`}>
+            <path data-r="bn-bandClip" />
+          </clipPath>
+          <clipPath id={`${uid}-bkC`}>
+            <path data-r="bk-clip" />
+          </clipPath>
+          <clipPath id={`${uid}-bkF`}>
+            <path data-r="bk-fclip" />
+          </clipPath>
+          <g id={`${uid}-p-heart`}>
+            <path d={heartPath()} fill={`url(#${uid}-gHeart)`} />
+          </g>
+          <g id={`${uid}-p-heartB`}>
+            <path d={heartPath()} fill={`url(#${uid}-gHeartBack)`} opacity="0.8" />
+          </g>
+          <g id={`${uid}-p-cloud1`}>
+            <circle cx="-5.5" cy="0" r="5" fill={`url(#${uid}-gCloud)`} />
+            <circle cx=".5" cy="-4" r="5.2" fill={`url(#${uid}-gCloud)`} />
+            <circle cx="6" cy="1" r="4.2" fill={`url(#${uid}-gCloud)`} />
+            <circle cx="0" cy="3.2" r="4.6" fill={`url(#${uid}-gCloud)`} />
+          </g>
+          <g id={`${uid}-p-cloud2`}>
+            <circle cx="-6" cy="1" r="4.6" fill={`url(#${uid}-gCloud)`} />
+            <circle cx="0" cy="-3.4" r="5.6" fill={`url(#${uid}-gCloud)`} />
+            <circle cx="6" cy="-.4" r="4.8" fill={`url(#${uid}-gCloud)`} />
+            <circle cx="1" cy="3" r="4.4" fill={`url(#${uid}-gCloud)`} />
+          </g>
           <g id={`${uid}-p-sparkY`} dangerouslySetInnerHTML={{ __html: star4(5, `url(#${uid}-gStarY)`) }} />
           <g id={`${uid}-p-sparkB`} dangerouslySetInnerHTML={{ __html: star4(5, `url(#${uid}-gStarB)`) }} />
-          <g id={`${uid}-p-square`}><rect x="-2.9" y="-2.9" width="5.8" height="5.8" rx="1.7" fill={`url(#${uid}-gSquare)`} /></g>
-          <g id={`${uid}-p-z`}><path d="M-4 -4.5 L4 -4.5 L-4 4.5 L4.4 4.5" fill="none" stroke={`url(#${uid}-gZ)`} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></g>
-          <g id={`${uid}-p-spiralP`}><path d={EYE.spiralL()} fill={`url(#${uid}-gPinkS)`} /></g>
-          <g id={`${uid}-p-spiralN`}><path d={EYE.spiralR()} fill={`url(#${uid}-gPurple)`} /></g>
-          <g id={`${uid}-p-ray`}><path d="M0 0 L0 -6" stroke={`url(#${uid}-gRed)`} strokeWidth="3" strokeLinecap="round" /></g>
-          <g id={`${uid}-p-ryellow`}><path d="M0 0 L0 -9" stroke={`url(#${uid}-gStarY)`} strokeWidth="3.6" strokeLinecap="round" /></g>
-          <g id={`${uid}-p-waveL`}><path d="M0 -10 Q-7 0 0 10" fill="none" stroke={`url(#${uid}-gWave)`} strokeWidth="3.8" strokeLinecap="round" /></g>
-          <g id={`${uid}-p-waveR`}><path d="M0 -10 Q7 0 0 10" fill="none" stroke={`url(#${uid}-gWave)`} strokeWidth="3.8" strokeLinecap="round" /></g>
-          <g id={`${uid}-p-drop`}><path d="M0 -6 C 3 -1, 4 2, 0 5 C -4 2, -3 -1, 0 -6 Z" fill={`url(#${uid}-gDrop)`} /></g>
+          <g id={`${uid}-p-square`}>
+            <rect x="-2.9" y="-2.9" width="5.8" height="5.8" rx="1.7" fill={`url(#${uid}-gSquare)`} />
+          </g>
+          <g id={`${uid}-p-z`}>
+            <path d="M-4 -4.5 L4 -4.5 L-4 4.5 L4.4 4.5" fill="none" stroke={`url(#${uid}-gZ)`} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+          <g id={`${uid}-p-spiralP`}>
+            <path d={EYE.spiralL()} fill={`url(#${uid}-gPinkS)`} />
+          </g>
+          <g id={`${uid}-p-spiralN`}>
+            <path d={EYE.spiralR()} fill={`url(#${uid}-gPurple)`} />
+          </g>
+          <g id={`${uid}-p-ray`}>
+            <path d="M0 0 L0 -6" stroke={`url(#${uid}-gRed)`} strokeWidth="3" strokeLinecap="round" />
+          </g>
+          <g id={`${uid}-p-ryellow`}>
+            <path d="M0 0 L0 -9" stroke={`url(#${uid}-gStarY)`} strokeWidth="3.6" strokeLinecap="round" />
+          </g>
+          <g id={`${uid}-p-waveL`}>
+            <path d="M0 -10 Q-7 0 0 10" fill="none" stroke={`url(#${uid}-gWave)`} strokeWidth="3.8" strokeLinecap="round" />
+          </g>
+          <g id={`${uid}-p-waveR`}>
+            <path d="M0 -10 Q7 0 0 10" fill="none" stroke={`url(#${uid}-gWave)`} strokeWidth="3.8" strokeLinecap="round" />
+          </g>
+          <g id={`${uid}-p-drop`}>
+            <path d="M0 -6 C 3 -1, 4 2, 0 5 C -4 2, -3 -1, 0 -6 Z" fill={`url(#${uid}-gDrop)`} />
+          </g>
         </defs>
         <ellipse data-r="ground" cx="130" cy="178" rx="104" ry="16" fill={`url(#${uid}-eGlow)`} filter={`url(#${uid}-odB12)`} />
         <ellipse data-r="contact" cx="130" cy="177.5" rx="78" ry="5.5" fill={`url(#${uid}-eShadow)`} />
@@ -440,7 +536,11 @@ export function DotView(props: DotViewProps) {
           <path data-r="ringB" fill="none" stroke="#1C9C7A" strokeWidth="3.4" opacity="0.8" />
         </g>
         <g data-r="waves">
-          {[0, 1, 2, 3].map((i) => <g key={i} data-r={`wave${i}`} opacity="0"><use href={`#${uid}-p-wave${i < 2 ? "L" : "R"}`} /></g>)}
+          {[0, 1, 2, 3].map((i) => (
+            <g key={i} data-r={`wave${i}`} opacity="0">
+              <use href={`#${uid}-p-wave${i < 2 ? "L" : "R"}`} />
+            </g>
+          ))}
         </g>
         <g data-r="fig">
           <path data-r="body" d={bodyPath(0)} fill={`url(#${uid}-eBody)`} stroke="rgba(130,128,200,.35)" strokeWidth="1" />
@@ -460,10 +560,18 @@ export function DotView(props: DotViewProps) {
           </g>
           <ellipse data-r="cheek0" rx="13" ry="8" fill={`url(#${uid}-odCheek)`} />
           <ellipse data-r="cheek1" rx="13" ry="8" fill={`url(#${uid}-odCheek)`} />
-          <g data-r="eyeA0"><path data-r="eyeAd0" fill={INK_COLOR} /></g>
-          <g data-r="eyeB0" opacity="0"><path data-r="eyeBd0" fill={INK_COLOR} /></g>
-          <g data-r="eyeA1"><path data-r="eyeAd1" fill={INK_COLOR} /></g>
-          <g data-r="eyeB1" opacity="0"><path data-r="eyeBd1" fill={INK_COLOR} /></g>
+          <g data-r="eyeA0">
+            <path data-r="eyeAd0" fill={INK_COLOR} />
+          </g>
+          <g data-r="eyeB0" opacity="0">
+            <path data-r="eyeBd0" fill={INK_COLOR} />
+          </g>
+          <g data-r="eyeA1">
+            <path data-r="eyeAd1" fill={INK_COLOR} />
+          </g>
+          <g data-r="eyeB1" opacity="0">
+            <path data-r="eyeBd1" fill={INK_COLOR} />
+          </g>
           <g data-r="accSpin">
             <g data-r="ao">
               <path data-r="cap-bandS" fill="none" stroke="#4E46A8" strokeWidth="9" opacity="0.3" />
@@ -481,8 +589,14 @@ export function DotView(props: DotViewProps) {
             </g>
             <g data-r="glasses" opacity="0">
               <path data-r="g-temples" fill="none" stroke="#2A2850" strokeWidth="2.4" strokeLinecap="round" opacity="0.9" />
-              <g data-r="gl0"><circle r="14.2" fill={`url(#${uid}-aLens)`} /><circle r="15" fill="none" stroke={`url(#${uid}-aFrame)`} strokeWidth="3.6" /></g>
-              <g data-r="gl1"><circle r="14.2" fill={`url(#${uid}-aLens)`} /><circle r="15" fill="none" stroke={`url(#${uid}-aFrame)`} strokeWidth="3.6" /></g>
+              <g data-r="gl0">
+                <circle r="14.2" fill={`url(#${uid}-aLens)`} />
+                <circle r="15" fill="none" stroke={`url(#${uid}-aFrame)`} strokeWidth="3.6" />
+              </g>
+              <g data-r="gl1">
+                <circle r="14.2" fill={`url(#${uid}-aLens)`} />
+                <circle r="15" fill="none" stroke={`url(#${uid}-aFrame)`} strokeWidth="3.6" />
+              </g>
               <path data-r="g-bridge" fill="none" stroke={`url(#${uid}-aFrame)`} strokeWidth="3.2" strokeLinecap="round" />
               <ellipse data-r="g-pad0" rx="1.6" ry="2.4" fill="#D9D3FA" />
               <ellipse data-r="g-pad1" rx="1.6" ry="2.4" fill="#D9D3FA" />
@@ -499,7 +613,8 @@ export function DotView(props: DotViewProps) {
               <ellipse data-r="ph-shell1" rx="11" ry="21.5" fill={`url(#${uid}-aCup)`} />
               <ellipse data-r="ph-plate0" rx="6.5" ry="14.5" fill={`url(#${uid}-aPlate)`} />
               <ellipse data-r="ph-plate1" rx="6.5" ry="14.5" fill={`url(#${uid}-aPlate)`} />
-              <g data-r="ph-cup0" /><g data-r="ph-cup1" />
+              <g data-r="ph-cup0" />
+              <g data-r="ph-cup1" />
             </g>
             <path data-r="cap-face" fill="#2A2470" opacity="0.3" clipPath={`url(#${uid}-clip)`} />
             <g data-r="bn" opacity="0">
@@ -604,17 +719,32 @@ export function DotView(props: DotViewProps) {
           <path d="M-7 -3 H7 M-7 2 H7 M-7 7 H2" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" />
         </g>
         <g data-r="ind">
-          <g data-r="ind-balls" opacity="0">{[0, 1, 2].map((i) => <g key={i} data-r={`ball${i}`}><circle r={4.4 + i * 0.4} fill={`url(#${uid}-gBall)`} /></g>)}</g>
+          <g data-r="ind-balls" opacity="0">
+            {[0, 1, 2].map((i) => (
+              <g key={i} data-r={`ball${i}`}>
+                <circle r={4.4 + i * 0.4} fill={`url(#${uid}-gBall)`} />
+              </g>
+            ))}
+          </g>
           <g data-r="ind-bang" opacity="0" dangerouslySetInnerHTML={{ __html: badgeInner(uid, "gAmber", "!") }} />
           <g data-r="ind-x" opacity="0" dangerouslySetInnerHTML={{ __html: badgeInner(uid, "gRed", "x") }} />
-          <g data-r="ind-dot" opacity="0"><circle r="6.2" fill="#0D0F17" /><circle r="4.6" fill={`url(#${uid}-gRed)`} /></g>
-          <g data-r="ind-heart" opacity="0"><use href={`#${uid}-p-heart`} /></g>
-          <g data-r="ind-spiral" opacity="0"><use href={`#${uid}-p-spiralP`} /></g>
+          <g data-r="ind-dot" opacity="0">
+            <circle r="6.2" fill="#0D0F17" />
+            <circle r="4.6" fill={`url(#${uid}-gRed)`} />
+          </g>
+          <g data-r="ind-heart" opacity="0">
+            <use href={`#${uid}-p-heart`} />
+          </g>
+          <g data-r="ind-spiral" opacity="0">
+            <use href={`#${uid}-p-spiralP`} />
+          </g>
           <g data-r="ind-question" opacity="0" dangerouslySetInnerHTML={{ __html: badgeInner(uid, "gCyan", "?") }} />
           <g data-r="ind-check" opacity="0" dangerouslySetInnerHTML={{ __html: badgeInner(uid, "gGreen", "v") }} />
         </g>
         {Array.from({ length: 18 }, (_, i) => (
-          <g key={i} data-part opacity="0"><use href={`#${uid}-p-heart`} /></g>
+          <g key={i} data-part opacity="0">
+            <use href={`#${uid}-p-heart`} />
+          </g>
         ))}
       </svg>
     </div>

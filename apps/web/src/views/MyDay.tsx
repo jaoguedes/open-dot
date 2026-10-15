@@ -31,10 +31,19 @@ export function MyDay() {
   const reviewed = digest?.body.total ?? 0;
   const monitors = snap?.monitors ?? [];
   const up = monitors.filter((m) => !m.incident?.open).length;
-  const lastCheck = monitors.map((m) => m.lastCheckAt).filter(Boolean).sort().at(-1);
+  const lastCheck = monitors
+    .map((m) => m.lastCheckAt)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
   const gmail = snap?.connections.find((c) => c.provider === "gmail" && c.status !== "disabled");
   // Só erro, "esperando você" e trabalho mudam o humor do Dot grande; o desempate é o da ilha.
-  const visual = dominantVisual([app.visualFor("dot"), ...agentsInPlace("mood").map((a) => app.visualFor(a)).filter((v) => v.semantic === "error" || v.semantic === "waiting" || v.semantic === "working")]);
+  const visual = dominantVisual([
+    app.visualFor("dot"),
+    ...agentsInPlace("mood")
+      .map((a) => app.visualFor(a))
+      .filter((v) => v.semantic === "error" || v.semantic === "waiting" || v.semantic === "working"),
+  ]);
   const nextRoutines = (snap?.routines ?? []).filter((r) => r.enabled).slice(0, 3);
   const apQueue = approvalQueue(snap?.approvals ?? [], Date.now());
 
@@ -54,7 +63,14 @@ export function MyDay() {
           )}
         </div>
         <div className="hero-dot">
-          <AgentDot visual={visual} accessory={app.accessoryFor(visual.agentId)} size={280} reducedMotion={app.reducedMotion} interactive antennaPulse={visual.agentId === "noticias" && items.some((f) => f.kind === "news_digest" && f.freshness === "fresh")} />
+          <AgentDot
+            visual={visual}
+            accessory={app.accessoryFor(visual.agentId)}
+            size={280}
+            reducedMotion={app.reducedMotion}
+            interactive
+            antennaPulse={visual.agentId === "noticias" && items.some((f) => f.kind === "news_digest" && f.freshness === "fresh")}
+          />
         </div>
       </section>
 
@@ -76,7 +92,13 @@ export function MyDay() {
             pendingShipments: snap?.shipments.shipments.filter((s) => s.needsCarrier).length ?? 0,
           });
           return (
-            <button key={a} type="button" className={`agent-pill ${pr.tone === "off" ? "is-off" : ""} ${pr.tone === "working" || pr.tone === "need" ? "on" : ""}`} onClick={() => app.navigate(`/agente/${a}`)} aria-label={pr.tone === "off" ? `${AGENTS[a].name}, não conectado` : AGENTS[a].name}>
+            <button
+              key={a}
+              type="button"
+              className={`agent-pill ${pr.tone === "off" ? "is-off" : ""} ${pr.tone === "working" || pr.tone === "need" ? "on" : ""}`}
+              onClick={() => app.navigate(`/agente/${a}`)}
+              aria-label={pr.tone === "off" ? `${AGENTS[a].name}, não conectado` : AGENTS[a].name}
+            >
               <span className={`agent-dot-status ${pr.dotClass}`} aria-hidden="true" />
               {AGENTS[a].name}
               {pr.tone === "working" ? " · lendo" : ""}
@@ -114,39 +136,39 @@ export function MyDay() {
           </div>
           {apQueue.total > 0 && <ApprovalQueueCard queue={apQueue} />}
           <div role="tabpanel" id="feed-panel" aria-labelledby={`tab-${filter}`}>
-          {!snap ? (
-            <p className="meta">Carregando o dia…</p>
-          ) : shown.length === 0 ? (
-            <div className="state">
-              {!gmail && app.mode !== "demo" ? (
-                <>
-                  <h2>Conecte seu Gmail para a primeira revisão.</h2>
-                  <p>O Correio começa só com leitura. Ele não envia, apaga nem arquiva nada.</p>
-                  <button className="btn primary" onClick={() => app.navigate("/conexoes")}>
-                    Conectar Gmail
-                  </button>
-                </>
-              ) : (
-                <>
-                  <h2>Nada neste filtro.</h2>
-                  <p>Resultados aparecem depois das rotinas. Nada é marcado como concluído sem confirmação real.</p>
-                </>
-              )}
-            </div>
-          ) : (
-            shown.map((it) => (
-              <article key={it.id} className={`feed-card ${isNeed(it) ? "need" : ""}`}>
-                <div className="feed-kicker">
-                  {AGENTS[it.agentId].name} · {fmtWhen(it.createdAt)}
-                  {isNeed(it) && it.kind !== "ci_failure" && <span className="chip warn chip-push">Precisa de você</span>}
-                  {it.kind === "ci_failure" && <span className="chip err chip-push">Falhou</span>}
-                </div>
-                <FeedCardBody item={it} />
-                {isNeed(it) && it.state !== "done" && it.state !== "snoozed" && app.mode === "live" && <FeedActions id={it.id} />}
-              </article>
-            ))
-          )}
-          {snap && app.feedHasMore && <MoreFeed />}
+            {!snap ? (
+              <p className="meta">Carregando o dia…</p>
+            ) : shown.length === 0 ? (
+              <div className="state">
+                {!gmail && app.mode !== "demo" ? (
+                  <>
+                    <h2>Conecte seu Gmail para a primeira revisão.</h2>
+                    <p>O Correio começa só com leitura. Ele não envia, apaga nem arquiva nada.</p>
+                    <button className="btn primary" onClick={() => app.navigate("/conexoes")}>
+                      Conectar Gmail
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h2>Nada neste filtro.</h2>
+                    <p>Resultados aparecem depois das rotinas. Nada é marcado como concluído sem confirmação real.</p>
+                  </>
+                )}
+              </div>
+            ) : (
+              shown.map((it) => (
+                <article key={it.id} className={`feed-card ${isNeed(it) ? "need" : ""}`}>
+                  <div className="feed-kicker">
+                    {AGENTS[it.agentId].name} · {fmtWhen(it.createdAt)}
+                    {isNeed(it) && it.kind !== "ci_failure" && <span className="chip warn chip-push">Precisa de você</span>}
+                    {it.kind === "ci_failure" && <span className="chip err chip-push">Falhou</span>}
+                  </div>
+                  <FeedCardBody item={it} />
+                  {isNeed(it) && it.state !== "done" && it.state !== "snoozed" && app.mode === "live" && <FeedActions id={it.id} />}
+                </article>
+              ))
+            )}
+            {snap && app.feedHasMore && <MoreFeed />}
           </div>
         </section>
         <aside className="day-aside">
@@ -177,8 +199,12 @@ function FeedCardBody({ item }: { item: FeedEntry }) {
       <>
         {item.body.itens.map((it) => (
           <article className="stack-4 mt-8" key={it.origem}>
-            <div className="tiny">{it.categoria} · {fmtWhen(it.quando)}</div>
-            <div className="feed-title">{it.de ?? "Remetente"} — {it.titulo}</div>
+            <div className="tiny">
+              {it.categoria} · {fmtWhen(it.quando)}
+            </div>
+            <div className="feed-title">
+              {it.de ?? "Remetente"} — {it.titulo}
+            </div>
             <p className="meta m-0">{it.o_que_aconteceu}</p>
             <p className="m-0">{it.o_que_fazer}</p>
             <div className="row-actions">
@@ -312,7 +338,11 @@ function MoreFeed() {
       <button className="btn" type="button" disabled={busy} onClick={() => void more()}>
         {busy ? "Carregando…" : "Mostrar mais"}
       </button>
-      {error && <p className="tiny err-text" role="status">{error}</p>}
+      {error && (
+        <p className="tiny err-text" role="status">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -326,7 +356,9 @@ function ApprovalQueueCard({ queue }: { queue: ReturnType<typeof approvalQueue<A
       <div className="feed-kicker">
         Aprovações <span className="chip warn chip-push">{queue.total === 1 ? "1 esperando" : `${queue.total} esperando`}</span>
       </div>
-      <h3 id="h-fila" className="feed-title">{queue.total === 1 ? "Uma ação espera seu OK." : `${queue.total} ações esperam seu OK.`}</h3>
+      <h3 id="h-fila" className="feed-title">
+        {queue.total === 1 ? "Uma ação espera seu OK." : `${queue.total} ações esperam seu OK.`}
+      </h3>
       <ol className="queue-list">
         {queue.visible.map((a, i) => (
           <li key={a.id}>

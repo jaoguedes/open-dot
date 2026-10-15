@@ -67,9 +67,7 @@ export function Connections() {
   return (
     <>
       <h1>Conexões</h1>
-      <p className="meta intro-gap">
-        Cada serviço tem consentimento próprio e permissões mínimas. Escritas exigem sua aprovação do conteúdo exato.
-      </p>
+      <p className="meta intro-gap">Cada serviço tem consentimento próprio e permissões mínimas. Escritas exigem sua aprovação do conteúdo exato.</p>
       {msg && (
         <p role="status" className={`banner ${msg.ok ? "ok" : "err"} ws-normal wrap-anywhere mb-16`}>
           {msg.text}
@@ -400,10 +398,9 @@ function Providers({ demo }: { demo: boolean }) {
   const app = useApp();
   const cfg = app.snap?.configured;
   const usage = app.snap?.usage;
-  const raw =
-    app.snap?.providers?.length
-      ? app.snap.providers
-      : providerCards({ groqConfigured: Boolean(cfg?.ai), groqPrivate: Boolean(cfg?.aiPrivate), calls: usage?.calls, callLimit: usage?.limits.calls });
+  const raw = app.snap?.providers?.length
+    ? app.snap.providers
+    : providerCards({ groqConfigured: Boolean(cfg?.ai), groqPrivate: Boolean(cfg?.aiPrivate), calls: usage?.calls, callLimit: usage?.limits.calls });
   const list = raw.map((p) => (p.id === "groq" && usage ? { ...p, quota: { calls: usage.calls, limit: usage.limits.calls } } : p));
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ id: string; ok: boolean; text: string } | null>(null);
@@ -428,9 +425,7 @@ function Providers({ demo }: { demo: boolean }) {
   return (
     <>
       <h2 className="section-h2">Provedores de IA</h2>
-      <p className="meta mb-12">
-        Sem IA, o feed mostra fontes, assuntos e a classificação por regras, com “Resumo por IA pendente”. Nenhuma rota paga. A chave nunca é digitada aqui.
-      </p>
+      <p className="meta mb-12">Sem IA, o feed mostra fontes, assuntos e a classificação por regras, com “Resumo por IA pendente”. Nenhuma rota paga. A chave nunca é digitada aqui.</p>
       {list.map((p) => {
         const chip = providerChip(p, demo, Boolean(cfg?.ai), Boolean(cfg?.aiPrivate));
         const exhausted = p.quota && p.quota.calls >= p.quota.limit;
@@ -519,7 +514,9 @@ function SourceFailures({ raw }: { raw: string | null }) {
     <ul className="list" aria-label="Fontes que falharam">
       {rows.map((r) => (
         <li key={`${r.source}-${r.code}`}>
-          <span className="subj">{r.source}: {r.frase}</span>
+          <span className="subj">
+            {r.source}: {r.frase}
+          </span>
         </li>
       ))}
     </ul>
@@ -539,7 +536,9 @@ function PacoteCard() {
         <span className={`chip ${state === "ligado" ? "ok" : ""}`}>{app.mode === "demo" ? "Desligado (demonstração)" : label}</span>
       </div>
       <h3 id="c-pacote">Rastreio automático</h3>
-      <p className="meta">Consultas neste mês: {calls} de {limit}. O app para em 900. Nada é comprado daqui.</p>
+      <p className="meta">
+        Consultas neste mês: {calls} de {limit}. O app para em 900. Nada é comprado daqui.
+      </p>
     </section>
   );
 }

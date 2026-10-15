@@ -16,7 +16,15 @@ function fakeTurso(token: string) {
   const calls: any[] = [];
   const toVal = (v: any) => (v.type === "null" ? null : v.type === "integer" ? Number(v.value) : v.type === "float" ? v.value : v.value);
   const fromVal = (v: any) =>
-    v === null ? { type: "null" } : typeof v === "number" ? (Number.isInteger(v) ? { type: "integer", value: String(v) } : { type: "float", value: v }) : typeof v === "bigint" ? { type: "integer", value: String(v) } : { type: "text", value: String(v) };
+    v === null
+      ? { type: "null" }
+      : typeof v === "number"
+        ? Number.isInteger(v)
+          ? { type: "integer", value: String(v) }
+          : { type: "float", value: v }
+        : typeof v === "bigint"
+          ? { type: "integer", value: String(v) }
+          : { type: "text", value: String(v) };
   const exec = (stmt: any) => {
     const st = db.prepare(stmt.sql);
     const args = (stmt.args ?? []).map(toVal);
@@ -92,7 +100,10 @@ test("cliente Turso: transação é tudo ou nada", async () => {
   await assert.rejects(h.batch([{ sql: "INSERT INTO y VALUES (1)" }, { sql: "INSERT INTO y VALUES (1)" }]));
   assert.deepEqual(await h.query("SELECT COUNT(*) AS n FROM y"), [{ n: 0 }]);
   const ok = await h.batch([{ sql: "INSERT INTO y VALUES (2)" }, { sql: "INSERT INTO y VALUES (3)" }]);
-  assert.deepEqual(ok.map((r) => r.changes), [1, 1]);
+  assert.deepEqual(
+    ok.map((r) => r.changes),
+    [1, 1],
+  );
 });
 
 test("cliente Turso: token inválido não vaza e falha com erro claro", async () => {
@@ -111,10 +122,7 @@ test("HranaDb não chama fetch como método (workerd Illegal invocation)", async
     if (this !== undefined && this !== globalThis) throw new TypeError("Illegal invocation");
     return t.fetchImpl(String(input), init ?? {});
   } as typeof fetch;
-  assert.throws(
-    () => workerdish.call({}, "https://db.turso.io/v2/pipeline", { method: "POST", body: "{}" }),
-    /Illegal invocation/,
-  );
+  assert.throws(() => workerdish.call({}, "https://db.turso.io/v2/pipeline", { method: "POST", body: "{}" }), /Illegal invocation/);
   const h = new HranaDb("https://db.turso.io", "tok", workerdish);
   await h.run("CREATE TABLE z (id INTEGER PRIMARY KEY)");
   assert.deepEqual(await h.query<{ n: number }>("SELECT COUNT(*) AS n FROM z"), [{ n: 0 }]);

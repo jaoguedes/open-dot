@@ -40,10 +40,7 @@ export async function listDeployments(fetchImpl: typeof fetch, p: { token: strin
  * Web Analytics no Hobby pode existir no painel; a API de insights costuma recusar o plano Free.
  * Nunca inventa visitas: se a leitura falhar, devolve unavailable.
  */
-export async function webAnalyticsHint(
-  fetchImpl: typeof fetch,
-  p: { token: string; projectId: string; teamId?: string },
-): Promise<{ available: false; note: string }> {
+export async function webAnalyticsHint(fetchImpl: typeof fetch, p: { token: string; projectId: string; teamId?: string }): Promise<{ available: false; note: string }> {
   const q = new URLSearchParams({ projectId: p.projectId });
   if (p.teamId) q.set("teamId", p.teamId);
   try {

@@ -3,10 +3,18 @@ import assert from "node:assert/strict";
 import { HranaDb } from "../apps/worker/src/db/hrana.ts";
 
 const okSelect = () =>
-  new Response(JSON.stringify({ results: [{ type: "ok", response: { type: "execute", result: { cols: [{ name: "n" }], rows: [[{ type: "integer", value: "1" }]], affected_row_count: 0 } } }, { type: "ok", response: { type: "close" } }] }), {
-    status: 200,
-    headers: { "content-type": "application/json" },
-  });
+  new Response(
+    JSON.stringify({
+      results: [
+        { type: "ok", response: { type: "execute", result: { cols: [{ name: "n" }], rows: [[{ type: "integer", value: "1" }]], affected_row_count: 0 } } },
+        { type: "ok", response: { type: "close" } },
+      ],
+    }),
+    {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    },
+  );
 
 function db(fetchImpl: typeof fetch, waits: number[] = []) {
   return new HranaDb("libsql://exemplo.turso.io", "tok", fetchImpl, { sleep: async (ms) => void waits.push(ms) });

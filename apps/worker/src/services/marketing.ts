@@ -8,11 +8,7 @@ import { ConnectorError } from "@open-dot/connectors/errors.ts";
 import { listRecentNews } from "./news.ts";
 
 /** Teste do Marketing: rascunhos + leitura. Nunca publica. */
-export async function testMarketing(
-  ctx: Ctx,
-  ownerId: string,
-  fetchImpl: typeof fetch,
-): Promise<{ drafts: number; sites: string[]; missing: string[]; published: false; note: string }> {
+export async function testMarketing(ctx: Ctx, ownerId: string, fetchImpl: typeof fetch): Promise<{ drafts: number; sites: string[]; missing: string[]; published: false; note: string }> {
   if (MARKETING_CAN_PUBLISH) throw new Error("incapacidade de publicar violada");
   const settings = await repo.agentSettings(ctx.db, ownerId, "marketing");
   if (settings && settings.enabled === 0) {
@@ -86,4 +82,3 @@ export async function testMarketing(
     note: "Marketing não publica.",
   };
 }
-

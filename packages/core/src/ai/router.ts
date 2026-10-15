@@ -222,9 +222,7 @@ export class AiRouter {
           model: model.id,
           messages: task.messages,
           temperature: 0.2,
-          ...(provider.id === "groq"
-            ? { max_completion_tokens: maxOut, reasoning_effort: "low" }
-            : { max_tokens: maxOut }),
+          ...(provider.id === "groq" ? { max_completion_tokens: maxOut, reasoning_effort: "low" } : { max_tokens: maxOut }),
           ...(task.jsonMode ? { response_format: { type: "json_object" } } : {}),
         }),
       });

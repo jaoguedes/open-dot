@@ -28,7 +28,12 @@ export function Home({ agentId }: { agentId: AgentId }) {
       <div className="day-sep">Hoje, {today}</div>
       {agentId !== "dot" && <AgentAbout agentId={agentId} />}
       {app.visualFor(agentId).semantic === "error" && (
-        <DotTrouble info={{ code: app.visualFor(agentId).reason && /^[a-z0-9_]+$/.test(app.visualFor(agentId).reason ?? "") ? app.visualFor(agentId).reason! : "unknown", route: app.path }} reducedMotion={app.reducedMotion} onRetry={() => void app.refresh()} onDismiss={() => (app.dismissError(agentId), app.announce("Erro dispensado até a próxima execução."))} />
+        <DotTrouble
+          info={{ code: app.visualFor(agentId).reason && /^[a-z0-9_]+$/.test(app.visualFor(agentId).reason ?? "") ? app.visualFor(agentId).reason! : "unknown", route: app.path }}
+          reducedMotion={app.reducedMotion}
+          onRetry={() => void app.refresh()}
+          onDismiss={() => (app.dismissError(agentId), app.announce("Erro dispensado até a próxima execução."))}
+        />
       )}
       <AgentActions agentId={agentId} />
       <div className="msg-head">
@@ -36,7 +41,12 @@ export function Home({ agentId }: { agentId: AgentId }) {
         <b>{AGENTS[agentId].name}</b>
         {digest && <span>{fmtWhen(digest.createdAt)}</span>}
       </div>
-      {agentId === "dot" && <h1 className="mb-8">{greeting()}{name ? `, ${name}` : ""}.</h1>}
+      {agentId === "dot" && (
+        <h1 className="mb-8">
+          {greeting()}
+          {name ? `, ${name}` : ""}.
+        </h1>
+      )}
       {agentId === "dot" && snap && (
         <Suspense fallback={null}>
           <AbsorbPanel />
@@ -86,27 +96,34 @@ function AgentActions({ agentId }: { agentId: AgentId }) {
             setNote(null);
             app.setActivity(toVisual("correio", "working", null, "Lendo e-mails. Nada é enviado."));
             sound.play("dot-think");
-            void api.reviewNow().then(
-              async (r) => {
-                app.setActivity(toVisual("correio", "success"));
-                if (r.ok) sound.play("dot-done");
-                setNote(r.note);
-                app.announce(r.note);
-                await app.refresh();
-                window.setTimeout(() => app.setActivity(null), 2500);
-              },
-              (e: unknown) => {
-                app.setActivity(null);
-                const msg = e instanceof ApiError ? e.message : "Não consegui revisar agora.";
-                setNote(msg);
-                app.announce(msg);
-              },
-            ).finally(() => setBusy(false));
+            void api
+              .reviewNow()
+              .then(
+                async (r) => {
+                  app.setActivity(toVisual("correio", "success"));
+                  if (r.ok) sound.play("dot-done");
+                  setNote(r.note);
+                  app.announce(r.note);
+                  await app.refresh();
+                  window.setTimeout(() => app.setActivity(null), 2500);
+                },
+                (e: unknown) => {
+                  app.setActivity(null);
+                  const msg = e instanceof ApiError ? e.message : "Não consegui revisar agora.";
+                  setNote(msg);
+                  app.announce(msg);
+                },
+              )
+              .finally(() => setBusy(false));
           }}
         >
           Revisar agora
         </button>
-        {note && <p className="meta" role="status">{note}</p>}
+        {note && (
+          <p className="meta" role="status">
+            {note}
+          </p>
+        )}
       </div>
     );
   }
@@ -120,24 +137,31 @@ function AgentActions({ agentId }: { agentId: AgentId }) {
           onClick={() => {
             setBusy(true);
             setNote(null);
-            void api.watchSelf().then(
-              async (r) => {
-                const msg = r.created ? "O Open Dot entrou na vigilância." : "O Open Dot já estava na vigilância.";
-                setNote(msg);
-                app.announce(msg);
-                await app.refresh();
-              },
-              (e: unknown) => {
-                const msg = e instanceof ApiError && e.status === 409 ? "Limite de 3 sites. Remova um para vigiar o Open Dot." : "Não consegui cadastrar o monitor.";
-                setNote(msg);
-                app.announce(msg);
-              },
-            ).finally(() => setBusy(false));
+            void api
+              .watchSelf()
+              .then(
+                async (r) => {
+                  const msg = r.created ? "O Open Dot entrou na vigilância." : "O Open Dot já estava na vigilância.";
+                  setNote(msg);
+                  app.announce(msg);
+                  await app.refresh();
+                },
+                (e: unknown) => {
+                  const msg = e instanceof ApiError && e.status === 409 ? "Limite de 3 sites. Remova um para vigiar o Open Dot." : "Não consegui cadastrar o monitor.";
+                  setNote(msg);
+                  app.announce(msg);
+                },
+              )
+              .finally(() => setBusy(false));
           }}
         >
           Vigiar o próprio Open Dot
         </button>
-        {note && <p className="meta" role="status">{note}</p>}
+        {note && (
+          <p className="meta" role="status">
+            {note}
+          </p>
+        )}
       </div>
     );
   }
@@ -149,16 +173,21 @@ function AgentAbout({ agentId }: { agentId: AgentId }) {
   const note = ABOUT[agentId];
   return (
     <div className="tiny m-0 mb-12">
-      <a href={`#sobre-${agentId}`} onClick={(e) => {
-        e.preventDefault();
-        const el = document.getElementById(`sobre-${agentId}`);
-        if (el instanceof HTMLDetailsElement) el.open = !el.open;
-      }}>
+      <a
+        href={`#sobre-${agentId}`}
+        onClick={(e) => {
+          e.preventDefault();
+          const el = document.getElementById(`sobre-${agentId}`);
+          if (el instanceof HTMLDetailsElement) el.open = !el.open;
+        }}
+      >
         Sobre o agente e permissões
       </a>
       <details id={`sobre-${agentId}`}>
         <summary className="sr-only">Sobre o agente e permissões</summary>
-        <span className="meta">{p.description} {note}</span>
+        <span className="meta">
+          {p.description} {note}
+        </span>
         <ul className="list meta">
           {p.tools.map((t) => (
             <li key={t}>

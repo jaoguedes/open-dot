@@ -21,7 +21,18 @@ export async function startHarness() {
     process.exit(2);
   }
 
-  const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".woff": "font/woff", ".woff2": "font/woff2", ".json": "application/json", ".png": "image/png", ".webmanifest": "application/manifest+json", ".mp3": "audio/mpeg" };
+  const MIME = {
+    ".html": "text/html; charset=utf-8",
+    ".js": "text/javascript",
+    ".css": "text/css",
+    ".svg": "image/svg+xml",
+    ".woff": "font/woff",
+    ".woff2": "font/woff2",
+    ".json": "application/json",
+    ".png": "image/png",
+    ".webmanifest": "application/manifest+json",
+    ".mp3": "audio/mpeg",
+  };
   const server = createServer((req, res) => {
     let path;
     try {
@@ -76,16 +87,56 @@ export async function startHarness() {
             ],
           },
         },
-        { id: "fd_ci", agentId: "codigo", runId: "gh:1", kind: "ci_failure", title: "Workflow falhou em exemplo/repo", state: "open", createdAt: NOW, freshness: "fresh", coverage: null, body: { summary: "CI terminou com falha.", href: "https://github.com/exemplo/repo/actions" } },
+        {
+          id: "fd_ci",
+          agentId: "codigo",
+          runId: "gh:1",
+          kind: "ci_failure",
+          title: "Workflow falhou em exemplo/repo",
+          state: "open",
+          createdAt: NOW,
+          freshness: "fresh",
+          coverage: null,
+          body: { summary: "CI terminou com falha.", href: "https://github.com/exemplo/repo/actions" },
+        },
       ],
     };
   }
   let state = freshState();
 
-  const configured = { database: true, google: true, owner: true, github: true, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false, tracking: false, trackingState: "desligado" };
+  const configured = {
+    database: true,
+    google: true,
+    owner: true,
+    github: true,
+    githubApp: false,
+    vercel: false,
+    ai: false,
+    aiPrivate: false,
+    finnhub: false,
+    tracking: false,
+    trackingState: "desligado",
+  };
   const shipments = {
     shipments: [
-      { id: "sh1", code: "NL123456789BR", carrier: "correios", carrierLabel: "Correios", storeLabel: null, status: null, statusLabel: null, lastEventAt: null, lastEvent: null, events: [], page: "https://rastreamento.correios.com.br/app/index.php", active: true, needsCarrier: false, lastError: null, provider: null, attribution: null },
+      {
+        id: "sh1",
+        code: "NL123456789BR",
+        carrier: "correios",
+        carrierLabel: "Correios",
+        storeLabel: null,
+        status: null,
+        statusLabel: null,
+        lastEventAt: null,
+        lastEvent: null,
+        events: [],
+        page: "https://rastreamento.correios.com.br/app/index.php",
+        active: true,
+        needsCarrier: false,
+        lastError: null,
+        provider: null,
+        attribution: null,
+      },
     ],
     tracking: { enabled: false, providerId: null, reason: "Rastreio automático desligado.", calls: 0, stop: 900, limit: 1000, paused: false },
     // Igual ao que o servidor manda (DISABLED_TRACKING_PROVIDERS): a tela não pode mostrar.
@@ -128,10 +179,21 @@ export async function startHarness() {
       if (handled !== undefined) return await handled;
     }
     if (state.failAll) return json(500, { error: { code: "internal", message: "Algo deu errado. Nada foi enviado ou alterado fora do Open Dot.", reason: "db_error" } });
-    if (p === "/api/session") return json(200, state.authed ? { authenticated: true, owner: state.owner ?? defaultOwner } : { authenticated: false, devLoginAvailable: false, googleLoginAvailable: true });
+    if (p === "/api/session")
+      return json(200, state.authed ? { authenticated: true, owner: state.owner ?? defaultOwner } : { authenticated: false, devLoginAvailable: false, googleLoginAvailable: true });
     if (!state.authed) return json(401, { error: { code: "unauthenticated", message: "Entre para continuar." } });
     if (p === "/api/snapshot") return json(200, { owner: state.owner ?? defaultOwner, ...parts(), failures: [] });
-    const legacy = { "/api/feed": "feed", "/api/connections": "connections", "/api/routines": "routines", "/api/runs": "runs", "/api/usage": "usage", "/api/monitors": "monitors", "/api/status": "status", "/api/approvals": "approvals", "/api/shipments": "shipments" }[p];
+    const legacy = {
+      "/api/feed": "feed",
+      "/api/connections": "connections",
+      "/api/routines": "routines",
+      "/api/runs": "runs",
+      "/api/usage": "usage",
+      "/api/monitors": "monitors",
+      "/api/status": "status",
+      "/api/approvals": "approvals",
+      "/api/shipments": "shipments",
+    }[p];
     if (legacy && req.method() === "GET") return json(200, parts()[legacy]);
     const done = /^\/api\/feed\/([^/]+)\/(done|snooze)$/.exec(p);
     if (done && req.method() === "POST") {
@@ -165,7 +227,10 @@ export async function startHarness() {
     const base = `http://${host}:${port}`;
     const open = async (path) => {
       await page.goto(base + path, { waitUntil: "domcontentloaded" });
-      await page.locator(".splash").waitFor({ state: "detached", timeout: 8_000 }).catch(() => {});
+      await page
+        .locator(".splash")
+        .waitFor({ state: "detached", timeout: 8_000 })
+        .catch(() => {});
     };
     try {
       await fn({ page, open, base, state, setRoute: (fn2) => (state.extra = fn2) });
@@ -185,7 +250,6 @@ export async function startHarness() {
     if (!cond) throw new Error(msg);
   };
   const T = { timeout: 5_000 };
-
 
   const finish = async () => {
     await browser.close();

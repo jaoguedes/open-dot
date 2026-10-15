@@ -120,7 +120,15 @@ export function AbsorbPanel() {
   }
 
   const semantic: SemanticState | null =
-    local.kind === "extracting" || s.phase === "uploading" ? "working" : s.phase === "received" || s.phase === "processing" ? "thinking" : s.phase === "organized" ? "success" : s.phase === "failed" ? "error" : null;
+    local.kind === "extracting" || s.phase === "uploading"
+      ? "working"
+      : s.phase === "received" || s.phase === "processing"
+        ? "thinking"
+        : s.phase === "organized"
+          ? "success"
+          : s.phase === "failed"
+            ? "error"
+            : null;
   const visual = semantic ? toVisual("dot", semantic, s.jobId, s.error) : app.visualFor("dot");
   const statusText =
     local.kind === "extracting"
@@ -151,18 +159,36 @@ export function AbsorbPanel() {
         if (f) void absorb(f);
       }}
     >
-      <AgentDot visual={visual} accessory="none" size={84} reducedMotion={app.reducedMotion} absorbing={local.kind === "extracting" || s.phase === "selected" || s.phase === "uploading"} label={`Dot — ${statusText || "pronto para absorver um arquivo"}`} />
+      <AgentDot
+        visual={visual}
+        accessory="none"
+        size={84}
+        reducedMotion={app.reducedMotion}
+        absorbing={local.kind === "extracting" || s.phase === "selected" || s.phase === "uploading"}
+        label={`Dot — ${statusText || "pronto para absorver um arquivo"}`}
+      />
       <div>
         <b>Dar um arquivo ao Dot</b>
         <p className="meta" style={{ margin: "2px 0 0" }}>
-          {live ? "Arraste aqui um PDF com texto, TXT ou Markdown (até 5 MB). O texto é lido no seu computador; o arquivo original não é enviado." : "Indisponível na demonstração: absorver precisa do servidor real (npm run dev)."}
+          {live
+            ? "Arraste aqui um PDF com texto, TXT ou Markdown (até 5 MB). O texto é lido no seu computador; o arquivo original não é enviado."
+            : "Indisponível na demonstração: absorver precisa do servidor real (npm run dev)."}
         </p>
         <div className="absorb-actions">
-          <input ref={input} type="file" accept={ACCEPT} className="sr-only" id="absorb-file" tabIndex={-1} disabled={!live || busy} onChange={(e) => {
-            const f = e.target.files?.[0];
-            e.target.value = "";
-            if (f) void absorb(f);
-          }} />
+          <input
+            ref={input}
+            type="file"
+            accept={ACCEPT}
+            className="sr-only"
+            id="absorb-file"
+            tabIndex={-1}
+            disabled={!live || busy}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) void absorb(f);
+            }}
+          />
           <button className="btn" type="button" disabled={!live || busy} onClick={() => input.current?.click()}>
             Escolher arquivo
           </button>
@@ -181,10 +207,19 @@ export function AbsorbPanel() {
         <div className="absorb-result card" data-testid="absorb-result">
           <h3>{result.result.title}</h3>
           <p className="meta" style={{ margin: 0 }}>
-            {result.result.words.toLocaleString("pt-BR")} palavras{result.result.pages ? ` · ${result.result.pages} páginas` : ""} · ~{result.result.readingMinutes} min de leitura · organizado por regras, sem IA
+            {result.result.words.toLocaleString("pt-BR")} palavras{result.result.pages ? ` · ${result.result.pages} páginas` : ""} · ~{result.result.readingMinutes} min de leitura · organizado por
+            regras, sem IA
           </p>
-          {result.result.headings.length > 0 && <p className="tiny" style={{ margin: "6px 0 0" }}>Seções: {result.result.headings.join(" · ")}</p>}
-          {result.result.keywords.length > 0 && <p className="tiny" style={{ margin: "4px 0 0" }}>Termos frequentes: {result.result.keywords.join(", ")}</p>}
+          {result.result.headings.length > 0 && (
+            <p className="tiny" style={{ margin: "6px 0 0" }}>
+              Seções: {result.result.headings.join(" · ")}
+            </p>
+          )}
+          {result.result.keywords.length > 0 && (
+            <p className="tiny" style={{ margin: "4px 0 0" }}>
+              Termos frequentes: {result.result.keywords.join(", ")}
+            </p>
+          )}
         </div>
       )}
     </section>

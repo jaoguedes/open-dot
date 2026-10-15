@@ -26,7 +26,18 @@ export interface FeedEntry {
     summary?: string;
     counts?: { important: number; review: number; low: number };
     abertura?: string;
-    itens?: Array<{ categoria: string; titulo: string; quando: string; o_que_aconteceu: string; o_que_fazer: string; origem: string; sensivel: boolean; de?: string; href?: string; rfc822?: string | null }>;
+    itens?: Array<{
+      categoria: string;
+      titulo: string;
+      quando: string;
+      o_que_aconteceu: string;
+      o_que_fazer: string;
+      origem: string;
+      sensivel: boolean;
+      de?: string;
+      href?: string;
+      rfc822?: string | null;
+    }>;
     sem_acao?: string[];
     ruido?: { contagem: number };
     anexos?: string;
@@ -269,7 +280,11 @@ export const api = {
   testProvider: (id: string) =>
     req<{ ok: true; used: "fake"; realCall: false; note: string; result: { category: string; evidenceId: string } }>(`/api/ai/providers/${encodeURIComponent(id)}/test`, { method: "POST" }),
   startGsc: () => req<{ url: string }>("/api/connections/gsc/start", { method: "POST" }),
-  testAgent: (id: string) => req<{ ok: true; failures?: Array<string | { source?: string; reason?: string }>; missing?: string[]; published?: false; traded?: false; note?: string }>(`/api/agents/${encodeURIComponent(id)}/test`, { method: "POST" }),
+  testAgent: (id: string) =>
+    req<{ ok: true; failures?: Array<string | { source?: string; reason?: string }>; missing?: string[]; published?: false; traded?: false; note?: string }>(
+      `/api/agents/${encodeURIComponent(id)}/test`,
+      { method: "POST" },
+    ),
   disableAgent: (id: string) => req<{ ok: true; enabled: false }>(`/api/agents/${encodeURIComponent(id)}/disable`, { method: "POST" }),
   enableAgent: (id: string) => req<{ ok: true; enabled: true }>(`/api/agents/${encodeURIComponent(id)}/enable`, { method: "POST" }),
   routines: () => req<{ routines: Routine[] }>("/api/routines"),
@@ -279,7 +294,8 @@ export const api = {
   status: () => req<{ agents: Snapshot["status"] }>("/api/status"),
   startGmail: () => req<{ url: string }>("/api/connections/gmail/start", { method: "POST" }),
   disconnect: (id: string) => req<{ ok: true; revokedAtProvider: boolean }>(`/api/connections/${encodeURIComponent(id)}/disconnect`, { method: "POST" }),
-  updateRoutine: (id: string, body: { times: string[]; timeZone: string; enabled: boolean }) => req<{ ok: true; cancelledFutureRuns: number }>(`/api/routines/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(body) }),
+  updateRoutine: (id: string, body: { times: string[]; timeZone: string; enabled: boolean }) =>
+    req<{ ok: true; cancelledFutureRuns: number }>(`/api/routines/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(body) }),
   runNow: (id: string) => req<{ ok: true; created: boolean; note: string }>(`/api/routines/${encodeURIComponent(id)}/run-now`, { method: "POST" }),
   addMonitor: (url: string, label: string) => req<{ id: string }>("/api/monitors", { method: "POST", body: JSON.stringify({ url, label }) }),
   ask: (question: string) => req<AskAnswer>("/api/ask", { method: "POST", body: JSON.stringify({ question }) }),
@@ -296,7 +312,8 @@ export const api = {
   reviewNow: () => req<{ ok: boolean; synced: number; shipments: number; reviewed: boolean; note: string }>("/api/correio/review-now", { method: "POST" }),
   watchSelf: () => req<{ id: string; created: boolean }>("/api/monitors/self", { method: "POST" }),
   shipments: () => req<ShipmentSnapshot>("/api/shipments"),
-  addShipment: (code: string, carrier?: string) => req<ShipmentSnapshot & { created: boolean; shipment: ShipmentView | null }>("/api/shipments", { method: "POST", body: JSON.stringify({ code, ...(carrier ? { carrier } : {}) }) }),
+  addShipment: (code: string, carrier?: string) =>
+    req<ShipmentSnapshot & { created: boolean; shipment: ShipmentView | null }>("/api/shipments", { method: "POST", body: JSON.stringify({ code, ...(carrier ? { carrier } : {}) }) }),
   confirmShipmentCarrier: (id: string, carrier: string) => req<ShipmentSnapshot>(`/api/shipments/${encodeURIComponent(id)}/carrier`, { method: "POST", body: JSON.stringify({ carrier }) }),
   deleteShipment: (id: string) => req<{ ok: true }>(`/api/shipments/${encodeURIComponent(id)}`, { method: "DELETE" }),
   feedDone: (id: string) => req<{ ok: true }>(`/api/feed/${encodeURIComponent(id)}/done`, { method: "POST" }),
@@ -359,10 +376,7 @@ export function sendUpload(body: UploadBody, onProgress: (loaded: number, total:
   });
 }
 
-export type SnapshotFetch =
-  | { kind: "same" }
-  | { kind: "fresh"; snap: Snapshot; failures: string[]; etag: string | null; next: string | null }
-  | { kind: "legacy" };
+export type SnapshotFetch = { kind: "same" } | { kind: "fresh"; snap: Snapshot; failures: string[]; etag: string | null; next: string | null } | { kind: "legacy" };
 
 /**
  * Uma requisição com If-None-Match (C1). 304 = nada mudou. 404 = Worker antigo sem a
@@ -416,45 +430,45 @@ export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Sn
   const failures: string[] = [];
   quietTrouble = true;
   try {
-  const settle = async <T,>(name: string, p: Promise<T>, fallback: T): Promise<T> => {
-    try {
-      return await p;
-    } catch (e) {
-      failures.push(name);
-      if (e instanceof ApiError && e.status === 401) throw e;
-      return fallback;
-    }
-  };
-  const [feed, conns, routines, runs, usage, monitors, status, approvals, shipments] = await Promise.all([
-    settle("feed", api.feed(), { items: [], next: null }),
-    settle("conexões", api.connections(), { configured: emptyConfigured, connections: [], agents: [], providers: [] }),
-    settle("rotinas", api.routines(), { routines: [] }),
-    settle("execuções", api.runs(), { runs: [] }),
-    settle("uso", api.usage(), null),
-    settle("monitores", api.monitors(), { monitors: [] }),
-    settle("estado", api.status(), { agents: [] }),
-    settle("aprovações", api.approvals(), { approvals: [], canSend: false }),
-    settle("encomendas", api.shipments(), emptyShipments),
-  ]);
-  return {
-    snap: {
-      owner,
-      feed: feed.items,
-      connections: conns.connections,
-      configured: conns.configured,
-      routines: routines.routines,
-      runs: runs.runs,
-      usage,
-      monitors: monitors.monitors,
-      status: status.agents,
-      agents: conns.agents ?? [],
-      providers: conns.providers ?? [],
-      approvals: approvals.approvals,
-      canSend: approvals.canSend,
-      shipments,
-    },
-    failures,
-  };
+    const settle = async <T>(name: string, p: Promise<T>, fallback: T): Promise<T> => {
+      try {
+        return await p;
+      } catch (e) {
+        failures.push(name);
+        if (e instanceof ApiError && e.status === 401) throw e;
+        return fallback;
+      }
+    };
+    const [feed, conns, routines, runs, usage, monitors, status, approvals, shipments] = await Promise.all([
+      settle("feed", api.feed(), { items: [], next: null }),
+      settle("conexões", api.connections(), { configured: emptyConfigured, connections: [], agents: [], providers: [] }),
+      settle("rotinas", api.routines(), { routines: [] }),
+      settle("execuções", api.runs(), { runs: [] }),
+      settle("uso", api.usage(), null),
+      settle("monitores", api.monitors(), { monitors: [] }),
+      settle("estado", api.status(), { agents: [] }),
+      settle("aprovações", api.approvals(), { approvals: [], canSend: false }),
+      settle("encomendas", api.shipments(), emptyShipments),
+    ]);
+    return {
+      snap: {
+        owner,
+        feed: feed.items,
+        connections: conns.connections,
+        configured: conns.configured,
+        routines: routines.routines,
+        runs: runs.runs,
+        usage,
+        monitors: monitors.monitors,
+        status: status.agents,
+        agents: conns.agents ?? [],
+        providers: conns.providers ?? [],
+        approvals: approvals.approvals,
+        canSend: approvals.canSend,
+        shipments,
+      },
+      failures,
+    };
   } finally {
     quietTrouble = false;
   }
@@ -493,4 +507,16 @@ export const emptyShipments: ShipmentSnapshot = {
   carriers: [],
 };
 
-export const emptyConfigured: Configured = { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false, tracking: false, trackingState: "desligado" };
+export const emptyConfigured: Configured = {
+  database: false,
+  google: false,
+  owner: false,
+  github: false,
+  githubApp: false,
+  vercel: false,
+  ai: false,
+  aiPrivate: false,
+  finnhub: false,
+  tracking: false,
+  trackingState: "desligado",
+};

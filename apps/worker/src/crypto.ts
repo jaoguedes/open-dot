@@ -28,7 +28,10 @@ export async function loadKeyring(spec: string | undefined): Promise<Keyring> {
   if (!spec) throw new Error("TOKEN_KEYS não configurado");
   const keys = new Map<string, CryptoKey>();
   let current = "";
-  for (const part of spec.split(",").map((s) => s.trim()).filter(Boolean)) {
+  for (const part of spec
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)) {
     const [ver, b64] = part.split(":");
     if (!ver || !b64 || !/^v\d+$/.test(ver)) throw new Error("TOKEN_KEYS em formato inválido");
     const raw = b64ToBytes(b64);
@@ -42,11 +45,7 @@ export async function loadKeyring(spec: string | undefined): Promise<Keyring> {
 
 export async function seal(k: Keyring, plaintext: string, aad = ""): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv, additionalData: new TextEncoder().encode(aad) },
-    k.keys.get(k.current)!,
-    new TextEncoder().encode(plaintext),
-  );
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: new TextEncoder().encode(aad) }, k.keys.get(k.current)!, new TextEncoder().encode(plaintext));
   return `${k.current}.${bytesToB64url(iv)}.${bytesToB64url(new Uint8Array(ct))}`;
 }
 
@@ -54,11 +53,7 @@ export async function open(k: Keyring, sealed: string, aad = ""): Promise<string
   const [ver, ivB, ctB] = sealed.split(".");
   const key = ver ? k.keys.get(ver) : undefined;
   if (!key || !ivB || !ctB) throw new Error("segredo ilegível ou chave desconhecida");
-  const pt = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: b64ToBytes(ivB) as BufferSource, additionalData: new TextEncoder().encode(aad) },
-    key,
-    b64ToBytes(ctB) as BufferSource,
-  );
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBytes(ivB) as BufferSource, additionalData: new TextEncoder().encode(aad) }, key, b64ToBytes(ctB) as BufferSource);
   return new TextDecoder().decode(pt);
 }
 

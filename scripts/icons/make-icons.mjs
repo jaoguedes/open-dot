@@ -24,7 +24,8 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 400, height: 700 }, deviceScaleFactor: 8, reducedMotion: "reduce", colorScheme: "dark" });
 await page.route("**/api/**", (route) => {
   const p = new URL(route.request().url()).pathname;
-  if (p === "/api/session") return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ authenticated: false, devLoginAvailable: false, googleLoginAvailable: true }) });
+  if (p === "/api/session")
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ authenticated: false, devLoginAvailable: false, googleLoginAvailable: true }) });
   if (p === "/api/version") return route.fulfill({ status: 200, contentType: "application/json", body: '{"app":"x","worker":"x"}' });
   return route.fulfill({ status: 401, contentType: "application/json", body: '{"error":{"code":"unauthenticated","message":"x"}}' });
 });

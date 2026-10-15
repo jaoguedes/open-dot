@@ -33,8 +33,16 @@ import { FrameGovernor, blendMs, clipsFor, gazeFromPointer, nextBlinkMs, tintCov
  */
 
 const PROP_FOR: Record<Accessory, string | null> = {
-  none: null, mail_cap: "Prop_MailCap", glasses: "Prop_Glasses", headphones: "Prop_Headphones",
-  antenna: null, visor: null, beret: null, beanie: null, bucket: null, crown: null,
+  none: null,
+  mail_cap: "Prop_MailCap",
+  glasses: "Prop_Glasses",
+  headphones: "Prop_Headphones",
+  antenna: null,
+  visor: null,
+  beret: null,
+  beanie: null,
+  bucket: null,
+  crown: null,
 };
 const CONTINUOUS = new Set<AgentVisual["semantic"]>(["thinking", "working"]);
 const ASSET_BASE = "/dot/";
@@ -328,7 +336,13 @@ export class DotScene {
     if (!mesh) return;
     const mat = mesh.material as MeshStandardMaterial;
     const box = new Box3().setFromObject(mesh);
-    const uniforms = { uOdTint: { value: new Color(1, 1, 1) }, uOdCov: { value: 0 }, uOdAmt: { value: 0 }, uOdMinY: { value: box.min.y }, uOdHeight: { value: Math.max(0.001, box.max.y - box.min.y) } };
+    const uniforms = {
+      uOdTint: { value: new Color(1, 1, 1) },
+      uOdCov: { value: 0 },
+      uOdAmt: { value: 0 },
+      uOdMinY: { value: box.min.y },
+      uOdHeight: { value: Math.max(0.001, box.max.y - box.min.y) },
+    };
     mat.onBeforeCompile = (shader) => {
       Object.assign(shader.uniforms, uniforms);
       shader.vertexShader = shader.vertexShader

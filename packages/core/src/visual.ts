@@ -195,9 +195,7 @@ export class VisualStateStore {
       for (const [jobKey, slot] of agentJobs) {
         let state = slot.state;
         if (state === "success" && now - slot.happenedAt > SUCCESS_VISIBLE_MS) state = "idle";
-        const better =
-          SEMANTIC_PRIORITY[state] > SEMANTIC_PRIORITY[best.state] ||
-          (SEMANTIC_PRIORITY[state] === SEMANTIC_PRIORITY[best.state] && slot.happenedAt > best.happenedAt);
+        const better = SEMANTIC_PRIORITY[state] > SEMANTIC_PRIORITY[best.state] || (SEMANTIC_PRIORITY[state] === SEMANTIC_PRIORITY[best.state] && slot.happenedAt > best.happenedAt);
         if (better) {
           best = {
             state,
@@ -233,7 +231,8 @@ export class VisualStateStore {
 
 export function toVisual(agentId: AgentId, semantic: SemanticState, jobId: string | null = null, reason: string | null = null): AgentVisual {
   let tint: string = AGENT_COLORS[agentId];
-  if (semantic === "error") tint = STATE_COLORS.error; // troca direta, sem misturar com a cor do agente
+  if (semantic === "error")
+    tint = STATE_COLORS.error; // troca direta, sem misturar com a cor do agente
   else if (semantic === "waiting") tint = STATE_COLORS.waiting;
   else if (semantic === "success") tint = STATE_COLORS.success;
   else if (semantic === "disconnected") tint = STATE_COLORS.disconnected;

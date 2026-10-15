@@ -26,7 +26,10 @@ test("resumo: categorias, ordem e sem código de login", () => {
     mail({ id: "s", subject: "2FA desativado na sua conta", snippet: "a verificação em duas etapas foi desativada", receivedAt: "2026-10-15T13:00:00.000Z" }),
   ];
   const r = buildCorreioResumo(messages);
-  assert.deepEqual(r.itens.map((i) => i.categoria), ["seguranca", "pagamento", "encomenda"]);
+  assert.deepEqual(
+    r.itens.map((i) => i.categoria),
+    ["seguranca", "pagamento", "encomenda"],
+  );
   assert.equal(r.abertura, "3 coisas pedem você.");
   assert.equal(r.ruido.contagem, 1);
   assert.deepEqual(r.sem_acao, ["c"]);

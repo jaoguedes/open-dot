@@ -84,12 +84,14 @@ function toHttps(raw: string, feedId: string): string | null {
 
 function itemLink(block: string, feedId: string): string | null {
   const about = /\brdf:about=["']([^"']+)["']/i.exec(block);
-  const hrefs = [...block.matchAll(/<link\b([^>]*)\/?>/gi)].map((m) => {
-    const attrs = m[1] ?? "";
-    const href = /href=["']([^"']+)["']/i.exec(attrs)?.[1];
-    const rel = /rel=["']([^"']+)["']/i.exec(attrs)?.[1] ?? "";
-    return href ? { href, rel } : null;
-  }).filter((x): x is { href: string; rel: string } => x !== null);
+  const hrefs = [...block.matchAll(/<link\b([^>]*)\/?>/gi)]
+    .map((m) => {
+      const attrs = m[1] ?? "";
+      const href = /href=["']([^"']+)["']/i.exec(attrs)?.[1];
+      const rel = /rel=["']([^"']+)["']/i.exec(attrs)?.[1] ?? "";
+      return href ? { href, rel } : null;
+    })
+    .filter((x): x is { href: string; rel: string } => x !== null);
   const alternate = hrefs.find((l) => l.rel.split(/\s+/).includes("alternate")) ?? hrefs.find((l) => !l.rel);
   const textLink = tag(block, "link");
   const guid = /<guid\b[^>]*>([\s\S]*?)<\/guid>/i.exec(block);
@@ -170,8 +172,14 @@ export interface PoliticsCluster {
 }
 
 function shareTokens(a: string, b: string): boolean {
-  const A = new Set(normalizeTitle(a).split(" ").filter((w) => w.length > 3));
-  const B = normalizeTitle(b).split(" ").filter((w) => w.length > 3);
+  const A = new Set(
+    normalizeTitle(a)
+      .split(" ")
+      .filter((w) => w.length > 3),
+  );
+  const B = normalizeTitle(b)
+    .split(" ")
+    .filter((w) => w.length > 3);
   if (A.size < 2) return false;
   let n = 0;
   for (const w of B) if (A.has(w)) n++;

@@ -38,9 +38,7 @@ test("presença: uma fonte da verdade, incidente nunca é 'Em repouso'", () => {
   assert.notEqual(code.label, "1 incidente");
 
   const site = entry({ agentId: "sentinela", kind: "site_incident", title: "Lento" });
-  const monitors: Monitor[] = [
-    { id: "m1", url: "https://exemplo.com", label: "exemplo.com", enabled: true, incident: { open: true, kind: "slow" }, lastCheckAt: null },
-  ];
+  const monitors: Monitor[] = [{ id: "m1", url: "https://exemplo.com", label: "exemplo.com", enabled: true, incident: { open: true, kind: "slow" }, lastCheckAt: null }];
   const sent = agentPresence("sentinela", toVisual("sentinela", "idle"), [site], monitors);
   assert.equal(sent.tone, "error");
   assert.equal(sent.label, "Lento");
@@ -58,9 +56,7 @@ test("presença: uma fonte da verdade, incidente nunca é 'Em repouso'", () => {
   assert.equal(off.label, "Não conectado");
   assert.equal(off.tone, "off");
   const ordered = ["foco", "correio"] as const;
-  const sorted = sortAgents(ordered, (id) =>
-    agentPresence(id, toVisual(id, "idle"), id === "correio" ? [digest] : [], [], { connected: true }),
-  );
+  const sorted = sortAgents(ordered, (id) => agentPresence(id, toVisual(id, "idle"), id === "correio" ? [digest] : [], [], { connected: true }));
   assert.deepEqual(sorted, ["correio", "foco"]);
 });
 

@@ -44,13 +44,7 @@ export const TOOL_KIND: Record<ToolName, ToolKind> = {
 };
 
 /** Escritas que exigem aprovação vinculada ao payload, sempre. */
-export const REQUIRES_APPROVAL: ReadonlySet<ToolName> = new Set([
-  "gmail.draft",
-  "gmail.send",
-  "github.issue.create",
-  "github.comment",
-  "vercel.redeploy",
-]);
+export const REQUIRES_APPROVAL: ReadonlySet<ToolName> = new Set(["gmail.draft", "gmail.send", "github.issue.create", "github.comment", "vercel.redeploy"]);
 
 /** Ferramentas internas que o sistema executa sem aprovação (não saem para terceiros). */
 const INTERNAL_WRITES: ReadonlySet<ToolName> = new Set(["feed.publish"]);

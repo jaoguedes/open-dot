@@ -6,12 +6,7 @@ import type { Db, RunResult, SqlValue, Stmt } from "./types.ts";
  * O token do banco só existe no Worker; nunca chega ao navegador.
  */
 
-type HranaValue =
-  | { type: "null" }
-  | { type: "integer"; value: string }
-  | { type: "float"; value: number }
-  | { type: "text"; value: string }
-  | { type: "blob"; base64: string };
+type HranaValue = { type: "null" } | { type: "integer"; value: string } | { type: "float"; value: number } | { type: "text"; value: string } | { type: "blob"; base64: string };
 
 interface ExecuteResult {
   cols: Array<{ name: string }>;
@@ -44,7 +39,10 @@ function fromHrana(v: HranaValue): SqlValue {
 }
 
 export class HranaError extends Error {
-  constructor(message: string, readonly status?: number) {
+  constructor(
+    message: string,
+    readonly status?: number,
+  ) {
     super(message);
   }
 }

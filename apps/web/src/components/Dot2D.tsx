@@ -38,26 +38,38 @@ function Eyes({ expression }: { expression: AgentVisual["expression"] }) {
     case "happy":
       return (
         <g fill="none" stroke={ink} strokeWidth={3.2} strokeLinecap="round">
-          {xs.map((x) => <path key={x} d={`M${x - 5.5} ${EYE_Y + 2} Q${x} ${EYE_Y - 6} ${x + 5.5} ${EYE_Y + 2}`} />)}
+          {xs.map((x) => (
+            <path key={x} d={`M${x - 5.5} ${EYE_Y + 2} Q${x} ${EYE_Y - 6} ${x + 5.5} ${EYE_Y + 2}`} />
+          ))}
         </g>
       );
     case "sleep":
       return (
         <g fill="none" stroke={ink} strokeWidth={3} strokeLinecap="round">
-          {xs.map((x) => <path key={x} d={`M${x - 5.5} ${EYE_Y - 1} Q${x} ${EYE_Y + 5} ${x + 5.5} ${EYE_Y - 1}`} />)}
+          {xs.map((x) => (
+            <path key={x} d={`M${x - 5.5} ${EYE_Y - 1} Q${x} ${EYE_Y + 5} ${x + 5.5} ${EYE_Y - 1}`} />
+          ))}
         </g>
       );
     case "eyes_low":
       return (
         <g fill={ink}>
-          {xs.map((x) => <path key={x} d={`M${x - 5} ${EYE_Y + 1} L${x + 5} ${EYE_Y + 1} Q${x + 5} ${EYE_Y + 8} ${x} ${EYE_Y + 8} Q${x - 5} ${EYE_Y + 8} ${x - 5} ${EYE_Y + 1} Z`} />)}
+          {xs.map((x) => (
+            <path key={x} d={`M${x - 5} ${EYE_Y + 1} L${x + 5} ${EYE_Y + 1} Q${x + 5} ${EYE_Y + 8} ${x} ${EYE_Y + 8} Q${x - 5} ${EYE_Y + 8} ${x - 5} ${EYE_Y + 1} Z`} />
+          ))}
         </g>
       );
     default: {
       const dy = expression === "look_up" ? -3 : 0;
       const ry = expression === "focused" ? 6 : expression === "surprised" ? 8 : expression === "attentive" ? 7.3 : 7;
       const rx = expression === "surprised" ? 6.6 : 5.9;
-      return <g fill={ink}>{xs.map((x) => <ellipse key={x} cx={x} cy={EYE_Y + dy} rx={rx} ry={ry} />)}</g>;
+      return (
+        <g fill={ink}>
+          {xs.map((x) => (
+            <ellipse key={x} cx={x} cy={EYE_Y + dy} rx={rx} ry={ry} />
+          ))}
+        </g>
+      );
     }
   }
 }
@@ -93,7 +105,11 @@ function AccessoryLayer({ kind }: { kind: Accessory }) {
 
 function Heart({ f }: { f: EffectFrame }) {
   return (
-    <svg viewBox="0 0 24 22" style={{ transform: `translate(${-50 + f.x * 300}%, ${f.y * 500}%) scale(${f.scale}) rotate(${f.rotationDeg}deg)`, opacity: f.alpha, left: `${62 + (f.x > 0 ? 8 : 0)}%` }} aria-hidden="true">
+    <svg
+      viewBox="0 0 24 22"
+      style={{ transform: `translate(${-50 + f.x * 300}%, ${f.y * 500}%) scale(${f.scale}) rotate(${f.rotationDeg}deg)`, opacity: f.alpha, left: `${62 + (f.x > 0 ? 8 : 0)}%` }}
+      aria-hidden="true"
+    >
       <path d="M12 21 C5 15 1 11.5 1 7 C1 3.5 3.7 1 7 1 C9.2 1 11 2.2 12 4 C13 2.2 14.8 1 17 1 C20.3 1 23 3.5 23 7 C23 11.5 19 15 12 21 Z" fill="#EEB5C1" />
     </svg>
   );
@@ -142,7 +158,15 @@ export function Dot2D({ visual, accessory, size, animate, reducedMotion, showBad
   }, [affectionSignal]);
 
   const bodyClass =
-    visual.bodyClip === "success" ? "bounce" : visual.bodyClip === "error" ? "shrink" : visual.pulse ? "pulse" : visual.bodyClip === "sleep_idle" || visual.semantic === "disconnected" ? "" : "breathe";
+    visual.bodyClip === "success"
+      ? "bounce"
+      : visual.bodyClip === "error"
+        ? "shrink"
+        : visual.pulse
+          ? "pulse"
+          : visual.bodyClip === "sleep_idle" || visual.semantic === "disconnected"
+            ? ""
+            : "breathe";
   const tintStart = visual.tintCoverage === "half" ? 0.5 : 0.66;
   const neutralTint = visual.agentId === "dot" && visual.semantic === "idle";
 
@@ -203,10 +227,16 @@ export function Dot2D({ visual, accessory, size, animate, reducedMotion, showBad
       </svg>
       {frames.length > 0 && (
         <div className="hearts" aria-hidden="true">
-          {frames.map((f) => <Heart key={f.id} f={f} />)}
+          {frames.map((f) => (
+            <Heart key={f.id} f={f} />
+          ))}
         </div>
       )}
-      {showBadge && <span className="badge-2d" title="Prévia 2D (fallback do modelo 3D).">2D</span>}
+      {showBadge && (
+        <span className="badge-2d" title="Prévia 2D (fallback do modelo 3D).">
+          2D
+        </span>
+      )}
     </div>
   );
 }

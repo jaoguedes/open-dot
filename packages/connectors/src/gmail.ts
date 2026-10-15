@@ -37,7 +37,11 @@ export async function getProfile(fetchImpl: typeof fetch, token: string, now: nu
 }
 
 /** Primeira sincronização: janela limitada (ex.: últimas 20 mensagens da caixa de entrada). */
-export async function listRecentIds(fetchImpl: typeof fetch, token: string, p: { query: string; max: number; now: number }): Promise<{ ids: Array<{ id: string; threadId: string }>; estimate: number | null }> {
+export async function listRecentIds(
+  fetchImpl: typeof fetch,
+  token: string,
+  p: { query: string; max: number; now: number },
+): Promise<{ ids: Array<{ id: string; threadId: string }>; estimate: number | null }> {
   const q = new URLSearchParams({ q: p.query, maxResults: String(Math.min(p.max, 100)) });
   const r = await call<{ messages?: Array<{ id: string; threadId: string }>; resultSizeEstimate?: number }>(fetchImpl, token, `/messages?${q}`, p.now);
   return { ids: r.messages ?? [], estimate: r.resultSizeEstimate ?? null };
@@ -113,7 +117,12 @@ export function gmailWebHref(gmailId: string, rfc822?: string | null): string {
 }
 
 function decodeEntities(s: string): string {
-  return s.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+  return s
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
 }
 
 /** Link para a mensagem original, montado pelo conector a partir do ID (nunca vindo do modelo). */

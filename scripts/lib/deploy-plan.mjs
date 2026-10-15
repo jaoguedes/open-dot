@@ -39,7 +39,10 @@ export async function waitForSmoke({ origin, appHash, timeoutMs, fetchImpl, now 
       const health = await (await fetchImpl(`${origin}/api/health`)).json();
       const version = await (await fetchImpl(`${origin}/api/version`)).json();
       const js = await fetchImpl(`${origin}/assets/app.js`);
-      const hash = createHash("sha256").update(Buffer.from(await js.arrayBuffer())).digest("hex").slice(0, 12);
+      const hash = createHash("sha256")
+        .update(Buffer.from(await js.arrayBuffer()))
+        .digest("hex")
+        .slice(0, 12);
       const sw = await (await fetchImpl(`${origin}/sw.js`)).text();
       const missing = await fetchImpl(`${origin}/assets/inexistente`);
       const type = missing.headers?.get?.("content-type") ?? "";

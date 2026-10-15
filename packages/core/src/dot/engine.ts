@@ -8,9 +8,18 @@ import type { AccessoryKind, DotFrame, EmitOpts, EngineMut, EyeFrame, EyeShape, 
 const STEP = 1 / 120;
 const BLINKABLE: Record<string, 1> = { open: 1, focused: 1, attentive: 1, big: 1, serious: 1 };
 const EXPR: Record<EyePair, [EyeShape, EyeShape]> = {
-  open: ["open", "open"], focused: ["focused", "focused"], attentive: ["attentive", "attentive"], big: ["big", "big"],
-  serious: ["serious", "serious"], half: ["half", "half"], happy: ["happy", "happy"], closed: ["closed", "closed"],
-  squint: ["gt", "lt"], wink: ["open", "lt"], angry: ["angryL", "angryR"], spiral: ["spiralL", "spiralR"],
+  open: ["open", "open"],
+  focused: ["focused", "focused"],
+  attentive: ["attentive", "attentive"],
+  big: ["big", "big"],
+  serious: ["serious", "serious"],
+  half: ["half", "half"],
+  happy: ["happy", "happy"],
+  closed: ["closed", "closed"],
+  squint: ["gt", "lt"],
+  wink: ["open", "lt"],
+  angry: ["angryL", "angryR"],
+  spiral: ["spiralL", "spiralR"],
 };
 
 interface Eye {
@@ -22,12 +31,35 @@ interface Eye {
 interface P {
   id: number;
   kind: ParticleKind;
-  x: number; y: number; vx: number; vy: number; ay: number; drag: number;
-  rot: number; vr: number; life: number; age: number; sc: number; wob: number; ph: number;
-  back: number; variant: number; side: number; radius: number; grad: number; len: number; dir: number; s: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  ay: number;
+  drag: number;
+  rot: number;
+  vr: number;
+  life: number;
+  age: number;
+  sc: number;
+  wob: number;
+  ph: number;
+  back: number;
+  variant: number;
+  side: number;
+  radius: number;
+  grad: number;
+  len: number;
+  dir: number;
+  s: number;
 }
 
-interface Tl { ev: Array<[number, (e: EngineMut) => void]>; t: number; i: number; reaction: boolean }
+interface Tl {
+  ev: Array<[number, (e: EngineMut) => void]>;
+  t: number;
+  i: number;
+  reaction: boolean;
+}
 
 export interface EngineOpts {
   reducedMotion?: boolean;
@@ -39,22 +71,47 @@ export class DotEngine implements EngineMut {
   rm: boolean;
   rng: () => number;
   t = 0;
-  sx = 1; sy = 1; vsx = 0; vsy = 0;
-  rot = 0; vrot = 0; rotT = 0;
-  posY = 0; vy = 0; shakeX = 0; shakeT = 0;
-  m = 0; mT = 0; vm = 0;
-  yaw = 0; pitch = 0; lookT: [number, number] = [0, 0];
+  sx = 1;
+  sy = 1;
+  vsx = 0;
+  vsy = 0;
+  rot = 0;
+  vrot = 0;
+  rotT = 0;
+  posY = 0;
+  vy = 0;
+  shakeX = 0;
+  shakeT = 0;
+  m = 0;
+  mT = 0;
+  vm = 0;
+  yaw = 0;
+  pitch = 0;
+  lookT: [number, number] = [0, 0];
   spin: { t: number; dur: number; turns: number } | null = null;
   spinYaw = 0;
   glowC: [number, number, number] = hexRgb("#3F7BFF");
   glowT: [number, number, number] = hexRgb("#3F7BFF");
   tintC: [number, number, number] = hexRgb("#FFC9DE");
   tintT: [number, number, number] = hexRgb("#FFC9DE");
-  tintA = 0; tintAT = 0; tintFull = 0; tintF = 0;
-  cheekA = 0.8; cheekAT = 0.8;
-  blink = 1; nextBlink: number; blinkT = -1;
-  indKind: IndKind = null; indPop = 0; vIndPop = 0; indAge = 0;
-  handsOn = 0; handsS = 0; vHands = 0; waveOn = 0; waving = 0;
+  tintA = 0;
+  tintAT = 0;
+  tintFull = 0;
+  tintF = 0;
+  cheekA = 0.8;
+  cheekAT = 0.8;
+  blink = 1;
+  nextBlink: number;
+  blinkT = -1;
+  indKind: IndKind = null;
+  indPop = 0;
+  vIndPop = 0;
+  indAge = 0;
+  handsOn = 0;
+  handsS = 0;
+  vHands = 0;
+  waveOn = 0;
+  waving = 0;
   particles: P[] = [];
   timelines: Tl[] = [];
   emitAcc = 0;
@@ -182,12 +239,19 @@ export class DotEngine implements EngineMut {
     this.particles.push({
       id: this.pid++,
       kind,
-      x, y,
-      vx: o.vx ?? 0, vy: o.vy ?? 0,
+      x,
+      y,
+      vx: o.vx ?? 0,
+      vy: o.vy ?? 0,
       ay: o.ay == null ? -30 : o.ay,
       drag: o.drag == null ? 0.6 : o.drag,
-      rot: o.rot ?? 0, vr: o.vr ?? 0,
-      life: o.life ?? 1.6, age: 0, sc: o.sc ?? 1, wob: o.wob ?? 0, ph: this.rng() * 6,
+      rot: o.rot ?? 0,
+      vr: o.vr ?? 0,
+      life: o.life ?? 1.6,
+      age: 0,
+      sc: o.sc ?? 1,
+      wob: o.wob ?? 0,
+      ph: this.rng() * 6,
       back: o.back ? 1 : 0,
       variant: o.v ?? 1,
       side: o.side ?? 0,
@@ -271,9 +335,11 @@ export class DotEngine implements EngineMut {
     const air = E.posY > 0 ? clamp(E.vy / 900, -0.08, 0.08) : 0;
     const breathe = Math.sin((E.t * Math.PI * 2) / (c.slow ? 5.2 : 3.6)) * 0.01;
     let r = spring(E.sx, E.vsx, 1 - breathe * 0.5 - Math.abs(air) * 0.6, 520, 15, h);
-    E.sx = r[0]; E.vsx = r[1];
+    E.sx = r[0];
+    E.vsx = r[1];
     r = spring(E.sy, E.vsy, (c.sy ?? 1) + breathe + Math.abs(air), 520, 15, h);
-    E.sy = r[0]; E.vsy = r[1];
+    E.sy = r[0];
+    E.vsy = r[1];
     let rt = E.rotT + (c.tilt ?? 0);
     if (c.jitter) rt += Math.sin(E.t * 7) * 1.4;
     if (E.sway) {
@@ -282,9 +348,11 @@ export class DotEngine implements EngineMut {
       else E.sway = null;
     }
     r = spring(E.rot, E.vrot, rt, 260, 11, h);
-    E.rot = r[0]; E.vrot = r[1];
+    E.rot = r[0];
+    E.vrot = r[1];
     r = spring(E.m, E.vm, E.mT, 120, 14, h);
-    E.m = clamp(r[0], 0, 1.08); E.vm = r[1];
+    E.m = clamp(r[0], 0, 1.08);
+    E.vm = r[1];
     if (E.shakeT > 0) {
       E.shakeT -= h;
       E.shakeX = Math.sin(E.t * 70) * 3 * clamp(E.shakeT / 0.3, 0, 1);
@@ -308,7 +376,10 @@ export class DotEngine implements EngineMut {
       E.spin.t += h;
       const p = clamp(E.spin.t / E.spin.dur, 0, 1);
       E.spinYaw = easeIO(p) * E.spin.turns * Math.PI * 2;
-      if (p >= 1) { E.spin = null; E.spinYaw = 0; }
+      if (p >= 1) {
+        E.spin = null;
+        E.spinYaw = 0;
+      }
     }
     const kc = smooth(0.002, h);
     for (let j = 0; j < 3; j++) {
@@ -326,19 +397,28 @@ export class DotEngine implements EngineMut {
       E.blinkT += h;
       const bp = E.blinkT / 0.13;
       E.blink = bp < 0.5 ? 1 - bp * 1.8 : bp < 1 ? 0.1 + (bp - 0.5) * 1.8 : 1;
-      if (bp >= 1) { E.blinkT = -1; E.blink = 1; }
+      if (bp >= 1) {
+        E.blinkT = -1;
+        E.blink = 1;
+      }
     }
     for (const eye of E.eyes) {
       if (eye.next) {
         eye.p += h / 0.16;
-        if (eye.p >= 1) { eye.shape = eye.next; eye.next = null; eye.p = 1; }
+        if (eye.p >= 1) {
+          eye.shape = eye.next;
+          eye.next = null;
+          eye.p = 1;
+        }
       }
     }
     r = spring(E.indPop, E.vIndPop, E.indKind ? 1 : 0, 340, 14, h);
-    E.indPop = r[0]; E.vIndPop = r[1];
+    E.indPop = r[0];
+    E.vIndPop = r[1];
     E.indAge += h;
     r = spring(E.handsS, E.vHands, E.handsOn, 300, 13, h);
-    E.handsS = r[0]; E.vHands = r[1];
+    E.handsS = r[0];
+    E.vHands = r[1];
     E.waving += ((E.waveOn ? 1 : 0) - E.waving) * smooth(0.0004, h);
     if (c.emit && !E.reaction) {
       E.emitAcc += h;
@@ -346,7 +426,14 @@ export class DotEngine implements EngineMut {
         E.emitAcc = 0;
         if (c.emit[0] === "square") {
           const s = E.rng() < 0.5 ? -1 : 1;
-          E.emit("square", 130 + s * (60 + E.rng() * 20), 70 + E.rng() * 30, { vx: s * (4 + E.rng() * 8), vy: -(25 + E.rng() * 15), vr: s * (90 + E.rng() * 110), ay: 0, life: 1.4, sc: 0.7 + E.rng() * 0.3 });
+          E.emit("square", 130 + s * (60 + E.rng() * 20), 70 + E.rng() * 30, {
+            vx: s * (4 + E.rng() * 8),
+            vy: -(25 + E.rng() * 15),
+            vr: s * (90 + E.rng() * 110),
+            ay: 0,
+            life: 1.4,
+            sc: 0.7 + E.rng() * 0.3,
+          });
         }
         if (c.emit[0] === "z") E.emit("z", 176, 66, { vx: 8, vy: -14, ay: -2, life: 2.8, s: 0.9 + E.rng() * 0.5, wob: 5, vr: 8, rot: -8 });
       }
@@ -361,7 +448,10 @@ export class DotEngine implements EngineMut {
       q.rot += q.vr * h;
     }
     E.particles = E.particles.filter((q) => q.age < q.life);
-    if (E.file) { E.file.t += h; if (E.file.t > 1.35) E.file = null; }
+    if (E.file) {
+      E.file.t += h;
+      if (E.file.t > 1.35) E.file = null;
+    }
   }
 
   frame(): DotFrame {
@@ -382,7 +472,10 @@ export class DotEngine implements EngineMut {
         shape: (eye.shape ?? "open") as EyeShape,
         next: eye.next,
         p: eye.p,
-        x: q.x, y: q.y, fx: Math.max(0.05, q.fx), vis: q.vis,
+        x: q.x,
+        y: q.y,
+        fx: Math.max(0.05, q.fx),
+        vis: q.vis,
         blink: by,
         spinDeg: rotSp % 360,
       } satisfies EyeFrame;
@@ -393,7 +486,10 @@ export class DotEngine implements EngineMut {
       return { x: ck.x, y: ck.y, rx: 13 * Math.max(0.05, ck.fx), opacity: E.cheekA * ck.vis };
     }) as DotFrame["cheeks"];
     const gs = clamp(1 - lift / 110, 0.55, 1.05);
-    let ix = 82, iy = 50 - lift + Math.sin(E.t * 2.2) * 2.5, extra = 0, s = Math.max(0, E.indPop);
+    let ix = 82,
+      iy = 50 - lift + Math.sin(E.t * 2.2) * 2.5,
+      extra = 0,
+      s = Math.max(0, E.indPop);
     if (E.indKind === "question") extra = Math.sin(E.t * 2.4) * 10;
     if (E.indKind === "bang") extra = Math.sin(E.t * 4) * 6;
     if (E.indKind === "x" && E.indAge < 1.2) extra = Math.sin(E.indAge * 30) * 9 * (1 - E.indAge / 1.2);
@@ -402,15 +498,28 @@ export class DotEngine implements EngineMut {
       s *= 1 + (bt < 0.14 ? (bt / 0.14) * 0.2 : bt < 0.28 ? 0.2 - ((bt - 0.14) / 0.14) * 0.2 : bt < 0.4 ? ((bt - 0.28) / 0.12) * 0.12 : bt < 0.55 ? 0.12 - ((bt - 0.4) / 0.15) * 0.12 : 0);
       iy = 48 - lift;
     }
-    if (E.indKind === "spiral") { extra = (E.t * 240) % 360; iy = 48 - lift; }
+    if (E.indKind === "spiral") {
+      extra = (E.t * 240) % 360;
+      iy = 48 - lift;
+    }
     if (E.indKind === "check") iy = 50 - lift;
-    if (E.acc === "cap" || E.acc === "phones") { ix -= 8; iy -= 16; }
+    if (E.acc === "cap" || E.acc === "phones") {
+      ix -= 8;
+      iy -= 16;
+    }
     const balls: Array<[number, number]> = [0, 1, 2].map((k) => {
       const ph = (E.t * 1.6 - k * 0.18) % 1;
       const yy = ph < 0.35 ? -Math.sin((ph / 0.35) * Math.PI) * 6 : 0;
       return [-14 + k * 14, 6 - k * 6 + yy];
     });
-    const waves = ([["l", -1, 0], ["lb", -1, 1], ["r", 1, 0], ["rb", 1, 1]] as const).map((w) => {
+    const waves = (
+      [
+        ["l", -1, 0],
+        ["lb", -1, 1],
+        ["r", 1, 0],
+        ["rb", 1, 1],
+      ] as const
+    ).map((w) => {
       const big = w[2];
       const ph = (E.t / 1.4 + (big ? 0.16 : 0)) % 1;
       const o = ph < 0.25 ? ph / 0.25 : ph < 0.6 ? 1 : 1 - (ph - 0.6) / 0.4;
@@ -433,7 +542,12 @@ export class DotEngine implements EngineMut {
     let file: DotFrame["file"] = null;
     if (E.file) {
       const ft = E.file.t;
-      let fx: number, fy: number, fs = 1, fo = 1, rot = 0, sy = 1;
+      let fx: number,
+        fy: number,
+        fs = 1,
+        fo = 1,
+        rot = 0,
+        sy = 1;
       if (ft < 0.7) {
         const u = easeIO(ft / 0.7);
         fx = lerp(236, 130, u);
@@ -442,7 +556,11 @@ export class DotEngine implements EngineMut {
         rot = 14 * (1 - ft / 0.7);
       } else {
         const v = clamp((ft - 0.7) / 0.5, 0, 1);
-        fx = 130; fy = 56 + v * 20; fs = 1 - v * 0.7; sy = fs * 0.7; fo = 1 - clamp((v - 0.6) / 0.4, 0, 1);
+        fx = 130;
+        fy = 56 + v * 20;
+        fs = 1 - v * 0.7;
+        sy = fs * 0.7;
+        fo = 1 - clamp((v - 0.6) / 0.4, 0, 1);
       }
       file = { x: fx, y: fy - lift, rot, sx: fs, sy, opacity: fo };
     }
@@ -460,21 +578,40 @@ export class DotEngine implements EngineMut {
       state: E.state,
       reaction: E.reaction,
       ariaLabel: `Dot — ${name}`,
-      m: E.m, sx: E.sx, sy: E.sy, rot: E.rot, lift, shakeX: E.shakeX,
-      yaw, pitch: E.pitch,
+      m: E.m,
+      sx: E.sx,
+      sy: E.sy,
+      rot: E.rot,
+      lift,
+      shakeX: E.shakeX,
+      yaw,
+      pitch: E.pitch,
       glow: [E.glowC[0], E.glowC[1], E.glowC[2]],
       tint: [E.tintC[0], E.tintC[1], E.tintC[2]],
-      tintA: E.tintA, tintF: E.tintF,
-      tintCy: lerp(168, 118, E.tintF), tintRy: lerp(60, 110, E.tintF), tintRx: lerp(120, 150, E.tintF),
-      cheekA: E.cheekA, grey: E.greyF, reducedMotion: E.rm ? 1 : 0,
+      tintA: E.tintA,
+      tintF: E.tintF,
+      tintCy: lerp(168, 118, E.tintF),
+      tintRy: lerp(60, 110, E.tintF),
+      tintRx: lerp(120, 150, E.tintF),
+      cheekA: E.cheekA,
+      grey: E.greyF,
+      reducedMotion: E.rm ? 1 : 0,
       accessory: E.acc,
       slotOpacity: clamp((E.m - 0.55) / 0.4, 0, 1),
-      groundRx: 104 * gs, groundOp: 0.95 * gs,
-      contactRx: 78 * gs, contactOp: clamp(gs, 0, 1),
-      specCx: 112 - Math.sin(E.yaw) * 14, spec2Cx: 98 - Math.sin(E.yaw) * 16,
-      eyes, cheeks,
+      groundRx: 104 * gs,
+      groundOp: 0.95 * gs,
+      contactRx: 78 * gs,
+      contactOp: clamp(gs, 0, 1),
+      specCx: 112 - Math.sin(E.yaw) * 14,
+      spec2Cx: 98 - Math.sin(E.yaw) * 16,
+      eyes,
+      cheeks,
       ind: {
-        kind: E.indKind, x: ix, y: iy, scale: s, rot: extra,
+        kind: E.indKind,
+        x: ix,
+        y: iy,
+        scale: s,
+        rot: extra,
         checkDash: 16 * (1 - clamp((E.indAge - 0.12) / 0.3, 0, 1)),
         balls,
       },
@@ -486,13 +623,28 @@ export class DotEngine implements EngineMut {
         const op = a > q.life * 0.65 ? 1 - (a - q.life * 0.65) / (q.life * 0.35) : 1;
         const wx = q.wob ? Math.sin(a * 4 + q.ph) * q.wob : 0;
         return {
-          id: q.id, kind: q.kind, x: q.x + wx, y: q.y, rot: q.rot,
-          sc: Math.max(0, pop(a) * q.sc), opacity: clamp(op, 0, 1),
-          back: q.back, variant: q.variant, side: q.side, radius: q.radius, grad: q.grad, len: q.len, dir: q.dir, s: q.s,
+          id: q.id,
+          kind: q.kind,
+          x: q.x + wx,
+          y: q.y,
+          rot: q.rot,
+          sc: Math.max(0, pop(a) * q.sc),
+          opacity: clamp(op, 0, 1),
+          back: q.back,
+          variant: q.variant,
+          side: q.side,
+          radius: q.radius,
+          grad: q.grad,
+          len: q.len,
+          dir: q.dir,
+          s: q.s,
         };
       }),
-      ringPulse: pulse, ringRx: 104 * pulse, ringRy: 15 * pulse,
-      ringCy: 175 + Math.sin(E.t * 2) * 1.2, ringDash: -((E.t * 90) % 426),
+      ringPulse: pulse,
+      ringRx: 104 * pulse,
+      ringRy: 15 * pulse,
+      ringCy: 175 + Math.sin(E.t * 2) * 1.2,
+      ringDash: -((E.t * 90) % 426),
       accSpinTx: E.spinYaw ? CX + Math.sin(E.spinYaw) * 34 : 0,
       accSpinSc: sc,
       accSpinOp: E.acc === "glasses" ? clamp(sc * 4, 0, 1) : 1,

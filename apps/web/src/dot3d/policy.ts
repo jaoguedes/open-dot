@@ -27,9 +27,14 @@ export const FALLBACK_TEXT: Record<FallbackReason, string> = {
 };
 
 /** Decide entre 3D e 2D. A ordem importa: o motivo mostrado é o primeiro que impede o 3D. */
-export function chooseRenderer(input: { webgl: boolean; reducedMotion: boolean; contextLost: boolean; manifestOk: boolean | null; loadFailed: boolean; canvasFree: boolean }):
-  | { kind: "3d" }
-  | { kind: "2d"; reason: FallbackReason } {
+export function chooseRenderer(input: {
+  webgl: boolean;
+  reducedMotion: boolean;
+  contextLost: boolean;
+  manifestOk: boolean | null;
+  loadFailed: boolean;
+  canvasFree: boolean;
+}): { kind: "3d" } | { kind: "2d"; reason: FallbackReason } {
   if (input.reducedMotion) return { kind: "2d", reason: "reduced-motion" };
   if (!input.webgl) return { kind: "2d", reason: "no-webgl" };
   if (input.contextLost) return { kind: "2d", reason: "context-lost" };

@@ -31,9 +31,7 @@ export function Mascot() {
   return (
     <>
       <h1>Mascote & aparência</h1>
-      <p className="meta intro-gap">
-        Motor em código (superelipse). Toque, três toques (tonto) e carinho. O GLB/three.js fica atrás de DOT_RENDERER=glb e não carrega neste caminho.
-      </p>
+      <p className="meta intro-gap">Motor em código (superelipse). Toque, três toques (tonto) e carinho. O GLB/three.js fica atrás de DOT_RENDERER=glb e não carrega neste caminho.</p>
 
       <section className="card mascot-stage" aria-label="Prévia do Dot">
         <AgentDot
@@ -74,23 +72,19 @@ export function Mascot() {
         </fieldset>
         <fieldset className="card">
           <legend className="tiny">Guarda-roupa (peças pelo contorno da cabeça)</legend>
-          {([
-            ["agent", "Do agente"],
-            ["beanie", "Gorro de gatinho"],
-            ["bucket", "Bucket"],
-            ["antenna", "Antena (Notícias)"],
-            ["visor", "Viseira (Mercado)"],
-            ["beret", "Boina (Marketing)"],
-            ["crown", "Coroa (conquista)"],
-          ] as const).map(([id, lab]) => (
+          {(
+            [
+              ["agent", "Do agente"],
+              ["beanie", "Gorro de gatinho"],
+              ["bucket", "Bucket"],
+              ["antenna", "Antena (Notícias)"],
+              ["visor", "Viseira (Mercado)"],
+              ["beret", "Boina (Marketing)"],
+              ["crown", "Coroa (conquista)"],
+            ] as const
+          ).map(([id, lab]) => (
             <label className="choice-row" key={id}>
-              <input
-                type="radio"
-                name="hat"
-                checked={hat === id}
-                disabled={id === "crown" && !CROWN_UNLOCKED}
-                onChange={() => setHat(id)}
-              />
+              <input type="radio" name="hat" checked={hat === id} disabled={id === "crown" && !CROWN_UNLOCKED} onChange={() => setHat(id)} />
               {lab}
               {id === "crown" && !CROWN_UNLOCKED ? " — desligada até existir a regra" : ""}
             </label>
@@ -136,9 +130,7 @@ export function Mascot() {
           <label htmlFor="pf-acc">Mostrar acessórios dos agentes</label>
           <input id="pf-acc" type="checkbox" checked={app.prefs.accessories} onChange={(e) => app.setPrefs({ accessories: e.target.checked })} />
         </div>
-        <p className="tiny mt-8">
-          Preferências ficam neste navegador. Sem boca e sem sobrancelhas. O tracinho só aparece durante a absorção.
-        </p>
+        <p className="tiny mt-8">Preferências ficam neste navegador. Sem boca e sem sobrancelhas. O tracinho só aparece durante a absorção.</p>
       </section>
 
       <SoundSettings />

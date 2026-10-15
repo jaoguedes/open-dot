@@ -8,7 +8,10 @@ const { scenario, expect, T, finish } = await startHarness();
 
 await scenario("A1", "Voltar no agente tem 44 px e volta para Meu dia", async ({ page, open }) => {
   await open("/meu-dia");
-  await page.getByRole("button", { name: /^Correio/ }).first().click(T);
+  await page
+    .getByRole("button", { name: /^Correio/ })
+    .first()
+    .click(T);
   await page.waitForURL(/\/agente\/correio/, T);
   const back = page.getByRole("button", { name: "Voltar" });
   await back.waitFor(T);
@@ -20,12 +23,18 @@ await scenario("A1", "Voltar no agente tem 44 px e volta para Meu dia", async ({
 
 await scenario("A1", "Faixa de agentes marca o atual e troca sem passar por Meu dia; voltar do navegador funciona", async ({ page, open }) => {
   await open("/meu-dia");
-  await page.getByRole("button", { name: /^Correio/ }).first().click(T);
+  await page
+    .getByRole("button", { name: /^Correio/ })
+    .first()
+    .click(T);
   await page.waitForURL(/\/agente\/correio/, T);
   const current = page.locator('.agent-tools [aria-current="true"], .agent-tools [aria-current="page"]');
   await current.first().waitFor(T);
   expect((await current.first().innerText()).includes("Correio"), "chip atual não é o Correio");
-  await page.locator(".agent-tools").getByRole("button", { name: /Código/ }).click(T);
+  await page
+    .locator(".agent-tools")
+    .getByRole("button", { name: /Código/ })
+    .click(T);
   await page.waitForURL(/\/agente\/codigo/, T);
   await page.goBack();
   await page.waitForURL(/\/agente\/correio/, T);
@@ -34,9 +43,15 @@ await scenario("A1", "Faixa de agentes marca o atual e troca sem passar por Meu 
 await scenario("A1", "Endereço malformado mostra aviso, nunca tela preta", async ({ page, open }) => {
   await open("/aprovacao/%E0%A4%A");
   await page.getByText("Endereço inválido").waitFor(T);
-  await page.getByRole("button", { name: /Meu dia/ }).first().waitFor(T);
+  await page
+    .getByRole("button", { name: /Meu dia/ })
+    .first()
+    .waitFor(T);
   await open("/agente/%E0%A4%A");
-  await page.getByText(/Não achei essa página|Endereço inválido/).first().waitFor(T);
+  await page
+    .getByText(/Não achei essa página|Endereço inválido/)
+    .first()
+    .waitFor(T);
 });
 
 await scenario("A1", "Rota desconhecida mostra Não achei essa página", async ({ page, open }) => {
@@ -62,7 +77,10 @@ await scenario(
     state.failAll = true;
     await open("/meu-dia");
     await page.getByText("Não consegui falar com o servidor").first().waitFor(T);
-    await page.getByRole("button", { name: /Tentar de novo/ }).first().waitFor(T);
+    await page
+      .getByRole("button", { name: /Tentar de novo/ })
+      .first()
+      .waitFor(T);
     const demoBanner = await page.getByText(/dados fictícios/).count();
     expect(demoBanner === 0, "entrou na demonstração sozinho");
   },
@@ -109,7 +127,10 @@ await scenario("A9", "Teste de agente mostra Fonte: motivo, sem [object Object]"
 await scenario("A9", "Entregas sem Ship24 e com Copiar código", async ({ page, open }) => {
   await open("/agente/entregas");
   await page.getByText("Abrir no site da transportadora").first().waitFor(T);
-  await page.getByRole("button", { name: /Copiar código/ }).first().waitFor(T);
+  await page
+    .getByRole("button", { name: /Copiar código/ })
+    .first()
+    .waitFor(T);
   const body = await page.locator("body").innerText();
   expect(!/Ship24|Seu Rastreio/.test(body), "provedor pago aparece na tela");
   expect(!/\[object Object\]|stale_run|upstream_http_\d+(?!\))/.test(body), "texto técnico cru na tela");
@@ -122,7 +143,10 @@ await scenario("A10", "Falha no polling vira faixa de desatualizado, não o Dot 
   await page.locator("p.serif").first().waitFor(T);
   state.failAll = true;
   for (let i = 0; i < 3; i++) await page.clock.runFor(61_000);
-  await page.getByText(/desatualizad/).first().waitFor(T);
+  await page
+    .getByText(/desatualizad/)
+    .first()
+    .waitFor(T);
   const troubles = await page.locator(".dot-trouble").count();
   expect(troubles === 0, "o Dot de erro apareceu por causa do polling");
   await page.locator(".feed-card", { hasText: "Workflow falhou" }).getByRole("button", { name: "Feito" }).click(T);

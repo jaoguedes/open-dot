@@ -37,12 +37,28 @@ test("prompt injection em e-mail vira texto marcado, nunca permissão", () => {
 test("IDs de evidência inventados pelo modelo são rejeitados", () => {
   const r = checkEvidenceRefs(["e1", "e9"], new Set(["e1", "e2"]));
   assert.deepEqual(r, { valid: ["e1"], invalid: ["e9"] });
-  const ai = parseAiTriage(JSON.stringify({ items: [{ id: "m1", category: "important", reason: "pede confirmação" }, { id: "inventado", category: "low", reason: "x" }, { id: "m2", category: "urgentíssimo", reason: "x" }] }), new Set(["m1", "m2"]));
+  const ai = parseAiTriage(
+    JSON.stringify({
+      items: [
+        { id: "m1", category: "important", reason: "pede confirmação" },
+        { id: "inventado", category: "low", reason: "x" },
+        { id: "m2", category: "urgentíssimo", reason: "x" },
+      ],
+    }),
+    new Set(["m1", "m2"]),
+  );
   assert.equal(ai.ok.length, 1);
   assert.equal(ai.rejected, 2);
 });
 
-const proposal: ActionProposal = { action: "gmail.draft", service: "gmail", account: "eu@gmail.com", resource: "thread-1", payload: { to: ["a@b.com"], subject: "Oi", body: "Confirmo." }, consequence: "Cria um rascunho." };
+const proposal: ActionProposal = {
+  action: "gmail.draft",
+  service: "gmail",
+  account: "eu@gmail.com",
+  resource: "thread-1",
+  payload: { to: ["a@b.com"], subject: "Oi", body: "Confirmo." },
+  consequence: "Cria um rascunho.",
+};
 
 async function pending(): Promise<Approval> {
   return { id: "ap1", ownerId: "o1", proposal, payloadHash: await hashProposal(proposal), status: "pending", version: 1, expiresAt: 10_000, createdAt: 0, decidedAt: null };
@@ -82,7 +98,19 @@ test("estado incerto não volta para fila sozinho; terminal não é sobrescrito"
   assert.deepEqual(transition({ state: "running", version: 2 }, "succeeded", 1), { ok: false, reason: "stale_version" });
 });
 
-const msg = (p: Partial<EmailMeta>): EmailMeta => ({ id: "m", threadId: "t", from: "Ana <ana@x.com>", to: "eu@gmail.com", subject: "", snippet: "", receivedAt: "2026-10-13T10:00:00Z", labels: [], listUnsubscribe: false, precedenceBulk: false, ...p });
+const msg = (p: Partial<EmailMeta>): EmailMeta => ({
+  id: "m",
+  threadId: "t",
+  from: "Ana <ana@x.com>",
+  to: "eu@gmail.com",
+  subject: "",
+  snippet: "",
+  receivedAt: "2026-10-13T10:00:00Z",
+  labels: [],
+  listUnsubscribe: false,
+  precedenceBulk: false,
+  ...p,
+});
 
 test("triagem por regras explica o motivo e respeita regras pessoais", () => {
   assert.equal(triageByRules(msg({ subject: "Fatura de outubro — vencimento dia 20" })).category, "important");
@@ -104,7 +132,18 @@ test("resumo: categorias somam o total e cobertura parcial é declarada", () => 
 test("monitor HTTP bloqueia SSRF e hosts fora da lista", () => {
   const allow = ["meusite.vercel.app"];
   assert.equal(checkTarget("https://meusite.vercel.app/health", allow).ok, true);
-  for (const bad of ["http://meusite.vercel.app", "https://127.0.0.1", "https://169.254.169.254/latest", "https://localhost", "https://[::1]/", "https://10.0.0.2", "https://2130706433", "https://user:pw@meusite.vercel.app", "https://meusite.vercel.app:8443", "https://outro.com"]) {
+  for (const bad of [
+    "http://meusite.vercel.app",
+    "https://127.0.0.1",
+    "https://169.254.169.254/latest",
+    "https://localhost",
+    "https://[::1]/",
+    "https://10.0.0.2",
+    "https://2130706433",
+    "https://user:pw@meusite.vercel.app",
+    "https://meusite.vercel.app:8443",
+    "https://outro.com",
+  ]) {
     assert.equal(checkTarget(bad, [...allow, "127.0.0.1", "localhost", "10.0.0.2", "2130706433", "169.254.169.254"]).ok, false, bad);
   }
 });

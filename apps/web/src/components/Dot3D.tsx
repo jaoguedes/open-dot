@@ -161,7 +161,11 @@ export function Dot3D({ visual, accessory, size, reducedMotion, label, affection
           <p className="tiny dot3d-reason">{FALLBACK_TEXT[mode.reason]}</p>
         </>
       )}
-      {show3d && <span className="badge-3d" title="Modelo 3D exportado do Blender. Aprovação artística pendente.">3D</span>}
+      {show3d && (
+        <span className="badge-3d" title="Modelo 3D exportado do Blender. Aprovação artística pendente.">
+          3D
+        </span>
+      )}
     </div>
   );
 }

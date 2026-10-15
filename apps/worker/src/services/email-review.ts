@@ -55,7 +55,12 @@ export async function runEmailReview(ctx: Ctx, run: repo.RunRow, fetchImpl: type
 
   const messages = await repo.untriagedMessages(ctx.db, ctx.keys, run.owner_id, 40);
   const pendingLeft = await repo.countPending(ctx.db, run.owner_id);
-  const syncedUntil = conns.map((c) => c.last_sync_at).filter(Boolean).sort().at(-1) ?? null;
+  const syncedUntil =
+    conns
+      .map((c) => c.last_sync_at)
+      .filter(Boolean)
+      .sort()
+      .at(-1) ?? null;
 
   let aiUsed = false;
   let aiNote: string | null = "Aviso por regras. A IA privada não entrou nesta revisão.";
@@ -131,6 +136,14 @@ export async function runEmailReview(ctx: Ctx, run: repo.RunRow, fetchImpl: type
     now: ctx.now(),
     markMessages: { runId: run.id, ids: messages.map((m) => m.id) },
   });
-  await repo.audit(ctx.db, { ownerId: run.owner_id, actor: "routine", action: "email_review", target: run.id, outcome: "published", detail: `itens=${resumo.itens.length} ai=${aiUsed}`, now: ctx.now() });
+  await repo.audit(ctx.db, {
+    ownerId: run.owner_id,
+    actor: "routine",
+    action: "email_review",
+    target: run.id,
+    outcome: "published",
+    detail: `itens=${resumo.itens.length} ai=${aiUsed}`,
+    now: ctx.now(),
+  });
   return { state: "succeeded", feedId };
 }

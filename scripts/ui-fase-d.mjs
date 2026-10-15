@@ -6,7 +6,13 @@ import { startHarness } from "./lib/ui-harness.mjs";
 const { scenario, expect, T, finish } = await startHarness();
 
 const askRoute = ({ path, json }) => {
-  if (path === "/api/ask") return json(200, { answer: "A fatura do banco vence amanhã.", sources: [{ id: "fd_mail#0", title: "Fatura vence amanhã — Banco", detail: "A fatura vence amanhã.", href: null, at: "2026-10-15T12:00:00.000Z" }], aiUsed: false, note: null });
+  if (path === "/api/ask")
+    return json(200, {
+      answer: "A fatura do banco vence amanhã.",
+      sources: [{ id: "fd_mail#0", title: "Fatura vence amanhã — Banco", detail: "A fatura vence amanhã.", href: null, at: "2026-10-15T12:00:00.000Z" }],
+      aiUsed: false,
+      note: null,
+    });
   return undefined;
 };
 const insideDialog = (page) => page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')));
@@ -66,8 +72,30 @@ await scenario(
   {
     setup: (s) =>
       (s.runs = [
-        { id: "r1", agentId: "correio", kind: "email_review", state: "failed", scheduledAt: null, late: false, attempt: 1, errorCode: "subrequest_limit", errorMessage: null, updatedAt: "2026-10-15T13:00:00.000Z" },
-        { id: "r2", agentId: "noticias", kind: "news_review", state: "succeeded", scheduledAt: null, late: false, attempt: 1, errorCode: null, errorMessage: null, updatedAt: "2026-10-15T12:30:00.000Z" },
+        {
+          id: "r1",
+          agentId: "correio",
+          kind: "email_review",
+          state: "failed",
+          scheduledAt: null,
+          late: false,
+          attempt: 1,
+          errorCode: "subrequest_limit",
+          errorMessage: null,
+          updatedAt: "2026-10-15T13:00:00.000Z",
+        },
+        {
+          id: "r2",
+          agentId: "noticias",
+          kind: "news_review",
+          state: "succeeded",
+          scheduledAt: null,
+          late: false,
+          attempt: 1,
+          errorCode: null,
+          errorMessage: null,
+          updatedAt: "2026-10-15T12:30:00.000Z",
+        },
       ]),
   },
 );
@@ -95,7 +123,23 @@ await scenario(
       s.feedNext = "cursor-1";
       s.extra = ({ path, url, json }) => {
         if (path === "/api/feed" && url.searchParams.get("before") === "cursor-1")
-          return json(200, { items: [{ id: "fd_old", agentId: "sentinela", runId: "x", kind: "deploy", title: "Deploy antigo", state: "open", createdAt: "2026-10-12T12:00:00.000Z", freshness: "stale", coverage: null, body: { summary: "Deploy de segunda." } }], next: null });
+          return json(200, {
+            items: [
+              {
+                id: "fd_old",
+                agentId: "sentinela",
+                runId: "x",
+                kind: "deploy",
+                title: "Deploy antigo",
+                state: "open",
+                createdAt: "2026-10-12T12:00:00.000Z",
+                freshness: "stale",
+                coverage: null,
+                body: { summary: "Deploy de segunda." },
+              },
+            ],
+            next: null,
+          });
         return undefined;
       };
     },
@@ -141,7 +185,8 @@ await scenario("D4", "Texto visível com pelo menos 12 px e botões com alvo de 
       for (const el of document.querySelectorAll("button, a.btn, [role=tab], .icon-btn, .dock a")) {
         if (!(el instanceof HTMLElement) || !el.offsetParent) continue;
         const r = el.getBoundingClientRect();
-        if (r.width && (r.height < 44 || r.width < 44)) out.push(`${el.tagName} "${(el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 24)}" ${Math.round(r.width)}×${Math.round(r.height)}`);
+        if (r.width && (r.height < 44 || r.width < 44))
+          out.push(`${el.tagName} "${(el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 24)}" ${Math.round(r.width)}×${Math.round(r.height)}`);
       }
       return out.slice(0, 6);
     });
@@ -161,11 +206,16 @@ await scenario("D4", "Painel de contexto no celular: foco preso, fundo inert, Es
   expect(await btn.evaluate((el) => el === document.activeElement), "o foco não voltou ao botão");
 });
 
-await scenario("D4", "A ilha do Dot não é região viva", async ({ page, open }) => {
-  await open("/meu-dia");
-  const live = await page.locator('.island [role="status"], .island[role="status"], .island [aria-live="polite"]').count();
-  expect(live === 0, "a ilha anuncia a cada mudança");
-}, { desktop: true });
+await scenario(
+  "D4",
+  "A ilha do Dot não é região viva",
+  async ({ page, open }) => {
+    await open("/meu-dia");
+    const live = await page.locator('.island [role="status"], .island[role="status"], .island [aria-live="polite"]').count();
+    expect(live === 0, "a ilha anuncia a cada mudança");
+  },
+  { desktop: true },
+);
 
 await scenario(
   "D7",
@@ -209,7 +259,10 @@ await scenario(
   async ({ page, base }) => {
     await page.clock.setFixedTime(new Date("2026-10-15T20:00:00Z")); // 16/10 05:00 em Tóquio; 15/10 17:00 em São Paulo
     await page.goto(base + "/agente/dot", { waitUntil: "domcontentloaded" });
-    await page.getByText(/16 de outubro/).first().waitFor(T);
+    await page
+      .getByText(/16 de outubro/)
+      .first()
+      .waitFor(T);
   },
   { setup: (s) => (s.owner = { email: "dono@example.com", name: "Bia", timeZone: "Asia/Tokyo" }) },
 );

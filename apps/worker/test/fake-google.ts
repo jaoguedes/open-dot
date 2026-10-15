@@ -42,7 +42,15 @@ export class FakeGoogle {
         if (this.refreshRevoked) return jsonResponse({ error: "invalid_grant" }, 400);
         return jsonResponse({ access_token: `at-${this.calls.length}`, expires_in: this.accessExpiresIn, scope: "openid email https://www.googleapis.com/auth/gmail.readonly" });
       }
-      const idPayload = { iss: "https://accounts.google.com", aud: "cid.apps.googleusercontent.com", sub: this.idSub, email: this.idEmail, email_verified: true, exp: 4_000_000_000, nonce: this.nextNonce };
+      const idPayload = {
+        iss: "https://accounts.google.com",
+        aud: "cid.apps.googleusercontent.com",
+        sub: this.idSub,
+        email: this.idEmail,
+        email_verified: true,
+        exp: 4_000_000_000,
+        nonce: this.nextNonce,
+      };
       const idToken = `x.${Buffer.from(JSON.stringify(idPayload)).toString("base64url")}.sig`;
       return jsonResponse({ access_token: "at-0", refresh_token: "rt-secret-123", expires_in: 3600, scope: this.grantedScope, id_token: idToken });
     }
@@ -54,7 +62,11 @@ export class FakeGoogle {
       if (this.rateLimited) return jsonResponse({ error: { errors: [{ reason: "rateLimitExceeded" }] } }, 429, { "retry-after": "30" });
       const path = url.pathname.replace("/gmail/v1/users/me", "");
       if (path === "/profile") return jsonResponse({ emailAddress: "joao@gmail.com", historyId: String(this.historyId) });
-      if (path === "/messages") return jsonResponse({ messages: this.messages.slice(0, Number(url.searchParams.get("maxResults") ?? 20)).map((m) => ({ id: m.id, threadId: m.threadId })), resultSizeEstimate: this.messages.length });
+      if (path === "/messages")
+        return jsonResponse({
+          messages: this.messages.slice(0, Number(url.searchParams.get("maxResults") ?? 20)).map((m) => ({ id: m.id, threadId: m.threadId })),
+          resultSizeEstimate: this.messages.length,
+        });
       if (path.startsWith("/messages/")) {
         const id = decodeURIComponent(path.split("/")[2]!);
         if (this.failMeta.has(id)) return jsonResponse({ error: { status: "INTERNAL" } }, 500);

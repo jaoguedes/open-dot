@@ -50,11 +50,15 @@ test("extração: PDF corrompido e PDF com senha têm mensagens próprias", asyn
   const bad = await extractFile(enc("%PDF-1.4\nisto não é um pdf de verdade"), { name: "x.pdf", mime: "application/pdf" }, { loadPdf: realPdfjs });
   assert.equal(bad.ok, false);
   if (!bad.ok) assert.equal(bad.code, "invalid_pdf");
-  const locked = await extractFile(makePdf(["oi"]), { name: "y.pdf", mime: "application/pdf" }, {
-    loadPdf: async () => {
-      throw Object.assign(new Error("No password given"), { name: "PasswordException" });
+  const locked = await extractFile(
+    makePdf(["oi"]),
+    { name: "y.pdf", mime: "application/pdf" },
+    {
+      loadPdf: async () => {
+        throw Object.assign(new Error("No password given"), { name: "PasswordException" });
+      },
     },
-  });
+  );
   assert.equal(locked.ok, false);
   if (!locked.ok) {
     assert.equal(locked.code, "password");

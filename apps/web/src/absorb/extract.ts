@@ -72,7 +72,14 @@ async function pdfText(data: Uint8Array, deps: ExtractDeps): Promise<{ ok: true;
       const page = await doc.getPage(i);
       const content = await page.getTextContent();
       // Itens de conteúdo marcado (sem `str`) são ignorados.
-      parts.push(content.items.map((it) => { const t = it as { str?: unknown; hasEOL?: unknown }; return (typeof t.str === "string" ? t.str : "") + (t.hasEOL ? "\n" : ""); }).join(""));
+      parts.push(
+        content.items
+          .map((it) => {
+            const t = it as { str?: unknown; hasEOL?: unknown };
+            return (typeof t.str === "string" ? t.str : "") + (t.hasEOL ? "\n" : "");
+          })
+          .join(""),
+      );
       page.cleanup?.();
       deps.onProgress?.({ done: i, total: doc.numPages });
     }

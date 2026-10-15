@@ -7,17 +7,7 @@ export const AGENT_IDS = ["dot", "correio", "codigo", "sentinela", "social", "fo
 export type AgentId = (typeof AGENT_IDS)[number];
 
 /** Estados persistidos de uma execução (capítulo 13 do PDF). */
-export const RUN_STATES = [
-  "queued",
-  "running",
-  "waiting_approval",
-  "waiting_quota",
-  "retry_scheduled",
-  "succeeded",
-  "failed",
-  "cancelled",
-  "uncertain",
-] as const;
+export const RUN_STATES = ["queued", "running", "waiting_approval", "waiting_quota", "retry_scheduled", "succeeded", "failed", "cancelled", "uncertain"] as const;
 export type RunState = (typeof RUN_STATES)[number];
 
 export const TERMINAL_RUN_STATES: ReadonlySet<RunState> = new Set(["succeeded", "failed", "cancelled"]);

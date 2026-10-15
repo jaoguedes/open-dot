@@ -27,19 +27,18 @@ export function NotificationBell({ go }: { go: (p: string) => void }) {
       </button>
       {open && (
         <Suspense fallback={null}>
-        <CenterPanel
-          events={events}
-          seenAt={seenAt}
-          onMarkAll={markAll}
-          onClose={() => setOpen(false)}
-          onPick={(path) => {
-            setOpen(false);
-            go(path);
-          }}
-        />
+          <CenterPanel
+            events={events}
+            seenAt={seenAt}
+            onMarkAll={markAll}
+            onClose={() => setOpen(false)}
+            onPick={(path) => {
+              setOpen(false);
+              go(path);
+            }}
+          />
         </Suspense>
       )}
     </>
   );
 }
-

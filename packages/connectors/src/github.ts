@@ -42,23 +42,83 @@ export function normalizeEvent(eventName: string, payload: Record<string, any>):
   switch (eventName) {
     case "pull_request": {
       const pr = payload.pull_request ?? {};
-      return { kind: "pr", installationId, repo, number: pr.number ?? null, title: String(pr.title ?? "").slice(0, 200), state: pr.merged ? "merged" : String(pr.state ?? payload.action), conclusion: null, url: safeGithubUrl(pr.html_url), headSha: pr.head?.sha ?? null, updatedAt: String(pr.updated_at ?? new Date().toISOString()), resourceKey: `${repo}#pr${pr.number}` };
+      return {
+        kind: "pr",
+        installationId,
+        repo,
+        number: pr.number ?? null,
+        title: String(pr.title ?? "").slice(0, 200),
+        state: pr.merged ? "merged" : String(pr.state ?? payload.action),
+        conclusion: null,
+        url: safeGithubUrl(pr.html_url),
+        headSha: pr.head?.sha ?? null,
+        updatedAt: String(pr.updated_at ?? new Date().toISOString()),
+        resourceKey: `${repo}#pr${pr.number}`,
+      };
     }
     case "issues": {
       const is = payload.issue ?? {};
-      return { kind: "issue", installationId, repo, number: is.number ?? null, title: String(is.title ?? "").slice(0, 200), state: String(is.state ?? payload.action), conclusion: null, url: safeGithubUrl(is.html_url), headSha: null, updatedAt: String(is.updated_at ?? new Date().toISOString()), resourceKey: `${repo}#issue${is.number}` };
+      return {
+        kind: "issue",
+        installationId,
+        repo,
+        number: is.number ?? null,
+        title: String(is.title ?? "").slice(0, 200),
+        state: String(is.state ?? payload.action),
+        conclusion: null,
+        url: safeGithubUrl(is.html_url),
+        headSha: null,
+        updatedAt: String(is.updated_at ?? new Date().toISOString()),
+        resourceKey: `${repo}#issue${is.number}`,
+      };
     }
     case "workflow_run": {
       const w = payload.workflow_run ?? {};
-      return { kind: "workflow", installationId, repo, number: w.run_number ?? null, title: String(w.name ?? "workflow").slice(0, 200), state: String(w.status ?? ""), conclusion: w.conclusion ?? null, url: safeGithubUrl(w.html_url), headSha: w.head_sha ?? null, updatedAt: String(w.updated_at ?? new Date().toISOString()), resourceKey: `${repo}#run${w.id}` };
+      return {
+        kind: "workflow",
+        installationId,
+        repo,
+        number: w.run_number ?? null,
+        title: String(w.name ?? "workflow").slice(0, 200),
+        state: String(w.status ?? ""),
+        conclusion: w.conclusion ?? null,
+        url: safeGithubUrl(w.html_url),
+        headSha: w.head_sha ?? null,
+        updatedAt: String(w.updated_at ?? new Date().toISOString()),
+        resourceKey: `${repo}#run${w.id}`,
+      };
     }
     case "check_run": {
       const c = payload.check_run ?? {};
-      return { kind: "check", installationId, repo, number: null, title: String(c.name ?? "check").slice(0, 200), state: String(c.status ?? ""), conclusion: c.conclusion ?? null, url: safeGithubUrl(c.html_url), headSha: c.head_sha ?? null, updatedAt: String(c.completed_at ?? c.started_at ?? new Date().toISOString()), resourceKey: `${repo}#check${c.id}` };
+      return {
+        kind: "check",
+        installationId,
+        repo,
+        number: null,
+        title: String(c.name ?? "check").slice(0, 200),
+        state: String(c.status ?? ""),
+        conclusion: c.conclusion ?? null,
+        url: safeGithubUrl(c.html_url),
+        headSha: c.head_sha ?? null,
+        updatedAt: String(c.completed_at ?? c.started_at ?? new Date().toISOString()),
+        resourceKey: `${repo}#check${c.id}`,
+      };
     }
     case "installation":
     case "installation_repositories":
-      return { kind: "installation", installationId, repo: null, number: null, title: `Instalação ${payload.action}`, state: String(payload.action ?? ""), conclusion: null, url: null, headSha: null, updatedAt: new Date().toISOString(), resourceKey: `installation#${installationId}` };
+      return {
+        kind: "installation",
+        installationId,
+        repo: null,
+        number: null,
+        title: `Instalação ${payload.action}`,
+        state: String(payload.action ?? ""),
+        conclusion: null,
+        url: null,
+        headSha: null,
+        updatedAt: new Date().toISOString(),
+        resourceKey: `installation#${installationId}`,
+      };
     default:
       return null;
   }

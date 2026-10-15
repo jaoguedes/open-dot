@@ -1,6 +1,9 @@
 /** Service worker do shell. O hash muda a cada build; o arquivo deixa de ser cache eterno. */
 export function serviceWorkerSource(build) {
-  const id = String(build).replace(/[^a-z0-9]/gi, "").slice(0, 32) || "dev";
+  const id =
+    String(build)
+      .replace(/[^a-z0-9]/gi, "")
+      .slice(0, 32) || "dev";
   return `/* Open Dot — shell ${id}. Nunca guarda /api. Navegação: network-first. Assets: stale-while-revalidate. */
 const CACHE = "open-dot-shell-${id}";
 const SHELL = ["/", "/index.html", "/assets/app.css", "/assets/app.js", "/assets/theme.js", "/favicon.svg", "/manifest.webmanifest"];

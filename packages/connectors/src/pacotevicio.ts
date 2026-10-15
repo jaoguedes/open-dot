@@ -70,7 +70,7 @@ export function parsePacoteBody(data: unknown, code: string): PacoteTrack {
       attribution,
     });
   }
-  const status = typeof body.status === "string" ? body.status : events.at(-1)?.status ?? "unknown";
+  const status = typeof body.status === "string" ? body.status : (events.at(-1)?.status ?? "unknown");
   const updatedAt = typeof body.status_updated_at === "string" ? body.status_updated_at : events.at(-1)?.at || null;
   return {
     code: typeof body.tracking_code === "string" ? body.tracking_code : code,
@@ -90,12 +90,7 @@ export function trimEvents(events: TrackingEvent[]): TrackingEvent[] {
 
 export async function trackPacoteVicio(fetchImpl: typeof fetch, apiKey: string, code: string): Promise<PacoteTrack> {
   const url = `https://api.pacotevicio.dev/v1/track/${encodeURIComponent(code)}`;
-  const resp = await fetchWithTimeout(
-    fetchImpl,
-    url,
-    { method: "GET", headers: { accept: "application/json", "X-API-Key": apiKey } },
-    12_000,
-  );
+  const resp = await fetchWithTimeout(fetchImpl, url, { method: "GET", headers: { accept: "application/json", "X-API-Key": apiKey } }, 12_000);
   const data = await resp.json().catch(() => null);
   if (resp.status === 401 || resp.status === 403) throw new ConnectorError("unauthorized", "Chave do PacoteVício recusada.", null, resp.status);
   if (resp.status === 404) throw new ConnectorError("not_found", "Código não encontrado.", null, 404);

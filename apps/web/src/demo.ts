@@ -40,21 +40,93 @@ export function demoSnapshot(): Snapshot {
         aiNote: "Exemplo classificado por regras.",
         abertura: "3 coisas pedem você.",
         itens: [
-          { categoria: "prazo", titulo: "Prazo de rematrícula", quando: at(6, 40), o_que_aconteceu: "Há um prazo nesta mensagem.", o_que_fazer: "Veja a data no original.", origem: "e2", sensivel: false, de: "Faculdade" },
-          { categoria: "resposta", titulo: "Você consegue revisar o documento?", quando: at(6, 5), o_que_aconteceu: "Ana fez uma pergunta.", o_que_fazer: "Responda se fizer sentido.", origem: "e3", sensivel: false, de: "Ana" },
-          { categoria: "encomenda", titulo: "Confirme a entrega de amanhã", quando: at(7, 12), o_que_aconteceu: "Um código de rastreio chegou.", o_que_fazer: "Acompanhe em Entregas.", origem: "e1", sensivel: false, de: "Loja Exemplo" },
+          {
+            categoria: "prazo",
+            titulo: "Prazo de rematrícula",
+            quando: at(6, 40),
+            o_que_aconteceu: "Há um prazo nesta mensagem.",
+            o_que_fazer: "Veja a data no original.",
+            origem: "e2",
+            sensivel: false,
+            de: "Faculdade",
+          },
+          {
+            categoria: "resposta",
+            titulo: "Você consegue revisar o documento?",
+            quando: at(6, 5),
+            o_que_aconteceu: "Ana fez uma pergunta.",
+            o_que_fazer: "Responda se fizer sentido.",
+            origem: "e3",
+            sensivel: false,
+            de: "Ana",
+          },
+          {
+            categoria: "encomenda",
+            titulo: "Confirme a entrega de amanhã",
+            quando: at(7, 12),
+            o_que_aconteceu: "Um código de rastreio chegou.",
+            o_que_fazer: "Acompanhe em Entregas.",
+            origem: "e1",
+            sensivel: false,
+            de: "Loja Exemplo",
+          },
         ],
         sem_acao: ["e4"],
         ruido: { contagem: 1 },
         anexos: "Anexos não são lidos.",
         top: [
-          { messageId: "e1", threadId: "t1", from: "Loja Exemplo <pedidos@exemplo.com>", subject: "Confirme a entrega de amanhã", reason: "Pede confirmação até amanhã às 14h.", receivedAt: at(7, 12), category: "important", href: "#exemplo" },
-          { messageId: "e2", threadId: "t2", from: "Faculdade <secretaria@exemplo.edu>", subject: "Prazo de rematrícula", reason: "Menciona “prazo”.", receivedAt: at(6, 40), category: "important", href: "#exemplo" },
-          { messageId: "e3", threadId: "t3", from: "Ana <ana@exemplo.com>", subject: "Você consegue revisar o documento?", reason: "Mensagem direta com pergunta para você.", receivedAt: at(6, 5), category: "important", href: "#exemplo" },
+          {
+            messageId: "e1",
+            threadId: "t1",
+            from: "Loja Exemplo <pedidos@exemplo.com>",
+            subject: "Confirme a entrega de amanhã",
+            reason: "Pede confirmação até amanhã às 14h.",
+            receivedAt: at(7, 12),
+            category: "important",
+            href: "#exemplo",
+          },
+          {
+            messageId: "e2",
+            threadId: "t2",
+            from: "Faculdade <secretaria@exemplo.edu>",
+            subject: "Prazo de rematrícula",
+            reason: "Menciona “prazo”.",
+            receivedAt: at(6, 40),
+            category: "important",
+            href: "#exemplo",
+          },
+          {
+            messageId: "e3",
+            threadId: "t3",
+            from: "Ana <ana@exemplo.com>",
+            subject: "Você consegue revisar o documento?",
+            reason: "Mensagem direta com pergunta para você.",
+            receivedAt: at(6, 5),
+            category: "important",
+            href: "#exemplo",
+          },
         ],
         rest: [
-          { messageId: "e4", threadId: "t4", from: "Banco <aviso@exemplo.com>", subject: "Extrato disponível", reason: "Aviso automático sem pedido de ação.", receivedAt: at(5), category: "low", href: "#exemplo" },
-          { messageId: "e5", threadId: "t5", from: "Newsletter <news@exemplo.com>", subject: "Novidades da semana", reason: "Lista, newsletter ou promoção.", receivedAt: at(4), category: "low", href: "#exemplo" },
+          {
+            messageId: "e4",
+            threadId: "t4",
+            from: "Banco <aviso@exemplo.com>",
+            subject: "Extrato disponível",
+            reason: "Aviso automático sem pedido de ação.",
+            receivedAt: at(5),
+            category: "low",
+            href: "#exemplo",
+          },
+          {
+            messageId: "e5",
+            threadId: "t5",
+            from: "Newsletter <news@exemplo.com>",
+            subject: "Novidades da semana",
+            reason: "Lista, newsletter ou promoção.",
+            receivedAt: at(4),
+            category: "low",
+            href: "#exemplo",
+          },
         ],
       },
     },
@@ -137,13 +209,32 @@ export function demoSnapshot(): Snapshot {
       body: {
         summary: "Rascunho a partir da notícia de exemplo. Nada foi publicado.",
         published: false,
-        drafts: [{ text: "Chip experimental reduz consumo — rascunho (exemplo fictício). Nada foi publicado.", sources: [{ title: "Chip experimental", link: "https://example.com/tech", outlet: "BBC News" }], status: "draft", publish: false }],
+        drafts: [
+          {
+            text: "Chip experimental reduz consumo — rascunho (exemplo fictício). Nada foi publicado.",
+            sources: [{ title: "Chip experimental", link: "https://example.com/tech", outlet: "BBC News" }],
+            status: "draft",
+            publish: false,
+          },
+        ],
       },
     },
   ];
   return {
     owner: { email: "exemplo@demo.local", name: "Alex", timeZone: "America/Sao_Paulo" },
-    configured: { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false, tracking: false, trackingState: "desligado" },
+    configured: {
+      database: false,
+      google: false,
+      owner: false,
+      github: false,
+      githubApp: false,
+      vercel: false,
+      ai: false,
+      aiPrivate: false,
+      finnhub: false,
+      tracking: false,
+      trackingState: "desligado",
+    },
     connections: [],
     monitors,
     usage: { day: today.toISOString().slice(0, 10), calls: 12, tokens: 24_000, limits: { calls: 50, tokens: 100_000 }, aiConfigured: false, privateAllowed: false },
@@ -221,7 +312,12 @@ export function demoSnapshot(): Snapshot {
 
 /** Busca local nos dados de exemplo — mesma regra do servidor: só responde com fontes. */
 export function demoAsk(question: string, snap: Snapshot): AskAnswer {
-  const words = question.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").split(/\W+/).filter((w) => w.length >= 3);
+  const words = question
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .split(/\W+/)
+    .filter((w) => w.length >= 3);
   const sources: AskAnswer["sources"] = [];
   for (const item of snap.feed) {
     for (const m of [...(item.body.top ?? []), ...(item.body.rest ?? [])]) {
@@ -230,6 +326,11 @@ export function demoAsk(question: string, snap: Snapshot): AskAnswer {
     }
   }
   return sources.length
-    ? { answer: `Encontrei ${sources.length} ${sources.length === 1 ? "item" : "itens"} nos dados de exemplo.`, sources: sources.slice(0, 5), aiUsed: false, note: "Demonstração: busca local, sem IA." }
+    ? {
+        answer: `Encontrei ${sources.length} ${sources.length === 1 ? "item" : "itens"} nos dados de exemplo.`,
+        sources: sources.slice(0, 5),
+        aiUsed: false,
+        note: "Demonstração: busca local, sem IA.",
+      }
     : { answer: "Não encontrei nada sobre isso nos dados de exemplo.", sources: [], aiUsed: false, note: "Demonstração: busca local, sem IA." };
 }

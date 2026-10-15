@@ -98,7 +98,10 @@ export function App() {
   useEffect(() => {
     const loaded = document.querySelector('meta[name="open-dot-build"]')?.getAttribute("content") ?? "";
     const look = () => {
-      void api.version().then((v) => setUpdate(versionChanged(loaded, v.app))).catch(() => {});
+      void api
+        .version()
+        .then((v) => setUpdate(versionChanged(loaded, v.app)))
+        .catch(() => {});
     };
     look();
     const onVis = () => {
@@ -139,7 +142,15 @@ export function App() {
   if (isPublicPath(app.path)) {
     return (
       <PublicShell path={app.path}>
-        <Suspense fallback={<p className="meta" role="status">Carregando…</p>}>{app.path === "/privacidade" ? <Privacy /> : <About />}</Suspense>
+        <Suspense
+          fallback={
+            <p className="meta" role="status">
+              Carregando…
+            </p>
+          }
+        >
+          {app.path === "/privacidade" ? <Privacy /> : <About />}
+        </Suspense>
       </PublicShell>
     );
   }
@@ -151,11 +162,7 @@ export function App() {
   if (app.mode === "unreachable") {
     return (
       <main className="reading pad-24">
-        <DotTrouble
-          info={{ code: "offline", route: app.path }}
-          reducedMotion={app.reducedMotion}
-          onRetry={() => void app.refresh()}
-        />
+        <DotTrouble info={{ code: "offline", route: app.path }} reducedMotion={app.reducedMotion} onRetry={() => void app.refresh()} />
         <button className="btn" type="button" onClick={() => app.enterDemo("Você pediu a demonstração.")}>
           Ver demonstração
         </button>
@@ -250,11 +257,23 @@ export function App() {
                 <Icon name="alert" /> Você está offline. Mostrando os últimos dados carregados{app.lastLoadedAt ? ` (${fmtTime(new Date(app.lastLoadedAt).toISOString())})` : ""}.
               </div>
             )}
-            {trouble && <DotTrouble info={trouble} reducedMotion={app.reducedMotion} onRetry={() => { setTrouble(null); void app.refresh(); }} onDismiss={() => setTrouble(null)} />}
+            {trouble && (
+              <DotTrouble
+                info={trouble}
+                reducedMotion={app.reducedMotion}
+                onRetry={() => {
+                  setTrouble(null);
+                  void app.refresh();
+                }}
+                onDismiss={() => setTrouble(null)}
+              />
+            )}
             {update && (
               <div className="banner" role="status">
                 Nova versão disponível
-                <button className="btn" type="button" onClick={() => location.reload()}>Atualizar</button>
+                <button className="btn" type="button" onClick={() => location.reload()}>
+                  Atualizar
+                </button>
               </div>
             )}
             {app.online && app.failures.length > 0 && (
@@ -269,7 +288,9 @@ export function App() {
               <button className="icon-btn menu-btn" aria-label="Abrir menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
                 <Icon name="menu" />
               </button>
-              <time className="top-date hide-sm" dateTime={new Date().toISOString()}>{fmtHeaderStamp()}</time>
+              <time className="top-date hide-sm" dateTime={new Date().toISOString()}>
+                {fmtHeaderStamp()}
+              </time>
               <div className="spacer" />
               <Island go={go} />
               <div className="spacer" />
@@ -298,7 +319,15 @@ export function App() {
                     {route === "agent" && agentId && <AgentRail current={agentId} go={go} />}
                   </div>
                 )}
-                <Suspense fallback={<p className="meta" role="status">Carregando…</p>}>{view}</Suspense>
+                <Suspense
+                  fallback={
+                    <p className="meta" role="status">
+                      Carregando…
+                    </p>
+                  }
+                >
+                  {view}
+                </Suspense>
               </div>
             </main>
             {showContext && (
@@ -369,20 +398,33 @@ function Sidebar({ open, go, current, onClose }: { open: boolean; go: (p: string
   const pct = usage ? Math.min(100, Math.round((usage.calls / Math.max(1, usage.limits.calls)) * 100)) : 0;
   const facts = factsFrom(app.snap, app.mode === "demo");
   const waiting = app.snap?.shipments.shipments.filter((s) => s.needsCarrier).length ?? 0;
-  const presenceOf = (a: AgentId) =>
-    agentPresence(a, app.visualFor(a), app.snap?.feed ?? [], app.snap?.monitors ?? [], { connected: agentConnected(a, facts), pendingShipments: waiting });
+  const presenceOf = (a: AgentId) => agentPresence(a, app.visualFor(a), app.snap?.feed ?? [], app.snap?.monitors ?? [], { connected: agentConnected(a, facts), pendingShipments: waiting });
   const ordered = sortAgents(LIST_AGENTS, presenceOf);
   return (
     <nav ref={navRef} className={`sidebar ${open ? "open" : ""}`} aria-label="Navegação principal" aria-modal={open ? true : undefined} role={open ? "dialog" : undefined}>
       <a className="brand" href="/meu-dia" onClick={(e) => (e.preventDefault(), go("/meu-dia"))}>
         <AgentDot visual={app.visualFor("dot")} accessory="none" size={30} animate={false} reducedMotion={app.reducedMotion} label="Open Dot" />
-        <span className="od-wordmark"><span>open</span><b>dot</b><span className="od-wordmark-dot" /></span>
+        <span className="od-wordmark">
+          <span>open</span>
+          <b>dot</b>
+          <span className="od-wordmark-dot" />
+        </span>
       </a>
       <div className="nav">
         {NAV.map((n) => (
-          <a key={n.path} href={n.path} className="nav-item" aria-current={(n.path === "/meu-dia" ? isMyDayPath(current) : current === n.path) ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(n.path))}>
+          <a
+            key={n.path}
+            href={n.path}
+            className="nav-item"
+            aria-current={(n.path === "/meu-dia" ? isMyDayPath(current) : current === n.path) ? "page" : undefined}
+            onClick={(e) => (e.preventDefault(), go(n.path))}
+          >
             <Icon name={n.icon} /> {n.label}
-            {n.path === "/meu-dia" && pending > 0 && <span className="count" aria-label={`${pending} itens`}>{pending}</span>}
+            {n.path === "/meu-dia" && pending > 0 && (
+              <span className="count" aria-label={`${pending} itens`}>
+                {pending}
+              </span>
+            )}
           </a>
         ))}
       </div>
@@ -395,7 +437,14 @@ function Sidebar({ open, go, current, onClose }: { open: boolean; go: (p: string
           const p = presenceOf(a);
           return (
             <a key={a} href={path} className={`nav-item agent-item ${connected ? "" : "is-off"}`} aria-current={current === path ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(path))}>
-              <AgentDot visual={v} accessory={app.accessoryFor(a)} size={44} animate={false} reducedMotion={app.reducedMotion} antennaPulse={a === "noticias" && (app.snap?.feed.some((f) => f.agentId === "noticias" && f.kind === "news_digest" && f.freshness === "fresh") ?? false)} />
+              <AgentDot
+                visual={v}
+                accessory={app.accessoryFor(a)}
+                size={44}
+                animate={false}
+                reducedMotion={app.reducedMotion}
+                antennaPulse={a === "noticias" && (app.snap?.feed.some((f) => f.agentId === "noticias" && f.kind === "news_digest" && f.freshness === "fresh") ?? false)}
+              />
               <span className="lines">
                 <span>{AGENTS[a].name}</span>
                 <span>{p.label}</span>
@@ -414,9 +463,7 @@ function Sidebar({ open, go, current, onClose }: { open: boolean; go: (p: string
           <div className="meter" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Chamadas de IA usadas hoje">
             <i style={{ width: `${pct}%` }} />
           </div>
-          <div className="tiny mt-6">
-            Custo R$ 0. {usage && !usage.aiConfigured ? "Resumos por regras." : "Sem cobrança extra."}
-          </div>
+          <div className="tiny mt-6">Custo R$ 0. {usage && !usage.aiConfigured ? "Resumos por regras." : "Sem cobrança extra."}</div>
         </div>
         <NameLine />
       </div>
@@ -490,12 +537,22 @@ function NameLine() {
         );
       }}
     >
-      <label className="tiny" htmlFor="display-name">Nome de exibição</label>
+      <label className="tiny" htmlFor="display-name">
+        Nome de exibição
+      </label>
       <input id="display-name" ref={nameInput} value={value} maxLength={40} onChange={(e) => setValue(e.target.value)} />
-      {error && <p className="tiny" role="alert">{error}</p>}
+      {error && (
+        <p className="tiny" role="alert">
+          {error}
+        </p>
+      )}
       <div className="row-actions">
-        <button className="btn primary" type="submit">Salvar</button>
-        <button className="btn ghost" type="button" onClick={() => setEditing(false)}>Cancelar</button>
+        <button className="btn primary" type="submit">
+          Salvar
+        </button>
+        <button className="btn ghost" type="button" onClick={() => setEditing(false)}>
+          Cancelar
+        </button>
       </div>
     </form>
   );

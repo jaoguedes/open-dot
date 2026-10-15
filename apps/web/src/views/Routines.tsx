@@ -104,7 +104,9 @@ export function Routines() {
                 {AGENTS[r.agentId]?.name ?? r.agentId} · {r.scheduledAt ? fmtDateTime(r.scheduledAt) : "—"}
                 {r.late && " (atrasada)"}
               </span>
-              <span className={`chip ${r.state === "failed" || r.state === "uncertain" ? "err" : r.state === "succeeded" ? "ok" : r.state === "waiting_quota" ? "warn" : ""}`}>{RUN_LABEL[r.state] ?? r.state}</span>
+              <span className={`chip ${r.state === "failed" || r.state === "uncertain" ? "err" : r.state === "succeeded" ? "ok" : r.state === "waiting_quota" ? "warn" : ""}`}>
+                {RUN_LABEL[r.state] ?? r.state}
+              </span>
               {r.errorMessage && <span className="why">{r.errorMessage}</span>}
             </li>
           ))}

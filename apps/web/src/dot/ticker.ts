@@ -28,8 +28,14 @@ function loop(now: number): void {
   hidden = false;
   let need = false;
   for (const s of subs) {
-    if (!s.visible) { s.last = now; continue; }
-    if (s.small && !s.active) { s.last = now; continue; }
+    if (!s.visible) {
+      s.last = now;
+      continue;
+    }
+    if (s.small && !s.active) {
+      s.last = now;
+      continue;
+    }
     const dt = s.last ? Math.min(0.05, (now - s.last) / 1000) : 1 / 60;
     s.last = now;
     s.fn(dt, now);
@@ -48,7 +54,10 @@ if (typeof document !== "undefined") {
     for (const s of subs) s.last = now;
     if (document.hidden) {
       hidden = true;
-      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
       return;
     }
     hidden = false;
@@ -68,11 +77,23 @@ export function subscribe(fn: TickFn, opts: { small?: boolean } = {}): TickerHan
   subs.add(sub);
   ensure();
   return {
-    setVisible(v) { sub.visible = v; if (v) { sub.last = performance.now(); ensure(); } },
-    setActive(v) { sub.active = v; if (v) ensure(); },
+    setVisible(v) {
+      sub.visible = v;
+      if (v) {
+        sub.last = performance.now();
+        ensure();
+      }
+    },
+    setActive(v) {
+      sub.active = v;
+      if (v) ensure();
+    },
     stop() {
       subs.delete(sub);
-      if (!subs.size && raf) { cancelAnimationFrame(raf); raf = 0; }
+      if (!subs.size && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
     },
     framesWhileHidden: () => hidden,
   };

@@ -62,9 +62,7 @@ export function defaultProviders(env: Record<string, string | undefined>): Provi
       billing: "free_tier",
       allowedData: zdr ? ["public", "personal", "private_email", "private_code"] : ["public", "personal"],
       privacyConfirmed: zdr,
-      privacyNote: zdr
-        ? "Zero Data Retention confirmado pelo dono da conta."
-        : "Sem confirmação de ZDR: e-mails e código privados não são enviados.",
+      privacyNote: zdr ? "Zero Data Retention confirmado pelo dono da conta." : "Sem confirmação de ZDR: e-mails e código privados não são enviados.",
       models: [
         {
           id: "openai/gpt-oss-20b",

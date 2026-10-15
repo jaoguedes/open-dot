@@ -10,10 +10,7 @@ export interface AgentPresence {
 }
 
 function slowSite(feed: FeedEntry[], monitors: Monitor[]): boolean {
-  return (
-    monitors.some((m) => m.incident?.open && m.incident.kind === "slow") ||
-    feed.some((f) => f.kind === "site_incident" && /lento|devagar/i.test(`${f.title} ${f.body.summary ?? ""}`))
-  );
+  return monitors.some((m) => m.incident?.open && m.incident.kind === "slow") || feed.some((f) => f.kind === "site_incident" && /lento|devagar/i.test(`${f.title} ${f.body.summary ?? ""}`));
 }
 
 /** Estado semântico a partir do tipo do item do feed (e monitores abertos). */
@@ -27,13 +24,7 @@ export function semanticFromItems(agentId: AgentId, feed: FeedEntry[], monitors:
 }
 
 /** Uma fonte da verdade para texto e ponto de status do agente. */
-export function agentPresence(
-  agentId: AgentId,
-  visual: AgentVisual,
-  feed: FeedEntry[],
-  monitors: Monitor[],
-  opts?: { connected?: boolean; pendingShipments?: number },
-): AgentPresence {
+export function agentPresence(agentId: AgentId, visual: AgentVisual, feed: FeedEntry[], monitors: Monitor[], opts?: { connected?: boolean; pendingShipments?: number }): AgentPresence {
   if (opts?.connected === false) return { tone: "off", label: "Não conectado", dotClass: "off" };
   const mine = feed.filter((f) => f.agentId === agentId && f.state !== "done" && f.state !== "snoozed");
   const builds = mine.filter((f) => f.kind === "ci_failure").length;

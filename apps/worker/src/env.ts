@@ -71,12 +71,6 @@ export function configured(env: Env) {
     aiPrivate: env.GROQ_ZDR_CONFIRMED === "true",
     finnhub: Boolean(env.FINNHUB_API_KEY),
     tracking: Boolean(env.PACOTEVICIO_API_KEY) && env.PACOTEVICIO_TERMS_CONFIRMED === "true",
-    trackingState: !env.PACOTEVICIO_API_KEY
-      ? env.PACOTEVICIO_TERMS_CONFIRMED === "true"
-        ? "sem_chave"
-        : "desligado"
-      : env.PACOTEVICIO_TERMS_CONFIRMED === "true"
-        ? "ligado"
-        : "termos",
+    trackingState: !env.PACOTEVICIO_API_KEY ? (env.PACOTEVICIO_TERMS_CONFIRMED === "true" ? "sem_chave" : "desligado") : env.PACOTEVICIO_TERMS_CONFIRMED === "true" ? "ligado" : "termos",
   };
 }

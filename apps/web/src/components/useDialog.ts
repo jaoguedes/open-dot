@@ -36,7 +36,9 @@ export function useDialog(open: boolean, ref: RefObject<HTMLElement | null>, onC
       }
       if (e.key !== "Tab") return;
       // O fundo é inert, mas o Tab ainda escaparia para a barra do navegador: o ciclo fica aqui.
-      const items = Array.from(el.querySelectorAll<HTMLElement>("input, textarea, select, button, [href], [tabindex]:not([tabindex='-1'])")).filter((n) => !n.hasAttribute("disabled") && n.offsetParent !== null);
+      const items = Array.from(el.querySelectorAll<HTMLElement>("input, textarea, select, button, [href], [tabindex]:not([tabindex='-1'])")).filter(
+        (n) => !n.hasAttribute("disabled") && n.offsetParent !== null,
+      );
       if (!items.length) return;
       const first = items[0]!;
       const last = items[items.length - 1]!;

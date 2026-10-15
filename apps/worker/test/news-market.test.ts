@@ -74,7 +74,10 @@ test("marketing: não publica; Search Console só leitura; desativar bloqueia te
   const cb = await c.call("GET", `/api/oauth/google/callback?code=abc&state=${encodeURIComponent(authUrl.searchParams.get("state")!)}`);
   assert.equal(cb.headers.get("location"), "/conexoes?ok=gsc");
   const conns = (await c.call("GET", "/api/connections")).json;
-  assert.equal(conns.connections.some((x: { provider: string; status: string }) => x.provider === "gsc" && x.status === "connected"), true);
+  assert.equal(
+    conns.connections.some((x: { provider: string; status: string }) => x.provider === "gsc" && x.status === "connected"),
+    true,
+  );
   const mkt = conns.agents.find((a: { id: string }) => a.id === "marketing");
   assert.ok(mkt.missing.some((x: string) => /Redes sociais/.test(x)));
   const t = await c.call("POST", "/api/agents/marketing/test");
@@ -95,8 +98,14 @@ test("código do worker: ingestQuotes não negocia", async () => {
   const r = await ingestQuotes(ctx, ownerId, newsFetch);
   assert.ok(r.quotes.length >= 2);
   assert.ok(r.quotes.every((q) => q.disclaimer.includes("não é recomendação")));
-  assert.equal(r.notices.some((n) => n.reason === "b3_fora_do_plano"), true);
-  assert.equal(r.failures.some((f) => f.source === "PETR4.SA"), false);
+  assert.equal(
+    r.notices.some((n) => n.reason === "b3_fora_do_plano"),
+    true,
+  );
+  assert.equal(
+    r.failures.some((f) => f.source === "PETR4.SA"),
+    false,
+  );
   const again = await ingestQuotes(ctx, ownerId, newsFetch);
   assert.equal(again.skipped, true);
   const order = await c.call("POST", "/api/orders", { symbol: "BTC", side: "buy" });

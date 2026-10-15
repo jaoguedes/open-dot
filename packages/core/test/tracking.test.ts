@@ -1,15 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import {
-  decideCarrier,
-  detectCode,
-  detectInText,
-  displayNameFor,
-  s10CheckDigit,
-  shopLabel,
-  trackingGate,
-  upsCheckDigit,
-} from "../src/tracking.ts";
+import { decideCarrier, detectCode, detectInText, displayNameFor, s10CheckDigit, shopLabel, trackingGate, upsCheckDigit } from "../src/tracking.ts";
 
 test("S10 dos Correios: NN427247410BR fecha o dígito; o vizinho não", () => {
   assert.equal(s10CheckDigit("42724741"), 0);
@@ -49,7 +40,10 @@ test("FedEx 96, USPS, Amazon e OnTrac têm formato próprio", () => {
   assert.equal(detectCode("9611020987654312345672")[0]?.carrier, "fedex");
   assert.equal(detectCode("TBA487064622000")[0]?.carrier, "amazon");
   assert.equal(detectCode("C11031500001879")[0]?.carrier, "ontrac");
-  assert.equal(detectCode("9361289878700317633795").some((c) => c.carrier === "usps"), true);
+  assert.equal(
+    detectCode("9361289878700317633795").some((c) => c.carrier === "usps"),
+    true,
+  );
 });
 
 test("número só de dígitos no e-mail não vira encomenda; dois códigos altos seguem cada um", () => {
@@ -58,7 +52,10 @@ test("número só de dígitos no e-mail não vira encomenda; dois códigos altos
   const both = detectInText("UPS 1Z5R89390357567127 e Correios NN427247410BR");
   assert.equal(both.filter((c) => c.confidence === "high").length, 2);
   const hinted = detectInText("Rastreio FedEx 123456789012 a caminho");
-  assert.equal(hinted.some((c) => c.carrier === "fedex"), true);
+  assert.equal(
+    hinted.some((c) => c.carrier === "fedex"),
+    true,
+  );
 });
 
 test("ambíguo: FedEx e DHL no mesmo número pedem escolha", () => {

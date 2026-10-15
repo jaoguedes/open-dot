@@ -6,9 +6,7 @@ import { extractFile, type PdfLike } from "./extract.ts";
  */
 
 export type ExtractRequest = { id: number; file: File };
-export type ExtractMessage =
-  | { id: number; type: "progress"; done: number; total: number }
-  | { id: number; type: "done"; result: Awaited<ReturnType<typeof extractFile>> };
+export type ExtractMessage = { id: number; type: "progress"; done: number; total: number } | { id: number; type: "done"; result: Awaited<ReturnType<typeof extractFile>> };
 
 // O projeto compila com lib DOM; o escopo do worker é tipado só no que usamos.
 const scope = self as unknown as { postMessage(m: ExtractMessage): void; onmessage: ((e: MessageEvent<ExtractRequest>) => void) | null };

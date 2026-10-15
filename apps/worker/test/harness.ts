@@ -13,7 +13,15 @@ export const TEST_KEY = "v1:" + Buffer.alloc(32, 7).toString("base64");
 export async function makeCtx(opts: { fetch?: typeof fetch; env?: Record<string, string>; now?: () => number } = {}): Promise<Ctx & { db: SqliteDb; clock: { t: number } }> {
   const db = new SqliteDb(":memory:");
   await applyMigrations(db, loadMigrations());
-  const parsed = parseEnv({ APP_ENV: "development", APP_ORIGIN: "http://localhost:8787", TOKEN_KEYS: TEST_KEY, GOOGLE_CLIENT_ID: "cid.apps.googleusercontent.com", GOOGLE_CLIENT_SECRET: "csecret", OWNER_EMAIL: "joao@example.com", ...opts.env });
+  const parsed = parseEnv({
+    APP_ENV: "development",
+    APP_ORIGIN: "http://localhost:8787",
+    TOKEN_KEYS: TEST_KEY,
+    GOOGLE_CLIENT_ID: "cid.apps.googleusercontent.com",
+    GOOGLE_CLIENT_SECRET: "csecret",
+    OWNER_EMAIL: "joao@example.com",
+    ...opts.env,
+  });
   if (!parsed.ok) throw new Error("env inválido: " + parsed.missing.join(","));
   const clock = { t: Date.parse("2026-10-13T10:00:00Z") };
   return {

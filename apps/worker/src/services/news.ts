@@ -34,7 +34,12 @@ async function readLimited(res: Response, max: number): Promise<string> {
   return new TextDecoder().decode(buf);
 }
 
-export async function ingestNews(ctx: Ctx, ownerId: string, fetchImpl: typeof fetch, opts: { feedIds?: string[]; maxFeeds?: number } = {}): Promise<{ fetched: number; stored: number; failures: SourceFailure[] }> {
+export async function ingestNews(
+  ctx: Ctx,
+  ownerId: string,
+  fetchImpl: typeof fetch,
+  opts: { feedIds?: string[]; maxFeeds?: number } = {},
+): Promise<{ fetched: number; stored: number; failures: SourceFailure[] }> {
   const settings = await repo.agentSettings(ctx.db, ownerId, "noticias");
   if (settings && settings.enabled === 0) return { fetched: 0, stored: 0, failures: [{ source: "Notícias", reason: "disabled" }] };
   const now = ctx.now();

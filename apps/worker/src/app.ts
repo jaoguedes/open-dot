@@ -1,5 +1,29 @@
 import { z } from "zod";
-import { AGENTS, agentsInPlace, GMAIL_CAN_SEND, selfHealthUrl, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, countsAsAgentError, displayNameFor, hashProposal, isValidTimeZone, localParts, nextSlot, parseHHMM, providerCards, renderUntrusted, runFictitiousProviderTest, sanitizeUntrusted, sha256Hex, toVisual, zonedTimeToUtc, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
+import {
+  AGENTS,
+  agentsInPlace,
+  GMAIL_CAN_SEND,
+  selfHealthUrl,
+  UNTRUSTED_SYSTEM_RULES,
+  checkEvidenceRefs,
+  countsAsAgentError,
+  displayNameFor,
+  hashProposal,
+  isValidTimeZone,
+  localParts,
+  nextSlot,
+  parseHHMM,
+  providerCards,
+  renderUntrusted,
+  runFictitiousProviderTest,
+  sanitizeUntrusted,
+  sha256Hex,
+  toVisual,
+  zonedTimeToUtc,
+  type ActionProposal,
+  type AgentId,
+  type SemanticState,
+} from "@open-dot/core";
 import { GMAIL_READ_SCOPES, GSC_READ_SCOPES, LOGIN_SCOPES, authUrl, exchangeCode, readIdToken, revoke } from "@open-dot/connectors/google.ts";
 import { getProfile } from "@open-dot/connectors/gmail.ts";
 import { normalizeEvent, verifySignature, isNewer } from "@open-dot/connectors/github.ts";
@@ -109,7 +133,10 @@ route("GET", "/api/session", { auth: false }, async (ctx, req, _p, ownerId) => {
   const local = isLocalRequest(ctx, req);
   if (!ownerId) return json({ authenticated: false, devLoginAvailable: ctx.env.APP_ENV === "development" && local, googleLoginAvailable: configured(ctx.env).google && configured(ctx.env).owner });
   const owner = await repo.getOwner(ctx.db, ownerId);
-  return json({ authenticated: true, owner: owner && { email: owner.email, name: displayNameFor(owner.email, owner.display_name, owner.name_custom === 1, ctx.env.OWNER_NAME ?? ""), timeZone: owner.time_zone } });
+  return json({
+    authenticated: true,
+    owner: owner && { email: owner.email, name: displayNameFor(owner.email, owner.display_name, owner.name_custom === 1, ctx.env.OWNER_NAME ?? ""), timeZone: owner.time_zone },
+  });
 });
 
 function isLocalRequest(ctx: Ctx, req: Request): boolean {
@@ -147,7 +174,19 @@ route("POST", "/api/sessions/logout-all", { auth: true }, async (ctx, _req, _p, 
 
 function describeUserAgent(ua: string | null): string {
   if (!ua) return "Aparelho desconhecido";
-  const os = /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad" : /Android/.test(ua) ? "Android" : /Mac OS X|Macintosh/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows" : /Linux/.test(ua) ? "Linux" : "Outro sistema";
+  const os = /iPhone/.test(ua)
+    ? "iPhone"
+    : /iPad/.test(ua)
+      ? "iPad"
+      : /Android/.test(ua)
+        ? "Android"
+        : /Mac OS X|Macintosh/.test(ua)
+          ? "Mac"
+          : /Windows/.test(ua)
+            ? "Windows"
+            : /Linux/.test(ua)
+              ? "Linux"
+              : "Outro sistema";
   const browser = /Edg\//.test(ua) ? "Edge" : /CriOS|Chrome\//.test(ua) ? "Chrome" : /FxiOS|Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "navegador";
   return `${browser} no ${os}`;
 }
@@ -227,7 +266,14 @@ const oauthCallback: Handler = async (ctx, req, _p, sessionOwnerId) => {
   if (!state || !code) return redirect("/?erro=callback_invalido");
   const st = await repo.consumeOAuthState(ctx.db, ctx.keys, await sha256Hex(state), ctx.now());
   if (!st) return redirect("/?erro=estado_expirado");
-  const tokens = await exchangeCode(ctx.fetch, { clientId: ctx.env.GOOGLE_CLIENT_ID!, clientSecret: ctx.env.GOOGLE_CLIENT_SECRET!, code, codeVerifier: st.verifier, redirectUri: redirectUri(ctx), now: ctx.now() });
+  const tokens = await exchangeCode(ctx.fetch, {
+    clientId: ctx.env.GOOGLE_CLIENT_ID!,
+    clientSecret: ctx.env.GOOGLE_CLIENT_SECRET!,
+    code,
+    codeVerifier: st.verifier,
+    redirectUri: redirectUri(ctx),
+    now: ctx.now(),
+  });
   if (!tokens.idToken) return redirect("/?erro=sem_id_token");
   const claims = readIdToken(tokens.idToken, { clientId: ctx.env.GOOGLE_CLIENT_ID!, nonce: st.nonce, now: ctx.now() });
 
@@ -354,7 +400,15 @@ route("GET", "/api/connections", { auth: true }, async (ctx, _r, _p, ownerId) =>
   const rows = await repo.listConnections(ctx.db, ownerId!);
   return json({
     configured: configured(ctx.env),
-    connections: rows.map((c) => ({ id: c.id, provider: c.provider, status: c.status, accountLabel: c.account_label, scopes: JSON.parse(c.scopes) as string[], lastSyncAt: c.last_sync_at, lastError: c.last_error })),
+    connections: rows.map((c) => ({
+      id: c.id,
+      provider: c.provider,
+      status: c.status,
+      accountLabel: c.account_label,
+      scopes: JSON.parse(c.scopes) as string[],
+      lastSyncAt: c.last_sync_at,
+      lastError: c.last_error,
+    })),
     agents: await extraAgentCards(ctx, ownerId!),
     providers: providerCards({ groqConfigured: configured(ctx.env).ai, groqPrivate: configured(ctx.env).aiPrivate }),
   });
@@ -377,7 +431,16 @@ route("POST", "/api/agents/:id/test", { auth: true }, async (ctx, _r, p, ownerId
     if (id === "noticias") {
       const r = await ingestNews(scoped, ownerId!, scoped.fetch, { maxFeeds: 4 });
       const items = await listRecentNews(scoped.db, ownerId!, 8);
-      return json({ ok: true, agentId: id, fetched: r.fetched, stored: r.stored, failures: r.failures, subrequests: budget.used, sample: items.slice(0, 3).map((i) => ({ title: i.title, link: i.link, outlet: i.outlet })), published: false });
+      return json({
+        ok: true,
+        agentId: id,
+        fetched: r.fetched,
+        stored: r.stored,
+        failures: r.failures,
+        subrequests: budget.used,
+        sample: items.slice(0, 3).map((i) => ({ title: i.title, link: i.link, outlet: i.outlet })),
+        published: false,
+      });
     }
     if (id === "mercado") {
       const r = await ingestQuotes(scoped, ownerId!, scoped.fetch);
@@ -504,7 +567,16 @@ route("GET", "/api/routines", { auth: true }, async (ctx, _r, _p, ownerId) => {
     routines: rows.map((r) => {
       const spec = { routineId: r.id, ownerId: r.owner_id, times: JSON.parse(r.times) as string[], timeZone: r.time_zone, weekdays: JSON.parse(r.weekdays) as number[] };
       const next = r.enabled ? nextSlot(spec, ctx.now()) : null;
-      return { id: r.id, agentId: r.agent_id, kind: r.kind, times: spec.times, timeZone: r.time_zone, weekdays: spec.weekdays, enabled: r.enabled === 1, nextRunAt: next ? new Date(next.scheduledAt).toISOString() : null };
+      return {
+        id: r.id,
+        agentId: r.agent_id,
+        kind: r.kind,
+        times: spec.times,
+        timeZone: r.time_zone,
+        weekdays: spec.weekdays,
+        enabled: r.enabled === 1,
+        nextRunAt: next ? new Date(next.scheduledAt).toISOString() : null,
+      };
     }),
   });
 });
@@ -524,7 +596,16 @@ route("POST", "/api/routines/:id/run-now", { auth: true }, async (ctx, _r, p, ow
   const r = (await repo.listRoutines(ctx.db, ownerId!)).find((x) => x.id === p.id);
   if (!r) return problem(404, "not_found", "Rotina não encontrada.");
   const minute = Math.floor(ctx.now() / 60_000);
-  const created = await repo.createRunForSlot(ctx.db, { ownerId: ownerId!, routineId: r.id, agentId: r.agent_id, kind: r.kind, slotKey: `${ownerId}:${r.id}:manual:${minute}`, scheduledAt: ctx.now(), late: false, now: ctx.now() });
+  const created = await repo.createRunForSlot(ctx.db, {
+    ownerId: ownerId!,
+    routineId: r.id,
+    agentId: r.agent_id,
+    kind: r.kind,
+    slotKey: `${ownerId}:${r.id}:manual:${minute}`,
+    scheduledAt: ctx.now(),
+    late: false,
+    now: ctx.now(),
+  });
   return json({ ok: true, created, note: "A revisão roda no próximo ciclo do agendador (até 5 minutos)." });
 });
 
@@ -545,7 +626,12 @@ route("POST", "/api/correio/review-now", { auth: true }, async (ctx, _r, _p, own
   const claimed = queued.state === "running" ? null : await repo.claimRun(ctx.db, queued, ctx.now());
   if (!claimed) return json({ ok: true, synced: sync.fetched, shipments: found, reviewed: false, note: "A revisão já está em andamento." });
   const result = await runEmailReview(ctx, claimed, f);
-  await repo.finishRun(ctx.db, claimed, { state: result.state, ...(result.errorCode ? { errorCode: result.errorCode } : {}), ...(result.message ? { errorMessage: result.message } : {}), now: ctx.now() });
+  await repo.finishRun(ctx.db, claimed, {
+    state: result.state,
+    ...(result.errorCode ? { errorCode: result.errorCode } : {}),
+    ...(result.message ? { errorMessage: result.message } : {}),
+    now: ctx.now(),
+  });
   const done = result.state === "succeeded";
   return json({
     ok: done,
@@ -559,7 +645,20 @@ route("POST", "/api/correio/review-now", { auth: true }, async (ctx, _r, _p, own
 
 route("GET", "/api/runs", { auth: true }, async (ctx, _r, _p, ownerId) => {
   const rows = await repo.listRuns(ctx.db, ownerId!, 30);
-  return json({ runs: rows.map((r) => ({ id: r.id, agentId: r.agent_id, kind: r.kind, state: r.state, scheduledAt: r.scheduled_at, late: r.late === 1, attempt: r.attempt, errorCode: r.error_code, errorMessage: r.error_message, updatedAt: r.updated_at })) });
+  return json({
+    runs: rows.map((r) => ({
+      id: r.id,
+      agentId: r.agent_id,
+      kind: r.kind,
+      state: r.state,
+      scheduledAt: r.scheduled_at,
+      late: r.late === 1,
+      attempt: r.attempt,
+      errorCode: r.error_code,
+      errorMessage: r.error_message,
+      updatedAt: r.updated_at,
+    })),
+  });
 });
 
 route("GET", "/api/usage", { auth: true }, async (ctx, _r, _p, ownerId) => {
@@ -592,7 +691,14 @@ route("POST", "/api/ask", { auth: true }, async (ctx, req, _p, ownerId) => {
   const sources: Array<Src & { score: number }> = [];
   for (const it of items) {
     const rows: Array<{ title: string; detail: string; href: string | null }> = [];
-    const b = it.body as { top?: any[]; rest?: any[]; summary?: string; href?: string; abertura?: string; itens?: Array<{ titulo?: string; de?: string; o_que_aconteceu?: string; o_que_fazer?: string; href?: string | null }> };
+    const b = it.body as {
+      top?: any[];
+      rest?: any[];
+      summary?: string;
+      href?: string;
+      abertura?: string;
+      itens?: Array<{ titulo?: string; de?: string; o_que_aconteceu?: string; o_que_fazer?: string; href?: string | null }>;
+    };
     for (const m of [...(b.top ?? []), ...(b.rest ?? [])]) rows.push({ title: `${m.subject} — ${m.from}`, detail: m.reason, href: m.href ?? null });
     for (const m of b.itens ?? []) rows.push({ title: `${m.titulo ?? ""} — ${m.de ?? ""}`, detail: `${m.o_que_aconteceu ?? ""} ${m.o_que_fazer ?? ""}`, href: m.href ?? null });
     if (b.summary) rows.push({ title: it.title, detail: b.summary, href: b.href ?? null });
@@ -624,7 +730,13 @@ route("POST", "/api/ask", { auth: true }, async (ctx, req, _p, ownerId) => {
     try {
       const parsed = JSON.parse(out.text) as { answer?: string; sources?: string[] };
       const refs = checkEvidenceRefs(parsed.sources ?? [], new Set(top.map((s) => s.id)));
-      if (parsed.answer && refs.valid.length) return json({ answer: parsed.answer.slice(0, 800), sources: top.filter((s) => refs.valid.includes(s.id)), aiUsed: true, note: refs.invalid.length ? "Algumas citações da IA foram descartadas." : null });
+      if (parsed.answer && refs.valid.length)
+        return json({
+          answer: parsed.answer.slice(0, 800),
+          sources: top.filter((s) => refs.valid.includes(s.id)),
+          aiUsed: true,
+          note: refs.invalid.length ? "Algumas citações da IA foram descartadas." : null,
+        });
     } catch {
       /* cai para a resposta por busca */
     }
@@ -867,7 +979,9 @@ route("POST", "/api/webhooks/github", { auth: false, csrf: false }, async (ctx, 
   const payload = JSON.parse(new TextDecoder().decode(raw)) as Record<string, any>;
   const ev = normalizeEvent(eventName, payload);
   // Dono vem da instalação registrada, nunca do payload.
-  const inst = ev?.installationId ? (await ctx.db.query<{ owner_id: string }>("SELECT owner_id FROM od_github_installations WHERE installation_id = ? AND active = 1", [ev.installationId]))[0] : undefined;
+  const inst = ev?.installationId
+    ? (await ctx.db.query<{ owner_id: string }>("SELECT owner_id FROM od_github_installations WHERE installation_id = ? AND active = 1", [ev.installationId]))[0]
+    : undefined;
   const fresh = await repo.recordDelivery(ctx.db, { provider: "github", deliveryId: delivery, ownerId: inst?.owner_id ?? null, payloadHash: await sha256Hex(raw), now: ctx.now() });
   if (!fresh) return json({ ok: true, duplicate: true });
   if (!ev || !inst || ev.kind === "installation") return json({ ok: true, ignored: true });
@@ -878,10 +992,11 @@ route("POST", "/api/webhooks/github", { auth: false, csrf: false }, async (ctx, 
     [inst.owner_id, ev.resourceKey, ev.kind, ev.repo, ev.title, ev.state, ev.conclusion, ev.url, ev.headSha, ev.updatedAt],
   );
   if (ev.kind === "workflow" && ev.conclusion === "success") {
-    await ctx.db.run(
-      "UPDATE od_feed_items SET state = 'done', resolved_at = ? WHERE owner_id = ? AND kind = 'ci_failure' AND state = 'open' AND title = ?",
-      [new Date(ctx.now()).toISOString(), inst.owner_id, `Workflow falhou em ${ev.repo}`],
-    );
+    await ctx.db.run("UPDATE od_feed_items SET state = 'done', resolved_at = ? WHERE owner_id = ? AND kind = 'ci_failure' AND state = 'open' AND title = ?", [
+      new Date(ctx.now()).toISOString(),
+      inst.owner_id,
+      `Workflow falhou em ${ev.repo}`,
+    ]);
   }
   if (ev.kind === "workflow" && ev.conclusion === "failure") {
     await repo.insertFeed(ctx.db, ctx.keys, {

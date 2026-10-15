@@ -172,4 +172,3 @@ export interface EmitOpts {
   len?: number;
   s?: number;
 }
-

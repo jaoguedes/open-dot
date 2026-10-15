@@ -39,7 +39,11 @@ export function isValidTimeZone(tz: string): boolean {
 
 /** Partes locais de um instante no fuso. */
 export function localParts(ts: number, tz: string) {
-  const parts = Object.fromEntries(dtf(tz).formatToParts(new Date(ts)).map((p) => [p.type, p.value]));
+  const parts = Object.fromEntries(
+    dtf(tz)
+      .formatToParts(new Date(ts))
+      .map((p) => [p.type, p.value]),
+  );
   return {
     year: Number(parts.year),
     month: Number(parts.month),

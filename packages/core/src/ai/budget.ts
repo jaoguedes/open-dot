@@ -12,9 +12,7 @@ export interface ReserveInput {
   tokens: number; // estimativa conservadora (entrada + saída máxima)
 }
 
-export type ReserveResult =
-  | { ok: true; reservationId: string }
-  | { ok: false; reason: "owner_calls" | "owner_tokens" | "model_requests" | "model_tokens" };
+export type ReserveResult = { ok: true; reservationId: string } | { ok: false; reason: "owner_calls" | "owner_tokens" | "model_requests" | "model_tokens" };
 
 export interface BudgetLedger {
   reserve(input: ReserveInput): Promise<ReserveResult>;

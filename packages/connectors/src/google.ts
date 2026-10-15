@@ -64,13 +64,19 @@ async function tokenRequest(fetchImpl: typeof fetch, body: Record<string, string
     accessToken: data.access_token,
     refreshToken: typeof data.refresh_token === "string" ? data.refresh_token : null,
     expiresAt: now + Number(data.expires_in ?? 3600) * 1000,
-    scope: String(data.scope ?? "").split(" ").filter(Boolean),
+    scope: String(data.scope ?? "")
+      .split(" ")
+      .filter(Boolean),
     idToken: typeof data.id_token === "string" ? data.id_token : null,
   };
 }
 
 export function exchangeCode(fetchImpl: typeof fetch, p: { clientId: string; clientSecret: string; code: string; codeVerifier: string; redirectUri: string; now: number }) {
-  return tokenRequest(fetchImpl, { grant_type: "authorization_code", client_id: p.clientId, client_secret: p.clientSecret, code: p.code, code_verifier: p.codeVerifier, redirect_uri: p.redirectUri }, p.now);
+  return tokenRequest(
+    fetchImpl,
+    { grant_type: "authorization_code", client_id: p.clientId, client_secret: p.clientSecret, code: p.code, code_verifier: p.codeVerifier, redirect_uri: p.redirectUri },
+    p.now,
+  );
 }
 
 export function refreshAccess(fetchImpl: typeof fetch, p: { clientId: string; clientSecret: string; refreshToken: string; now: number }) {
@@ -79,7 +85,12 @@ export function refreshAccess(fetchImpl: typeof fetch, p: { clientId: string; cl
 
 export async function revoke(fetchImpl: typeof fetch, token: string): Promise<boolean> {
   try {
-    const r = await fetchWithTimeout(fetchImpl, GOOGLE_REVOKE, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token }).toString() }, 10_000);
+    const r = await fetchWithTimeout(
+      fetchImpl,
+      GOOGLE_REVOKE,
+      { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token }).toString() },
+      10_000,
+    );
     return r.ok;
   } catch {
     return false;
@@ -101,7 +112,19 @@ export interface IdClaims {
 export function readIdToken(idToken: string, p: { clientId: string; nonce: string | null; now: number }): IdClaims {
   const parts = idToken.split(".");
   if (parts.length !== 3) throw new ConnectorError("invalid_response", "ID token malformado");
-  const json = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(parts[1]!.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(parts[1]!.length / 4) * 4, "=")), (c) => c.charCodeAt(0)))) as Record<string, unknown>;
+  const json = JSON.parse(
+    new TextDecoder().decode(
+      Uint8Array.from(
+        atob(
+          parts[1]!
+            .replace(/-/g, "+")
+            .replace(/_/g, "/")
+            .padEnd(Math.ceil(parts[1]!.length / 4) * 4, "="),
+        ),
+        (c) => c.charCodeAt(0),
+      ),
+    ),
+  ) as Record<string, unknown>;
   const iss = json.iss;
   if (iss !== "https://accounts.google.com" && iss !== "accounts.google.com") throw new ConnectorError("invalid_response", "Emissor inesperado");
   const aud = json.aud;

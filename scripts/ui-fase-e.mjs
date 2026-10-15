@@ -19,7 +19,8 @@ const withApprovals = (s) => {
   s.approvals = [approval("ap-c", 30, "terceira"), approval("ap-a", 10, "primeira"), approval("ap-b", 20, "segunda")];
   s.extra = ({ path, req, json }) => {
     if (path === "/api/approvals" && req.method() === "GET") return json(200, { approvals: s.approvals, canSend: false });
-    if (/^\/api\/approvals\/[^/]+\/decision$/.test(path)) return json(409, { result: "conflict", cause: "changed", executed: false, sent: false, error: { code: "approval_changed", message: "O conteúdo mudou. Aprove de novo." } });
+    if (/^\/api\/approvals\/[^/]+\/decision$/.test(path))
+      return json(409, { result: "conflict", cause: "changed", executed: false, sent: false, error: { code: "approval_changed", message: "O conteúdo mudou. Aprove de novo." } });
     return undefined;
   };
 };

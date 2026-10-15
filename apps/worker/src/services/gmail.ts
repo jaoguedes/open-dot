@@ -103,7 +103,12 @@ export async function syncGmail(ctx: Ctx, conn: repo.ConnectionRow, fetchImpl: t
         }
       }
     }
-    if (got.length) await repo.storeMessages(ctx.db, ctx.keys, got.map((m) => ({ ownerId: conn.owner_id, connectionId: conn.id, m, now: ctx.now() })));
+    if (got.length)
+      await repo.storeMessages(
+        ctx.db,
+        ctx.keys,
+        got.map((m) => ({ ownerId: conn.owner_id, connectionId: conn.id, m, now: ctx.now() })),
+      );
     if (drops.length) {
       await ctx.db.batch(drops.map((id) => ({ sql: "DELETE FROM od_email_pending WHERE owner_id = ? AND connection_id = ? AND message_id = ?", args: [conn.owner_id, conn.id, id] })));
     }

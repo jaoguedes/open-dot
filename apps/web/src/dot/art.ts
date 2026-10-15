@@ -9,8 +9,12 @@ export function brush(pts: Array<[number, number]>, W: number, taper = 0.4): str
   for (let i = 0; i < n; i++) {
     const a = pts[Math.max(i - 1, 0)]!;
     const b = pts[Math.min(i + 1, n - 1)]!;
-    const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
-    const nx = -dy / len, ny = dx / len, t = i / (n - 1);
+    const dx = b[0] - a[0],
+      dy = b[1] - a[1],
+      len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len,
+      ny = dx / len,
+      t = i / (n - 1);
     const w = (W / 2) * (taper + (1 - taper) * Math.sin(Math.PI * t));
     Ls.push([pts[i]![0] + nx * w, pts[i]![1] + ny * w]);
     Rs.push([pts[i]![0] - nx * w, pts[i]![1] - ny * w]);
@@ -28,7 +32,8 @@ export function brush(pts: Array<[number, number]>, W: number, taper = 0.4): str
 export function qb(x0: number, y0: number, cx: number, cy: number, x1: number, y1: number, n = 20): Array<[number, number]> {
   const out: Array<[number, number]> = [];
   for (let i = 0; i <= n; i++) {
-    const t = i / n, u = 1 - t;
+    const t = i / n,
+      u = 1 - t;
     out.push([u * u * x0 + 2 * u * t * cx + t * t * x1, u * u * y0 + 2 * u * t * cy + t * t * y1]);
   }
   return out;
@@ -50,7 +55,9 @@ export function spiralPts(cx: number, cy: number, r0: number, turns: number, dir
   const out: Array<[number, number]> = [];
   const N = 70;
   for (let i = 0; i <= N; i++) {
-    const p = i / N, a = start + dir * p * Math.PI * 2 * turns, r = r0 * (1 - p * 0.88);
+    const p = i / N,
+      a = start + dir * p * Math.PI * 2 * turns,
+      r = r0 * (1 - p * 0.88);
     out.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
   }
   return out;
@@ -61,10 +68,18 @@ function ellD(rx: number, ry: number, oy = 0): string {
 }
 
 function angryD(side: number): string {
-  const rx = 6.6, ry = 9.8, cy = 2, pts: Array<[number, number]> = [];
-  const outerX = -side * rx, innerX = side * rx, yO = cy - ry * 0.92, yI = cy - ry * 0.3;
+  const rx = 6.6,
+    ry = 9.8,
+    cy = 2,
+    pts: Array<[number, number]> = [];
+  const outerX = -side * rx,
+    innerX = side * rx,
+    yO = cy - ry * 0.92,
+    yI = cy - ry * 0.3;
   for (let i = 0; i < 48; i++) {
-    const a = (i / 48) * Math.PI * 2, x = rx * Math.cos(a), y = cy + ry * Math.sin(a);
+    const a = (i / 48) * Math.PI * 2,
+      x = rx * Math.cos(a),
+      y = cy + ry * Math.sin(a);
     const t = (x - outerX) / (innerX - outerX);
     pts.push([x, Math.max(y, yO + t * (yI - yO))]);
   }
@@ -80,8 +95,32 @@ export const EYE: Record<EyeShape, () => string> = {
   half: () => ellD(6, 4, 4),
   happy: () => brush(qb(-9, 3, 0, -10, 9, 3), 5.2, 0.45),
   closed: () => brush(qb(-9.5, -1, 0, 9, 9.5, -1), 4.6, 0.45),
-  gt: () => brush(seg([[-5, -8], [5, 0], [-5, 8]], 10), 4.8, 0.5),
-  lt: () => brush(seg([[5, -8], [-5, 0], [5, 8]], 10), 4.8, 0.5),
+  gt: () =>
+    brush(
+      seg(
+        [
+          [-5, -8],
+          [5, 0],
+          [-5, 8],
+        ],
+        10,
+      ),
+      4.8,
+      0.5,
+    ),
+  lt: () =>
+    brush(
+      seg(
+        [
+          [5, -8],
+          [-5, 0],
+          [5, 8],
+        ],
+        10,
+      ),
+      4.8,
+      0.5,
+    ),
   angryL: () => angryD(1),
   angryR: () => angryD(-1),
   spiralL: () => brush(spiralPts(0, 0, 8.4, 2.25, 1, -Math.PI / 2), 3.8, 0.5),
@@ -97,12 +136,23 @@ function lg(id: string, a: string, b: string): string {
 export function artDefs(uid: string): string {
   const g = (name: string, a: string, b: string) => lg(`${uid}-${name}`, a, b);
   return (
-    g("gCyan", "#8BE9FF", "#23B2F0") + g("gAmber", "#FFD877", "#FF9F1C") + g("gRed", "#FF95A6", "#FF3D5C") +
-    g("gGreen", "#86F2BC", "#1FBF73") + g("gHeart", "#FFA9C6", "#FF4D84") + g("gHeartBack", "#C98AAB", "#94506F") +
-    g("gBall", "#93EDFF", "#3D97FF") + g("gStarY", "#FFF2A6", "#FFC53D") + g("gStarG", "#C2FFDF", "#38D68D") +
-    g("gStarB", "#D6F3FF", "#6CBDFF") + g("gPurple", "#CDB0FF", "#8B5CF6") + g("gPinkS", "#FF9CBC", "#FF3F78") +
-    g("gCloud", "#FFFFFF", "#D9D2F6") + g("gSquare", "#9CF0FF", "#36C2EE") + g("gDrop", "#B9EBFF", "#5DB8F5") +
-    g("gZ", "#B9CCFF", "#7C98F5") + g("gWave", "#7FE6FF", "#2CB6EE") +
+    g("gCyan", "#8BE9FF", "#23B2F0") +
+    g("gAmber", "#FFD877", "#FF9F1C") +
+    g("gRed", "#FF95A6", "#FF3D5C") +
+    g("gGreen", "#86F2BC", "#1FBF73") +
+    g("gHeart", "#FFA9C6", "#FF4D84") +
+    g("gHeartBack", "#C98AAB", "#94506F") +
+    g("gBall", "#93EDFF", "#3D97FF") +
+    g("gStarY", "#FFF2A6", "#FFC53D") +
+    g("gStarG", "#C2FFDF", "#38D68D") +
+    g("gStarB", "#D6F3FF", "#6CBDFF") +
+    g("gPurple", "#CDB0FF", "#8B5CF6") +
+    g("gPinkS", "#FF9CBC", "#FF3F78") +
+    g("gCloud", "#FFFFFF", "#D9D2F6") +
+    g("gSquare", "#9CF0FF", "#36C2EE") +
+    g("gDrop", "#B9EBFF", "#5DB8F5") +
+    g("gZ", "#B9CCFF", "#7C98F5") +
+    g("gWave", "#7FE6FF", "#2CB6EE") +
     `<linearGradient id="${uid}-eBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#FBF8FF"/><stop offset=".72" stop-color="#EDE8FC"/><stop offset=".9" stop-color="#D8D8FA"/><stop offset="1" stop-color="#BCC6F8"/></linearGradient>` +
     `<radialGradient id="${uid}-eEdge" cx=".5" cy=".44" r=".6"><stop offset="0" stop-color="#8D8BDA" stop-opacity="0"/><stop offset=".66" stop-color="#8D8BDA" stop-opacity="0"/><stop offset="1" stop-color="#8382D4" stop-opacity=".46"/></radialGradient>` +
     `<radialGradient id="${uid}-eKey" cx=".36" cy=".2" r=".46"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>` +

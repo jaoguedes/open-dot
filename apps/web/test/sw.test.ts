@@ -19,7 +19,7 @@ test("dois deploys trocam o cache e a navegação não é cache-first", () => {
 });
 
 test("asset html de um arquivo que não existe vira 404", async () => {
-  const html = await assetOrReal404(new Response("<!doctype html><div id=\"root\">", { status: 200, headers: { "content-type": "text/html" } }));
+  const html = await assetOrReal404(new Response('<!doctype html><div id="root">', { status: 200, headers: { "content-type": "text/html" } }));
   assert.equal(html.status, 404);
   const js = await assetOrReal404(new Response("export {}", { status: 200, headers: { "content-type": "text/javascript" } }));
   assert.equal(js.status, 200);

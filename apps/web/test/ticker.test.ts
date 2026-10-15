@@ -12,17 +12,26 @@ test("ticker: aba oculta não avança inscritos e o rAF para", () => {
 
   Object.defineProperty(globalThis, "document", {
     configurable: true,
-    value: { get hidden() { return hidden.v; }, addEventListener() {} },
+    value: {
+      get hidden() {
+        return hidden.v;
+      },
+      addEventListener() {},
+    },
   });
   globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
     rafId += 1;
     queued.set(rafId, cb);
     return rafId;
   };
-  globalThis.cancelAnimationFrame = (id: number) => { queued.delete(id); };
+  globalThis.cancelAnimationFrame = (id: number) => {
+    queued.delete(id);
+  };
 
   const calls: number[] = [];
-  const h = subscribe((dt) => { calls.push(dt); });
+  const h = subscribe((dt) => {
+    calls.push(dt);
+  });
   assert.equal(tickerBusy(), true);
   const first = [...queued.entries()][0];
   assert.ok(first);

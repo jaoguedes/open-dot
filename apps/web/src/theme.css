@@ -1,46 +1,123 @@
 /* Tokens do sistema visual (tela 05, D-015). Nenhuma cor solta nos componentes. */
-@font-face { font-family: "Inter"; src: url("/fonts/Inter-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Inter"; src: url("/fonts/Inter-Medium.woff") format("woff"); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: "Inter"; src: url("/fonts/Inter-SemiBold.woff") format("woff"); font-weight: 600; font-style: normal; font-display: swap; }
-@font-face { font-family: "Instrument Serif"; src: url("/fonts/InstrumentSerif-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
-@font-face { font-family: "JetBrains Mono"; src: url("/fonts/JetBrainsMono-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Medium.woff") format("woff");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-SemiBold.woff") format("woff");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/InstrumentSerif-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: "Instrument Serif", "Times New Roman", serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", menlo, monospace;
-  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
-  --r-ctl: 12px; --r-card: 20px; --r-float: 22px; --r-pill: 999px;
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --r-ctl: 12px;
+  --r-card: 20px;
+  --r-float: 22px;
+  --r-pill: 999px;
   --ask-bar: 96px;
   --dock: 0px;
-  --sidebar: 260px; --context: 280px; --reading: 920px;
+  --sidebar: 260px;
+  --context: 280px;
+  --reading: 920px;
 
-  --bg: #050608; --surface: #0E1014; --surface-2: #16181E; --text: #F3F4F7; --text-2: #9AA0AE; --text-3: #80869A; --border: #1A1D24;
-  --accent: #3361FF; --accent-soft: rgba(51, 97, 255, 0.16); --on-accent: #FFFFFF; --link: #6E95FF;
-  --ok: #2BD47F; --warn: #FFB627; --err: #FF4D6A; --info: #5B8CFF; --muted: #6B7181;
-  --agent-correio: #5B8CFF; --agent-codigo: #8C6BFF; --agent-sentinela: #45E2BE; --agent-foco: #A98BFF;
-  --agent-noticias: #FF7A1F; --agent-mercado: #16B26A; --agent-marketing: #F0457F; --agent-entregas: #C9862A;
-  --glass: #000000; --glass-border: #22252E;
-  --shadow: 0 12px 40px rgba(0,0,0,.6);
-  --focus: #8EA6FF;
+  --bg: #050608;
+  --surface: #0e1014;
+  --surface-2: #16181e;
+  --text: #f3f4f7;
+  --text-2: #9aa0ae;
+  --text-3: #80869a;
+  --border: #1a1d24;
+  --accent: #3361ff;
+  --accent-soft: rgba(51, 97, 255, 0.16);
+  --on-accent: #ffffff;
+  --link: #6e95ff;
+  --ok: #2bd47f;
+  --warn: #ffb627;
+  --err: #ff4d6a;
+  --info: #5b8cff;
+  --muted: #6b7181;
+  --agent-correio: #5b8cff;
+  --agent-codigo: #8c6bff;
+  --agent-sentinela: #45e2be;
+  --agent-foco: #a98bff;
+  --agent-noticias: #ff7a1f;
+  --agent-mercado: #16b26a;
+  --agent-marketing: #f0457f;
+  --agent-entregas: #c9862a;
+  --glass: #000000;
+  --glass-border: #22252e;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --focus: #8ea6ff;
   --hero: none;
-  --btn-primary-bg: #F3F4F7; --btn-primary-fg: #0B0C10;
-  --glow-mail: radial-gradient(closest-side, rgba(54,216,244,.45), rgba(63,123,255,.25) 50%, transparent);
-  --glow-need: radial-gradient(closest-side, rgba(255,182,39,.42), rgba(255,111,163,.2) 55%, transparent);
-  --glow-site: radial-gradient(closest-side, rgba(69,226,190,.4), rgba(140,107,255,.2) 55%, transparent);
-  --wordmark-dot: linear-gradient(135deg, #36D8F4, #3F7BFF 50%, #9E83FF);
-  --need-border: #2A2414;
+  --btn-primary-bg: #f3f4f7;
+  --btn-primary-fg: #0b0c10;
+  --glow-mail: radial-gradient(closest-side, rgba(54, 216, 244, 0.45), rgba(63, 123, 255, 0.25) 50%, transparent);
+  --glow-need: radial-gradient(closest-side, rgba(255, 182, 39, 0.42), rgba(255, 111, 163, 0.2) 55%, transparent);
+  --glow-site: radial-gradient(closest-side, rgba(69, 226, 190, 0.4), rgba(140, 107, 255, 0.2) 55%, transparent);
+  --wordmark-dot: linear-gradient(135deg, #36d8f4, #3f7bff 50%, #9e83ff);
+  --need-border: #2a2414;
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
-  --bg: #F4F5F8; --surface: #FFFFFF; --surface-2: #ECEEF3; --text: #12141A; --text-2: #5C6370; --text-3: #5F6673; --border: #D8DCE6;
-  --accent: #3361FF; --accent-soft: rgba(51, 97, 255, 0.10); --on-accent: #FFFFFF; --link: #2F56E0;
-  --ok: #117044; --warn: #8A5C00; --err: #C22745; --info: #3361FF; --muted: #5C6370;
-  --glass: #FFFFFF; --glass-border: #D8DCE6;
-  --shadow: 0 8px 28px rgba(18,20,26,.08);
-  --focus: #2748C7;
-  --btn-primary-bg: #12141A; --btn-primary-fg: #F3F4F7;
-  --need-border: #E8D7A8;
+  --bg: #f4f5f8;
+  --surface: #ffffff;
+  --surface-2: #eceef3;
+  --text: #12141a;
+  --text-2: #5c6370;
+  --text-3: #5f6673;
+  --border: #d8dce6;
+  --accent: #3361ff;
+  --accent-soft: rgba(51, 97, 255, 0.1);
+  --on-accent: #ffffff;
+  --link: #2f56e0;
+  --ok: #117044;
+  --warn: #8a5c00;
+  --err: #c22745;
+  --info: #3361ff;
+  --muted: #5c6370;
+  --glass: #ffffff;
+  --glass-border: #d8dce6;
+  --shadow: 0 8px 28px rgba(18, 20, 26, 0.08);
+  --focus: #2748c7;
+  --btn-primary-bg: #12141a;
+  --btn-primary-fg: #f3f4f7;
+  --need-border: #e8d7a8;
   color-scheme: light;
 }

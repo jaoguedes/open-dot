@@ -28,22 +28,7 @@ export const DISABLED_TRACKING_PROVIDERS = [
   { id: "seurastreio", name: "Seu Rastreio", reason: "API paga. Fica desligada." },
 ] as const;
 
-export type CarrierId =
-  | "correios"
-  | "ups"
-  | "fedex"
-  | "usps"
-  | "dhl"
-  | "ontrac"
-  | "amazon"
-  | "s10"
-  | "jadlog"
-  | "loggi"
-  | "total"
-  | "shopee"
-  | "jt"
-  | "aliexpress"
-  | "anjun";
+export type CarrierId = "correios" | "ups" | "fedex" | "usps" | "dhl" | "ontrac" | "amazon" | "s10" | "jadlog" | "loggi" | "total" | "shopee" | "jt" | "aliexpress" | "anjun";
 
 export const CARRIER_LABEL: Record<CarrierId, string> = {
   correios: "Correios",
@@ -63,10 +48,7 @@ export const CARRIER_LABEL: Record<CarrierId, string> = {
   anjun: "Anjun Express",
 };
 
-export const MANUAL_CARRIERS: CarrierId[] = [
-  "correios", "ups", "fedex", "usps", "dhl", "ontrac", "amazon",
-  "jadlog", "loggi", "total", "shopee", "jt", "aliexpress", "anjun",
-];
+export const MANUAL_CARRIERS: CarrierId[] = ["correios", "ups", "fedex", "usps", "dhl", "ontrac", "amazon", "jadlog", "loggi", "total", "shopee", "jt", "aliexpress", "anjun"];
 
 const S10_WEIGHTS = [8, 6, 4, 2, 3, 5, 9, 7];
 
@@ -202,10 +184,7 @@ export function detectInText(text: string): TrackingCandidate[] {
     if (seen.has(code)) continue;
     for (const c of detectCode(code)) {
       if (c.confidence === "high") continue;
-      const hinted =
-        (c.carrier === "fedex" && near(text, at, /fedex/i)) ||
-        (c.carrier === "dhl" && near(text, at, /\bdhl\b/i)) ||
-        (c.carrier === "usps" && near(text, at, /\busps\b/i));
+      const hinted = (c.carrier === "fedex" && near(text, at, /fedex/i)) || (c.carrier === "dhl" && near(text, at, /\bdhl\b/i)) || (c.carrier === "usps" && near(text, at, /\busps\b/i));
       if (hinted) pushUnique(found, c);
     }
   }

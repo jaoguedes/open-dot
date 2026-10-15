@@ -19,7 +19,10 @@ async function grab(page, path, fullPage = false) {
 
 async function ready(p) {
   const splash = p.locator(".splash");
-  const seen = await splash.waitFor({ state: "attached", timeout: 2500 }).then(() => true).catch(() => false);
+  const seen = await splash
+    .waitFor({ state: "attached", timeout: 2500 })
+    .then(() => true)
+    .catch(() => false);
   if (seen) await splash.waitFor({ state: "detached", timeout: 8000 }).catch(() => {});
 }
 

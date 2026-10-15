@@ -46,7 +46,9 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
         <p className="lead">{b.abertura ?? b.headline}</p>
         {b.itens.map((it) => (
           <article key={it.origem} className="card mt-12">
-            <div className="card-top">{it.categoria} · {fmtWhen(it.quando)}</div>
+            <div className="card-top">
+              {it.categoria} · {fmtWhen(it.quando)}
+            </div>
             <h3>{it.de ?? "Remetente"}</h3>
             <SourcePill agentId="correio" origin={it.de ?? "Remetente"} href={it.href ?? gmailWebHref(it.origem, it.rfc822)} />
             <p>{it.titulo}</p>
@@ -58,7 +60,7 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
             </div>
           </article>
         ))}
-        {(b.sem_acao?.length || b.ruido?.contagem) ? (
+        {b.sem_acao?.length || b.ruido?.contagem ? (
           <details className="mt-12">
             <summary>
               {b.sem_acao?.length ? `Sem ação (${b.sem_acao.length})` : ""}
@@ -85,7 +87,11 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
         ) : (
           <>
             Revisei {b.total} {b.total === 1 ? "mensagem" : "mensagens"}
-            {isDemo ? " do exemplo" : ""}. <b>{b.counts?.important ?? 0} {b.counts?.important === 1 ? "merece" : "merecem"} sua atenção</b>, {b.counts?.review ?? 0} para revisar e {b.counts?.low ?? 0} podem esperar.
+            {isDemo ? " do exemplo" : ""}.{" "}
+            <b>
+              {b.counts?.important ?? 0} {b.counts?.important === 1 ? "merece" : "merecem"} sua atenção
+            </b>
+            , {b.counts?.review ?? 0} para revisar e {b.counts?.low ?? 0} podem esperar.
           </>
         )}
       </p>
@@ -140,7 +146,7 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
             {item.coverage.partial && <span className="text-warn">{item.coverage.partialReason}</span>}
           </>
         )}
-        <span>{b.aiUsed ? "Classificado com IA" : b.aiNote ?? "Classificado por regras"}</span>
+        <span>{b.aiUsed ? "Classificado com IA" : (b.aiNote ?? "Classificado por regras")}</span>
         <span>Nenhum e-mail foi alterado.</span>
       </div>
     </section>
@@ -198,11 +204,13 @@ export function FeedRow({ item }: { item: FeedEntry }) {
           <span>
             {AGENTS[item.agentId]?.name ?? item.agentId} · {fmtDateTime(item.createdAt)}
           </span>
-          {b.href && app.mode !== "demo" && (b.href.startsWith("https://") ? (
-            <a href={b.href} target="_blank" rel="noreferrer noopener">
-              Ver fonte <Icon name="external" size={12} />
-            </a>
-          ) : null)}
+          {b.href &&
+            app.mode !== "demo" &&
+            (b.href.startsWith("https://") ? (
+              <a href={b.href} target="_blank" rel="noreferrer noopener">
+                Ver fonte <Icon name="external" size={12} />
+              </a>
+            ) : null)}
           {item.body.actions?.some((a) => a.kind === "reconnect") && (
             <a href="/conexoes" onClick={(e) => (e.preventDefault(), app.navigate("/conexoes"))}>
               Reconectar

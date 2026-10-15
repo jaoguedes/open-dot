@@ -10,7 +10,9 @@ const file = (n: string) => readFileSync(new URL(n, dir));
 /** Decodificador mínimo de PNG RGBA/RGB 8 bits sem entrelaçamento (o que o canvas gera). */
 function decode(buf: Buffer) {
   let p = 8;
-  let w = 0, h = 0, type = 0;
+  let w = 0,
+    h = 0,
+    type = 0;
   const idat: Buffer[] = [];
   while (p < buf.length) {
     const len = buf.readUInt32BE(p);
@@ -36,7 +38,9 @@ function decode(buf: Buffer) {
       const a = x >= bpp ? px[y * stride + x - bpp]! : 0;
       const b = y > 0 ? px[(y - 1) * stride + x]! : 0;
       const c = x >= bpp && y > 0 ? px[(y - 1) * stride + x - bpp]! : 0;
-      const pa = Math.abs(b - c), pb = Math.abs(a - c), pc = Math.abs(a + b - 2 * c);
+      const pa = Math.abs(b - c),
+        pb = Math.abs(a - c),
+        pc = Math.abs(a + b - 2 * c);
       const pred = f === 0 ? 0 : f === 1 ? a : f === 2 ? b : f === 3 ? (a + b) >> 1 : pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
       px[y * stride + x] = (v + pred) & 255;
     }
@@ -45,7 +49,12 @@ function decode(buf: Buffer) {
 }
 
 test("ícones têm os tamanhos certos e o apple-touch-icon é 180×180", () => {
-  for (const [n, s] of [["icon-192.png", 192], ["icon-512.png", 512], ["maskable-512.png", 512], ["apple-touch-icon.png", 180]] as const) {
+  for (const [n, s] of [
+    ["icon-192.png", 192],
+    ["icon-512.png", 512],
+    ["maskable-512.png", 512],
+    ["apple-touch-icon.png", 180],
+  ] as const) {
     const { w, h } = decode(file(n));
     assert.deepEqual([w, h], [s, s], n);
   }

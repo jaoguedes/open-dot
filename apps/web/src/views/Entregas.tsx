@@ -46,10 +46,14 @@ export function Entregas() {
       <h1>{AGENTS.entregas.name}</h1>
       <p className="meta">{AGENTS.entregas.description}</p>
       {!snap.tracking.enabled && (
-        <p className="state" role="status">{snap.tracking.reason || "Rastreio automático desligado. Você ainda pode guardar o código e abrir o site da transportadora."}</p>
+        <p className="state" role="status">
+          {snap.tracking.reason || "Rastreio automático desligado. Você ainda pode guardar o código e abrir o site da transportadora."}
+        </p>
       )}
       {snap.tracking.paused && (
-        <p className="banner" role="status">Parei nas {snap.tracking.stop} consultas deste mês para não passar das {snap.tracking.limit} do plano gratuito.</p>
+        <p className="banner" role="status">
+          Parei nas {snap.tracking.stop} consultas deste mês para não passar das {snap.tracking.limit} do plano gratuito.
+        </p>
       )}
 
       <form
@@ -89,7 +93,9 @@ export function Entregas() {
             <select value={carrier} onChange={(e) => setCarrier(e.target.value)} required>
               <option value="">Escolher…</option>
               {snap.carriers.map((c) => (
-                <option key={c.id} value={c.id}>{c.label}</option>
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                </option>
               ))}
             </select>
           </label>
@@ -99,8 +105,16 @@ export function Entregas() {
             {pendingId ? "Confirmar transportadora" : "Monitorar encomenda"}
           </button>
         </div>
-        {note && <p className="meta" role="status">{note}</p>}
-        {error && <p className="banner err" role="alert">{error}</p>}
+        {note && (
+          <p className="meta" role="status">
+            {note}
+          </p>
+        )}
+        {error && (
+          <p className="banner err" role="alert">
+            {error}
+          </p>
+        )}
       </form>
 
       {snap.shipments.length === 0 ? (
@@ -120,19 +134,26 @@ export function Entregas() {
 }
 
 function ShipmentRow({ row, onChanged, onError }: { row: ShipmentView; onChanged: (msg: string) => void; onError: (msg: string) => void }) {
-  const hint = row.lastError ? ERROR_PT[row.lastError] ?? "Não consegui atualizar esta encomenda." : null;
+  const hint = row.lastError ? (ERROR_PT[row.lastError] ?? "Não consegui atualizar esta encomenda.") : null;
   return (
     <li className="card" style={{ display: "grid", gap: 6, marginBottom: 10 }}>
       <strong>{row.storeLabel || "Encomenda"}</strong>
       <span className="mono">{row.code}</span>
-      <span>{row.carrierLabel ?? "Transportadora a confirmar"} · {row.statusLabel ?? "Sem atualização"}</span>
+      <span>
+        {row.carrierLabel ?? "Transportadora a confirmar"} · {row.statusLabel ?? "Sem atualização"}
+      </span>
       {row.lastEvent && (
-        <span className="meta">{row.lastEvent}{row.lastEventAt ? ` · ${fmtTime(row.lastEventAt)}` : ""}</span>
+        <span className="meta">
+          {row.lastEvent}
+          {row.lastEventAt ? ` · ${fmtTime(row.lastEventAt)}` : ""}
+        </span>
       )}
       {hint && <span className="meta">{hint}</span>}
       <div className="row-actions">
         {row.page && (
-          <a className="btn" href={row.page} target="_blank" rel="noreferrer">Abrir no site da transportadora</a>
+          <a className="btn" href={row.page} target="_blank" rel="noreferrer">
+            Abrir no site da transportadora
+          </a>
         )}
         <button
           className="btn"
@@ -160,7 +181,9 @@ function ShipmentRow({ row, onChanged, onError }: { row: ShipmentView; onChanged
         </button>
       </div>
       {(row.provider === "pacotevicio" || row.attribution) && (
-        <a href={PACOTEVICIO_ATTRIBUTION.href} target="_blank" rel="noreferrer">{PACOTEVICIO_ATTRIBUTION.label}</a>
+        <a href={PACOTEVICIO_ATTRIBUTION.href} target="_blank" rel="noreferrer">
+          {PACOTEVICIO_ATTRIBUTION.label}
+        </a>
       )}
     </li>
   );

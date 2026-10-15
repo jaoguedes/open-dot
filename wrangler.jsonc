@@ -10,7 +10,7 @@
     "directory": "apps/web/dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/assets/*", "/chunks/*", "/fonts/*", "/sounds/*", "/dot/*"]
+    "run_worker_first": ["/api/*", "/assets/*", "/chunks/*", "/fonts/*", "/sounds/*", "/dot/*"],
   },
   // Um único Cron Trigger (Free permite 5 por conta). Horário em UTC; o código converte 08h/17h America/Sao_Paulo.
   "triggers": { "crons": ["*/5 * * * *"] },
@@ -25,6 +25,6 @@
     "AI_CALLS_PER_DAY": "50",
     "AI_TOKENS_PER_DAY": "100000",
     "GROQ_ZDR_CONFIRMED": "false",
-    "PACOTEVICIO_TERMS_CONFIRMED": "false"
-  }
+    "PACOTEVICIO_TERMS_CONFIRMED": "false",
+  },
 }

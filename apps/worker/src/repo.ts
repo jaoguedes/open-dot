@@ -21,7 +21,10 @@ export async function upsertOwner(db: Db, p: { sub: string; email: string; name:
 }
 
 export async function getOwner(db: Db, ownerId: string) {
-  const r = await db.query<{ id: string; email: string; display_name: string | null; name_custom: number; time_zone: string }>("SELECT id, email, display_name, name_custom, time_zone FROM od_owners WHERE id = ?", [ownerId]);
+  const r = await db.query<{ id: string; email: string; display_name: string | null; name_custom: number; time_zone: string }>(
+    "SELECT id, email, display_name, name_custom, time_zone FROM od_owners WHERE id = ?",
+    [ownerId],
+  );
   return r[0] ?? null;
 }
 
@@ -143,8 +146,18 @@ export async function upsertGscConnection(db: Db, keys: Keyring, p: { ownerId: s
   const secret = await seal(keys, JSON.stringify(p.tokens), `conn:${id}`);
   const now = iso(p.now);
   const stmts = existing
-    ? [{ sql: "UPDATE od_connections SET status = 'connected', account_label = ?, scopes = ?, last_error = NULL, version = version + 1, updated_at = ? WHERE id = ? AND owner_id = ?", args: [p.account, JSON.stringify(p.scopes), now, id, p.ownerId] as SqlValue[] }]
-    : [{ sql: "INSERT INTO od_connections (id, owner_id, provider, status, account_label, external_id, scopes, created_at, updated_at) VALUES (?, ?, 'gsc', 'connected', ?, ?, ?, ?, ?)", args: [id, p.ownerId, p.account, p.account, JSON.stringify(p.scopes), now, now] as SqlValue[] }];
+    ? [
+        {
+          sql: "UPDATE od_connections SET status = 'connected', account_label = ?, scopes = ?, last_error = NULL, version = version + 1, updated_at = ? WHERE id = ? AND owner_id = ?",
+          args: [p.account, JSON.stringify(p.scopes), now, id, p.ownerId] as SqlValue[],
+        },
+      ]
+    : [
+        {
+          sql: "INSERT INTO od_connections (id, owner_id, provider, status, account_label, external_id, scopes, created_at, updated_at) VALUES (?, ?, 'gsc', 'connected', ?, ?, ?, ?, ?)",
+          args: [id, p.ownerId, p.account, p.account, JSON.stringify(p.scopes), now, now] as SqlValue[],
+        },
+      ];
   stmts.push({
     sql: "INSERT INTO od_connection_secrets (connection_id, owner_id, key_version, ciphertext, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(connection_id) DO UPDATE SET key_version = excluded.key_version, ciphertext = excluded.ciphertext, updated_at = excluded.updated_at",
     args: [id, p.ownerId, keys.current, secret, now],
@@ -186,11 +199,24 @@ export async function releaseRefreshLease(db: Db, connectionId: string) {
 }
 
 export async function markConnection(db: Db, ownerId: string, id: string, status: string, error: string | null, now: number) {
-  await db.run("UPDATE od_connections SET status = ?, last_error = ?, version = version + 1, updated_at = ? WHERE id = ? AND owner_id = ?", [status, error === null ? null : scrubSecrets(error).slice(0, 300), iso(now), id, ownerId]);
+  await db.run("UPDATE od_connections SET status = ?, last_error = ?, version = version + 1, updated_at = ? WHERE id = ? AND owner_id = ?", [
+    status,
+    error === null ? null : scrubSecrets(error).slice(0, 300),
+    iso(now),
+    id,
+    ownerId,
+  ]);
 }
 
 export async function setCursor(db: Db, ownerId: string, id: string, cursor: string, now: number) {
-  await db.run("UPDATE od_connections SET cursor = ?, cursor_at = ?, last_sync_at = ?, last_error = NULL, updated_at = ? WHERE id = ? AND owner_id = ?", [cursor, iso(now), iso(now), iso(now), id, ownerId]);
+  await db.run("UPDATE od_connections SET cursor = ?, cursor_at = ?, last_sync_at = ?, last_error = NULL, updated_at = ? WHERE id = ? AND owner_id = ?", [
+    cursor,
+    iso(now),
+    iso(now),
+    iso(now),
+    id,
+    ownerId,
+  ]);
 }
 
 export async function touchSync(db: Db, ownerId: string, id: string, now: number) {
@@ -224,14 +250,10 @@ export async function ensureEmailRoutine(db: Db, ownerId: string, now: number): 
   const r = await db.query<{ id: string }>("SELECT id FROM od_routines WHERE owner_id = ? AND kind = 'email_review'", [ownerId]);
   if (r[0]) return r[0].id;
   const id = randomId("rt_");
-  await db.run("INSERT INTO od_routines (id, owner_id, agent_id, kind, times, time_zone, weekdays, enabled, last_planned_at, created_at, updated_at) VALUES (?, ?, 'correio', 'email_review', ?, 'America/Sao_Paulo', '[]', 1, ?, ?, ?)", [
-    id,
-    ownerId,
-    JSON.stringify(["08:00", "17:00"]),
-    iso(now),
-    iso(now),
-    iso(now),
-  ]);
+  await db.run(
+    "INSERT INTO od_routines (id, owner_id, agent_id, kind, times, time_zone, weekdays, enabled, last_planned_at, created_at, updated_at) VALUES (?, ?, 'correio', 'email_review', ?, 'America/Sao_Paulo', '[]', 1, ?, ?, ?)",
+    [id, ownerId, JSON.stringify(["08:00", "17:00"]), iso(now), iso(now), iso(now)],
+  );
   return id;
 }
 
@@ -239,24 +261,22 @@ export async function ensureNewsRoutine(db: Db, ownerId: string, now: number): P
   const r = await db.query<{ id: string }>("SELECT id FROM od_routines WHERE owner_id = ? AND kind = 'news_review'", [ownerId]);
   if (r[0]) return r[0].id;
   const id = randomId("rt_");
-  await db.run("INSERT INTO od_routines (id, owner_id, agent_id, kind, times, time_zone, weekdays, enabled, last_planned_at, created_at, updated_at) VALUES (?, ?, 'noticias', 'news_review', ?, 'America/Sao_Paulo', '[]', 1, ?, ?, ?)", [
-    id,
-    ownerId,
-    JSON.stringify(["08:00"]),
-    iso(now),
-    iso(now),
-    iso(now),
-  ]);
+  await db.run(
+    "INSERT INTO od_routines (id, owner_id, agent_id, kind, times, time_zone, weekdays, enabled, last_planned_at, created_at, updated_at) VALUES (?, ?, 'noticias', 'news_review', ?, 'America/Sao_Paulo', '[]', 1, ?, ?, ?)",
+    [id, ownerId, JSON.stringify(["08:00"]), iso(now), iso(now), iso(now)],
+  );
   return id;
 }
 
 export async function agentSettings(db: Db, ownerId: string, agentId: string) {
   return (
-    await db.query<{ enabled: number; config: string; last_test_at: string | null; last_error: string | null }>(
-      "SELECT enabled, config, last_test_at, last_error FROM od_agent_settings WHERE owner_id = ? AND agent_id = ?",
-      [ownerId, agentId],
-    )
-  )[0] ?? null;
+    (
+      await db.query<{ enabled: number; config: string; last_test_at: string | null; last_error: string | null }>(
+        "SELECT enabled, config, last_test_at, last_error FROM od_agent_settings WHERE owner_id = ? AND agent_id = ?",
+        [ownerId, agentId],
+      )
+    )[0] ?? null
+  );
 }
 
 export async function listAgentSettings(db: Db, ownerId: string) {
@@ -302,8 +322,14 @@ export async function enabledRoutines(db: Db) {
 export async function updateRoutine(db: Db, ownerId: string, id: string, p: { times: string[]; timeZone: string; enabled: boolean; now: number }) {
   // Mudar horário invalida execuções futuras ainda não iniciadas.
   return db.batch([
-    { sql: "UPDATE od_routines SET times = ?, time_zone = ?, enabled = ?, last_planned_at = ?, updated_at = ? WHERE id = ? AND owner_id = ?", args: [JSON.stringify(p.times), p.timeZone, p.enabled ? 1 : 0, iso(p.now), iso(p.now), id, ownerId] },
-    { sql: "UPDATE od_runs SET state = 'cancelled', version = version + 1, updated_at = ? WHERE owner_id = ? AND routine_id = ? AND state = 'queued' AND scheduled_at > ?", args: [iso(p.now), ownerId, id, iso(p.now)] },
+    {
+      sql: "UPDATE od_routines SET times = ?, time_zone = ?, enabled = ?, last_planned_at = ?, updated_at = ? WHERE id = ? AND owner_id = ?",
+      args: [JSON.stringify(p.times), p.timeZone, p.enabled ? 1 : 0, iso(p.now), iso(p.now), id, ownerId],
+    },
+    {
+      sql: "UPDATE od_runs SET state = 'cancelled', version = version + 1, updated_at = ? WHERE owner_id = ? AND routine_id = ? AND state = 'queued' AND scheduled_at > ?",
+      args: [iso(p.now), ownerId, id, iso(p.now)],
+    },
   ]);
 }
 
@@ -312,7 +338,10 @@ export async function setPlanned(db: Db, routineId: string, ts: number) {
 }
 
 /** Cria a execução do slot. A UNIQUE(owner_id, slot_key) torna o cron repetido inofensivo. */
-export async function createRunForSlot(db: Db, p: { ownerId: string; routineId: string | null; agentId: string; kind: string; slotKey: string; scheduledAt: number; late: boolean; now: number }): Promise<boolean> {
+export async function createRunForSlot(
+  db: Db,
+  p: { ownerId: string; routineId: string | null; agentId: string; kind: string; slotKey: string; scheduledAt: number; late: boolean; now: number },
+): Promise<boolean> {
   const r = await db.run(
     "INSERT OR IGNORE INTO od_runs (id, owner_id, routine_id, agent_id, kind, slot_key, scheduled_at, late, state, version, attempt, next_attempt_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'queued', 1, 0, ?, ?, ?)",
     [randomId("run_"), p.ownerId, p.routineId, p.agentId, p.kind, p.slotKey, iso(p.scheduledAt), p.late ? 1 : 0, iso(p.scheduledAt), iso(p.now), iso(p.now)],
@@ -371,7 +400,11 @@ export async function claimRun(db: Db, run: RunRow, now: number, leaseMs = 4 * 6
   return { ...run, state: "running", version: run.version + 1, attempt: run.attempt + 1 };
 }
 
-export async function finishRun(db: Db, run: RunRow, p: { state: "succeeded" | "failed" | "waiting_quota" | "retry_scheduled" | "uncertain" | "waiting_approval"; errorCode?: string; errorMessage?: string; nextAttemptAt?: number; now: number }): Promise<boolean> {
+export async function finishRun(
+  db: Db,
+  run: RunRow,
+  p: { state: "succeeded" | "failed" | "waiting_quota" | "retry_scheduled" | "uncertain" | "waiting_approval"; errorCode?: string; errorMessage?: string; nextAttemptAt?: number; now: number },
+): Promise<boolean> {
   const r = await db.run(
     "UPDATE od_runs SET state = ?, version = version + 1, lease_until = NULL, error_code = ?, error_message = ?, next_attempt_at = ?, updated_at = ? WHERE id = ? AND version = ? AND state = 'running'",
     [p.state, p.errorCode ?? null, p.errorMessage ? scrubSecrets(p.errorMessage).slice(0, 300) : null, p.nextAttemptAt ? iso(p.nextAttemptAt) : null, iso(p.now), run.id, run.version],
@@ -396,7 +429,10 @@ export async function addPending(db: Db, ownerId: string, connectionId: string, 
 }
 
 export async function pendingIds(db: Db, ownerId: string, connectionId: string, limit: number) {
-  return db.query<{ message_id: string; thread_id: string; attempts: number }>("SELECT message_id, thread_id, attempts FROM od_email_pending WHERE owner_id = ? AND connection_id = ? ORDER BY discovered_at LIMIT ?", [ownerId, connectionId, limit]);
+  return db.query<{ message_id: string; thread_id: string; attempts: number }>(
+    "SELECT message_id, thread_id, attempts FROM od_email_pending WHERE owner_id = ? AND connection_id = ? ORDER BY discovered_at LIMIT ?",
+    [ownerId, connectionId, limit],
+  );
 }
 
 export async function countPending(db: Db, ownerId: string): Promise<number> {
@@ -447,7 +483,19 @@ export async function bumpPending(db: Db, ownerId: string, connectionId: string,
 }
 
 export async function untriagedMessages(db: Db, keys: Keyring, ownerId: string, limit = 50) {
-  const rows = await db.query<{ connection_id: string; message_id: string; thread_id: string; from_enc: string; subject_enc: string; snippet_enc: string | null; received_at: string; labels: string; list_unsub: number; bulk: number; rfc822_id: string | null }>(
+  const rows = await db.query<{
+    connection_id: string;
+    message_id: string;
+    thread_id: string;
+    from_enc: string;
+    subject_enc: string;
+    snippet_enc: string | null;
+    received_at: string;
+    labels: string;
+    list_unsub: number;
+    bulk: number;
+    rfc822_id: string | null;
+  }>(
     "SELECT connection_id, message_id, thread_id, from_enc, subject_enc, snippet_enc, received_at, labels, list_unsub, bulk, rfc822_id FROM od_email_messages WHERE owner_id = ? AND digest_run_id IS NULL ORDER BY received_at DESC LIMIT ?",
     [ownerId, limit],
   );
@@ -474,12 +522,40 @@ export async function untriagedMessages(db: Db, keys: Keyring, ownerId: string, 
 
 // ---------------- Feed ----------------
 
-export async function insertFeed(db: Db, keys: Keyring, p: { ownerId: string; agentId: string; runId: string | null; kind: string; title: string; body: unknown; freshness: string; coverage: unknown; now: number; retentionDays?: number; markMessages?: { runId: string; ids: string[] } }): Promise<string | null> {
+export async function insertFeed(
+  db: Db,
+  keys: Keyring,
+  p: {
+    ownerId: string;
+    agentId: string;
+    runId: string | null;
+    kind: string;
+    title: string;
+    body: unknown;
+    freshness: string;
+    coverage: unknown;
+    now: number;
+    retentionDays?: number;
+    markMessages?: { runId: string; ids: string[] };
+  },
+): Promise<string | null> {
   const id = randomId("fd_");
   const stmts = [
     {
       sql: "INSERT OR IGNORE INTO od_feed_items (id, owner_id, agent_id, run_id, kind, title, body_enc, freshness, coverage, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      args: [id, p.ownerId, p.agentId, p.runId, p.kind, p.title, await seal(keys, JSON.stringify(p.body), `feed:${p.ownerId}`), p.freshness, p.coverage ? JSON.stringify(p.coverage) : null, iso(p.now), iso(p.now + (p.retentionDays ?? 30) * 86_400_000)] as SqlValue[],
+      args: [
+        id,
+        p.ownerId,
+        p.agentId,
+        p.runId,
+        p.kind,
+        p.title,
+        await seal(keys, JSON.stringify(p.body), `feed:${p.ownerId}`),
+        p.freshness,
+        p.coverage ? JSON.stringify(p.coverage) : null,
+        iso(p.now),
+        iso(p.now + (p.retentionDays ?? 30) * 86_400_000),
+      ] as SqlValue[],
     },
   ];
   for (const mid of p.markMessages?.ids ?? []) {
@@ -489,13 +565,29 @@ export async function insertFeed(db: Db, keys: Keyring, p: { ownerId: string; ag
   return res[0]?.changes === 1 ? id : null;
 }
 
-export async function insertFeeds(db: Db, keys: Keyring, items: Array<{ ownerId: string; agentId: string; runId: string | null; kind: string; title: string; body: unknown; freshness: string; coverage: unknown; now: number; retentionDays?: number }>): Promise<void> {
+export async function insertFeeds(
+  db: Db,
+  keys: Keyring,
+  items: Array<{ ownerId: string; agentId: string; runId: string | null; kind: string; title: string; body: unknown; freshness: string; coverage: unknown; now: number; retentionDays?: number }>,
+): Promise<void> {
   if (!items.length) return;
   const stmts: Stmt[] = [];
   for (const p of items) {
     stmts.push({
       sql: "INSERT OR IGNORE INTO od_feed_items (id, owner_id, agent_id, run_id, kind, title, body_enc, freshness, coverage, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      args: [randomId("fd_"), p.ownerId, p.agentId, p.runId, p.kind, p.title, await seal(keys, JSON.stringify(p.body), `feed:${p.ownerId}`), p.freshness, p.coverage ? JSON.stringify(p.coverage) : null, iso(p.now), iso(p.now + (p.retentionDays ?? 30) * 86_400_000)],
+      args: [
+        randomId("fd_"),
+        p.ownerId,
+        p.agentId,
+        p.runId,
+        p.kind,
+        p.title,
+        await seal(keys, JSON.stringify(p.body), `feed:${p.ownerId}`),
+        p.freshness,
+        p.coverage ? JSON.stringify(p.coverage) : null,
+        iso(p.now),
+        iso(p.now + (p.retentionDays ?? 30) * 86_400_000),
+      ],
     });
   }
   await db.batch(stmts);
@@ -509,31 +601,57 @@ export async function listFeed(db: Db, keys: Keyring, ownerId: string, p: { befo
     args.push(p.before.createdAt, p.before.createdAt, p.before.id);
   }
   args.push(Math.min(p.limit, 50));
-  const rows = await db.query<{ id: string; agent_id: string; run_id: string | null; kind: string; title: string; body_enc: string; freshness: string; coverage: string | null; created_at: string; state: string; resolved_at: string | null; snooze_until: string | null }>(
+  const rows = await db.query<{
+    id: string;
+    agent_id: string;
+    run_id: string | null;
+    kind: string;
+    title: string;
+    body_enc: string;
+    freshness: string;
+    coverage: string | null;
+    created_at: string;
+    state: string;
+    resolved_at: string | null;
+    snooze_until: string | null;
+  }>(
     `SELECT id, agent_id, run_id, kind, title, body_enc, freshness, coverage, created_at, state, resolved_at, snooze_until FROM od_feed_items WHERE ${where} ORDER BY created_at DESC, id DESC LIMIT ?`,
     args,
   );
   const out = [];
   for (const r of rows) {
     const awake = r.state === "snoozed" && r.snooze_until && Date.parse(r.snooze_until) <= p.now;
-    out.push({ id: r.id, agentId: r.agent_id, runId: r.run_id, kind: r.kind, title: r.title, body: JSON.parse(await open(keys, r.body_enc, `feed:${ownerId}`)), freshness: r.freshness, coverage: r.coverage ? JSON.parse(r.coverage) : null, createdAt: r.created_at, state: awake ? "open" : (r.state || "open"), resolvedAt: r.resolved_at, snoozeUntil: r.snooze_until });
+    out.push({
+      id: r.id,
+      agentId: r.agent_id,
+      runId: r.run_id,
+      kind: r.kind,
+      title: r.title,
+      body: JSON.parse(await open(keys, r.body_enc, `feed:${ownerId}`)),
+      freshness: r.freshness,
+      coverage: r.coverage ? JSON.parse(r.coverage) : null,
+      createdAt: r.created_at,
+      state: awake ? "open" : r.state || "open",
+      resolvedAt: r.resolved_at,
+      snoozeUntil: r.snooze_until,
+    });
   }
   return out;
 }
 
 export async function setFeedState(db: Db, ownerId: string, id: string, state: "done" | "snoozed" | "open", now: number, snoozeUntil: string | null): Promise<boolean> {
-  const res = await db.run(
-    "UPDATE od_feed_items SET state = ?, resolved_at = ?, snooze_until = ? WHERE id = ? AND owner_id = ?",
-    [state, state === "done" ? iso(now) : null, snoozeUntil, id, ownerId],
-  );
+  const res = await db.run("UPDATE od_feed_items SET state = ?, resolved_at = ?, snooze_until = ? WHERE id = ? AND owner_id = ?", [
+    state,
+    state === "done" ? iso(now) : null,
+    snoozeUntil,
+    id,
+    ownerId,
+  ]);
   return res.changes === 1;
 }
 
 export async function markFeedDone(db: Db, ownerId: string, kind: string, runLike: string, now: number): Promise<void> {
-  await db.run(
-    "UPDATE od_feed_items SET state = 'done', resolved_at = ? WHERE owner_id = ? AND kind = ? AND state = 'open' AND run_id LIKE ?",
-    [iso(now), ownerId, kind, runLike],
-  );
+  await db.run("UPDATE od_feed_items SET state = 'done', resolved_at = ? WHERE owner_id = ? AND kind = ? AND state = 'open' AND run_id LIKE ?", [iso(now), ownerId, kind, runLike]);
 }
 
 // ---------------- Orçamento de IA (reserva atômica em SQL) ----------------
@@ -559,7 +677,19 @@ export class DbLedger implements BudgetLedger {
         sql: `UPDATE od_quota_counters SET calls = calls + 1, tokens = tokens + ?
               WHERE scope_key = ? AND day = ? AND calls + 1 <= ? AND tokens + ? <= ?
               AND EXISTS (SELECT 1 FROM od_quota_counters m WHERE m.scope_key = ? AND m.day = ? AND m.calls + 1 <= ? AND m.tokens + ? <= ?)`,
-        args: [input.tokens, ownerKey, input.day, this.limits.ownerCalls, input.tokens, this.limits.ownerTokens, modelKey, input.day, this.limits.modelRequests(mk), input.tokens, this.limits.modelTokens(mk)],
+        args: [
+          input.tokens,
+          ownerKey,
+          input.day,
+          this.limits.ownerCalls,
+          input.tokens,
+          this.limits.ownerTokens,
+          modelKey,
+          input.day,
+          this.limits.modelRequests(mk),
+          input.tokens,
+          this.limits.modelTokens(mk),
+        ],
       },
       { sql: "UPDATE od_quota_counters SET calls = calls + 1, tokens = tokens + ? WHERE scope_key = ? AND day = ? AND changes() = 1", args: [input.tokens, modelKey, input.day] },
       {
@@ -569,7 +699,11 @@ export class DbLedger implements BudgetLedger {
     ]);
     const ok = await this.db.query<{ id: string }>("SELECT id FROM od_quota_reservations WHERE id = ?", [id]);
     if (ok[0]) return { ok: true, reservationId: id };
-    const c = await this.db.query<{ scope_key: string; calls: number; tokens: number }>("SELECT scope_key, calls, tokens FROM od_quota_counters WHERE day = ? AND scope_key IN (?, ?)", [input.day, ownerKey, modelKey]);
+    const c = await this.db.query<{ scope_key: string; calls: number; tokens: number }>("SELECT scope_key, calls, tokens FROM od_quota_counters WHERE day = ? AND scope_key IN (?, ?)", [
+      input.day,
+      ownerKey,
+      modelKey,
+    ]);
     const o = c.find((x) => x.scope_key === ownerKey);
     const m = c.find((x) => x.scope_key === modelKey);
     if (o && o.calls + 1 > this.limits.ownerCalls) return { ok: false, reason: "owner_calls" };
@@ -587,12 +721,20 @@ export class DbLedger implements BudgetLedger {
   }
 
   private async settle(id: string, state: string, refundTokens: (reserved: number) => number, refundCalls: number) {
-    const r = (await this.db.query<{ tokens: number; day: string; owner_key: string; model_key: string }>("SELECT tokens, day, owner_key, model_key FROM od_quota_reservations WHERE id = ? AND state = 'reserved'", [id]))[0];
+    const r = (
+      await this.db.query<{ tokens: number; day: string; owner_key: string; model_key: string }>(
+        "SELECT tokens, day, owner_key, model_key FROM od_quota_reservations WHERE id = ? AND state = 'reserved'",
+        [id],
+      )
+    )[0];
     if (!r) return;
     const refund = refundTokens(Number(r.tokens));
     await this.db.batch([
       { sql: "UPDATE od_quota_reservations SET state = ? WHERE id = ? AND state = 'reserved'", args: [state, id] },
-      { sql: "UPDATE od_quota_counters SET tokens = tokens - ?, calls = calls - ? WHERE day = ? AND scope_key IN (?, ?) AND changes() = 1", args: [refund, refundCalls, r.day, r.owner_key, r.model_key] },
+      {
+        sql: "UPDATE od_quota_counters SET tokens = tokens - ?, calls = calls - ? WHERE day = ? AND scope_key IN (?, ?) AND changes() = 1",
+        args: [refund, refundCalls, r.day, r.owner_key, r.model_key],
+      },
     ]);
   }
 }
@@ -629,7 +771,10 @@ export async function usageToday(db: Db, ownerId: string, now: number) {
  * Decide uma aprovação só se versão, hash do conteúdo e estado baterem (compare-and-set).
  * Quando não bate, diz a causa: "changed" (o conteúdo ou a versão mudou) ou "decided".
  */
-export async function decideApproval(db: Db, p: { ownerId: string; id: string; decision: "approve" | "reject"; expectedVersion: number; payloadHash: string; now: number }): Promise<"ok" | "changed" | "decided" | "expired" | "not_found"> {
+export async function decideApproval(
+  db: Db,
+  p: { ownerId: string; id: string; decision: "approve" | "reject"; expectedVersion: number; payloadHash: string; now: number },
+): Promise<"ok" | "changed" | "decided" | "expired" | "not_found"> {
   const r = await db.run(
     "UPDATE od_approvals SET status = ?, version = version + 1, decided_at = ? WHERE id = ? AND owner_id = ? AND version = ? AND status = 'pending' AND payload_hash = ? AND expires_at > ?",
     [p.decision === "approve" ? "approved" : "rejected", iso(p.now), p.id, p.ownerId, p.expectedVersion, p.payloadHash, iso(p.now)],
@@ -668,16 +813,17 @@ export async function listApprovals(db: Db, keys: Keyring, ownerId: string) {
   return out;
 }
 
-export async function createApproval(
-  db: Db,
-  keys: Keyring,
-  p: { ownerId: string; action: string; proposal: object; payloadHash: string; now: number; ttlMs?: number },
-): Promise<string> {
+export async function createApproval(db: Db, keys: Keyring, p: { ownerId: string; action: string; proposal: object; payloadHash: string; now: number; ttlMs?: number }): Promise<string> {
   const id = randomId("ap_");
-  await db.run(
-    "INSERT INTO od_approvals (id, owner_id, action, proposal_enc, payload_hash, status, version, expires_at, created_at) VALUES (?, ?, ?, ?, ?, 'pending', 1, ?, ?)",
-    [id, p.ownerId, p.action, await seal(keys, JSON.stringify(p.proposal), `appr:${id}`), p.payloadHash, iso(p.now + (p.ttlMs ?? 86_400_000)), iso(p.now)],
-  );
+  await db.run("INSERT INTO od_approvals (id, owner_id, action, proposal_enc, payload_hash, status, version, expires_at, created_at) VALUES (?, ?, ?, ?, ?, 'pending', 1, ?, ?)", [
+    id,
+    p.ownerId,
+    p.action,
+    await seal(keys, JSON.stringify(p.proposal), `appr:${id}`),
+    p.payloadHash,
+    iso(p.now + (p.ttlMs ?? 86_400_000)),
+    iso(p.now),
+  ]);
   return id;
 }
 
@@ -687,10 +833,13 @@ export async function editApproval(
   p: { ownerId: string; id: string; proposal: object; payloadHash: string; expectedVersion: number; now: number },
 ): Promise<"ok" | "changed" | "decided" | "not_found"> {
   const enc = await seal(keys, JSON.stringify(p.proposal), `appr:${p.id}`);
-  const r = await db.run(
-    "UPDATE od_approvals SET proposal_enc = ?, payload_hash = ?, version = version + 1 WHERE id = ? AND owner_id = ? AND version = ? AND status = 'pending'",
-    [enc, p.payloadHash, p.id, p.ownerId, p.expectedVersion],
-  );
+  const r = await db.run("UPDATE od_approvals SET proposal_enc = ?, payload_hash = ?, version = version + 1 WHERE id = ? AND owner_id = ? AND version = ? AND status = 'pending'", [
+    enc,
+    p.payloadHash,
+    p.id,
+    p.ownerId,
+    p.expectedVersion,
+  ]);
   if (r.changes === 1) return "ok";
   const row = (await db.query<{ status: string }>("SELECT status FROM od_approvals WHERE id = ? AND owner_id = ?", [p.id, p.ownerId]))[0];
   if (!row) return "not_found";
@@ -716,20 +865,30 @@ export async function listMonitors(db: Db, ownerId: string) {
 }
 
 export async function dueMonitors(db: Db, now: number, limit = 3) {
-  return db.query<MonitorRow>("SELECT * FROM od_monitors WHERE enabled = 1 ORDER BY COALESCE(last_check_at, '') LIMIT ?", [limit]).then((rows) =>
-    rows.filter((m) => !m.last_check_at || Date.parse(m.last_check_at) + m.interval_min * 60_000 - 30_000 <= now),
-  );
+  return db
+    .query<MonitorRow>("SELECT * FROM od_monitors WHERE enabled = 1 ORDER BY COALESCE(last_check_at, '') LIMIT ?", [limit])
+    .then((rows) => rows.filter((m) => !m.last_check_at || Date.parse(m.last_check_at) + m.interval_min * 60_000 - 30_000 <= now));
 }
 
 export async function addMonitor(db: Db, p: { ownerId: string; url: string; host: string; label: string; now: number }): Promise<string> {
   const id = randomId("mon_");
-  await db.run("INSERT OR IGNORE INTO od_monitors (id, owner_id, url, host, label, interval_min, enabled, incident, created_at) VALUES (?, ?, ?, ?, ?, 5, 1, '{}', ?)", [id, p.ownerId, p.url, p.host, p.label, iso(p.now)]);
+  await db.run("INSERT OR IGNORE INTO od_monitors (id, owner_id, url, host, label, interval_min, enabled, incident, created_at) VALUES (?, ?, ?, ?, ?, 5, 1, '{}', ?)", [
+    id,
+    p.ownerId,
+    p.url,
+    p.host,
+    p.label,
+    iso(p.now),
+  ]);
   return id;
 }
 
 export async function saveSample(db: Db, m: MonitorRow, s: { at: number; ok: boolean; status: number | null; latencyMs: number | null; error?: string }, incident: unknown) {
   await db.batch([
-    { sql: "INSERT OR IGNORE INTO od_monitor_samples (monitor_id, owner_id, at, ok, status, latency_ms, error) VALUES (?, ?, ?, ?, ?, ?, ?)", args: [m.id, m.owner_id, iso(s.at), s.ok ? 1 : 0, s.status, s.latencyMs, s.error ?? null] },
+    {
+      sql: "INSERT OR IGNORE INTO od_monitor_samples (monitor_id, owner_id, at, ok, status, latency_ms, error) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      args: [m.id, m.owner_id, iso(s.at), s.ok ? 1 : 0, s.status, s.latencyMs, s.error ?? null],
+    },
     { sql: "UPDATE od_monitors SET incident = ?, last_check_at = ? WHERE id = ? AND owner_id = ?", args: [JSON.stringify(incident), iso(s.at), m.id, m.owner_id] },
   ]);
 }
@@ -738,12 +897,26 @@ export async function saveSample(db: Db, m: MonitorRow, s: { at: number; ok: boo
 
 /** true se é a primeira vez que vemos esta entrega. */
 export async function recordDelivery(db: Db, p: { provider: string; deliveryId: string; ownerId: string | null; payloadHash: string; now: number }): Promise<boolean> {
-  const r = await db.run("INSERT OR IGNORE INTO od_inbox_events (provider, delivery_id, owner_id, received_at, payload_hash) VALUES (?, ?, ?, ?, ?)", [p.provider, p.deliveryId, p.ownerId, iso(p.now), p.payloadHash]);
+  const r = await db.run("INSERT OR IGNORE INTO od_inbox_events (provider, delivery_id, owner_id, received_at, payload_hash) VALUES (?, ?, ?, ?, ?)", [
+    p.provider,
+    p.deliveryId,
+    p.ownerId,
+    iso(p.now),
+    p.payloadHash,
+  ]);
   return r.changes === 1;
 }
 
 export async function audit(db: Db, p: { ownerId: string | null; actor: "user" | "routine" | "system"; action: string; target?: string | null; outcome: string; detail?: string | null; now: number }) {
-  await db.run("INSERT INTO od_audit_events (owner_id, at, actor, action, target, outcome, detail) VALUES (?, ?, ?, ?, ?, ?, ?)", [p.ownerId, iso(p.now), p.actor, p.action, p.target ?? null, p.outcome, p.detail ? scrubSecrets(p.detail).slice(0, 300) : null]);
+  await db.run("INSERT INTO od_audit_events (owner_id, at, actor, action, target, outcome, detail) VALUES (?, ?, ?, ?, ?, ?, ?)", [
+    p.ownerId,
+    iso(p.now),
+    p.actor,
+    p.action,
+    p.target ?? null,
+    p.outcome,
+    p.detail ? scrubSecrets(p.detail).slice(0, 300) : null,
+  ]);
 }
 
 /** Retenção: apaga o que venceu (evidências 7 dias, resumos 30, auditoria 90). */
@@ -799,10 +972,19 @@ export async function listShipments(db: Db, ownerId: string): Promise<ShipmentRo
   );
 }
 
-export async function insertShipment(db: Db, p: {
-  id: string; ownerId: string; code: string; carrier: string | null; confidence: string | null;
-  storeLabel: string | null; needsCarrier: boolean; now: number;
-}): Promise<boolean> {
+export async function insertShipment(
+  db: Db,
+  p: {
+    id: string;
+    ownerId: string;
+    code: string;
+    carrier: string | null;
+    confidence: string | null;
+    storeLabel: string | null;
+    needsCarrier: boolean;
+    now: number;
+  },
+): Promise<boolean> {
   const r = await db.run(
     `INSERT OR IGNORE INTO od_shipments
       (id, owner_id, code, carrier, confidence, store_label, events_json, active, needs_carrier, created_at, updated_at)
@@ -829,21 +1011,30 @@ export async function dueShipments(db: Db, ownerId: string, dueBeforeIso: string
   );
 }
 
-export async function saveShipmentTrack(db: Db, p: {
-  id: string; ownerId: string; carrier: string | null; status: string; statusLabel: string;
-  lastEventAt: string | null; lastEvent: string | null; eventsJson: string; provider: string | null;
-  delivered: boolean; error: string | null; now: number;
-}) {
+export async function saveShipmentTrack(
+  db: Db,
+  p: {
+    id: string;
+    ownerId: string;
+    carrier: string | null;
+    status: string;
+    statusLabel: string;
+    lastEventAt: string | null;
+    lastEvent: string | null;
+    eventsJson: string;
+    provider: string | null;
+    delivered: boolean;
+    error: string | null;
+    now: number;
+  },
+) {
   await db.run(
     `UPDATE od_shipments SET
        carrier = COALESCE(?, carrier), status = ?, status_label = ?, last_event_at = ?, last_event = ?,
        events_json = ?, provider = ?, provider_checked_at = ?, delivered_at = ?, active = ?,
        last_error = ?, updated_at = ?
      WHERE id = ? AND owner_id = ?`,
-    [
-      p.carrier, p.status, p.statusLabel, p.lastEventAt, p.lastEvent, p.eventsJson, p.provider,
-      iso(p.now), p.delivered ? iso(p.now) : null, p.delivered ? 0 : 1, p.error, iso(p.now), p.id, p.ownerId,
-    ],
+    [p.carrier, p.status, p.statusLabel, p.lastEventAt, p.lastEvent, p.eventsJson, p.provider, iso(p.now), p.delivered ? iso(p.now) : null, p.delivered ? 0 : 1, p.error, iso(p.now), p.id, p.ownerId],
   );
 }
 
@@ -852,10 +1043,7 @@ export async function touchShipment(db: Db, id: string, ownerId: string, error: 
 }
 
 export async function confirmShipmentCarrier(db: Db, ownerId: string, id: string, carrier: string, now: number): Promise<boolean> {
-  const r = await db.run(
-    "UPDATE od_shipments SET carrier = ?, needs_carrier = 0, provider_checked_at = NULL, updated_at = ? WHERE owner_id = ? AND id = ?",
-    [carrier, iso(now), ownerId, id],
-  );
+  const r = await db.run("UPDATE od_shipments SET carrier = ?, needs_carrier = 0, provider_checked_at = NULL, updated_at = ? WHERE owner_id = ? AND id = ?", [carrier, iso(now), ownerId, id]);
   return r.changes === 1;
 }
 

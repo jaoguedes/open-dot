@@ -36,8 +36,14 @@ function fail(msg) {
 for (const [path, name] of paths) {
   errors.length = 0;
   await page.goto(BASE + path, { waitUntil: "domcontentloaded" });
-  await page.getByRole("button", { name: /modo desenvolvimento|demonstração/i }).waitFor({ timeout: 20_000 }).catch(() => {});
-  await page.locator(".splash").waitFor({ state: "detached", timeout: 8_000 }).catch(() => {});
+  await page
+    .getByRole("button", { name: /modo desenvolvimento|demonstração/i })
+    .waitFor({ timeout: 20_000 })
+    .catch(() => {});
+  await page
+    .locator(".splash")
+    .waitFor({ state: "detached", timeout: 8_000 })
+    .catch(() => {});
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
   if (wide) fail(`${name}: rolagem horizontal`);
   // A caixa é fixa e o conteúdo rola por baixo dela. Falha se um botão estiver inteiro
@@ -74,7 +80,10 @@ for (const [path, name] of paths) {
 
 errors.length = 0;
 await page.goto(BASE + "/?demo=1", { waitUntil: "domcontentloaded" });
-await page.locator(".splash").waitFor({ state: "detached", timeout: 8_000 }).catch(() => {});
+await page
+  .locator(".splash")
+  .waitFor({ state: "detached", timeout: 8_000 })
+  .catch(() => {});
 await page.getByRole("button", { name: "Perguntar ao Dot" }).click();
 const dialog = page.getByRole("dialog", { name: "Buscar ou perguntar" });
 await dialog.waitFor({ timeout: 5_000 });
@@ -88,7 +97,10 @@ await dialog.waitFor({ state: "hidden", timeout: 3_000 }).catch(() => fail("busc
 async function openDemo(path) {
   errors.length = 0;
   await page.goto(BASE + path, { waitUntil: "domcontentloaded" });
-  await page.locator(".splash").waitFor({ state: "detached", timeout: 8_000 }).catch(() => {});
+  await page
+    .locator(".splash")
+    .waitFor({ state: "detached", timeout: 8_000 })
+    .catch(() => {});
 }
 
 // O gancho ?forcar=render só existe no build de desenvolvimento (B4). Contra o build
@@ -115,11 +127,13 @@ if (!apiText.includes("subrequest_limit") || !apiText.includes("Cloudflare Free"
 else console.log("ok   reason de API");
 
 await page.evaluate(() => sessionStorage.setItem("od-chunk-reload", "1"));
-page.evaluate(() => {
-  setTimeout(() => {
-    void import("/assets/chunks/nao-existe.js");
-  }, 0);
-}).catch(() => {});
+page
+  .evaluate(() => {
+    setTimeout(() => {
+      void import("/assets/chunks/nao-existe.js");
+    }, 0);
+  })
+  .catch(() => {});
 await page.getByRole("alert").getByText("chunk_missing", { exact: true }).waitFor({ timeout: 8_000 });
 const chunkText = await page.getByRole("alert").innerText();
 if (!chunkText.includes("versão velha") || !chunkText.includes("chunk_missing")) fail("chunk 404: explicação do dicionário ausente");

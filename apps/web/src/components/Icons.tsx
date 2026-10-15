@@ -34,7 +34,18 @@ export type IconName = keyof typeof P;
 
 export function Icon({ name, size = 18, title }: { name: IconName; size?: number; title?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden={title ? undefined : true} role={title ? "img" : undefined}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={title ? undefined : true}
+      role={title ? "img" : undefined}
+    >
       {title && <title>{title}</title>}
       <path d={P[name]} />
     </svg>

@@ -36,15 +36,10 @@ export async function hashProposal(p: ActionProposal): Promise<string> {
   return sha256Hex(canonicalJson({ action: p.action, service: p.service, account: p.account, resource: p.resource, payload: p.payload }));
 }
 
-export type DecisionResult =
-  | { ok: true; approval: Approval }
-  | { ok: false; reason: "stale_version" | "not_pending" | "expired" | "hash_mismatch" | "wrong_owner" };
+export type DecisionResult = { ok: true; approval: Approval } | { ok: false; reason: "stale_version" | "not_pending" | "expired" | "hash_mismatch" | "wrong_owner" };
 
 /** Decisão pura (o banco aplica a mesma regra com UPDATE condicional). */
-export async function decide(
-  a: Approval,
-  input: { ownerId: string; decision: "approve" | "reject"; expectedVersion: number; payloadHash: string; now: number },
-): Promise<DecisionResult> {
+export async function decide(a: Approval, input: { ownerId: string; decision: "approve" | "reject"; expectedVersion: number; payloadHash: string; now: number }): Promise<DecisionResult> {
   if (a.ownerId !== input.ownerId) return { ok: false, reason: "wrong_owner" };
   if (a.version !== input.expectedVersion) return { ok: false, reason: "stale_version" };
   if (a.status !== "pending") return { ok: false, reason: "not_pending" };

@@ -96,9 +96,7 @@ export function Approval({ id }: { id: string }) {
         <AgentDot visual={waiting} accessory={app.accessoryFor("correio")} size={120} reducedMotion={app.reducedMotion} />
         <div>
           <h1>Posso enviar esta resposta?</h1>
-          <p className="serif approval-sub">
-            nada sai sem o seu OK
-          </p>
+          <p className="serif approval-sub">nada sai sem o seu OK</p>
         </div>
       </section>
 
@@ -109,11 +107,7 @@ export function Approval({ id }: { id: string }) {
           <dt>Assunto</dt>
           <dd>{subject}</dd>
         </dl>
-        {editing ? (
-          <textarea value={text} onChange={(e) => setDraft(e.target.value)} rows={8} aria-label="Texto da resposta" />
-        ) : (
-          <div className="approval-body">{text}</div>
-        )}
+        {editing ? <textarea value={text} onChange={(e) => setDraft(e.target.value)} rows={8} aria-label="Texto da resposta" /> : <div className="approval-body">{text}</div>}
         <p className="approval-lock">
           <Icon name="alert" size={14} /> A aprovação vale só para este texto exato.
         </p>
@@ -165,4 +159,3 @@ export function Approval({ id }: { id: string }) {
     </div>
   );
 }
-

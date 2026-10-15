@@ -50,36 +50,42 @@ async function buildCtx(bindings: Bindings): Promise<Ctx | { error: string[] }> 
 export default {
   async fetch(req: Request, bindings: Bindings): Promise<Response> {
     try {
-    const url = new URL(req.url);
-    if (url.pathname === "/api/version" && req.method === "GET") return versionResponse(url, bindings);
-    if (url.pathname.startsWith("/api/")) {
-      const ctx = await buildCtx(bindings);
-      if ("error" in ctx) {
-        logSafe("error", { api: "not_configured", missing: ctx.error });
-        return new Response(JSON.stringify({ error: { code: "not_configured", message: "Configuração incompleta do servidor." } }), { status: 503, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
+      const url = new URL(req.url);
+      if (url.pathname === "/api/version" && req.method === "GET") return versionResponse(url, bindings);
+      if (url.pathname.startsWith("/api/")) {
+        const ctx = await buildCtx(bindings);
+        if ("error" in ctx) {
+          logSafe("error", { api: "not_configured", missing: ctx.error });
+          return new Response(JSON.stringify({ error: { code: "not_configured", message: "Configuração incompleta do servidor." } }), {
+            status: 503,
+            headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+          });
+        }
+        return handleApi(ctx, req);
       }
-      return handleApi(ctx, req);
-    }
-    if (/^\/(assets|chunks|fonts|sounds|dot)\//.test(url.pathname) && bindings.ASSETS) {
-      return assetOrReal404(await bindings.ASSETS.fetch(req));
-    }
-    if (bindings.ASSETS) return bindings.ASSETS.fetch(req);
-    return new Response("Interface não publicada.", { status: 404 });
+      if (/^\/(assets|chunks|fonts|sounds|dot)\//.test(url.pathname) && bindings.ASSETS) {
+        return assetOrReal404(await bindings.ASSETS.fetch(req));
+      }
+      if (bindings.ASSETS) return bindings.ASSETS.fetch(req);
+      return new Response("Interface não publicada.", { status: 404 });
     } catch (e) {
       logSafe("error", { api: "fatal", reason: e instanceof Error ? e.name : "unknown" });
-      return new Response(JSON.stringify({ error: { code: "internal", message: "Não consegui falar com o servidor." } }), { status: 500, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
+      return new Response(JSON.stringify({ error: { code: "internal", message: "Não consegui falar com o servidor." } }), {
+        status: 500,
+        headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+      });
     }
   },
 
   async scheduled(_controller: unknown, bindings: Bindings): Promise<void> {
     try {
-    const ctx = await buildCtx(bindings);
-    if ("error" in ctx) {
-      logSafe("error", { cron: "skipped", missing: ctx.error });
-      return;
-    }
-    const report = await tick(ctx);
-    logSafe("log", { cron: "tick", ...report });
+      const ctx = await buildCtx(bindings);
+      if ("error" in ctx) {
+        logSafe("error", { cron: "skipped", missing: ctx.error });
+        return;
+      }
+      const report = await tick(ctx);
+      logSafe("log", { cron: "tick", ...report });
     } catch (e) {
       logSafe("error", { cron: "error", reason: e instanceof Error ? e.name : "unknown" });
     }

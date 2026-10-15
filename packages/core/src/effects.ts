@@ -41,9 +41,7 @@ export interface HeartEmitterOptions {
   random?: () => number;
 }
 
-export type EmitResult =
-  | { ok: true; created: EffectInstance[] }
-  | { ok: false; reason: "cooldown" | "suppressed" | "hidden" };
+export type EmitResult = { ok: true; created: EffectInstance[] } | { ok: false; reason: "cooldown" | "suppressed" | "hidden" };
 
 export class HeartEmitter {
   private alive = new Map<string, EffectInstance>();
@@ -84,7 +82,7 @@ export class HeartEmitter {
         id: `heart-${++this.counter}`,
         kind: "heart",
         seed: Math.floor(r() * 1e9),
-        startAt: now + (ctx.reducedMotion ? 0 : this.o.delaysMs[i] ?? i * 120),
+        startAt: now + (ctx.reducedMotion ? 0 : (this.o.delaysMs[i] ?? i * 120)),
         durationMs: Math.round(this.o.minLifeMs + r() * (this.o.maxLifeMs - this.o.minLifeMs)),
         driftX: (r() - 0.5) * 0.3,
         rise: ctx.reducedMotion ? 0 : 0.18 + r() * 0.12,

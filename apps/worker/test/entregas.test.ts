@@ -58,7 +58,10 @@ test("atalho Vigiar o próprio Open Dot é idempotente e usa o APP_ORIGIN, não 
   assert.equal(second.json.created, false);
   assert.equal(second.json.id, first.json.id);
   const rows = (await c.call("GET", "/api/monitors")).json.monitors;
-  assert.deepEqual(rows.map((m: { url: string }) => m.url), [`${origin}/api/health`]);
+  assert.deepEqual(
+    rows.map((m: { url: string }) => m.url),
+    [`${origin}/api/health`],
+  );
 });
 
 test("atalho do próprio Open Dot recusa origem local", async () => {

@@ -6,17 +6,29 @@ export function GmailOpen({ gmailId, rfc822, demo }: { gmailId: string; rfc822?:
   if (demo) {
     return (
       <>
-        <span className="btn" aria-disabled="true" title="Demonstração: sem conta conectada">Abrir no app do Gmail</span>
-        <span className="btn" aria-disabled="true" title="Demonstração: sem conta conectada">Abrir na web</span>
+        <span className="btn" aria-disabled="true" title="Demonstração: sem conta conectada">
+          Abrir no app do Gmail
+        </span>
+        <span className="btn" aria-disabled="true" title="Demonstração: sem conta conectada">
+          Abrir na web
+        </span>
       </>
     );
   }
   return (
     <>
-      <button type="button" className="btn" onClick={() => { window.location.href = "googlegmail://"; }}>
+      <button
+        type="button"
+        className="btn"
+        onClick={() => {
+          window.location.href = "googlegmail://";
+        }}
+      >
         Abrir no app do Gmail
       </button>
-      <a className="btn" href={web} target="_blank" rel="noreferrer">Abrir na web</a>
+      <a className="btn" href={web} target="_blank" rel="noreferrer">
+        Abrir na web
+      </a>
     </>
   );
 }

@@ -65,7 +65,10 @@ test("fluxo completo simulado: conectar Gmail (leitura), sincronizar e publicar 
 
   const conns = (await c.call("GET", "/api/connections")).json.connections;
   assert.equal(conns[0].status, "connected");
-  assert.deepEqual(conns[0].scopes.filter((s: string) => s.includes("gmail")), ["https://www.googleapis.com/auth/gmail.readonly"]);
+  assert.deepEqual(
+    conns[0].scopes.filter((s: string) => s.includes("gmail")),
+    ["https://www.googleapis.com/auth/gmail.readonly"],
+  );
 
   const routines = (await c.call("GET", "/api/routines")).json.routines;
   const emailRt = routines.find((r: { kind: string }) => r.kind === "email_review");
@@ -93,7 +96,10 @@ test("fluxo completo simulado: conectar Gmail (leitura), sincronizar e publicar 
   assert.ok(!JSON.stringify(d.body).includes("Menciona"));
   assert.equal(d.coverage.analyzed, 2);
   // nenhuma chamada de escrita ao Gmail (o tick também lê RSS/cotações no mesmo fetch)
-  assert.ok(google.calls.filter((x) => x.includes("gmail")).every((x) => x.startsWith("GET ")), google.calls.join("\n"));
+  assert.ok(
+    google.calls.filter((x) => x.includes("gmail")).every((x) => x.startsWith("GET ")),
+    google.calls.join("\n"),
+  );
 });
 
 test("tokens ficam cifrados: refresh token não aparece em texto no banco", async () => {
@@ -110,7 +116,17 @@ test("isolamento por dono: outra sessão não lê nem desconecta dados alheios",
   const ctx = await makeCtx({ fetch: google.fetch });
   const a = await connectGmail(google, ctx);
   const connId = (await a.call("GET", "/api/connections")).json.connections[0].id;
-  await repo.insertFeed(ctx.db, ctx.keys, { ownerId: (await ctx.db.query<{ id: string }>("SELECT id FROM od_owners"))[0]!.id, agentId: "correio", runId: "r-a", kind: "notice", title: "Privado do A", body: { s: 1 }, freshness: "fresh", coverage: null, now: ctx.now() });
+  await repo.insertFeed(ctx.db, ctx.keys, {
+    ownerId: (await ctx.db.query<{ id: string }>("SELECT id FROM od_owners"))[0]!.id,
+    agentId: "correio",
+    runId: "r-a",
+    kind: "notice",
+    title: "Privado do A",
+    body: { s: 1 },
+    freshness: "fresh",
+    coverage: null,
+    now: ctx.now(),
+  });
 
   // Dono B com sessão própria.
   const ownerB = await repo.upsertOwner(ctx.db, { sub: "sub-b", email: "b@example.com", name: "B", now: ctx.now() });
@@ -191,7 +207,10 @@ test("sincronização incremental: dedupe, cursor expirado ressincroniza, falha 
   assert.equal(r.synced[0]?.status, "error");
   assert.equal(await count(), 2, "a2 salvo, a3 pendente");
   const pending = await ctx.db.query<{ message_id: string }>("SELECT message_id FROM od_email_pending");
-  assert.deepEqual(pending.map((p) => p.message_id), ["a3"]);
+  assert.deepEqual(
+    pending.map((p) => p.message_id),
+    ["a3"],
+  );
 
   google.failMeta.clear();
   google.historyExpired = true; // cursor antigo → 404 → ressincroniza janela
@@ -247,7 +266,10 @@ test("aprovações concorrentes no banco: um único efeito", async () => {
   const owner = await repo.upsertOwner(ctx.db, { sub: "s", email: "e@x.com", name: null, now: ctx.now() });
   const proposal = { action: "gmail.draft", service: "gmail", account: "e@x.com", resource: "t1", payload: { body: "ok" }, consequence: "rascunho" };
   const h = await hashProposal(proposal);
-  await ctx.db.run("INSERT INTO od_approvals (id, owner_id, action, proposal_enc, payload_hash, status, version, expires_at, created_at) VALUES ('ap1', ?, 'gmail.draft', 'x', ?, 'pending', 1, ?, ?)", [owner, h, new Date(ctx.now() + 3600_000).toISOString(), new Date(ctx.now()).toISOString()]);
+  await ctx.db.run(
+    "INSERT INTO od_approvals (id, owner_id, action, proposal_enc, payload_hash, status, version, expires_at, created_at) VALUES ('ap1', ?, 'gmail.draft', 'x', ?, 'pending', 1, ?, ?)",
+    [owner, h, new Date(ctx.now() + 3600_000).toISOString(), new Date(ctx.now()).toISOString()],
+  );
   const results = await Promise.all([1, 2, 3].map(() => repo.decideApproval(ctx.db, { ownerId: owner, id: "ap1", decision: "approve", expectedVersion: 1, payloadHash: h, now: ctx.now() })));
   assert.deepEqual(results.sort(), ["decided", "decided", "ok"]);
   assert.equal(await repo.decideApproval(ctx.db, { ownerId: "outro", id: "ap1", decision: "approve", expectedVersion: 2, payloadHash: h, now: ctx.now() }), "not_found");
@@ -305,9 +327,20 @@ test("webhook GitHub: assinatura inválida, entrega duplicada e evento fora de o
   };
   const { handleApi } = await import("../src/app.ts");
   const send = async (body: string, delivery: string, sig?: string) =>
-    handleApi(ctx, new Request("http://localhost:8787/api/webhooks/github", { method: "POST", body, headers: { "x-github-event": "workflow_run", "x-github-delivery": delivery, "x-hub-signature-256": sig ?? (await sign(body)) } }));
+    handleApi(
+      ctx,
+      new Request("http://localhost:8787/api/webhooks/github", {
+        method: "POST",
+        body,
+        headers: { "x-github-event": "workflow_run", "x-github-delivery": delivery, "x-hub-signature-256": sig ?? (await sign(body)) },
+      }),
+    );
   const run = (conclusion: string, updated: string) =>
-    JSON.stringify({ installation: { id: 42 }, repository: { full_name: "joao/app" }, workflow_run: { id: 7, name: "CI", status: "completed", conclusion, html_url: "https://github.com/joao/app/actions/runs/7", head_sha: "abcdef1234", updated_at: updated, run_number: 3 } });
+    JSON.stringify({
+      installation: { id: 42 },
+      repository: { full_name: "joao/app" },
+      workflow_run: { id: 7, name: "CI", status: "completed", conclusion, html_url: "https://github.com/joao/app/actions/runs/7", head_sha: "abcdef1234", updated_at: updated, run_number: 3 },
+    });
 
   const failed = run("failure", "2026-10-13T10:05:00Z");
   assert.equal((await send(failed, "d1", "sha256=" + "0".repeat(64))).status, 401);

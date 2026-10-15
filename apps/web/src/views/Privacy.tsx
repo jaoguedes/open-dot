@@ -18,22 +18,17 @@ export function Privacy() {
     <article className="legal">
       <p className="serif legal-kicker">Política</p>
       <h1>Privacidade</h1>
-      <p className="lead">
-        O Open Dot é um espaço pessoal. Não vendemos, alugamos nem compartilhamos os seus dados com
-        terceiros.
-      </p>
+      <p className="lead">O Open Dot é um espaço pessoal. Não vendemos, alugamos nem compartilhamos os seus dados com terceiros.</p>
 
       <h2>Gmail só em leitura</h2>
       <p>
-        Pedimos apenas a permissão <span className="mono">gmail.readonly</span>. O Correio lê
-        metadados e um trecho curto. Não envia, apaga, arquiva nem marca nada sem uma política
-        explícita e a sua aprovação do conteúdo exato.
+        Pedimos apenas a permissão <span className="mono">gmail.readonly</span>. O Correio lê metadados e um trecho curto. Não envia, apaga, arquiva nem marca nada sem uma política explícita e a sua
+        aprovação do conteúdo exato.
       </p>
 
       <h2>Inteligência artificial</h2>
       <p>
-        Quando a IA está ligada, usamos um provedor com retenção zero (zero data retention). Conteúdo
-        de e-mail, issue, site ou arquivo é dado não confiável: nunca vira instrução e não libera
+        Quando a IA está ligada, usamos um provedor com retenção zero (zero data retention). Conteúdo de e-mail, issue, site ou arquivo é dado não confiável: nunca vira instrução e não libera
         ferramenta.
       </p>
 

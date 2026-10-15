@@ -23,18 +23,22 @@ export function judgeExtraction(text: string, pages: number | null): ExtractionV
 
 /** Normaliza o texto extraído: quebra de linha única, sem espaços repetidos e sem caracteres de controle. */
 export function normalizeText(text: string): string {
-  return text
-    .replace(/\r\n?/g, "\n")
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
-    .replace(/[ \t\u00A0]+/g, " ")
-    .replace(/ *\n */g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  return (
+    text
+      .replace(/\r\n?/g, "\n")
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+      .replace(/[ \t\u00A0]+/g, " ")
+      .replace(/ *\n */g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim()
+  );
 }
 
 const STOP = new Set(
-  "a o e de da do das dos em no na nos nas um uma uns umas para por com sem que se ao aos à às é são ser foi como mais mas ou também já não sim seu sua seus suas ele ela eles elas isso isto este esta esse essa aquele aquela cada até ate entre sobre quando onde muito pode deve todo toda todos todas the of and to in for on with is are be this that from by at or an as it".split(" "),
+  "a o e de da do das dos em no na nos nas um uma uns umas para por com sem que se ao aos à às é são ser foi como mais mas ou também já não sim seu sua seus suas ele ela eles elas isso isto este esta esse essa aquele aquela cada até ate entre sobre quando onde muito pode deve todo toda todos todas the of and to in for on with is are be this that from by at or an as it".split(
+    " ",
+  ),
 );
 
 export interface Organized {
@@ -50,9 +54,14 @@ export interface Organized {
 
 export function organizeText(input: { text: string; fileName: string; mime: string; pages: number | null }): Organized {
   const text = normalizeText(input.text);
-  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
   const isMd = input.mime === "text/markdown" || /\.(md|markdown)$/i.test(input.fileName);
-  const headings = (isMd ? lines.filter((l) => /^#{1,3}\s+\S/.test(l)).map((l) => l.replace(/^#{1,3}\s+/, "")) : lines.filter((l) => l.length <= 80 && /^[A-ZÀ-Ú0-9][^.!?]*$/.test(l) && l.split(" ").length <= 10))
+  const headings = (
+    isMd ? lines.filter((l) => /^#{1,3}\s+\S/.test(l)).map((l) => l.replace(/^#{1,3}\s+/, "")) : lines.filter((l) => l.length <= 80 && /^[A-ZÀ-Ú0-9][^.!?]*$/.test(l) && l.split(" ").length <= 10)
+  )
     .slice(0, 8)
     .map((h) => h.slice(0, 80));
   const words = text.split(/\s+/).filter(Boolean);

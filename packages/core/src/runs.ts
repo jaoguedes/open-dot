@@ -33,9 +33,7 @@ export interface RunSnapshot {
   version: number;
 }
 
-export type TransitionResult =
-  | { ok: true; next: RunSnapshot }
-  | { ok: false; reason: "stale_version" | "terminal" | "forbidden" };
+export type TransitionResult = { ok: true; next: RunSnapshot } | { ok: false; reason: "stale_version" | "terminal" | "forbidden" };
 
 /**
  * Transição com controle otimista: só aplica se a versão esperada for a atual.

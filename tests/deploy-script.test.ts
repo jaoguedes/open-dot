@@ -18,10 +18,12 @@ test("o id ativo é o 100% mais recente, mesmo se não for o último da lista", 
 });
 
 test("texto com uuid no final não vence o JSON", () => {
-  const text = `log solto ${OLD}\n` + JSON.stringify([
-    { created_on: "2026-10-15T10:00:00.000Z", versions: [{ version_id: OLD, percentage: 100 }] },
-    { created_on: "2026-10-15T17:20:44.377Z", versions: [{ version_id: NEW, percentage: 100 }] },
-  ]);
+  const text =
+    `log solto ${OLD}\n` +
+    JSON.stringify([
+      { created_on: "2026-10-15T10:00:00.000Z", versions: [{ version_id: OLD, percentage: 100 }] },
+      { created_on: "2026-10-15T17:20:44.377Z", versions: [{ version_id: NEW, percentage: 100 }] },
+    ]);
   assert.equal(activeVersionId(parseDeploymentsJson(text)), NEW);
   assert.equal(parseDeploymentsJson("sem json"), null);
 });

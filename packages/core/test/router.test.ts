@@ -31,16 +31,14 @@ const task = (p: Partial<AiTask> = {}): AiTask => ({
   ...p,
 });
 
-const ledger = (calls = 50, tokens = 100_000) =>
-  new MemoryLedger(() => ({ ownerCallsPerDay: calls, ownerTokensPerDay: tokens, modelRequestsPerDay: 1000, modelTokensPerDay: 200_000 }));
+const ledger = (calls = 50, tokens = 100_000) => new MemoryLedger(() => ({ ownerCallsPerDay: calls, ownerTokensPerDay: tokens, modelRequestsPerDay: 1000, modelTokensPerDay: 200_000 }));
 
 test("validação recusa provedor pago e dado privado sem confirmação de política", () => {
-  const { ok, rejected } = validateProviders([
-    { ...provider("a", ["public"]), billing: "paid" },
-    { ...provider("b", ["private_email"]), privacyConfirmed: false },
-    provider("c", ["public"]),
-  ]);
-  assert.deepEqual(ok.map((p) => p.id), ["c"]);
+  const { ok, rejected } = validateProviders([{ ...provider("a", ["public"]), billing: "paid" }, { ...provider("b", ["private_email"]), privacyConfirmed: false }, provider("c", ["public"])]);
+  assert.deepEqual(
+    ok.map((p) => p.id),
+    ["c"],
+  );
   assert.equal(rejected.length, 2);
 });
 
@@ -69,7 +67,10 @@ test("429 em A e B não permitido para conteúdo privado: aguarda, não envia a 
   const out = await r.run(task());
   assert.equal(out.status, "waiting_quota");
   if (out.status === "waiting_quota") assert.equal(out.retryAt, 1_000_000 + 20_000);
-  assert.ok(calls.every((u) => u.includes("a.example")), "nenhuma chamada a B");
+  assert.ok(
+    calls.every((u) => u.includes("a.example")),
+    "nenhuma chamada a B",
+  );
 });
 
 test("reservas concorrentes no último saldo não ultrapassam o teto", async () => {
@@ -182,7 +183,10 @@ test("Groq usa max_completion_tokens e reasoning low; 402 desliga a rota", async
 test("registro D-016: só Groq ligado; Gemini nunca privado; nenhuma rota paga", async () => {
   const { PROVIDER_REGISTRY, enabledProviders, registryAllowsPaid } = await import("../src/ai/registry.ts");
   assert.equal(registryAllowsPaid(), false);
-  assert.deepEqual(enabledProviders().map((p) => p.id), ["groq"]);
+  assert.deepEqual(
+    enabledProviders().map((p) => p.id),
+    ["groq"],
+  );
   const gemini = PROVIDER_REGISTRY.find((p) => p.id === "gemini")!;
   assert.equal(gemini.enabled, false);
   assert.equal(gemini.neverPrivate, true);

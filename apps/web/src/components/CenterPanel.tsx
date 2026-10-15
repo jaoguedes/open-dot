@@ -4,7 +4,19 @@ import { fmtWhen } from "../format.ts";
 import { useDialog } from "./useDialog.ts";
 
 /** Central do Dot (D2): carregada só quando o sino é tocado. */
-export function CenterPanel({ events, seenAt, onMarkAll, onClose, onPick }: { events: ReturnType<typeof buildEvents>; seenAt: string | null; onMarkAll: () => void; onClose: () => void; onPick: (p: string) => void }) {
+export function CenterPanel({
+  events,
+  seenAt,
+  onMarkAll,
+  onClose,
+  onPick,
+}: {
+  events: ReturnType<typeof buildEvents>;
+  seenAt: string | null;
+  onMarkAll: () => void;
+  onClose: () => void;
+  onPick: (p: string) => void;
+}) {
   const box = useRef<HTMLDivElement>(null);
   useDialog(true, box, onClose);
   return (

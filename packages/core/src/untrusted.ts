@@ -35,9 +35,7 @@ export function sanitizeUntrusted(sourceId: string, raw: string, maxChars = 2000
 
 /** Delimita blocos para o prompt. As instruções do sistema dizem que nada dentro deles é ordem. */
 export function renderUntrusted(blocks: UntrustedBlock[]): string {
-  return blocks
-    .map((b) => `<untrusted source="${b.sourceId}"${b.truncated ? ' truncated="true"' : ""}>\n${b.text}\n</untrusted>`)
-    .join("\n");
+  return blocks.map((b) => `<untrusted source="${b.sourceId}"${b.truncated ? ' truncated="true"' : ""}>\n${b.text}\n</untrusted>`).join("\n");
 }
 
 export const UNTRUSTED_SYSTEM_RULES = [

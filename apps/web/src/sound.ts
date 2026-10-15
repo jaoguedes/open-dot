@@ -117,10 +117,7 @@ export type SoundPlayer = ReturnType<typeof createSoundPlayer>;
 
 /** Instância do app. Em ambiente sem `Audio` (testes, SSR) vira um tocador mudo. */
 export const sound: SoundPlayer = createSoundPlayer({
-  makeAudio: (src) =>
-    typeof Audio !== "undefined"
-      ? (new Audio(src) as unknown as AudioLike)
-      : { volume: 0, currentTime: 0, paused: true, preload: "", load() {}, play() {}, pause() {} },
+  makeAudio: (src) => (typeof Audio !== "undefined" ? (new Audio(src) as unknown as AudioLike) : { volume: 0, currentTime: 0, paused: true, preload: "", load() {}, play() {}, pause() {} }),
   isHidden: () => typeof document !== "undefined" && document.hidden,
   now: () => Date.now(),
 });

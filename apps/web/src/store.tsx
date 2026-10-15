@@ -124,7 +124,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch {
       /* sem sessionStorage: sem oi */
     }
-    const need = snap.approvals.filter((a) => a.status === "pending").length + snap.feed.filter((f) => (f.kind === "ci_failure" || f.kind === "site_incident") && f.state !== "done" && f.state !== "snoozed").length;
+    const need =
+      snap.approvals.filter((a) => a.status === "pending").length +
+      snap.feed.filter((f) => (f.kind === "ci_failure" || f.kind === "site_incident") && f.state !== "done" && f.state !== "snoozed").length;
     const ids = new Set(snap.feed.map((f) => f.id));
     const prev = lastCounts.current;
     lastCounts.current = { need, ids };
@@ -331,8 +333,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AppState>(
-    () => ({ mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, setActivity, path, navigate, goBack, announce, announcement, feedHasMore: Boolean(feedNext) && mode === "live", loadMoreFeed, dismissError }),
-    [mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, path, navigate, goBack, announce, announcement, feedNext, loadMoreFeed, dismissError],
+    () => ({
+      mode,
+      demoReason,
+      snap,
+      failures,
+      online,
+      lastLoadedAt,
+      setupMissing,
+      login,
+      refresh,
+      enterDemo,
+      prefs,
+      setPrefs,
+      reducedMotion,
+      visualFor,
+      accessoryFor,
+      activity,
+      setActivity,
+      path,
+      navigate,
+      goBack,
+      announce,
+      announcement,
+      feedHasMore: Boolean(feedNext) && mode === "live",
+      loadMoreFeed,
+      dismissError,
+    }),
+    [
+      mode,
+      demoReason,
+      snap,
+      failures,
+      online,
+      lastLoadedAt,
+      setupMissing,
+      login,
+      refresh,
+      enterDemo,
+      prefs,
+      setPrefs,
+      reducedMotion,
+      visualFor,
+      accessoryFor,
+      activity,
+      path,
+      navigate,
+      goBack,
+      announce,
+      announcement,
+      feedNext,
+      loadMoreFeed,
+      dismissError,
+    ],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

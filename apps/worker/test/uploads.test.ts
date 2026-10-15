@@ -119,7 +119,14 @@ test("upload: PDF escaneado/vazio, hash divergente, tipo e tamanho recusados com
   assert.equal(long.json.error.code, "text_too_long");
 
   // Corpo acima do limite é recusado antes de ler JSON.
-  const res = await handleApi(ctx, new Request("http://localhost:8787/api/uploads", { method: "POST", headers: { cookie: c.getCookie(), "x-open-dot": "1", "content-type": "application/json", "content-length": String(MAX_UPLOAD_BODY + 1) }, body: "{}" }));
+  const res = await handleApi(
+    ctx,
+    new Request("http://localhost:8787/api/uploads", {
+      method: "POST",
+      headers: { cookie: c.getCookie(), "x-open-dot": "1", "content-type": "application/json", "content-length": String(MAX_UPLOAD_BODY + 1) },
+      body: "{}",
+    }),
+  );
   assert.equal(res.status, 413);
   assert.equal(ctx.db.raw.prepare("SELECT COUNT(*) AS n FROM od_uploads").get()!.n, 0);
 });

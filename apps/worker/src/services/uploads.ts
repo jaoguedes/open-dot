@@ -28,8 +28,7 @@ export interface UploadInput {
 }
 
 export type CreateResult =
-  | { ok: true; id: string; runId: string; state: "received" }
-  | { ok: false; status: number; code: string; message: string; existing?: { id: string; state: string; createdAt: string } };
+  { ok: true; id: string; runId: string; state: "received" } | { ok: false; status: number; code: string; message: string; existing?: { id: string; state: string; createdAt: string } };
 
 export function parseUploadInput(raw: unknown): UploadInput | null {
   if (!raw || typeof raw !== "object") return null;
@@ -75,7 +74,21 @@ export async function createUpload(ctx: Ctx, ownerId: string, input: UploadInput
     await ctx.db.batch([
       {
         sql: "INSERT INTO od_uploads (id, owner_id, file_sha256, text_sha256, file_name_enc, mime, file_bytes, text_chars, pages, text_enc, state, run_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'received', ?, ?, ?)",
-        args: [id, ownerId, input.fileSha256, input.textSha256, await seal(ctx.keys, input.fileName, `upload-name:${id}`), input.mime || "application/octet-stream", input.fileBytes, text.length, input.pages, await seal(ctx.keys, text, `upload:${id}`), runId, iso(now), iso(now)],
+        args: [
+          id,
+          ownerId,
+          input.fileSha256,
+          input.textSha256,
+          await seal(ctx.keys, input.fileName, `upload-name:${id}`),
+          input.mime || "application/octet-stream",
+          input.fileBytes,
+          text.length,
+          input.pages,
+          await seal(ctx.keys, text, `upload:${id}`),
+          runId,
+          iso(now),
+          iso(now),
+        ],
       },
       {
         sql: "INSERT INTO od_runs (id, owner_id, routine_id, agent_id, kind, slot_key, scheduled_at, late, state, version, attempt, next_attempt_at, created_at, updated_at) VALUES (?, ?, NULL, 'dot', 'file_organize', ?, ?, 0, 'queued', 1, 0, ?, ?, ?)",
@@ -118,7 +131,10 @@ export async function organizeUpload(ctx: Ctx, run: repo.RunRow): Promise<{ stat
       kind: "file_organized",
       // O título do feed fica em claro no banco; nome e conteúdo do arquivo só no corpo cifrado.
       title: "Arquivo organizado",
-      body: { headline: result.title, summary: `${result.title} — ${result.words.toLocaleString("pt-BR")} palavras${result.pages ? ` em ${result.pages} páginas` : ""}. Termos: ${result.keywords.slice(0, 5).join(", ") || "—"}. Organizado por regras, sem IA.` },
+      body: {
+        headline: result.title,
+        summary: `${result.title} — ${result.words.toLocaleString("pt-BR")} palavras${result.pages ? ` em ${result.pages} páginas` : ""}. Termos: ${result.keywords.slice(0, 5).join(", ") || "—"}. Organizado por regras, sem IA.`,
+      },
       freshness: "fresh",
       coverage: null,
       now: ctx.now(),
@@ -126,7 +142,12 @@ export async function organizeUpload(ctx: Ctx, run: repo.RunRow): Promise<{ stat
     return { state: "succeeded" };
   } catch (e) {
     const message = e instanceof Error ? e.message.slice(0, 200) : "erro";
-    await ctx.db.run("UPDATE od_uploads SET state = 'failed', error_code = 'organize_failed', error_message = ?, updated_at = ? WHERE id = ? AND owner_id = ?", ["Não consegui organizar o texto.", iso(ctx.now()), up.id, up.owner_id]);
+    await ctx.db.run("UPDATE od_uploads SET state = 'failed', error_code = 'organize_failed', error_message = ?, updated_at = ? WHERE id = ? AND owner_id = ?", [
+      "Não consegui organizar o texto.",
+      iso(ctx.now()),
+      up.id,
+      up.owner_id,
+    ]);
     return { state: "failed", errorCode: "organize_failed", message };
   }
 }
@@ -166,7 +187,21 @@ export interface UploadView {
   updatedAt: string;
 }
 
-type UploadRow = { id: string; file_name_enc: string; mime: string; file_bytes: number; text_chars: number; pages: number | null; state: UploadView["state"]; run_id: string | null; result_enc: string | null; error_code: string | null; error_message: string | null; created_at: string; updated_at: string };
+type UploadRow = {
+  id: string;
+  file_name_enc: string;
+  mime: string;
+  file_bytes: number;
+  text_chars: number;
+  pages: number | null;
+  state: UploadView["state"];
+  run_id: string | null;
+  result_enc: string | null;
+  error_code: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 async function toView(ctx: Ctx, r: UploadRow, withResult: boolean): Promise<UploadView> {
   return {
@@ -203,7 +238,10 @@ export async function deleteUpload(ctx: Ctx, ownerId: string, id: string): Promi
   await ctx.db.batch([
     { sql: "DELETE FROM od_uploads WHERE id = ? AND owner_id = ?", args: [id, ownerId] },
     { sql: "DELETE FROM od_feed_items WHERE owner_id = ? AND run_id = ? AND kind = 'file_organized'", args: [ownerId, up.run_id] },
-    { sql: "UPDATE od_runs SET state = 'cancelled', version = version + 1, updated_at = ? WHERE id = ? AND owner_id = ? AND state IN ('queued','retry_scheduled')", args: [iso(ctx.now()), up.run_id, ownerId] },
+    {
+      sql: "UPDATE od_runs SET state = 'cancelled', version = version + 1, updated_at = ? WHERE id = ? AND owner_id = ? AND state IN ('queued','retry_scheduled')",
+      args: [iso(ctx.now()), up.run_id, ownerId],
+    },
   ]);
   return true;
 }
