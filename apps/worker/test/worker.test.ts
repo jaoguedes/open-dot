@@ -50,8 +50,8 @@ test("passo 2 do tique falha e os passos seguintes seguem", async () => {
 test("migrações: idempotentes, detectam alteração e recusam destrutivas", async () => {
   const db = new SqliteDb();
   const ms = loadMigrations();
-  assert.deepEqual((await applyMigrations(db, ms)).applied, ["0001", "0002", "0003", "0004", "0005", "0006"]);
-  assert.deepEqual((await applyMigrations(db, ms)).skipped, ["0001", "0002", "0003", "0004", "0005", "0006"]);
+  assert.deepEqual((await applyMigrations(db, ms)).applied, ["0001", "0002", "0003", "0004", "0005", "0006", "0007"]);
+  assert.deepEqual((await applyMigrations(db, ms)).skipped, ["0001", "0002", "0003", "0004", "0005", "0006", "0007"]);
   await assert.rejects(applyMigrations(db, [{ ...ms[0]!, sql: ms[0]!.sql + "\n-- mudou" }]), /alterada/);
   await assert.rejects(applyMigrations(db, [{ version: "0099", name: "x", sql: "DROP TABLE od_owners;" }]), /destrutiva/);
 });
@@ -389,7 +389,7 @@ test("health não expõe segredos", async () => {
   const authed = client(ctx);
   assert.equal((await authed.call("POST", "/api/session/dev")).status, 200);
   const detail = await authed.call("GET", "/api/health");
-  assert.equal(detail.json.schema, "0006");
+  assert.equal(detail.json.schema, "0007");
   assert.equal(detail.json.configured.ai, true);
 });
 
@@ -402,7 +402,7 @@ test("currentSchema devolve código curto sem mensagem, token ou URL", async () 
 
   const db = new SqliteDb(":memory:");
   await applyMigrations(db, loadMigrations());
-  assert.deepEqual(await currentSchema(db), { version: "0006" });
+  assert.deepEqual(await currentSchema(db), { version: "0007" });
 
   assert.equal(classifySchemaError(new HranaError("Turso respondeu 401", 401)), "http_401");
   assert.equal(classifySchemaError(new HranaError("Turso respondeu 403", 403)), "http_401");
