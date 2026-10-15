@@ -625,7 +625,11 @@ export async function usageToday(db: Db, ownerId: string, now: number) {
 // ---------------- Aprovações ----------------
 
 /** Decisão com compare-and-set: duas confirmações concorrentes → um único efeito. */
-export async function decideApproval(db: Db, p: { ownerId: string; id: string; decision: "approve" | "reject"; expectedVersion: number; payloadHash: string; now: number }): Promise<"ok" | "conflict" | "expired" | "not_found"> {
+/**
+ * Decide uma aprovação só se versão, hash do conteúdo e estado baterem (compare-and-set).
+ * Quando não bate, diz a causa: "changed" (o conteúdo ou a versão mudou) ou "decided".
+ */
+export async function decideApproval(db: Db, p: { ownerId: string; id: string; decision: "approve" | "reject"; expectedVersion: number; payloadHash: string; now: number }): Promise<"ok" | "changed" | "decided" | "expired" | "not_found"> {
   const r = await db.run(
     "UPDATE od_approvals SET status = ?, version = version + 1, decided_at = ? WHERE id = ? AND owner_id = ? AND version = ? AND status = 'pending' AND payload_hash = ? AND expires_at > ?",
     [p.decision === "approve" ? "approved" : "rejected", iso(p.now), p.id, p.ownerId, p.expectedVersion, p.payloadHash, iso(p.now)],
@@ -634,7 +638,7 @@ export async function decideApproval(db: Db, p: { ownerId: string; id: string; d
   const row = (await db.query<{ status: string; expires_at: string }>("SELECT status, expires_at FROM od_approvals WHERE id = ? AND owner_id = ?", [p.id, p.ownerId]))[0];
   if (!row) return "not_found";
   if (row.status === "pending" && row.expires_at <= iso(p.now)) return "expired";
-  return "conflict";
+  return row.status === "pending" ? "changed" : "decided";
 }
 
 export async function listApprovals(db: Db, keys: Keyring, ownerId: string) {
@@ -681,15 +685,16 @@ export async function editApproval(
   db: Db,
   keys: Keyring,
   p: { ownerId: string; id: string; proposal: object; payloadHash: string; expectedVersion: number; now: number },
-): Promise<"ok" | "conflict" | "not_found"> {
+): Promise<"ok" | "changed" | "decided" | "not_found"> {
   const enc = await seal(keys, JSON.stringify(p.proposal), `appr:${p.id}`);
   const r = await db.run(
     "UPDATE od_approvals SET proposal_enc = ?, payload_hash = ?, version = version + 1 WHERE id = ? AND owner_id = ? AND version = ? AND status = 'pending'",
     [enc, p.payloadHash, p.id, p.ownerId, p.expectedVersion],
   );
   if (r.changes === 1) return "ok";
-  const row = (await db.query<{ id: string }>("SELECT id FROM od_approvals WHERE id = ? AND owner_id = ?", [p.id, p.ownerId]))[0];
-  return row ? "conflict" : "not_found";
+  const row = (await db.query<{ status: string }>("SELECT status FROM od_approvals WHERE id = ? AND owner_id = ?", [p.id, p.ownerId]))[0];
+  if (!row) return "not_found";
+  return row.status === "pending" ? "changed" : "decided";
 }
 
 // ---------------- Monitores ----------------

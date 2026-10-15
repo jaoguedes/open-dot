@@ -249,7 +249,7 @@ test("aprovações concorrentes no banco: um único efeito", async () => {
   const h = await hashProposal(proposal);
   await ctx.db.run("INSERT INTO od_approvals (id, owner_id, action, proposal_enc, payload_hash, status, version, expires_at, created_at) VALUES ('ap1', ?, 'gmail.draft', 'x', ?, 'pending', 1, ?, ?)", [owner, h, new Date(ctx.now() + 3600_000).toISOString(), new Date(ctx.now()).toISOString()]);
   const results = await Promise.all([1, 2, 3].map(() => repo.decideApproval(ctx.db, { ownerId: owner, id: "ap1", decision: "approve", expectedVersion: 1, payloadHash: h, now: ctx.now() })));
-  assert.deepEqual(results.sort(), ["conflict", "conflict", "ok"]);
+  assert.deepEqual(results.sort(), ["decided", "decided", "ok"]);
   assert.equal(await repo.decideApproval(ctx.db, { ownerId: "outro", id: "ap1", decision: "approve", expectedVersion: 2, payloadHash: h, now: ctx.now() }), "not_found");
 });
 
