@@ -24,6 +24,8 @@
     "worker:deploy": "npm run check && npm run test:workerd && npx --yes wrangler@4 deploy",
     "worker:dev": "npx --yes wrangler@4 dev --local --port 8799",
     "test:workerd": "tsx scripts/check-workerd-health.ts",
+    "ui:mobile": "node scripts/ui-mobile.mjs",
+    "deploy": "node scripts/deploy.mjs",
     "setup:cloud": "tsx scripts/setup-cloud.ts",
     "test:blender": "python3 blender/test_spec.py",
     "eval:ai": "tsx scripts/eval-ai.ts"
