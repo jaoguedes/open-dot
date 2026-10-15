@@ -58,6 +58,20 @@ async function ready(p) {
 // UI_ONLY=dot3d roda só a seção do Dot 3D (iteração rápida); sem a variável, roda tudo.
 const ONLY = process.env.UI_ONLY ?? "";
 if (!ONLY) {
+{
+  const { p, ctx, errors } = await page({ colorScheme: "dark" });
+  await p.goto(BASE + "/sobre");
+  await ready(p);
+  check("sobre abre sem login", (await p.getByRole("heading", { name: "Open Dot" }).count()) > 0 && (await p.getByRole("button", { name: /modo desenvolvimento/i }).count()) === 0);
+  check("sobre liga privacidade", (await p.getByRole("link", { name: /privacidade/i }).count()) > 0);
+  check("sobre sem erro de console", errors.length === 0, errors.join(" | ").slice(0, 200));
+  await p.goto(BASE + "/privacidade");
+  await ready(p);
+  check("privacidade abre sem login", (await p.getByRole("heading", { name: "Privacidade" }).count()) > 0);
+  check("privacidade cita Gmail só leitura", (await p.getByText(/gmail\.readonly/).count()) > 0);
+  check("privacidade sem erro de console", errors.length === 0, errors.join(" | ").slice(0, 200));
+  await ctx.close();
+}
 // 1) Login local e estado vazio real
 {
   const { p, ctx, errors } = await page({ colorScheme: "dark" });
@@ -180,18 +194,22 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
   check("caminho padrão usa o motor SVG", (await p.locator('[data-dot-renderer="engine"]').count()) > 0);
   check("chunk do three.js não carrega no caminho padrão", !requested.some((u) => /DotScene/.test(u)), requested.filter((u) => /DotScene|three/.test(u)).join(" | ").slice(0, 200));
 
+  const preview = p.locator("section.card [data-dot-renderer='engine']").first();
+  await preview.scrollIntoViewIfNeeded();
   await p.getByRole("radio", { name: "Esperando seu OK" }).check();
   await p.getByRole("button", { name: "Fazer carinho" }).first().click();
-  await p.waitForTimeout(200);
+  await p.getByText(/Carinho não aparece/).waitFor({ timeout: 3_000 });
   const heartsBlocked = await p.evaluate(() => [...document.querySelectorAll("section.card [data-part]")].filter((e) => Number(e.getAttribute("opacity")) > 0.08).length);
   const note = await p.getByText(/Carinho não aparece/).count();
   check("carinho não mascara aprovação pendente", heartsBlocked === 0 && note === 1, `partículas=${heartsBlocked} nota=${note}`);
 
   await p.getByRole("radio", { name: "Em repouso" }).check();
   await p.getByRole("button", { name: "Fazer carinho" }).first().click();
-  await p.waitForTimeout(900);
-  const hearts = await p.evaluate(() => [...document.querySelectorAll("section.card [data-part]")].filter((e) => Number(e.getAttribute("opacity")) > 0.08).length);
-  check("carinho aparece em repouso", hearts > 0, `${hearts} partículas`);
+  const hearts = await p
+    .waitForFunction(() => [...document.querySelectorAll("section.card [data-part]")].filter((e) => Number(e.getAttribute("opacity")) > 0.08).length, null, { timeout: 3_000 })
+    .then((h) => h.jsonValue())
+    .catch(() => 0);
+  check("carinho aparece em repouso", Number(hearts) > 0, `${hearts} partículas`);
 
   await p.getByRole("radio", { name: "Com erro" }).check();
   const stage = p.locator("section.card [data-dot-renderer='engine']").first();
@@ -201,14 +219,15 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
   check("toque no erro não troca o estado", /erro/i.test(blockedPoke), blockedPoke);
 
   await p.getByRole("radio", { name: "Em repouso" }).check();
+  await stage.scrollIntoViewIfNeeded();
   await stage.click({ position: { x: 110, y: 110 } });
-  await p.waitForTimeout(60);
   await stage.click({ position: { x: 110, y: 110 } });
-  await p.waitForTimeout(60);
   await stage.click({ position: { x: 110, y: 110 } });
-  await p.waitForTimeout(400);
-  const dizzy = await p.evaluate(() => Number(document.querySelector('section.card [data-r="ind-spiral"]')?.getAttribute("opacity") ?? "0"));
-  check("três toques em 0,9 s disparam tonto", dizzy > 0, `spiral=${dizzy}`);
+  const dizzy = await p
+    .waitForFunction(() => Number(document.querySelector('section.card [data-r="ind-spiral"]')?.getAttribute("opacity") ?? "0"), null, { timeout: 3_000 })
+    .then((h) => h.jsonValue())
+    .catch(() => 0);
+  check("três toques em 0,9 s disparam tonto", Number(dizzy) > 0, `spiral=${dizzy}`);
 
   const before = await p.evaluate(() => document.querySelector('section.card [data-r="eyeAd0"]')?.parentElement?.getAttribute("transform") ?? "");
   const box = await stage.boundingBox();
@@ -218,9 +237,11 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
   check("o olhar segue o ponteiro", before !== after, `${before} → ${after}`);
 
   await p.getByRole("radio", { name: "Correio" }).check();
-  await p.waitForTimeout(500);
-  const cap = await p.evaluate(() => Number(document.querySelector('section.card [data-r="cap"]')?.getAttribute("opacity") ?? "0"));
-  check("acessório do Correio (boné) aparece", cap > 0, `cap=${cap}`);
+  const cap = await p
+    .waitForFunction(() => Number(document.querySelector('section.card [data-r="cap"]')?.getAttribute("opacity") ?? "0"), null, { timeout: 3_000 })
+    .then((h) => h.jsonValue())
+    .catch(() => 0);
+  check("acessório do Correio (boné) aparece", Number(cap) > 0, `cap=${cap}`);
   await ctx.close();
 }
 }

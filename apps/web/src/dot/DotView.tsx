@@ -337,8 +337,11 @@ export function DotView(props: DotViewProps) {
       else e.setState(map);
     }
     e.setAccessory(props.ring ? "ring" : resolveAcc(props.accessory));
+    tickRef.current?.setVisible(true);
     tickRef.current?.setActive(true);
-  }, [props.visual.semantic, props.accessory, props.ring]);
+    const svg = svgRef.current;
+    if (svg) apply(svg, uid, e.frame(), pulseRef.current);
+  }, [props.visual.semantic, props.accessory, props.ring, uid]);
 
   useEffect(() => {
     const e = eng.current;
@@ -346,9 +349,14 @@ export function DotView(props: DotViewProps) {
     lastAff.current = props.affectionSignal;
     if (!props.visual.allowCosmetic) { props.onAffection?.("suppressed"); return; }
     const r = e.react("love");
-    if (r === "ok") tickRef.current?.setActive(true);
+    if (r === "ok") {
+      tickRef.current?.setVisible(true);
+      tickRef.current?.setActive(true);
+      const svg = svgRef.current;
+      if (svg) apply(svg, uid, e.frame(), pulseRef.current);
+    }
     props.onAffection?.(r === "ok" ? "ok" : r === "cooldown" ? "cooldown" : "suppressed");
-  }, [props.affectionSignal, props.visual.allowCosmetic, props.onAffection]);
+  }, [props.affectionSignal, props.visual.allowCosmetic, props.onAffection, uid]);
 
   useEffect(() => {
     const e = eng.current;
@@ -377,9 +385,13 @@ export function DotView(props: DotViewProps) {
     if (clicks.current.length >= 3) {
       clicks.current = [];
       e.react("dizzy");
-      return;
+    } else {
+      e.react("poke");
     }
-    e.react("poke");
+    tickRef.current?.setVisible(true);
+    tickRef.current?.setActive(true);
+    const svg = svgRef.current;
+    if (svg) apply(svg, uid, e.frame(), pulseRef.current);
   };
 
   const label = props.label ?? `${props.visual.label}`;

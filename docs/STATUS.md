@@ -1,6 +1,6 @@
 # STATUS — Open Dot
 
-_Atualizado em 14/10/2026 · Etapa 1 visual (tela 02, feed, demo, ilha) no núcleo; etapas 2–4 em seguida._
+_Atualizado em 14/10/2026 · Etapas 1–2 no núcleo; faltam testes de UI, deploy e GitHub._
 
 ## Sessão autônoma 13→14/10 (em andamento)
 
@@ -92,7 +92,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Etapa 3: `setup:cloud --from-dev-vars`, testes locais (check, test:ui com causa dos timeouts do Mascote, eval:ai) e deploy Workers Free. Depois Etapa 4 (GitHub privado).
+Etapa 3 em andamento: `--from-dev-vars`, tinta imediata do motor (carinho/tonto/boné sem depender do rAF) e retry do organize. Falta test:ui + deploy + GitHub.
 
 ## Como retomar em outra sessão
 

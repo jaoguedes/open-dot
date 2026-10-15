@@ -135,9 +135,14 @@ export async function organizeUpload(ctx: Ctx, run: repo.RunRow): Promise<{ stat
 export async function processNow(ctx: Ctx, ownerId: string, id: string): Promise<UploadView | null> {
   const up = (await ctx.db.query<{ run_id: string | null }>("SELECT run_id FROM od_uploads WHERE id = ? AND owner_id = ?", [id, ownerId]))[0];
   if (!up) return null;
-  const run = up.run_id ? (await ctx.db.query<repo.RunRow>("SELECT * FROM od_runs WHERE id = ? AND owner_id = ?", [up.run_id, ownerId]))[0] : undefined;
+  const loadRun = () => (up.run_id ? ctx.db.query<repo.RunRow>("SELECT * FROM od_runs WHERE id = ? AND owner_id = ?", [up.run_id, ownerId]) : Promise.resolve([]));
+  let run = (await loadRun())[0];
   if (run && (run.state === "queued" || run.state === "retry_scheduled")) {
-    const claimed = await repo.claimRun(ctx.db, run, ctx.now());
+    let claimed = await repo.claimRun(ctx.db, run, ctx.now());
+    if (!claimed) {
+      run = (await loadRun())[0];
+      if (run && (run.state === "queued" || run.state === "retry_scheduled")) claimed = await repo.claimRun(ctx.db, run, ctx.now());
+    }
     if (claimed) {
       const r = await organizeUpload(ctx, claimed);
       await repo.finishRun(ctx.db, claimed, { state: r.state, ...(r.errorCode ? { errorCode: r.errorCode } : {}), ...(r.message ? { errorMessage: r.message } : {}), now: ctx.now() });
