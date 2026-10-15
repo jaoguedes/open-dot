@@ -5,7 +5,7 @@ import { AgentDot } from "../dot/AgentDot.tsx";
 import { fmtTime, greeting, needYouLine } from "../format.ts";
 import { agentConnected, agentPresence, type ConnectionFacts } from "../presence.ts";
 import type { FeedEntry } from "../api.ts";
-import { api } from "../api.ts";
+import { ApiError, api } from "../api.ts";
 import { GmailOpen } from "../components/GmailOpen.tsx";
 
 type Filter = "all" | "need" | "sources";
@@ -149,16 +149,11 @@ export function MyDay() {
               <article key={it.id} className={`feed-card ${isNeed(it) ? "need" : ""}`}>
                 <div className="feed-kicker">
                   {AGENTS[it.agentId].name} · {fmtTime(it.createdAt)}
-                  {isNeed(it) && it.kind !== "ci_failure" && <span className="chip warn" style={{ marginLeft: "auto" }}>Precisa de você</span>}
-                  {it.kind === "ci_failure" && <span className="chip err" style={{ marginLeft: "auto" }}>Falhou</span>}
+                  {isNeed(it) && it.kind !== "ci_failure" && <span className="chip warn chip-push">Precisa de você</span>}
+                  {it.kind === "ci_failure" && <span className="chip err chip-push">Falhou</span>}
                 </div>
                 <FeedCardBody item={it} pendingAp={pendingAp} />
-                {isNeed(it) && it.state !== "done" && it.state !== "snoozed" && app.mode === "live" && (
-                  <div className="row-actions">
-                    <button className="btn" type="button" onClick={() => void api.feedDone(it.id).then(() => app.refresh())}>Feito</button>
-                    <button className="btn ghost" type="button" onClick={() => void api.feedSnooze(it.id).then(() => app.refresh())}>Adiar</button>
-                  </div>
-                )}
+                {isNeed(it) && it.state !== "done" && it.state !== "snoozed" && app.mode === "live" && <FeedActions id={it.id} />}
               </article>
             ))
           )}
@@ -232,5 +227,42 @@ function FeedCardBody({ item, pendingAp }: { item: FeedEntry; pendingAp?: string
         </div>
       )}
     </>
+  );
+}
+
+/** Feito / Adiar: um clique por vez; falha vira aviso no cartão (o Dot de erro vem do api.ts). */
+function FeedActions({ id }: { id: string }) {
+  const app = useApp();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const act = async (kind: "done" | "snooze") => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      if (kind === "done") await api.feedDone(id);
+      else await api.feedSnooze(id);
+      app.announce(kind === "done" ? "Marcado como feito." : "Adiado até amanhã às 8h.");
+      await app.refresh();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Não consegui salvar. Tente de novo.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="row-actions">
+      <button className="btn" type="button" disabled={busy} onClick={() => void act("done")}>
+        Feito
+      </button>
+      <button className="btn ghost" type="button" disabled={busy} onClick={() => void act("snooze")}>
+        Adiar
+      </button>
+      {error && (
+        <p className="tiny err-text" role="status">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

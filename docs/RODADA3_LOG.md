@@ -84,3 +84,26 @@ Achado para a fase D: a ilha mostrou “Correio com erro · not_connected” (c�
 - Worker `4c19544f-eb50-47a9-9961-7d77e75989a1`, app `a2534331ca01` (build do commit `5ee300b`), rollback `509e4b64-2ff9-44a1-8a24-9dfcc0b8c84d`. Fumaça do script ok.
 - Conferido no ar: `/api/health` `{"ok":true}`; `app.js` `max-age=0, must-revalidate`; chunk `immutable` 1 ano; `/sounds/dot-tap.mp3` `max-age=86400`; `/fonts/nao-existe.woff2` GET → 404 `text/plain` `no-store`; `/api/snapshot` sem sessão → 401.
 - Nos primeiros segundos um chunk novo respondeu 404 a um HEAD; segundos depois 200 em GET e HEAD (propagação). O app já trata chunk ausente recarregando uma vez.
+
+## Dívida da fase A: testes de navegador (15/10/2026)
+
+`scripts/ui-fase-a.mjs` (`npm run ui:fase-a`): serve um `dist` qualquer num servidor local, simula a API com `page.route` (mesmas formas das rotas reais, inclusive `disabledProviders` com Ship24) e roda em 390×844 com toque. Não precisa de `npm run dev`. O `npm run deploy` passou a rodá-lo.
+
+Prova: worktree em `e0de064` (último commit antes de qualquer correção da fase A), `node scripts/build.mjs` lá, e o mesmo script com `--dist` apontando para esse build.
+
+| Teste | `e0de064` (antes) | atual |
+|---|---|---|
+| A1 Voltar ≥ 44 px volta para Meu dia | falha: não há botão Voltar | ok |
+| A1 Faixa marca o atual, troca de agente, voltar do navegador | falha: não há faixa | ok |
+| A1 `/aprovacao/%E0%A4%A` mostra “Endereço inválido” | falha | ok |
+| A1 rota desconhecida “Não achei essa página” | falha (caía no Dot) | ok |
+| A2 2 e-mails + 1 CI = “Três coisas”; Feito → “Duas” | falha: “Duas coisas pedem você.” (`mailNeed \|\| outros`) | ok |
+| A3 API 500 em host público (`opendot.test`) | falha: entrou na demonstração | ok |
+| A8 Login com `?erro=callback_invalido` | falha | **falhava também no código publicado da fase A**; corrigido agora (6 textos novos no Login) |
+| A8 Login conhece os 6 códigos | falha | idem, corrigido agora |
+| A8 Conexões mostra banner e limpa a URL | falha (não limpava) | ok (limpeza feita na fase B) |
+| A9 Testar Mercado mostra “CoinGecko: …” | falha: `[object Object]` | ok |
+| A9 Entregas sem Ship24, com “Copiar código” | falha | ok |
+| A10 Polling com 500 vira faixa “desatualizado”, clique com falha mostra o Dot | falha: o Dot de erro apareceu pelo polling | **falhava também no publicado**: o clique em “Feito” com 500 deixava promessa rejeitada sem tratamento. Corrigido (`FeedActions` em `MyDay.tsx`, um clique por vez, aviso no cartão). |
+
+Resultado: 0/12 → 12/12. Saída completa do “antes” guardada nesta sessão; para repetir: `git worktree add /tmp/antes e0de064 && ln -s $PWD/node_modules /tmp/antes/ && (cd /tmp/antes && node scripts/build.mjs) && node scripts/ui-fase-a.mjs --dist /tmp/antes/apps/web/dist`.

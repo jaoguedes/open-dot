@@ -28,7 +28,8 @@
     "deploy": "node scripts/deploy.mjs",
     "setup:cloud": "tsx scripts/setup-cloud.ts",
     "test:blender": "python3 blender/test_spec.py",
-    "eval:ai": "tsx scripts/eval-ai.ts"
+    "eval:ai": "tsx scripts/eval-ai.ts",
+    "ui:fase-a": "node scripts/ui-fase-a.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",

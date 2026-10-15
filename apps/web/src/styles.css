@@ -409,3 +409,5 @@ details > summary::-webkit-details-marker { display: none; }
 .chip-gap { margin-left: 8px; }
 .block { display: block; }
 .boot-blank { min-height: 100dvh; background: var(--bg); }
+.chip-push { margin-left: auto; }
+.err-text { color: var(--err); }

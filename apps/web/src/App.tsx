@@ -581,6 +581,12 @@ function Login() {
     estado_expirado: "O login expirou ou foi reaproveitado. Tente de novo.",
     consentimento_negado: "Você cancelou no Google. Nada foi conectado.",
     login_nao_configurado: "Login com Google ainda não foi configurado no servidor.",
+    callback_invalido: "O retorno do Google veio incompleto. Tente entrar de novo.",
+    sem_id_token: "O Google não confirmou a sua conta. Tente entrar de novo.",
+    sessao_trocada: "A sessão mudou no meio do caminho. Entre de novo.",
+    sem_refresh_token: "O Google não enviou a permissão de longa duração. Remova o acesso em myaccount.google.com/permissions e tente de novo.",
+    permissao_gmail_negada: "O Google não concedeu a leitura do Gmail. Nada foi conectado.",
+    permissao_gsc_negada: "O Google não concedeu a leitura do Search Console. Nada foi conectado.",
   };
   return (
     <main style={{ display: "grid", placeItems: "center", minHeight: "100%", padding: 16 }}>
