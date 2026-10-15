@@ -31,7 +31,7 @@ async function main() {
       console.error("Crie um banco separado para o Open Dot (docs/ACOES_DO_JOAO.md). Nada foi alterado.");
       process.exit(2);
     }
-    console.log(`Banco remoto: ${new URL(url.replace("libsql://", "https://")).host} (${tables.length} tabelas existentes)`);
+    console.log(`Banco remoto: presente (${tables.length} tabelas existentes)`);
   } else {
     mkdirSync(join(root, ".data"), { recursive: true });
     db = new SqliteDb(join(root, ".data/dev.sqlite"));

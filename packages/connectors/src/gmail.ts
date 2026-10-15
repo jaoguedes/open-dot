@@ -8,7 +8,7 @@ import { ConnectorError, fetchWithTimeout } from "./errors.ts";
  */
 
 const BASE = "https://gmail.googleapis.com/gmail/v1/users/me";
-const META_HEADERS = ["From", "To", "Subject", "Date", "List-Unsubscribe", "Precedence"];
+const META_HEADERS = ["From", "To", "Subject", "Date", "List-Unsubscribe", "Precedence", "Message-ID"];
 
 async function call<T>(fetchImpl: typeof fetch, token: string, path: string, now: number): Promise<T> {
   const resp = await fetchWithTimeout(fetchImpl, `${BASE}${path}`, { headers: { authorization: `Bearer ${token}` } }, 15_000);
@@ -101,7 +101,15 @@ export function normalizeMessage(m: RawMessage): EmailMeta {
     labels: m.labelIds ?? [],
     listUnsubscribe: h.has("list-unsubscribe"),
     precedenceBulk: /bulk|list|junk/i.test(h.get("precedence") ?? ""),
+    rfc822Id: (h.get("message-id") ?? "").replace(/[<>]/g, "").slice(0, 200) || null,
   };
+}
+
+/** Abre a busca pelo Message-Id. Sem ele, cai em #all/<id do Gmail>. */
+export function gmailWebHref(gmailId: string, rfc822?: string | null): string {
+  const id = (rfc822 ?? "").trim().replace(/[<>]/g, "");
+  if (id && !/[\s/]/.test(id)) return `https://mail.google.com/mail/u/0/#search/rfc822msgid:${encodeURIComponent(id)}`;
+  return `https://mail.google.com/mail/u/0/#all/${encodeURIComponent(gmailId)}`;
 }
 
 function decodeEntities(s: string): string {

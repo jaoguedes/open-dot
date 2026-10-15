@@ -19,6 +19,8 @@ export interface EmailMeta {
   labels: string[];
   listUnsubscribe: boolean;
   precedenceBulk: boolean;
+  /** Message-Id RFC822, quando o Gmail mandou o cabeçalho. Sem isso o link usa #all. */
+  rfc822Id?: string | null;
 }
 
 export interface PersonalRules {

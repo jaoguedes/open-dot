@@ -28,8 +28,8 @@ async function connectGmail(google: FakeGoogle, ctx: Awaited<ReturnType<typeof m
 test("migrações: idempotentes, detectam alteração e recusam destrutivas", async () => {
   const db = new SqliteDb();
   const ms = loadMigrations();
-  assert.deepEqual((await applyMigrations(db, ms)).applied, ["0001", "0002", "0003", "0004"]);
-  assert.deepEqual((await applyMigrations(db, ms)).skipped, ["0001", "0002", "0003", "0004"]);
+  assert.deepEqual((await applyMigrations(db, ms)).applied, ["0001", "0002", "0003", "0004", "0005"]);
+  assert.deepEqual((await applyMigrations(db, ms)).skipped, ["0001", "0002", "0003", "0004", "0005"]);
   await assert.rejects(applyMigrations(db, [{ ...ms[0]!, sql: ms[0]!.sql + "\n-- mudou" }]), /alterada/);
   await assert.rejects(applyMigrations(db, [{ version: "0099", name: "x", sql: "DROP TABLE od_owners;" }]), /destrutiva/);
 });
@@ -61,10 +61,14 @@ test("fluxo completo simulado: conectar Gmail (leitura), sincronizar e publicar 
   const d = feed[0];
   assert.equal(d.kind, "email_digest");
   assert.equal(d.body.total, 2);
-  assert.equal(d.body.counts.important + d.body.counts.review + d.body.counts.low, 2);
-  assert.match(d.body.top[0].href, /^https:\/\/mail\.google\.com\/mail\/\?authuser=joao%40gmail\.com#all\/t-m1$/);
+  assert.equal(d.body.itens.length + d.body.sem_acao.length + d.body.ruido.contagem, 2);
+  assert.equal(d.body.itens[0].categoria, "resposta");
+  assert.match(d.body.itens[0].href, /^https:\/\/mail\.google\.com\/mail\/u\/0\/#all\/m1$/);
+  assert.match(d.body.itens[0].o_que_fazer, /^(Confira|Pague|Veja|Responda|Acompanhe|Abra|Guarde)/);
   assert.equal(d.body.aiUsed, false);
   assert.match(d.body.aiNote, /regras/);
+  assert.equal(d.body.ruido.contagem, 1);
+  assert.ok(!JSON.stringify(d.body).includes("Menciona"));
   assert.equal(d.coverage.analyzed, 2);
   // nenhuma chamada de escrita ao Gmail (o tick também lê RSS/cotações no mesmo fetch)
   assert.ok(google.calls.filter((x) => x.includes("gmail")).every((x) => x.startsWith("GET ")), google.calls.join("\n"));
@@ -324,7 +328,7 @@ test("health não expõe segredos", async () => {
   const r = await client(ctx).call("GET", "/api/health");
   assert.equal(r.status, 200);
   assert.equal(r.json.ok, true);
-  assert.equal(r.json.schema, "0004");
+  assert.equal(r.json.schema, "0005");
   assert.equal(r.json.schemaError, null);
   assert.ok(!JSON.stringify(r.json).includes("gsk_super_secreta"));
   assert.equal(r.json.configured.ai, true);
@@ -340,7 +344,7 @@ test("currentSchema devolve código curto sem mensagem, token ou URL", async () 
 
   const db = new SqliteDb(":memory:");
   await applyMigrations(db, loadMigrations());
-  assert.deepEqual(await currentSchema(db), { version: "0004" });
+  assert.deepEqual(await currentSchema(db), { version: "0005" });
 
   assert.equal(classifySchemaError(new HranaError("Turso respondeu 401", 401)), "http_401");
   assert.equal(classifySchemaError(new HranaError("Turso respondeu 403", 403)), "http_401");
