@@ -7,6 +7,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
+import { activeVersionId, parseDeploymentsJson, waitForSmoke } from "./lib/deploy-plan.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
 const wranglerText = readFileSync(join(root, "wrangler.jsonc"), "utf8");
@@ -43,16 +44,13 @@ function capture(cmd, args) {
 
 run("npm", ["run", "build"]);
 run("npm", ["run", "check"]);
-run("npm", ["run", "db:migrate", "--", "--remote"]);
 run("npm", ["run", "test:workerd"]);
 run("npm", ["run", "ui:mobile"]);
 
-const listed = capture("npx", ["--yes", "wrangler@4", "deployments", "list"]);
-const blob = `${listed.stdout}\n${listed.stderr}`;
-const versions = [...blob.matchAll(/Version\(s\):\s+\(100%\)\s+([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi)].map((m) => m[1]);
-const previous = versions.at(-1);
+const listed = capture("npx", ["--yes", "wrangler@4", "deployments", "list", "--json"]);
+const previous = activeVersionId(parseDeploymentsJson(listed.stdout ?? ""));
 if (!previous) {
-  console.error("Não consegui ler a versão atual do Worker. O deploy não foi feito.");
+  console.error("Não consegui ler a versão ativa do Worker. O deploy não foi feito.");
   process.exit(1);
 }
 const statusPath = join(root, "docs/STATUS.md");
@@ -66,35 +64,13 @@ if (status.includes("Versão do Worker antes deste deploy")) {
 writeFileSync(statusPath, status);
 console.log("Versão anterior registrada para rollback.");
 
+run("npm", ["run", "db:migrate", "--", "--remote"]);
 run("npx", ["--yes", "wrangler@4", "deploy"]);
 
-let health = { ok: false, schema: "" };
-for (let i = 0; i < 6; i++) {
-  health = await fetch(`${origin}/api/health`).then((r) => r.json());
-  if (health.ok) break;
-  await new Promise((r) => setTimeout(r, 2000));
-}
-if (!health.ok) {
-  console.error("Fumaça: /api/health não veio no schema esperado.");
-  process.exit(1);
-}
-const version = await fetch(`${origin}/api/version`).then((r) => r.json());
 const localHash = createHash("sha256").update(readFileSync(join(root, "apps/web/dist/assets/app.js"))).digest("hex").slice(0, 12);
-const remoteJs = await fetch(`${origin}/assets/app.js`);
-const remoteHash = createHash("sha256").update(Buffer.from(await remoteJs.arrayBuffer())).digest("hex").slice(0, 12);
-if (remoteHash !== localHash) {
-  console.error("Fumaça: o app.js publicado não tem o mesmo hash do build local.");
+const smoke = await waitForSmoke({ origin, appHash: localHash, timeoutMs: 60_000, fetchImpl: fetch });
+if (!smoke) {
+  console.error("Fumaça: em 60 s o health ou o hash publicado não bateram.");
   process.exit(1);
 }
-const sw = await fetch(`${origin}/sw.js`).then((r) => r.text());
-if (!sw.includes(localHash)) {
-  console.error("Fumaça: /sw.js não traz a versão deste build.");
-  process.exit(1);
-}
-const missing = await fetch(`${origin}/assets/inexistente`);
-const missingType = missing.headers.get("content-type") ?? "";
-if (missing.status !== 404 || missingType.includes("text/html")) {
-  console.error("Fumaça: /assets/inexistente não devolveu 404.");
-  process.exit(1);
-}
-console.log(`Fumaça ok. Worker ${version.worker ?? "publicado"}. App ${localHash}. Rollback: ${previous}.`);
+console.log(`Fumaça ok. Worker ${smoke.worker ?? "publicado"}. App ${localHash}. Rollback: ${previous}.`);

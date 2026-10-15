@@ -1,6 +1,23 @@
 # STATUS — Open Dot
 
-_Atualizado em 15/10/2026, rodada 2. Produção `ok:true`, schema `0005`, Worker `da21bebf-d11a-4fdc-abad-c87022130c56`, app `6b4e0f771bdb`. Rollback com `wrangler rollback`: `e065a2e9-70dc-479d-9fd7-f44bf2e6cc4d`. Rastreio automático desligado (`trackingState: desligado`)._
+_Atualizado em 15/10/2026, rodada 3. Produção `ok:true`, schema `0006`, Worker `4d1dbc6e-b55d-475f-8e27-ec36659eb036`, app `75ea1683146c`. Rollback com `wrangler rollback`: `da21bebf-d11a-4fdc-abad-c87022130c56`. Rastreio automático desligado (`trackingState: desligado`). `GROQ_ZDR_CONFIRMED` e `PACOTEVICIO_TERMS_CONFIRMED` seguem `false`._
+
+## Rodada 3 (15/10/2026)
+
+Publicado o commit `4ab5e13`. O build desse commit gera `app.js` com hash `75ea1683146c`, igual ao arquivo no ar. Fases B–G e as auditorias não estão publicadas. O que cada item A1–A10 tem de prova está no diário `docs/RODADA3_LOG.md`.
+
+| Item | Estado | Validação |
+|---|---|---|
+| A4 Notícias | ✅ parser | Feed da Folha ao vivo (HTTP 200, `text/xml`) caía em “nenhum item com título e link https”. O teste do redirecionamento `*https://` falhou antes da correção e passou depois. Os outros 7 feeds da allowlist responderam 200. |
+| A2 Erro que não sai | 🟡 | `stale_run` com 31 min deixa de contar; com 5 min continua (`packages/core/test/rodada3-a.test.ts`). Botões Feito/Adiar estão na tela. Não há teste de que a contagem “Precisa de você” muda. |
+| A3 Demonstração | 🟡 | Host público sem dados não entra em demonstração (função pura, mesmo arquivo de teste). Não há teste de browser com API 500. |
+| A5 Mercado | 🟡 | CoinGecko com User-Agent respondeu 200. PETR4 vira aviso `b3_fora_do_plano` e não entra em `failures`. Segunda leitura em 15 min vem `skipped`. brapi não foi ligado. |
+| A6 Tique | ✅ | Falha forçada no passo do Gmail; monitores, execuções e donos seguem (`apps/worker/test/worker.test.ts`). |
+| A7 Schema | ✅ | `0006` com exigência `0005` é compatível; `0004` não é. Migração `0006` aplicada no Turso antes do deploy. |
+| A1 Navegação | 🟡 sem prova vermelha | Voltar, faixa e “Não achei essa página” estão no código. `ui:mobile` 390×844 passou nas telas, sem um teste que falhava só nesse fluxo. |
+| A8 API | 🟡 sem prova vermelha | JSON inválido e endereço malformado viram 400; o fetch do Worker tem try/catch. Textos novos de login e o redirecionamento de OAuth não foram cobertos por um teste que falhava antes. |
+| A9 Textos | 🟡 sem prova vermelha | O teste de agente formata `{source, reason}`. Ship24 saiu da tela. Não há teste que falhava ao ver `[object Object]` ou “Ship24”. |
+| A10 Aviso | 🟡 sem prova vermelha | Polling não dispara o Dot de erro; o mesmo código espera 5 min. Sem teste. |
 
 ## Rodada 2 (15/10/2026)
 
