@@ -165,6 +165,7 @@ export async function startHarness() {
     status: { agents: [] },
     approvals: { approvals: state.approvals ?? [], canSend: false },
     shipments,
+    silenced: { senders: state.silenced ?? [] },
   });
   const defaultOwner = { email: "dono@example.com", name: "Bia", timeZone: "America/Sao_Paulo" };
 

@@ -134,6 +134,8 @@ export function Connections() {
 
       <Providers demo={demo} />
 
+      <SilencedSenders demo={demo} />
+
       <Sessions demo={demo} />
 
       <DiagnosticsCard demo={demo} />
@@ -696,6 +698,68 @@ function MyDataCard({ demo }: { demo: boolean }) {
           )}
           {error && <p className="banner err">{error}</p>}
         </>
+      )}
+    </section>
+  );
+}
+
+/** Conexões > Correio > Remetentes silenciados (G): lista, "Voltar a avisar", vazio e erro. */
+function SilencedSenders({ demo }: { demo: boolean }) {
+  const app = useApp();
+  const [list, setList] = useState<Array<{ domainHash: string; label: string }> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  useEffect(() => {
+    if (demo) return;
+    let alive = true;
+    api
+      .silencedSenders()
+      .then((r) => alive && setList(r.senders))
+      .catch((e) => alive && setError(e instanceof ApiError ? e.message : "Não consegui listar os remetentes silenciados."));
+    return () => {
+      alive = false;
+    };
+  }, [demo, app.snap?.silenced?.length]);
+  const undo = async (hash: string, label: string) => {
+    setBusy(hash);
+    setError(null);
+    try {
+      await api.undoSilence(hash);
+      app.clearTriageFor(hash);
+      setList((old) => (old ?? []).filter((s) => s.domainHash !== hash));
+      app.announce(`Voltei a avisar sobre ${label}.`);
+      await app.refresh();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Não consegui voltar a avisar. Tente de novo.");
+    } finally {
+      setBusy(null);
+    }
+  };
+  return (
+    <section className="card section-gap" aria-labelledby="c-silenciados">
+      <div className="card-top">
+        <Icon name="mail" size={14} /> Correio
+      </div>
+      <h3 id="c-silenciados">Remetentes silenciados</h3>
+      {demo ? (
+        <p>Indisponível na demonstração.</p>
+      ) : error ? (
+        <p className="banner err">{error}</p>
+      ) : list === null ? (
+        <p className="meta">Carregando…</p>
+      ) : list.length === 0 ? (
+        <p className="meta">Nenhum remetente silenciado. Dois “Não importa” no mesmo remetente o silenciam.</p>
+      ) : (
+        <ul className="plain-list">
+          {list.map((s) => (
+            <li key={s.domainHash} className="row-center-8">
+              <span className="grow-min0">{s.label}</span>
+              <button className="btn" type="button" disabled={busy === s.domainHash} onClick={() => void undo(s.domainHash, s.label)}>
+                Voltar a avisar
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   );
