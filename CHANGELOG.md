@@ -34,7 +34,7 @@ Feito a partir dos commits (`git log`). Datas em 2026. O efeito para quem usa ve
 - Caixa de perguntas que respeita o toque; datas no fuso do dono.
 - Ícones com o Dot atual (sem o tracinho fora da absorção) e maskable dentro da zona segura.
 
-### Coucou (ideias) e sons (fase E)
+### Registro de agentes, fila de aprovações e sons (fase E)
 - Registro único de agentes; fila de aprovações “1 de N”; conflito de aprovação explicado; desempate do Dot documentado (`docs/DOT_COMPORTAMENTO.md`); “Dispensar” no erro; progresso real na ilha; pílulas de fonte.
 - Sons do Dot, desligados por padrão (ver Mascote).
 

@@ -186,3 +186,11 @@ Base conferida: `65c05bb`, árvore limpa, `npm run check` verde (249 testes), li
 - 2ª tentativa: o axe do `ui:fase-d` acusou `link-in-text-block` no link “/privacidade” do cartão Contato público. Links dentro de texto passaram a ser sublinhados (`e86f77e`). Nada foi alterado em produção.
 - 3ª: publicado. `Aplicadas: 0007`. Worker `69ebaf7d-85b0-4cf7-9996-77899d97e1bd`, app `48b491adb418`, rollback `4c19544f-eb50-47a9-9961-7d77e75989a1`. `/api/health` `{"ok":true}`.
 - Reprodução do hash: worktree limpo em `e86f77e` com `npm ci` → `48b491adb418` (igual). Com `node_modules` em link simbólico o hash muda (só os nomes dos chunks), porque o esbuild usa o caminho dos módulos no hash; a reprodução precisa de `node_modules` próprio.
+
+## Parte 2 — remoção das referências ao projeto removido (15/10/2026)
+
+- `git grep -i` antes: **ocorrências do projeto removido: 23 em 9 arquivos → 0**. PDFs de `docs/referencias/` (não versionados) conferidos: 0. Imagens não têm texto.
+- Conferido antes de apagar: não há código, arte ou som de outro projeto no repositório (o protótipo `dot_motor.html` só descrevia um print). Três **valores** vinham iguais e foram trocados por valores próprios (D-022): superelipse 2,7 → **2,6** e 4,5 → **4,2**; suavização de cor `0,002^dt` → **`0,003^dt`**. Testes: `packages/core/test/dot.test.ts` (2 testes ajustados/novos falharam antes da troca e passam depois). Capturas do Dot antes/depois em `docs/capturas/rodada3-dot/` (repouso, trabalhando, erro): cantos um pouco mais redondos, aparência mantida.
+- Reescrito de forma neutra: NOTICE e LICENCAS (só dependências reais), CHANGELOG (fase E: “Registro de agentes, fila de aprovações e sons”), DECISOES (D-014), prompts da rodada 3 e do visual, `dot_motor.html` (sem a tabela de comparação nem comentários de origem), `physics.ts`, README dos sons, `.cursor/rules/10-visual.mdc`.
+- Teste novo: `tests/sem-projeto-removido.test.ts` (o nome é montado por partes; exclui `package-lock.json`). Falhava antes (restava `physics.ts`) → passa.
+- Histórico do git não foi reescrito (decisão adiada para antes do open source). O app publicado muda (valores do motor), então vai no próximo deploy.

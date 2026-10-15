@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
 /* Layout: palco grande do motor + painel "motor ao vivo"; controles em três fileiras (estado, reação, acessório);
-   depois o pipeline do motor e a comparação com o Coucou. Visual único escuro, de propósito (palco noturno do Dot). */
+   depois o pipeline do motor. Visual único escuro, de propósito (palco noturno do Dot). */
 :root {
   color-scheme: dark;
   --bg: #0B0C0F; --panel: #121318; --panel-2: #181A20; --line: #262933; --line-2: #343846;
@@ -105,7 +105,7 @@ footer { text-align: center; font: 500 11px/1.6 var(--mono); color: var(--faint)
   <header>
     <span class="eyebrow">Open Dot · Dot final</span>
     <h1>Um Dot vivo, feito só de código</h1>
-    <p class="lead">O corpo é 3D, com volume, luz e sombra. O rosto, os símbolos e as partículas são desenho 2D por cima: ilustração fofa, em degradê suave, sem pontos de brilho. Nada aqui é vídeo, GIF ou imagem pronta. Um motor calcula o Dot a cada quadro: molas de squash e stretch, pulo com gravidade, rosto numa esfera que gira de verdade, cores que se misturam e partículas com física. Mesmo formato e mesma ideia do Coucou: superelipse |x/rx|^2,7 + |y/ry|^2,7 = 1, olhos numa esfera. No “oi” aparecem mãozinhas; no resto do tempo, nada de mãos.</p>
+    <p class="lead">O corpo é 3D, com volume, luz e sombra. O rosto, os símbolos e as partículas são desenho 2D por cima: ilustração fofa, em degradê suave, sem pontos de brilho. Nada aqui é vídeo, GIF ou imagem pronta. Um motor calcula o Dot a cada quadro: molas de squash e stretch, pulo com gravidade, rosto numa esfera que gira de verdade, cores que se misturam e partículas com física. Forma: superelipse |x/rx|^2,6 + |y/ry|^2,6 = 1, olhos numa esfera. No “oi” aparecem mãozinhas; no resto do tempo, nada de mãos.</p>
   </header>
 
   <div class="play">
@@ -132,30 +132,9 @@ footer { text-align: center; font: 500 11px/1.6 var(--mono); color: var(--faint)
     <ol class="pipe">
       <li><b>Estado</b><p>Uma tabela diz, para cada estado, a cor da luz, os olhos, para onde olhar e o símbolo. Erro e aprovação bloqueiam carinho e tonto.</p></li>
       <li><b>Alvos</b><p>Cada reação é uma linha do tempo de eventos: <code>pular</code>, <code>girar</code>, <code>emitir</code>, <code>trocar olhos</code>. Eles só mudam alvos.</p></li>
-      <li><b>Molas e suavização</b><p>Molas subamortecidas levam o corpo até os alvos, com sobra e acomodação. Cores usam <code>1 − 0,002^dt</code>, igual ao Coucou. Física a 120 Hz.</p></li>
-      <li><b>Desenho</b><p>A cada quadro o SVG é redesenhado: superelipse calculada (n 2,7 → 4,5 na absorção), olhos projetados na esfera, partículas.</p></li>
+      <li><b>Molas e suavização</b><p>Molas subamortecidas levam o corpo até os alvos, com sobra e acomodação. Cores usam <code>1 − 0,003^dt</code>. Física a 120 Hz.</p></li>
+      <li><b>Desenho</b><p>A cada quadro o SVG é redesenhado: superelipse calculada (n 2,6 → 4,2 na absorção), olhos projetados na esfera, partículas.</p></li>
     </ol>
-  </section>
-
-  <section aria-labelledby="h-cmp">
-    <h2 id="h-cmp">Coucou × o Dot que está no projeto hoje</h2>
-    <p>O que o print mostra do Coucou e o que o código do Open Dot faz agora (conferido no repositório do seu Mac).</p>
-    <div class="tbl">
-      <table>
-        <thead><tr><th>Peça</th><th>Coucou</th><th>Open Dot hoje</th><th>Este Dot final</th></tr></thead>
-        <tbody>
-          <tr><td>Máquina de estados</td><td><code>setState</code> + tabela <code>BotStates</code></td><td class="y">Tem, e é boa: prioridade, revisões, aprovações</td><td class="y">Usa a mesma ideia</td></tr>
-          <tr><td>Laço de animação</td><td><code>update(dt)</code> a 120 Hz</td><td class="h">Toca clipes prontos do Blender (até 30 fps)</td><td class="y">Física a 120 Hz, desenho a cada quadro</td></tr>
-          <tr><td>Squash e stretch</td><td>Molas e tweens</td><td class="n">Clipes com variação de 1–9%</td><td class="y">Molas com sobra e pulo com gravidade</td></tr>
-          <tr><td>Olhar</td><td>Olhos numa esfera (yaw/pitch)</td><td class="h">Osso girando ±poucos graus</td><td class="y">Esfera com escorço e giro completo</td></tr>
-          <tr><td>Expressões</td><td>~30 estados</td><td class="n">5 formas de olho</td><td class="y">12 formas, troca em 160 ms</td></tr>
-          <tr><td>Partículas</td><td><code>emit(.spark, count: 5)</code></td><td class="n">Só corações</td><td class="y">9 tipos desenhados, com física</td></tr>
-          <tr><td>Cores</td><td>Mistura suave por quadro</td><td class="y">Tinta por shader</td><td class="y">Mistura suave por quadro</td></tr>
-          <tr><td>Forma</td><td>Superelipse n 2,7 (caixa n 4,5)</td><td class="h">Superelipse no Blender, mas ficou caixa</td><td class="y">Superelipse n 2,7 → 4,5, igual ao Coucou</td></tr>
-          <tr><td>Sons</td><td>28 sons</td><td class="n">Nenhum</td><td class="n">Nenhum ainda</td></tr>
-        </tbody>
-      </table>
-    </div>
   </section>
 
   <footer>© 2026 João Pedro Guedes · Dot · protótipo do motor para o Open Dot</footer>
@@ -440,7 +419,7 @@ function smooth(rest, dt) { return 1 - Math.pow(rest, dt); }
 
 var CY = 113, RX = 83, RY = 64, BASE = 177, SPH = 80;
 function bodyD(m) {
-  var N = 96, d = "", n = 2.7 + m * 1.8;
+  var N = 96, d = "", n = 2.6 + m * 1.6;
   for (var i = 0; i < N; i++) {
     var th = i / N * Math.PI * 2, c = Math.cos(th), s = Math.sin(th);
     var x = (c < 0 ? -1 : 1) * Math.pow(Math.abs(c), 2 / n), y = (s < 0 ? -1 : 1) * Math.pow(Math.abs(s), 2 / n);
@@ -480,7 +459,7 @@ var EXPR = {
   squint: ["gt", "lt"], wink: ["open", "lt"], angry: ["angryL", "angryR"], spiral: ["spiralL", "spiralR"]
 };
 
-/* ---------- tabela de estados (como a BotStates do Coucou) ---------- */
+/* ---------- tabela de estados ---------- */
 var STATES = {
   idle: { name: "repouso", glow: "#3F7BFF", eyes: "open", look: "free", float: 1 },
   thinking: { name: "pensando", glow: "#9E83FF", eyes: "open", look: [.17, .15], ind: "balls", float: 1 },
@@ -785,8 +764,8 @@ DP.step = function (h) {
   var kl = smooth(.0006, h);
   E.yaw += (lt[0] - E.yaw) * kl; E.pitch += (lt[1] - E.pitch) * kl;
   if (E.spin) { E.spin.t += h; var p = clamp(E.spin.t / E.spin.dur, 0, 1); E.spinYaw = easeIO(p) * E.spin.turns * Math.PI * 2; if (p >= 1) { E.spin = null; E.spinYaw = 0; } }
-  /* cores: mesma fórmula de suavização do Coucou (1 - 0,002^dt) */
-  var kc = smooth(.002, h);
+  /* cores: suavização 1 - 0,003^dt */
+  var kc = smooth(.003, h);
   for (var j = 0; j < 3; j++) { E.glowC[j] += (E.glowT[j] - E.glowC[j]) * kc; E.tintC[j] += (E.tintT[j] - E.tintC[j]) * kc; }
   E.tintA += (E.tintAT - E.tintA) * kc; E.cheekA += (E.cheekAT - E.cheekA) * kc;
   /* piscar irregular */
@@ -942,7 +921,7 @@ function waveArt(side, big) { var hh = big ? 15 : 10, x = big ? 6 * side : 0; re
 function zArt(s) { return fill(brush(seg([[-4 * s, -4.5 * s], [4 * s, -4.5 * s], [-4 * s, 4.5 * s], [4.4 * s, 4.5 * s]], 8), 2.6 * s, .55), "url(#gZ)", ' stroke="#9DB3FA" stroke-width=".4" stroke-linejoin="round"'); }
 function bangArt() { return badge("gAmber", glyph("!")); }
 
-/* símbolo em selo redondo, como os do Coucou: aro escuro, miolo em degradê, desenho branco */
+/* símbolo em selo redondo: aro escuro, miolo em degradê, desenho branco */
 function badge(grad, inner) { return '<circle r="11" fill="#0D0F17"/><circle r="9.2" fill="url(#' + grad + ')"/>' + inner; }
 function glyph(k) {
   var st = ' fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round"';
@@ -984,7 +963,7 @@ function proj(a, p, R) {
 }
 /* ponto da silhueta (superelipse) deslocado para fora pela normal */
 function bodyPt(th, m, off) {
-  var n = 2.7 + m * 1.8;
+  var n = 2.6 + m * 1.6;
   function at(t) { var c = Math.cos(t), s = Math.sin(t); return [130 + RX * (c < 0 ? -1 : 1) * Math.pow(Math.abs(c), 2 / n), CY + RY * (s < 0 ? -1 : 1) * Math.pow(Math.abs(s), 2 / n)]; }
   var p = at(th), a = at(th - .01), b = at(th + .01), dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
   return [p[0] + dy / l * (off || 0), p[1] - dx / l * (off || 0)];
@@ -1141,7 +1120,7 @@ function row(k, v, bar) { return "<dt>" + k + "</dt><dd>" + v + "</dd>" + (bar !
 function deg(r) { return (r * 180 / Math.PI).toFixed(1) + "°"; }
 setInterval(function () {
   var r = eng.readout();
-  $("read").innerHTML = row("estado", r.estado) + row("forma (n)", (2.7 + 1.8 * clamp(r.forma, 0, 1)).toFixed(2).replace(".", ","), r.forma) +
+  $("read").innerHTML = row("estado", r.estado) + row("forma (n)", (2.6 + 1.6 * clamp(r.forma, 0, 1)).toFixed(2).replace(".", ","), r.forma) +
     row("squash x", r.sx.toFixed(3)) + row("squash y", r.sy.toFixed(3)) + row("inclinação", r.rot.toFixed(1) + "°") +
     row("olhar (yaw)", deg(r.yaw)) + row("olhar (pitch)", deg(r.pitch)) + row("altura do pulo", r.alt.toFixed(1)) +
     row("partículas", r.part) + row("quadros/s", r.fps);

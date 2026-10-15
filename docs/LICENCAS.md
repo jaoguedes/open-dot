@@ -15,6 +15,5 @@
 | **Dot** (personagem, catálogo, `.blend`, `.glb`, posters) | — | © João Pedro Guedes, todos os direitos reservados | Mascote | Definir licença antes de qualquer publicação |
 | Ícones da interface | — | Próprios (desenhados no código) | Interface | Sem biblioteca de terceiros |
 | Sons do Dot (`apps/web/public/sounds/*.mp3`) | — | Originais, sintetizados por `scripts/sounds/make_dot_sounds.py` | Sons opcionais (desligados por padrão) | Nenhum áudio de terceiros |
-| Coucou (ideias de arquitetura) | — | MIT, segundo o brief da rodada 3 | Inspiração para o motor do Dot (superelipse, molas), o registro único de agentes, a fila de aprovações, o cartão de progresso e as pílulas de fonte | Nenhum nome, personagem, som ou imagem do Coucou foi copiado. URL e autor a confirmar pelo João (não constam no repositório). |
 
 **Pendente:** depois do primeiro `npm install` com rede, rode `npx license-checker --summary` (ou equivalente) e anexe o resultado aqui, para cobrir as dependências transitivas.

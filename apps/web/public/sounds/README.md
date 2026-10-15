@@ -1,6 +1,6 @@
 # Sons do Dot
 
-Treze sons curtos, **originais**: foram sintetizados do zero por `scripts/sounds/make_dot_sounds.py` (marimba/bolha suave). Nenhum áudio, nome ou desenho de outro projeto foi copiado. Estilo inspirado só na ideia de "um bichinho que reage com sons pequenos".
+Treze sons curtos, **originais**: foram sintetizados do zero por `scripts/sounds/make_dot_sounds.py` (marimba/bolha suave). Nenhum áudio de terceiros.
 
 | Arquivo | Quando toca | Duração |
 |---|---|---|

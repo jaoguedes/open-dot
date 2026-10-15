@@ -1,4 +1,4 @@
-# RODADA 3 — correções reais, auditoria em 3 passadas, navegação, sons e ideias do Coucou
+# RODADA 3 — correções reais, auditoria em 3 passadas, navegação, sons, registro de agentes e fila de aprovações
 
 Leia este arquivo INTEIRO antes de começar. Cumpra as fases NA ORDEM. Leia também AGENTS.md, CLAUDE.md, docs/DECISOES.md, docs/STATUS.md e docs/ACOES_DO_JOAO.md.
 
@@ -9,7 +9,7 @@ Leia este arquivo INTEIRO antes de começar. Cumpra as fases NA ORDEM. Leia tamb
 - Interface 100% em português do Brasil, frases curtas e humanas. Nada de código técnico cru na tela (use o dicionário `packages/core/src/errors-pt.ts`).
 - Migrações: SOMENTE novas (0006, 0007…), aditivas (ADD COLUMN / CREATE TABLE IF NOT EXISTS). Nunca edite migração já aplicada, nunca apague coluna.
 - Nada de "feito" sem prova. Cada item termina com: teste automático que falha antes e passa depois, e (para interface) verificação em 390x844 com `npm run ui:mobile`.
-- Não copie nome, personagem, sons ou imagens do projeto Coucou. Só ideias de arquitetura. Registre a inspiração (código MIT) em docs/LICENCAS.md e NOTICE.
+- Nada de nome, personagem, som ou imagem de terceiros: tudo do Open Dot é próprio.
 - Mantenha um diário em `docs/RODADA3_LOG.md`: item, o que reproduziu de verdade, o que mudou, teste.
 - Se um item for impossível ou arriscado, NÃO invente: pare esse item, registre no diário com o motivo e siga para o próximo.
 
@@ -135,7 +135,7 @@ Em `packages/core/src/news.ts`:
 - D8. `Home.tsx` usa fuso fixo `America/Sao_Paulo` para a data; use o fuso do dono (`snap.owner.timeZone`).
 
 ====================================================================
-## FASE E — do Coucou (só ideias, sem assets) + sons do Dot
+## FASE E — registro de agentes, fila de aprovações e sons do Dot
 ====================================================================
 - E1. REGISTRO ÚNICO DE AGENTES em `packages/core` (estenda `agents.ts`): id, nome, cor, rosto, rota, descrição, ferramentas, visibilidade na barra/lista/busca/pílulas. `App.tsx`, `MyDay.tsx`, `Home.tsx` e a paleta derivam dele (hoje `SIDEBAR_AGENTS`, `LIST_AGENTS`, o array de pílulas e a paleta divergem). Teste: agente falso aparece em todos os lugares e some de todos ao remover. Opcional simples: usuário escolhe quais agentes ficam ativos e a cor de cada um (por dono).
 - E2. FILA DE APROVAÇÕES: um por vez, em ordem de chegada, "1 de N", máximo 5 visíveis, o resto em "mais N". Lógica pura em `packages/core` com testes (ordem, limite, duplicata, expiração).
