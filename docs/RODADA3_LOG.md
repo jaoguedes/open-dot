@@ -78,3 +78,9 @@ Também: o 503 de configuração incompleta não lista mais os nomes das variáv
 
 Achado para a fase D: a ilha mostrou “Correio com erro · not_connected” (código cru) no ambiente local.
 `npm run check`: 199 testes, 0 falhas. `ui:mobile` ok.
+
+## Publicação da fase C (15/10/2026)
+
+- Worker `4c19544f-eb50-47a9-9961-7d77e75989a1`, app `a2534331ca01` (build do commit `5ee300b`), rollback `509e4b64-2ff9-44a1-8a24-9dfcc0b8c84d`. Fumaça do script ok.
+- Conferido no ar: `/api/health` `{"ok":true}`; `app.js` `max-age=0, must-revalidate`; chunk `immutable` 1 ano; `/sounds/dot-tap.mp3` `max-age=86400`; `/fonts/nao-existe.woff2` GET → 404 `text/plain` `no-store`; `/api/snapshot` sem sessão → 401.
+- Nos primeiros segundos um chunk novo respondeu 404 a um HEAD; segundos depois 200 em GET e HEAD (propagação). O app já trata chunk ausente recarregando uma vez.
