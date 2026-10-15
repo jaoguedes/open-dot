@@ -48,3 +48,4 @@ jobs:
           npm run ui:fase-e
           npm run ui:fase-f
           npm run ui:fase-g
+          npm run ui:rodada4
