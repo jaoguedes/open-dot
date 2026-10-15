@@ -130,7 +130,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 - ⛔ **Rede de pacotes nesta sessão:** npm e PyPI estavam bloqueados. Não deu para instalar o Vite, o Wrangler, o three.js nem o validador da Khronos aqui. O projeto usa o que estava disponível; o `npm install` no seu Mac baixa o resto normalmente.
 - ⛔ **Blender:** a VM ligada ao Mac é Linux e não executa o Blender.app. O build precisa rodar no Terminal do macOS (um comando).
 
-Versão do Worker antes deste deploy (rollback com `wrangler rollback`): `da21bebf-d11a-4fdc-abad-c87022130c56`.
+Versão do Worker antes deste deploy (rollback com `wrangler rollback`): `4d1dbc6e-b55d-475f-8e27-ec36659eb036`.
 
 ## Próxima ação exata
 

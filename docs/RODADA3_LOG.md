@@ -58,3 +58,10 @@ Prova vermelha: o mesmo `apps/worker/test/fase-b.test.ts` rodado contra o códig
 
 Também: o 503 de configuração incompleta não lista mais os nomes das variáveis ausentes para o público (vai só para o log).
 `npm run check`: 171 testes, 0 falhas. `ui:mobile` ok.
+
+## Publicação da fase B (15/10/2026)
+
+- Primeira tentativa de `npm run deploy` parou antes de publicar: o passo “erro de render” do `ui:mobile` usa `?forcar=render`, que a B4 tirou do build de produção. Nada foi ao ar. Correção (`scripts/ui-mobile.mjs`): o passo só roda quando o bundle servido tem o gancho; caso contrário diz “pulado”.
+- Achado: `npm run dev` observa o código e escreve no mesmo `apps/web/dist`. `scripts/deploy.mjs` agora guarda o hash depois do check, recusa dist com gancho de teste e aborta se o hash mudar antes do `wrangler deploy`.
+- Publicado: Worker `509e4b64-2ff9-44a1-8a24-9dfcc0b8c84d`, app `bcfc3da9a745` (commit `a6fe017`), rollback `4d1dbc6e-b55d-475f-8e27-ec36659eb036`. Fumaça do script ok. `/api/health` público = `{"ok":true}`. CSP com `media-src 'self'`.
+- `/api/legal` devolve um contato porque o segredo `CONTACT_EMAIL` existe em produção com o mesmo Gmail do login. É configuração (a B1 permite); se o João não quiser publicar esse endereço, basta `wrangler secret delete CONTACT_EMAIL` ou trocar.
