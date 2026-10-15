@@ -1,0 +1,817 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>Dot do Open Dot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: coluna de 1120px; palco da tela de carregamento, interação, anatomia, estados, absorção, agentes e comparação.
+   Tokens do app Open Dot; palco azul-noite como o 3D do Mascot Desk. */
+:root {
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bg: #FAF9F7; --surface: #F1F0ED; --surface-2: #E9E7E3; --text: #27262A; --text-2: #69666E; --border: #D8D5D0;
+  --accent: #655583; --focus: #4D3F6E;
+  --stage: #E6E8F6; --stage-2: #F7F7FD;
+  --glow-op: .5; --contact: .16; --edge: rgba(130, 140, 210, .35);
+  --bubble: #FFFFFF; --bubble-text: #27262A; --bubble-line: rgba(63,123,255,.35);
+  --chip-amber: #8A5A00; --chip-red: #B42335; --chip-mint: #2F7D5B; --chip-grey: #69666E;
+  --wm-open: #4A4852; --wm-dot: #1E1D22; --z: #5B6BD8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161719; --surface: #1E2024; --surface-2: #26282D; --text: #EEEEEF; --text-2: #A4A5AE; --border: #303239;
+    --accent: #B7ABF7; --focus: #CFC6FF;
+    --stage: #070D24; --stage-2: #13204D;
+    --glow-op: .9; --contact: .4; --edge: rgba(0,0,0,0);
+    --bubble: #1B2550; --bubble-text: #EEEEEF; --bubble-line: rgba(120,160,255,.4);
+    --chip-amber: #E9B75E; --chip-red: #F08A93; --chip-mint: #79C9A5; --chip-grey: #A4A5AE;
+    --wm-open: #C9CDE6; --wm-dot: #FFFFFF; --z: #8FB0FF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161719; --surface: #1E2024; --surface-2: #26282D; --text: #EEEEEF; --text-2: #A4A5AE; --border: #303239;
+  --accent: #B7ABF7; --focus: #CFC6FF;
+  --stage: #070D24; --stage-2: #13204D;
+  --glow-op: .9; --contact: .4; --edge: rgba(0,0,0,0);
+  --bubble: #1B2550; --bubble-text: #EEEEEF; --bubble-line: rgba(120,160,255,.4);
+  --chip-amber: #E9B75E; --chip-red: #F08A93; --chip-mint: #79C9A5; --chip-grey: #A4A5AE;
+  --wm-open: #C9CDE6; --wm-dot: #FFFFFF; --z: #8FB0FF;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.55 var(--font); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 32px); padding-block: 32px 72px; display: grid; gap: 56px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.12; font-weight: 700; }
+h2 { font-size: 1.35rem; font-weight: 700; }
+h3 { font-size: .98rem; font-weight: 600; }
+p { margin: 0; }
+code { font: 500 .88em/1 ui-monospace, "SF Mono", Menlo, monospace; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.lead { color: var(--text-2); max-width: 70ch; font-size: 1.02rem; }
+header, section { display: grid; gap: 14px; }
+section { gap: 20px; }
+.sec-head { display: grid; gap: 6px; }
+.sec-head p { color: var(--text-2); max-width: 72ch; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+.seg { display: inline-flex; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 3px; gap: 2px; }
+.seg button, .btn { font: 500 13px/1 var(--font); color: var(--text-2); background: transparent; border: 0; border-radius: 7px; padding: 8px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.btn { border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+.btn:hover { background: var(--surface-2); }
+.ctl-label { font-size: 13px; color: var(--text-2); }
+
+.stage { position: relative; border-radius: 20px; overflow: hidden; border: 1px solid var(--border);
+  background: radial-gradient(55% 60% at 50% 42%, var(--stage-2), var(--stage) 78%);
+  min-height: 460px; display: grid; place-items: center; padding: 40px 16px; }
+.stage-inner { position: relative; display: grid; justify-items: center; gap: 2px; }
+.stage .hero-dot { width: min(300px, 72vw); height: auto; }
+.status { font-size: 13px; color: var(--text-2); display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.status i { width: 5px; height: 5px; border-radius: 50%; background: var(--text-2); display: inline-block; animation: st 1.2s infinite ease-in-out; }
+.status i:nth-child(2) { animation-delay: .15s; } .status i:nth-child(3) { animation-delay: .3s; }
+@keyframes st { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+.wm { display: flex; align-items: center; font-size: clamp(2.6rem, 8vw, 4.1rem); letter-spacing: -0.06em; line-height: 1; }
+.wm-open { font-weight: 500; color: var(--wm-open); }
+.wm-dot { font-weight: 800; color: var(--wm-dot); }
+.wm-pt { width: .2em; height: .2em; border-radius: 50%; margin-left: .07em; align-self: flex-end; margin-bottom: .14em; background: linear-gradient(135deg, #36D8F4, #3F7BFF 50%, #9E83FF); box-shadow: 0 0 .4em rgba(63,123,255,.65); }
+.wm-face { width: 1.15em; margin-right: .14em; display: inline-block; }
+.wm-face svg { display: block; width: 100%; height: auto; }
+.wm[data-v="a"] .wm-face { display: none; }
+.wm[data-v="b"] .wm-pt { display: none; }
+.wm.play .wm-face { animation: faceIn .55s cubic-bezier(.22,1,.36,1) both; }
+.wm.play .wm-open { animation: openIn .55s .1s cubic-bezier(.22,1,.36,1) both; }
+.wm.play .wm-dot { animation: dotIn .6s .42s cubic-bezier(.22,1,.36,1) both; }
+.wm.play .wm-pt { animation: ptIn .45s .95s cubic-bezier(.34,1.56,.64,1) both, ptPulse 3.4s 1.6s ease-in-out infinite; }
+@keyframes faceIn { from { opacity: 0; transform: translateY(8px) scale(.8); } }
+@keyframes openIn { from { opacity: 0; transform: translateX(-10px); } }
+@keyframes dotIn { from { opacity: 0; transform: translateX(22px); } }
+@keyframes ptIn { from { opacity: 0; transform: scale(0); } }
+@keyframes ptPulse { 0%, 30%, 100% { transform: scale(1); } 40% { transform: scale(1.35); } 50% { transform: scale(.95); } }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+.card .pad { padding: 6px 14px 14px; display: grid; gap: 6px; align-content: start; }
+.card .pad p { font-size: 13px; color: var(--text-2); line-height: 1.45; }
+.mini-stage { background: radial-gradient(70% 70% at 50% 45%, var(--stage-2), var(--stage) 88%); display: grid; place-items: center; padding: 10px 6px 0; }
+.mini-stage svg { width: 100%; max-width: 210px; height: auto; display: block; }
+.chip { justify-self: start; font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.chip.amber { color: var(--chip-amber); } .chip.red { color: var(--chip-red); } .chip.mint { color: var(--chip-mint); } .chip.grey { color: var(--chip-grey); }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; margin-right: 6px; }
+
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 28px; align-items: center; }
+.two .mini-stage { border-radius: 20px; border: 1px solid var(--border); padding: 24px 12px 8px; }
+.two .mini-stage svg { max-width: 380px; }
+#play { cursor: pointer; touch-action: manipulation; }
+.traits { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.traits li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: start; }
+.traits b { font-weight: 600; }
+.traits span.n { width: 24px; height: 24px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); font-size: 12px; font-weight: 600; display: grid; place-items: center; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.traits p { color: var(--text-2); font-size: 14px; }
+.palette { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12.5px; color: var(--text-2); }
+.palette code { color: var(--text); }
+.steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; list-style: none; margin: 0; padding: 0; }
+.steps li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 13px; color: var(--text-2); display: grid; gap: 2px; }
+.steps b { color: var(--text); font-weight: 600; font-size: 13px; }
+.steps span { font-variant-numeric: tabular-nums; font-size: 12px; }
+
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--text-2); font-size: 13.5px; }
+.note { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; display: grid; gap: 8px; }
+.note p { color: var(--text-2); font-size: 14px; max-width: 82ch; }
+@media (max-width: 760px) { .two, .compare { grid-template-columns: minmax(0, 1fr); } .stage { min-height: 400px; } }
+
+/* ------------- Dot: animações ------------- */
+.dot { overflow: visible; }
+.dot .fig, .dot .ground, .dot .eye, .dot .fx, .dot .bub, .dot .ring, .dot .gaze { transform-box: fill-box; }
+.dot .fig { transform-origin: 50% 100%; }
+.dot .ground, .dot .eye { transform-origin: 50% 50%; }
+.dot .gaze { transition: transform .18s cubic-bezier(.22,1,.36,1); }
+.stroke-eye { fill: none; stroke: #120F1E; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+
+.a-float .fig { animation: float 3.6s ease-in-out infinite; }
+.a-float .ground { animation: groundF 3.6s ease-in-out infinite; }
+.a-blink .eye.b { animation: blink 4.6s infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-4px) scale(1.015, .985); } }
+@keyframes groundF { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.9); opacity: .8; } }
+@keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(.1); } }
+
+.a-sleep .fig { animation: float 5.4s ease-in-out infinite; }
+.a-sleep .z { animation: zz 3.6s ease-in infinite; }
+.a-sleep .z:nth-of-type(2) { animation-delay: 1.2s; } .a-sleep .z:nth-of-type(3) { animation-delay: 2.4s; }
+@keyframes zz { 0% { opacity: 0; transform: translate(0, 6px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(8px, -12px); } }
+
+.a-think .td { animation: td 1.2s ease-in-out infinite; }
+.a-think .td:nth-of-type(2) { animation-delay: .15s; } .a-think .td:nth-of-type(3) { animation-delay: .3s; }
+@keyframes td { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
+
+.a-work .fig { animation: workW .9s ease-in-out infinite; }
+.a-work .fx { animation: pulse .9s ease-in-out infinite; transform-origin: 50% 50%; }
+@keyframes workW { 0%, 100% { transform: rotate(-1.2deg) scale(1.01, .99); } 50% { transform: rotate(1.2deg) scale(.99, 1.01); } }
+@keyframes pulse { 0%, 100% { opacity: .35; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.06); } }
+
+.a-wait .ring { animation: ring 1.8s ease-out infinite; transform-origin: 50% 50%; }
+@keyframes ring { 0% { transform: scale(.7); opacity: .9; } 100% { transform: scale(1.35); opacity: 0; } }
+
+.a-ok .fig { animation: hop 2.2s cubic-bezier(.22,1,.36,1) infinite; }
+.a-ok .fx { animation: twinkle 2.2s ease-in-out infinite; transform-origin: 50% 50%; }
+.a-ok .fx:nth-of-type(2) { animation-delay: .3s; } .a-ok .fx:nth-of-type(3) { animation-delay: .6s; }
+@keyframes hop { 0%, 60%, 100% { transform: translateY(0) scale(1, 1); } 10% { transform: scale(1.07, .93); } 25% { transform: translateY(-9px) scale(.96, 1.05); } 40% { transform: translateY(0) scale(1.05, .95); } 48% { transform: scale(1, 1); } }
+@keyframes twinkle { 0%, 100% { opacity: .25; transform: scale(.6) rotate(0); } 50% { opacity: 1; transform: scale(1.1) rotate(20deg); } }
+
+.a-surp .fig { animation: surp 2.4s cubic-bezier(.22,1,.36,1) infinite; }
+.a-surp .fx { animation: pulse 1.2s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes surp { 0%, 50%, 100% { transform: scale(1, 1); } 8% { transform: translateY(-5px) scale(.94, 1.08); } 18% { transform: scale(1.04, .97); } 26% { transform: scale(1, 1); } }
+
+.a-err .fig { animation: shake 3s ease-in-out infinite; }
+.a-err .fx { animation: pulse 1.6s ease-in-out infinite; transform-origin: 50% 50%; }
+@keyframes shake { 0%, 70%, 100% { transform: translateX(0); } 74% { transform: translateX(-3px); } 78% { transform: translateX(3px); } 82% { transform: translateX(-2px); } 86% { transform: translateX(0); } }
+
+.a-love .fx { animation: heart 3s ease-out infinite; transform-origin: 50% 50%; }
+.a-love .fx:nth-of-type(2) { animation-delay: .8s; } .a-love .fx:nth-of-type(3) { animation-delay: 1.6s; } .a-love .fx:nth-of-type(4) { animation-delay: 2.2s; }
+@keyframes heart { 0% { opacity: 0; transform: translateY(8px) scale(.5); } 20% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-16px) scale(.9); } }
+
+.a-scan .ring { animation: ringS 2s ease-in-out infinite; transform-origin: 50% 50%; }
+@keyframes ringS { 0%, 100% { opacity: .55; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.04); } }
+
+/* Absorção (3,6 s): a forma e a fenda são animadas por SMIL dentro do SVG; aqui só o "engolir" e o check */
+.a-absorb .fig { animation: gulp 3.6s ease-in-out infinite; }
+.a-absorb .fx { animation: checkIn 3.6s ease-out infinite; transform-origin: 50% 50%; }
+@keyframes gulp { 0%, 14%, 100% { transform: scale(1, 1); } 18% { transform: scale(1.04, .96); } 22% { transform: scale(1, 1); } 50% { transform: scale(1, 1); } 56% { transform: translateY(-5px) scale(.96, 1.05); } 62% { transform: scale(1.05, .95); } 68% { transform: scale(1, 1); } }
+@keyframes checkIn { 0%, 70% { opacity: 0; transform: scale(.4); } 76% { opacity: 1; transform: scale(1.1); } 94% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
+
+/* Interação (clique/toque) */
+.poke .fig { animation: poke .5s cubic-bezier(.22,1,.36,1); }
+@keyframes poke { 0% { transform: scale(1, 1); } 25% { transform: scale(1.1, .88); } 55% { transform: translateY(-6px) scale(.95, 1.06); } 100% { transform: scale(1, 1); } }
+
+/* "Oi" da tela de carregamento (3,4 s em loop). Pose estática = piscadinha + balão. */
+.e-n, .e-s { opacity: 0; } .e-w { opacity: 1; }
+.a-oi .fig { animation: figOi 3.4s cubic-bezier(.22,1,.36,1) infinite; }
+.a-oi .ground { animation: groundOi 3.4s cubic-bezier(.22,1,.36,1) infinite; }
+.a-oi .e-n { animation: eN 3.4s steps(1) infinite; }
+.a-oi .e-s { animation: eS 3.4s steps(1) infinite; }
+.a-oi .e-w { animation: eW 3.4s steps(1) infinite; }
+.a-oi .bub { animation: bubOi 3.4s cubic-bezier(.34,1.56,.64,1) infinite; transform-origin: 0% 100%; }
+.a-oi .fx { animation: linesOi 3.4s ease-in-out infinite; }
+@keyframes figOi {
+  0% { transform: translateY(0) rotate(0) scale(1, 1); }
+  6% { transform: translateY(0) scale(1.08, .92); }
+  16% { transform: translateY(-18px) scale(.95, 1.07); }
+  27% { transform: translateY(0) scale(1.1, .9); }
+  34% { transform: translateY(0) scale(.98, 1.02); }
+  42% { transform: rotate(-6deg); }
+  52% { transform: rotate(4deg); }
+  62% { transform: rotate(-6deg); }
+  72% { transform: rotate(4deg); }
+  80% { transform: rotate(-2deg); }
+  88%, 100% { transform: translateY(0) rotate(0) scale(1, 1); }
+}
+@keyframes groundOi { 0%, 100% { transform: scale(1); opacity: 1; } 16% { transform: scale(.68); opacity: .55; } 27% { transform: scale(1.12); opacity: 1; } 34% { transform: scale(1); } }
+@keyframes eN { 0% { opacity: 1; } 25% { opacity: 0; } 86% { opacity: 1; } }
+@keyframes eS { 0% { opacity: 0; } 25% { opacity: 1; } 36% { opacity: 0; } }
+@keyframes eW { 0% { opacity: 0; } 36% { opacity: 1; } 86% { opacity: 0; } }
+@keyframes bubOi { 0%, 37% { opacity: 0; transform: scale(.5); } 43% { opacity: 1; transform: scale(1.06); } 48%, 80% { opacity: 1; transform: scale(1); } 86%, 100% { opacity: 0; transform: scale(.8); } }
+@keyframes linesOi { 0%, 40% { opacity: 0; } 46%, 74% { opacity: 1; } 80%, 100% { opacity: 0; } }
+
+/* ---------- Partículas desenhadas uma a uma ---------- */
+.dot .pp, .dot .pi, .dot .lay, .dot .spin, .dot .acc3 { transform-box: fill-box; transform-origin: 50% 50%; }
+/* sobe e deriva (cada partícula tem --dx, --dy, --r e atraso próprios) */
+.rise { animation: rise var(--t, 2.8s) cubic-bezier(.22,1,.36,1) var(--d, 0s) infinite both; }
+@keyframes rise {
+  0% { opacity: 0; transform: translate(0, 6px) scale(.2) rotate(0); }
+  12% { opacity: 1; transform: translate(calc(var(--dx) * .15), -2px) scale(1.18) rotate(calc(var(--r) * .2)); }
+  22% { transform: translate(calc(var(--dx) * .3), calc(var(--dy) * .2)) scale(1) rotate(calc(var(--r) * .4)); }
+  70% { opacity: .95; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.8) rotate(var(--r)); }
+}
+.beat { animation: beat 1s cubic-bezier(.34,1.56,.64,1) infinite; }
+@keyframes beat { 0%, 60%, 100% { transform: scale(1); } 14% { transform: scale(1.2); } 28% { transform: scale(.98); } 40% { transform: scale(1.12); } }
+.bob { animation: bob 2.8s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+.spin { animation: spin 1s linear infinite; }
+.spin.rev { animation-direction: reverse; }
+.spin.slow { animation-duration: 1.8s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.twk { animation: twk var(--t, 1.6s) ease-in-out var(--d, 0s) infinite both; }
+@keyframes twk { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0); } 40% { opacity: 1; transform: scale(1.15) rotate(25deg); } 60% { opacity: 1; transform: scale(1) rotate(35deg); } }
+
+/* Erro (3,2 s): amassa, treme, nuvenzinhas de raiva, raios, ✕ tremendo e depois o pontinho vermelho */
+.s-err .fig { animation: errFig 3.2s cubic-bezier(.22,1,.36,1) infinite; }
+@keyframes errFig { 0% { transform: none; } 6% { transform: scale(1.07, .92); } 10% { transform: translateX(-3px) scale(1.03, .97); } 14% { transform: translateX(3px); } 18% { transform: translateX(-2.4px); } 22% { transform: translateX(2px); } 26% { transform: translateX(-1.2px); } 30% { transform: translateX(.6px); } 36%, 100% { transform: none; } }
+.s-err .ix { animation: ixPop 3.2s infinite; }
+@keyframes ixPop { 0% { opacity: 0; transform: scale(0); } 7% { opacity: 1; transform: scale(1.2); } 11% { transform: scale(1); } 15% { transform: rotate(-9deg); } 19% { transform: rotate(8deg); } 23% { transform: rotate(-5deg); } 27% { transform: rotate(3deg); } 31%, 56% { opacity: 1; transform: rotate(0) scale(1); } 63%, 100% { opacity: 0; transform: scale(0); } }
+.s-err .sdot { animation: sdot 3.2s infinite; }
+@keyframes sdot { 0%, 60% { opacity: 0; transform: scale(0); } 67% { opacity: 1; transform: scale(1.25); } 72% { transform: scale(1); } 84% { transform: scale(1.15); opacity: .75; } 96% { transform: scale(1); opacity: 1; } 100% { opacity: 0; transform: scale(.6); } }
+.s-err .clL { animation: clL 3.2s cubic-bezier(.22,1,.36,1) infinite; }
+.s-err .clR { animation: clR 3.2s cubic-bezier(.22,1,.36,1) infinite; }
+@keyframes clL { 0%, 9% { opacity: 0; transform: translate(12px, 8px) scale(.3); } 17% { opacity: 1; transform: translate(2px, 0) scale(1.1); } 23% { transform: translate(0, -1px) scale(1); } 48% { opacity: 1; transform: translate(-7px, -8px) scale(1.04); } 62%, 100% { opacity: 0; transform: translate(-12px, -13px) scale(1.2); } }
+@keyframes clR { 0%, 11% { opacity: 0; transform: translate(-12px, 8px) scale(.3); } 19% { opacity: 1; transform: translate(-2px, 0) scale(1.1); } 25% { transform: translate(0, -1px) scale(1); } 50% { opacity: 1; transform: translate(7px, -8px) scale(1.04); } 64%, 100% { opacity: 0; transform: translate(12px, -13px) scale(1.2); } }
+.s-err .rays { animation: rays 3.2s cubic-bezier(.34,1.56,.64,1) infinite; }
+@keyframes rays { 0%, 9% { opacity: 0; transform: scale(.2); } 15% { opacity: 1; transform: scale(1.18); } 21% { transform: scale(1); } 42% { opacity: 1; } 54%, 100% { opacity: 0; transform: scale(1.12); } }
+.s-err .ex1 { animation: exA 3.2s infinite; } .s-err .ex2 { animation: exB 3.2s infinite; }
+@keyframes exA { 0%, 66% { opacity: 1; } 71%, 100% { opacity: 0; } }
+@keyframes exB { 0%, 66% { opacity: 0; } 71%, 100% { opacity: 1; } }
+.s-err .tint { animation: tintP 3.2s ease-in-out infinite; }
+@keyframes tintP { 0%, 100% { opacity: .35; } 15% { opacity: .75; } 50% { opacity: .5; } }
+
+/* Carinho (3 s): pulinho, coração batendo, corações subindo, piscadinha no meio */
+.s-love .fig { animation: loveFig 3s cubic-bezier(.22,1,.36,1) infinite; }
+@keyframes loveFig { 0% { transform: none; } 8% { transform: scale(1.06, .94); } 18% { transform: translateY(-7px) scale(.97, 1.04); } 28% { transform: scale(1.04, .96); } 36% { transform: none; } 58% { transform: rotate(-2.5deg); } 70% { transform: rotate(1deg); } 80%, 100% { transform: none; } }
+.s-love .ex1 { animation: lvA 3s infinite; } .s-love .ex2 { animation: lvB 3s infinite; }
+@keyframes lvA { 0%, 52% { opacity: 1; } 55%, 74% { opacity: 0; } 77%, 100% { opacity: 1; } }
+@keyframes lvB { 0%, 52% { opacity: 0; } 55%, 74% { opacity: 1; } 77%, 100% { opacity: 0; } }
+
+/* Tonto: olhos em espiral girando em sentidos opostos, corpo balança ±3° */
+.s-dizzy .fig { animation: sway 1.2s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+
+/* Pensando, trabalhando, concluído, surpreso, esperando, dormindo */
+.s-think .ball { animation: ball 1.3s cubic-bezier(.34,1.56,.64,1) infinite; }
+.s-think .ball:nth-of-type(2) { animation-delay: .16s; } .s-think .ball:nth-of-type(3) { animation-delay: .32s; }
+@keyframes ball { 0%, 55%, 100% { transform: translateY(0) scale(1, 1); } 20% { transform: translateY(-6px) scale(.92, 1.1); } 38% { transform: translateY(0) scale(1.1, .9); } }
+.s-work .wv { animation: wave 1.4s ease-out infinite; }
+.s-work .wv.b { animation-delay: .22s; }
+@keyframes wave { 0% { opacity: 0; transform: scale(.7); } 25% { opacity: 1; transform: scale(1.05); } 60% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.12); } }
+.s-ok .chk { stroke-dasharray: 40; animation: chk 2.4s cubic-bezier(.22,1,.36,1) infinite; }
+@keyframes chk { 0%, 18% { stroke-dashoffset: 40; opacity: 1; } 38%, 86% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+.s-surp .ray3 { animation: fan 2.4s cubic-bezier(.34,1.56,.64,1) infinite; }
+@keyframes fan { 0%, 4% { opacity: 0; transform: scale(.2) translateY(6px); } 12% { opacity: 1; transform: scale(1.2) translateY(-2px); } 18% { transform: scale(1); } 46% { opacity: 1; } 60%, 100% { opacity: 0; transform: scale(1.1) translateY(-4px); } }
+.s-wait .bang { animation: bangP 1.6s cubic-bezier(.34,1.56,.64,1) infinite; }
+@keyframes bangP { 0%, 100% { transform: scale(1) rotate(0); } 20% { transform: scale(1.14) rotate(-4deg); } 40% { transform: scale(.98) rotate(2deg); } 55% { transform: scale(1) rotate(0); } }
+.s-wait .fig { animation: float 7.2s ease-in-out infinite; }
+.s-sleep .zz { animation: zzz 4.2s ease-in-out var(--d, 0s) infinite both; }
+@keyframes zzz { 0% { opacity: 0; transform: translate(0, 6px) scale(.5) rotate(-6deg); } 25% { opacity: .9; transform: translate(3px, -2px) scale(1) rotate(4deg); } 60% { opacity: .7; transform: translate(-2px, -10px) scale(1.05) rotate(-4deg); } 100% { opacity: 0; transform: translate(6px, -20px) scale(1.1) rotate(6deg); } }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="odBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset=".42" stop-color="#FFF8FD"/><stop offset=".64" stop-color="#F3EAFB"/><stop offset=".84" stop-color="#D9D8FB"/><stop offset="1" stop-color="#A3B3FB"/>
+    </linearGradient>
+    <radialGradient id="odCheek"><stop offset="0" stop-color="#FF8FB8" stop-opacity=".8"/><stop offset="1" stop-color="#FF8FB8" stop-opacity="0"/></radialGradient>
+    <linearGradient id="odLowerG" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient>
+    <mask id="odLower" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#odLowerG)"/></mask>
+    <radialGradient id="odHeart" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFB8CF"/><stop offset=".45" stop-color="#FF6F9C"/><stop offset="1" stop-color="#E8386C"/></radialGradient>
+    <radialGradient id="odHeartBack" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#C66A92"/><stop offset="1" stop-color="#8E3E66"/></radialGradient>
+    <radialGradient id="odBall" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#C9F6FF"/><stop offset=".45" stop-color="#5FD8FF"/><stop offset="1" stop-color="#1C8FE0"/></radialGradient>
+    <radialGradient id="odCloud" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".65" stop-color="#F3F0FF"/><stop offset="1" stop-color="#C9C2F2"/></radialGradient>
+    <radialGradient id="odAmber" cx=".35" cy=".25" r=".8"><stop offset="0" stop-color="#FFE29A"/><stop offset=".5" stop-color="#FFB627"/><stop offset="1" stop-color="#E08A00"/></radialGradient>
+    <radialGradient id="odStarY" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".35" stop-color="#B8FFE2"/><stop offset="1" stop-color="#2BD47F"/></radialGradient>
+    <radialGradient id="odStarB" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".4" stop-color="#C6EEFF"/><stop offset="1" stop-color="#5FB8FF"/></radialGradient>
+    <linearGradient id="odCrown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#F2EEFD"/><stop offset="1" stop-color="#C9C8F4"/></linearGradient>
+    <radialGradient id="odBtn" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#9FB6FF"/></radialGradient>
+    <linearGradient id="odVisor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8DB2FF"/><stop offset=".5" stop-color="#5B8CFF"/><stop offset="1" stop-color="#3B67E0"/></linearGradient>
+    <linearGradient id="odLens" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".42"/><stop offset=".5" stop-color="#E8E6FF" stop-opacity=".12"/><stop offset="1" stop-color="#B9B4F0" stop-opacity=".22"/></linearGradient>
+    <linearGradient id="odBand" gradientUnits="userSpaceOnUse" x1="0" y1="44" x2="0" y2="125"><stop offset="0" stop-color="#D8C9FF"/><stop offset=".5" stop-color="#A88CF2"/><stop offset="1" stop-color="#7E62D8"/></linearGradient>
+    <radialGradient id="odCup" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#D4C4FF"/><stop offset=".55" stop-color="#9F84EC"/><stop offset="1" stop-color="#6F52CC"/></radialGradient>
+    <radialGradient id="odCushion" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#F6F1FF"/><stop offset="1" stop-color="#C8B8F6"/></radialGradient>
+    <linearGradient id="odRing" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D2FFF2"/><stop offset=".5" stop-color="#5EE6C4"/><stop offset="1" stop-color="#1FA884"/></linearGradient>
+    <filter id="odB1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1"/></filter>
+    <filter id="odB2"x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2"/></filter>
+    <filter id="odB3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="odB7" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>
+    <filter id="odB12" x="-60%" y="-200%" width="220%" height="500%"><feGaussianBlur stdDeviation="12"/></filter>
+    <filter id="odGrey"><feColorMatrix type="saturate" values=".1"/></filter>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Open Dot · prévia para aprovação</span>
+    <h1>Dot: gordinho e fofo, com a luz do Mascot Desk</h1>
+    <p class="lead">A forma é a das pranchas do Open Dot: um mochi gordinho, sem tracinho na cabeça. As cores, os olhos e o jeito de reagir vêm do Dot 3D do Mascot Desk: branco que vai para lilás e azul na base, aro de luz azul, olhos ovais altos e bochechas rosadas. Só quando absorve um arquivo ele fica mais quadrado e abre o tracinho.</p>
+  </header>
+
+  <section aria-labelledby="h-load">
+    <div class="sec-head">
+      <h2 id="h-load">Tela de carregamento</h2>
+      <p>O Dot quica, faz carinha de esforço e, sem mãos, acena balançando o corpo enquanto pisca para você. O nome se forma embaixo: “open” e depois “dot”, sempre juntos.</p>
+    </div>
+    <div class="controls">
+      <span class="ctl-label" id="lbl-wm">Assinatura</span>
+      <div class="seg" aria-labelledby="lbl-wm">
+        <button id="wm-a" type="button" aria-pressed="true">A · opendot + pontinho</button>
+        <button id="wm-b" type="button" aria-pressed="false">B · rosto 2D + opendot</button>
+      </div>
+      <button id="replay" class="btn" type="button">Repetir entrada</button>
+    </div>
+    <div class="stage">
+      <div class="stage-inner">
+        <div id="hero"></div>
+        <div class="wm play" id="wm" data-v="a" aria-label="opendot">
+          <span class="wm-face" id="wm-face" aria-hidden="true"></span><span class="wm-open">open</span><span class="wm-dot">dot</span><span class="wm-pt" aria-hidden="true"></span>
+        </div>
+        <div class="status">Preparando seu dia <i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-play">
+    <div class="sec-head">
+      <h2 id="h-play">Mexa com ele</h2>
+      <p>As mesmas interações do Mascot Desk. Passe o mouse ou o dedo pelo quadro: os olhos seguem você. Toque nele: ele amassa e pula. Três toques rápidos: fica tonto. O botão faz carinho.</p>
+    </div>
+    <div class="two">
+      <div style="display:grid;gap:10px">
+        <div class="mini-stage" id="play" role="button" tabindex="0" aria-label="Tocar no Dot" style="border-radius:20px;border:1px solid var(--border);padding:24px 12px 8px"></div>
+        <button id="pet" class="btn" type="button" style="justify-self:center">Fazer carinho</button>
+      </div>
+      <ol class="traits">
+        <li><span class="n">1</span><div><b>Olhar que segue</b><p>Os olhos andam até 5 px na direção do cursor, com atraso suave. Parado por 8 s, ele volta a olhar para a frente.</p></div></li>
+        <li><span class="n">2</span><div><b>Toque</b><p>Amassa (1,10 × 0,88), estica no pulo e volta em 0,5 s. Pisca logo depois.</p></div></li>
+        <li><span class="n">3</span><div><b>Tonto e carinho</b><p>Três toques em menos de 0,9 s deixam ele tonto por pouco mais de 1 s. O botão “Fazer carinho” traz corações. Nenhum dos dois aparece por cima de erro ou aprovação.</p></div></li>
+        <li><span class="n">4</span><div><b>Piscar e respirar</b><p>Pisca a cada 4–5 s (120 ms) e flutua 4 px num ciclo de 3,6 s. Com movimento reduzido, fica parado.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-anat">
+    <div class="sec-head">
+      <h2 id="h-anat">Como ele é</h2>
+      <p>Forma das pranchas 3D do Open Dot. Material, cores e rosto do Dot 3D do Mascot Desk (renders do Blender e comparação SVG × 3D).</p>
+    </div>
+    <div class="two">
+      <div class="mini-stage" id="anat-dot"></div>
+      <ol class="traits">
+        <li><span class="n">1</span><div><b>Corpo gordinho</b><p>Mochi de cerca de 1,4 de largura para 1 de altura. Topo em cúpula, laterais que estufam embaixo, base reta apoiada no chão. Sem quinas e sem tracinho.</p></div></li>
+        <li><span class="n">2</span><div><b>Cores do Mascot Desk</b><p>Branco puro no topo, rosado-lilás no meio e azul-lavanda na base, com aro de luz azul embaixo. Acabamento macio e levemente brilhante, sem contorno.</p></div></li>
+        <li><span class="n">3</span><div><b>Luz da base</b><p>Brilho colorido embaixo e no chão. Azul é o Dot; cada agente e cada estado tem a sua cor.</p></div></li>
+        <li><span class="n">4</span><div><b>Olhos</b><p>Ovais pretos altos, sem brilho e sem íris, a 60% da altura do corpo. Viram arcos (feliz), setinhas (esforço), piscadinha ou bolinhas (surpresa).</p></div></li>
+        <li><span class="n">5</span><div><b>Bochechas</b><p>Manchas rosadas grandes e desfocadas, por fora e um pouco abaixo dos olhos.</p></div></li>
+        <li><span class="n">6</span><div><b>O que ele não tem</b><p>Mãos, boca, sobrancelhas, nadadeira, orelha e selo fixo. Símbolos acima da cabeça só aparecem durante um estado.</p></div></li>
+      </ol>
+    </div>
+    <div class="palette" aria-label="Paleta">
+      <span><i class="swatch" style="background:#FFFFFF;border:1px solid #D8D5D0"></i>Topo <code>#FFFFFF</code></span>
+      <span><i class="swatch" style="background:#F3EAFB"></i>Meio <code>#F3EAFB</code></span>
+      <span><i class="swatch" style="background:#A3B3FB"></i>Base <code>#A3B3FB</code></span>
+      <span><i class="swatch" style="background:#3F7BFF"></i>Aro e luz <code>#3F7BFF</code></span>
+      <span><i class="swatch" style="background:#120F1E"></i>Olhos <code>#120F1E</code></span>
+      <span><i class="swatch" style="background:#FF8FB8"></i>Bochecha <code>#FF8FB8</code></span>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-abs">
+    <div class="sec-head">
+      <h2 id="h-abs">Absorvendo arquivo</h2>
+      <p>O único momento em que ele muda de forma: fica mais quadrado e abre o tracinho no alto, como na prancha de absorção. Depois volta a ser o mochi.</p>
+    </div>
+    <div class="two">
+      <div class="mini-stage" id="abs-dot"></div>
+      <ol class="steps">
+        <li><b>1 · Arquivo chega</b><span>0,20 s</span>Vem de lado com rastro de partículas.</li>
+        <li><b>2 · Percebe</b><span>0,15 s</span>Olhos atentos e um amassadinho.</li>
+        <li><b>3 · Fica quadrado</b><span>0,30 s</span>O corpo endireita e o tracinho abre, brilhando.</li>
+        <li><b>4 · Engole</b><span>0,30 s</span>O arquivo afunda no tracinho.</li>
+        <li><b>5 · Pulinho</b><span>0,15 s</span>Quica uma vez para confirmar.</li>
+        <li><b>6 · Volta ao normal</b><span>0,20 s</span>O tracinho fecha e ele vira mochi de novo.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-states">
+    <div class="sec-head">
+      <h2 id="h-states">Estados</h2>
+      <p>A cor do estado troca a luz da base. Erro sempre vem com texto. Carinho não aparece por cima de erro nem de aprovação pendente.</p>
+    </div>
+    <div class="grid" id="states"></div>
+  </section>
+
+  <section aria-labelledby="h-agents">
+    <div class="sec-head">
+      <h2 id="h-agents">Agentes e acessórios</h2>
+      <p>Um único Dot. Cada agente troca o acessório removível e a cor da luz, como na prancha de funções.</p>
+    </div>
+    <div class="grid" id="agents"></div>
+  </section>
+
+  <section aria-labelledby="h-cmp">
+    <div class="sec-head"><h2 id="h-cmp">O que muda em relação ao Dot atual</h2></div>
+    <div class="compare">
+      <div class="card">
+        <div class="mini-stage" id="cmp-old"></div>
+        <div class="pad">
+          <h3>Atual (feito pelo Cursor)</h3>
+          <ul class="plain">
+            <li>Caixa de laterais retas, cantos de sabonete</li>
+            <li>Bege acinzentado e chapado, sem luz na base</li>
+            <li>Olhos pequenos colados no rodapé</li>
+            <li>Tracinho escuro o tempo todo, parece cofrinho</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="mini-stage" id="cmp-new"></div>
+        <div class="pad">
+          <h3>Novo</h3>
+          <ul class="plain">
+            <li>Mochi gordinho, base reta, sem quinas</li>
+            <li>Branco → lilás → azul, com aro e luz azuis</li>
+            <li>Olhos ovais altos e bochechas grandes</li>
+            <li>Tracinho só ao absorver arquivo</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <h3>No 3D (Blender 4.5)</h3>
+      <p>O corpo parte de uma esfera, não de um cubo. Ela é achatada, alargada embaixo e tem a base aplainada. O material copia o do Mascot Desk: degradê vertical branco → rosado → lavanda → azul, superfície macia com brilho leve e aro azul de luz embaixo. Olhos e bochechas são peças na frente. A forma “quadrada” da absorção é um shape key do corpo, e o tracinho é uma peça que só aparece nesse momento. A luz colorida da base vem do app, tingida pela cor do agente ou do estado.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var RM = false;
+  try { RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+  var MOCHI = "M 47 138 C 40 92, 72 56, 130 55 C 188 56, 220 92, 213 138 C 209 167, 184 177, 130 177 C 76 177, 51 167, 47 138 Z";
+  var SQUARE = "M 50 128 C 49 80, 62 64, 130 63 C 198 64, 211 80, 210 128 C 210 165, 198 176, 130 176 C 62 176, 50 165, 50 128 Z";
+  var INK = "#120F1E";
+  var L = { cx: 111, cy: 129 }, R = { cx: 149, cy: 129 };
+  var uid = 0;
+  function f(n) { return Math.round(n * 100) / 100; }
+
+  /* ---------- Pincel: traço cheio no meio e fino nas pontas (como os olhos do Mascot Desk) ---------- */
+  function brush(pts, W, taper) {
+    taper = taper == null ? .4 : taper;
+    var n = pts.length, Ls = [], Rs = [];
+    for (var i = 0; i < n; i++) {
+      var a = pts[Math.max(i - 1, 0)], b = pts[Math.min(i + 1, n - 1)];
+      var dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
+      var nx = -dy / len, ny = dx / len, t = i / (n - 1);
+      var w = W / 2 * (taper + (1 - taper) * Math.sin(Math.PI * t));
+      Ls.push([pts[i][0] + nx * w, pts[i][1] + ny * w]);
+      Rs.push([pts[i][0] - nx * w, pts[i][1] - ny * w]);
+    }
+    var d = "M" + f(Ls[0][0]) + " " + f(Ls[0][1]);
+    for (i = 1; i < n; i++) d += " L" + f(Ls[i][0]) + " " + f(Ls[i][1]);
+    var e = Rs[n - 1], wEnd = W / 2 * taper;
+    d += " A" + f(wEnd) + " " + f(wEnd) + " 0 0 1 " + f(e[0]) + " " + f(e[1]);
+    for (i = n - 2; i >= 0; i--) d += " L" + f(Rs[i][0]) + " " + f(Rs[i][1]);
+    d += " A" + f(wEnd) + " " + f(wEnd) + " 0 0 1 " + f(Ls[0][0]) + " " + f(Ls[0][1]) + " Z";
+    return d;
+  }
+  function qb(x0, y0, cx, cy, x1, y1, n) {
+    n = n || 20; var out = [];
+    for (var i = 0; i <= n; i++) { var t = i / n, u = 1 - t; out.push([u * u * x0 + 2 * u * t * cx + t * t * x1, u * u * y0 + 2 * u * t * cy + t * t * y1]); }
+    return out;
+  }
+  function seg(pts, n) {
+    var out = [];
+    for (var k = 0; k < pts.length - 1; k++) for (var i = 0; i < n; i++) { var t = i / n; out.push([pts[k][0] + (pts[k + 1][0] - pts[k][0]) * t, pts[k][1] + (pts[k + 1][1] - pts[k][1]) * t]); }
+    out.push(pts[pts.length - 1]); return out;
+  }
+  function spiralPts(cx, cy, r0, turns, dir, start) {
+    var out = [], N = 70;
+    for (var i = 0; i <= N; i++) { var p = i / N, a = start + dir * p * Math.PI * 2 * turns, r = r0 * (1 - p * .88); out.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
+    return out;
+  }
+  function fill(d, color, extra) { return '<path d="' + d + '" fill="' + color + '"' + (extra || "") + "/>"; }
+
+  /* ---------- Olhos ---------- */
+  function oval(c, o) {
+    o = o || {};
+    return '<ellipse class="eye' + (o.nb ? "" : " b") + '" cx="' + (c.cx + (o.dx || 0)) + '" cy="' + (c.cy + (o.dy || 0)) + '" rx="' + (o.rx || 6) + '" ry="' + (o.ry || 10.2) + '" fill="' + INK + '"/>';
+  }
+  function happy(c) { return fill(brush(qb(c.cx - 9, c.cy + 3, c.cx, c.cy - 10, c.cx + 9, c.cy + 3), 5.2, .45), INK); }
+  function closed(c) { return fill(brush(qb(c.cx - 9.5, c.cy - 1, c.cx, c.cy + 9, c.cx + 9.5, c.cy - 1), 4.6, .45), INK); }
+  function chevron(c, dir) { var s = dir; return fill(brush(seg([[c.cx - 5 * s, c.cy - 8], [c.cx + 5 * s, c.cy], [c.cx - 5 * s, c.cy + 8]], 10), 4.6, .5), INK, ' stroke="' + INK + '" stroke-width=".6" stroke-linejoin="round"'); }
+  function angry(c, side) {
+    var rx = 6.6, ry = 9.8, cx = c.cx, cy = c.cy + 2, pts = [];
+    var outerX = cx - side * rx, innerX = cx + side * rx, yO = cy - ry * .92, yI = cy - ry * .3;
+    for (var i = 0; i < 64; i++) {
+      var a = i / 64 * Math.PI * 2, x = cx + rx * Math.cos(a), y = cy + ry * Math.sin(a);
+      var t = (x - outerX) / (innerX - outerX), ly = yO + t * (yI - yO);
+      pts.push([x, Math.max(y, ly)]);
+    }
+    return '<path d="M' + pts.map(function (p) { return f(p[0]) + " " + f(p[1]); }).join(" L") + ' Z" fill="' + INK + '" stroke="' + INK + '" stroke-width="1.2" stroke-linejoin="round"/>';
+  }
+  function spiralEye(c, dir) {
+    return '<g class="spin' + (dir < 0 ? " rev" : "") + '">' + fill(brush(spiralPts(c.cx, c.cy, 8.4, 2.25, dir, -Math.PI / 2), 3.8, .5), INK) + '<circle cx="' + c.cx + '" cy="' + c.cy + '" r="10.5" fill="none"/></g>';
+  }
+  function eyes(expr) {
+    switch (expr) {
+      case "look_up": return oval(L, { dx: 2, dy: -4 }) + oval(R, { dx: 2, dy: -4 });
+      case "focused": return oval(L, { dy: 2, rx: 6.4, ry: 6.4 }) + oval(R, { dy: 2, rx: 6.4, ry: 6.4 });
+      case "attentive": return oval(L, { rx: 6.6, ry: 11.4 }) + oval(R, { rx: 6.6, ry: 11.4 });
+      case "surprised": return oval(L, { rx: 7.6, ry: 12.4, nb: 1 }) + oval(R, { rx: 7.6, ry: 12.4, nb: 1 });
+      case "happy": return happy(L) + happy(R);
+      case "wink": return oval(L, { nb: 1 }) + chevron(R, -1);
+      case "squint": return chevron(L, 1) + chevron(R, -1);
+      case "angry": return angry(L, 1) + angry(R, -1);
+      case "serious": return oval(L, { dy: 2, ry: 8.4 }) + oval(R, { dy: 2, ry: 8.4 });
+      case "dizzy": return spiralEye(L, 1) + spiralEye(R, -1);
+      case "half": return oval(L, { dy: 4, ry: 4, nb: 1 }) + oval(R, { dy: 4, ry: 4, nb: 1 });
+      case "calm": case "sleep": return closed(L) + closed(R);
+      default: return oval(L) + oval(R);
+    }
+  }
+  function layers(a, b) { return '<g class="lay ex1">' + eyes(a) + '</g><g class="lay ex2" opacity="' + (RM ? 0 : 1) + '">' + eyes(b) + "</g>"; }
+  function cheeks(strong) {
+    var op = strong ? 1 : .8;
+    return '<ellipse cx="86" cy="137" rx="13" ry="8" fill="url(#odCheek)" opacity="' + op + '"/><ellipse cx="174" cy="137" rx="13" ry="8" fill="url(#odCheek)" opacity="' + op + '"/>';
+  }
+
+  /* ---------- Partículas: cada uma desenhada à parte ---------- */
+  // wrapper animado (CSS) + posição/rotação/escala fixas (atributo)
+  function P(cls, vars, x, y, rot, sc, inner) {
+    return '<g class="pp ' + cls + '" style="' + (vars || "") + '"><g transform="translate(' + x + " " + y + ") rotate(" + (rot || 0) + ") scale(" + (sc || 1) + ')">' + inner + "</g></g>";
+  }
+  function heartArt(back) {
+    var d = "M0 9 C -14 0, -12 -12, -5.5 -12 C -2 -12, 0 -9, 0 -7 C 0 -9, 2 -12, 5.5 -12 C 12 -12, 14 0, 0 9 Z";
+    if (back) return fill(d, "url(#odHeartBack)", ' opacity=".75"');
+    return fill(d, "#FF4F7E", ' opacity=".45" filter="url(#odB3)"') + fill(d, "url(#odHeart)") +
+      '<ellipse cx="-5.6" cy="-6.4" rx="3.2" ry="2" fill="#FFFFFF" opacity=".85" transform="rotate(-35 -5.6 -6.4)"/><circle cx="-1.8" cy="-8.6" r=".9" fill="#FFFFFF" opacity=".8"/>';
+  }
+  function cloudArt(v) {
+    var b = v === 2 ? [[-6, 1, 4.6], [0, -3.4, 5.6], [6, -.4, 4.8], [1, 3, 4.4], [-1.5, -6.5, 3]] : [[-5.5, 0, 5], [.5, -4, 5.2], [6, 1, 4.2], [0, 3.2, 4.6]];
+    var s = b.map(function (c) { return '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + c[2] + '"/>'; }).join("");
+    return '<g fill="#C9C2F2" transform="translate(.6 1.4)">' + s + '</g><g fill="url(#odCloud)">' + s + "</g>" +
+      '<ellipse cx="-2" cy="-5" rx="2.6" ry="1.4" fill="#FFFFFF" transform="rotate(-20 -2 -5)"/>';
+  }
+  function xArt() {
+    var a = brush(qb(-7, -7, -.5, .5, 7, 7, 14), 5, .45), b = brush(qb(7, -7, .8, -.5, -7, 7, 14), 5, .45);
+    return fill(a + " " + b, "#FF4D6A", ' opacity=".55" filter="url(#odB3)"') + fill(a, "#FF4D6A") + fill(b, "#FF4D6A") +
+      fill(brush(qb(-5, -5.6, -3, -3.8, -1.4, -2.2, 6), 1.6, .4), "#FFC2CC", ' opacity=".9"');
+  }
+  function dashArt(len, w) { return fill(brush(seg([[0, 0], [0, -len]], 6), w || 3, .35), "#FF4D6A"); }
+  function spiralArt(r, col, turns, dir, w) { return fill(brush(spiralPts(0, 0, r, turns, dir, Math.PI * .3), w, .45), col, "") ; }
+  function ballArt(r) { return '<circle r="' + (r + 2.5) + '" fill="#36D8F4" opacity=".45" filter="url(#odB3)"/><circle r="' + r + '" fill="url(#odBall)"/><ellipse cx="' + f(-r * .35) + '" cy="' + f(-r * .38) + '" rx="' + f(r * .32) + '" ry="' + f(r * .22) + '" fill="#FFFFFF" opacity=".9" transform="rotate(-30)"/>'; }
+  function star4(r, grad) {
+    var d = "M0 " + (-r) + " C " + f(r * .16) + " " + f(-r * .3) + ", " + f(r * .3) + " " + f(-r * .16) + ", " + r + " 0 C " + f(r * .3) + " " + f(r * .16) + ", " + f(r * .16) + " " + f(r * .3) + ", 0 " + r + " C " + f(-r * .16) + " " + f(r * .3) + ", " + f(-r * .3) + " " + f(r * .16) + ", " + (-r) + " 0 C " + f(-r * .3) + " " + f(-r * .16) + ", " + f(-r * .16) + " " + f(-r * .3) + ", 0 " + (-r) + " Z";
+    return fill(d, grad);
+  }
+  function waveArt(side, big) {
+    var h = big ? 15 : 10, x = big ? 6 * side : 0;
+    return fill(brush(qb(x, -h, x + 7 * side, 0, x, h, 16), 3.8, .3), "#36D8F4");
+  }
+  function zArt(s) { return fill(brush(seg([[-4 * s, -4.5 * s], [4 * s, -4.5 * s], [-4 * s, 4.5 * s], [4.4 * s, 4.5 * s]], 8), 2.6 * s, .55), "currentColor", ' stroke="currentColor" stroke-width=".4" stroke-linejoin="round"'); }
+  function bangArt() {
+    return '<rect x="-4.6" y="-12" width="9.2" height="16" rx="4.6" fill="#FF9F1C" opacity=".4" filter="url(#odB3)"/>' +
+      fill("M -3.6 -10.4 C -3.6 -13.4, 3.6 -13.4, 3.6 -10.4 L 2 1.6 C 1.8 3.4, -1.8 3.4, -2 1.6 Z", "url(#odAmber)") +
+      '<circle cx="0" cy="8" r="3.2" fill="url(#odAmber)"/><ellipse cx="-1.4" cy="-9.4" rx="1.1" ry="2.2" fill="#FFF6DA" opacity=".9"/>';
+  }
+
+  /* ---------- Acessórios com volume ---------- */
+  var CAP = '<g class="acc3">' +
+    '<ellipse cx="170" cy="90" rx="34" ry="6" fill="#4A5BD0" opacity=".28" filter="url(#odB3)"/>' +
+    '<ellipse cx="130" cy="76" rx="54" ry="7" fill="#5B6BD8" opacity=".22" filter="url(#odB3)"/>' +
+    '<path d="M 78 74 C 76 50, 110 37, 133 37 C 160 37, 187 50, 184 72 C 166 81, 96 82, 78 74 Z" fill="url(#odCrown)"/>' +
+    '<path d="M 90 64 C 96 50, 112 42, 126 40" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" opacity=".95"/>' +
+    '<g fill="none" stroke="#D5CFF4" stroke-width="1.1" stroke-linecap="round"><path d="M 132 40 C 129 52, 127 64, 127 79"/><path d="M 108 43 C 103 54, 100 66, 100 78"/><path d="M 157 43 C 162 54, 165 65, 166 77"/></g>' +
+    '<path d="M 80 71 C 100 80, 162 80, 183 69" fill="none" stroke="#BDB8EC" stroke-width="2.4" opacity=".7"/>' +
+    '<circle cx="133" cy="38" r="4.2" fill="url(#odBtn)"/><circle cx="131.8" cy="36.8" r="1.2" fill="#FFFFFF"/>' +
+    '<path d="M 128 78 C 156 81, 197 76, 222 65 C 224 72, 215 84, 189 90 C 165 95, 140 91, 128 82 Z" fill="#2B53B8"/>' +
+    '<path d="M 128 75 C 156 78, 196 73, 220 62 C 222 68, 213 79, 188 85 C 164 90, 140 86, 128 79 Z" fill="url(#odVisor)"/>' +
+    '<path d="M 140 78 C 166 80, 196 75, 216 66" fill="none" stroke="#D6E4FF" stroke-width="1.7" stroke-linecap="round" opacity=".9"/></g>';
+  function lens(c) {
+    return '<circle cx="' + c.cx + '" cy="' + c.cy + '" r="15" fill="url(#odLens)"/>' +
+      '<path d="M' + (c.cx - 9) + " " + (c.cy - 3) + " L" + (c.cx - 3) + " " + (c.cy - 9) + '" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" opacity=".75"/>' +
+      '<path d="M' + (c.cx - 9.5) + " " + (c.cy + 2.5) + " L" + (c.cx - 7.5) + " " + (c.cy + .5) + '" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" opacity=".6"/>' +
+      '<circle cx="' + c.cx + '" cy="' + c.cy + '" r="15" fill="none" stroke="#1E1C30" stroke-width="3.2"/>' +
+      '<path d="M' + (c.cx - 12.5) + " " + (c.cy - 8) + " A 15 15 0 0 1 " + (c.cx - 4) + " " + (c.cy - 14.4) + '" fill="none" stroke="#8D88C2" stroke-width="1.1" stroke-linecap="round"/>';
+  }
+  var GLASSES = '<g class="acc3">' +
+    '<path d="M 96 126 Q 72 121 52 117" fill="none" stroke="#1E1C30" stroke-width="2.6" stroke-linecap="round"/><path d="M 164 126 Q 188 121 208 117" fill="none" stroke="#1E1C30" stroke-width="2.6" stroke-linecap="round"/>' +
+    '<path d="M 90 122 Q 72 119 58 116.5" fill="none" stroke="#6E6A9C" stroke-width=".9" stroke-linecap="round"/>' +
+    lens(L) + lens(R) +
+    '<path d="M 125.6 127 Q 130 122 134.4 127" fill="none" stroke="#1E1C30" stroke-width="2.8" stroke-linecap="round"/>' +
+    '<ellipse cx="124" cy="134" rx="1.6" ry="2.2" fill="#E8E4FF" opacity=".8"/><ellipse cx="136" cy="134" rx="1.6" ry="2.2" fill="#E8E4FF" opacity=".8"/></g>';
+  var PHONES = '<g class="acc3">' +
+    '<path d="M 56 120 C 50 46, 210 42, 204 118" fill="none" stroke="#5E46B8" stroke-width="11" stroke-linecap="round" opacity=".35" transform="translate(0 2)"/>' +
+    '<path d="M 56 120 C 50 46, 210 42, 204 118" fill="none" stroke="url(#odBand)" stroke-width="10" stroke-linecap="round"/>' +
+    '<path d="M 62 98 C 66 56, 194 52, 198 96" fill="none" stroke="#F4EEFF" stroke-width="2.2" stroke-linecap="round" opacity=".9"/>' +
+    '<rect x="48" y="98" width="11" height="15" rx="3.5" fill="#7E62D8"/><rect x="201" y="96" width="11" height="15" rx="3.5" fill="#7E62D8"/>' +
+    '<ellipse cx="51" cy="129" rx="13" ry="21" fill="url(#odCup)"/><ellipse cx="58" cy="129" rx="7.5" ry="17" fill="url(#odCushion)"/><ellipse cx="60" cy="131" rx="3.6" ry="12" fill="#BBA9F2" opacity=".7"/><ellipse cx="45" cy="120" rx="3" ry="7" fill="#FFFFFF" opacity=".55"/>' +
+    '<ellipse cx="209" cy="127" rx="12" ry="20" fill="url(#odCup)"/><ellipse cx="202" cy="127" rx="7" ry="16" fill="url(#odCushion)"/><ellipse cx="200" cy="129" rx="3.4" ry="11" fill="#BBA9F2" opacity=".7"/><ellipse cx="212" cy="118" rx="2.6" ry="6" fill="#FFFFFF" opacity=".45"/></g>';
+  var RING = '<g class="ring"><ellipse cx="196" cy="183" rx="27" ry="8" fill="#45E2BE" opacity=".5" filter="url(#odB3)"/>' +
+    '<path d="M 172 182 A 24 6.5 0 0 1 220 182" fill="none" stroke="#1FA884" stroke-width="4" opacity=".75"/>' +
+    '<path d="M 172 182 A 24 6.5 0 0 0 220 182" fill="none" stroke="url(#odRing)" stroke-width="4.6"/>' +
+    '<path d="M 181 186.4 A 24 6.5 0 0 0 203 188.3" fill="none" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" opacity=".85"/></g>';
+
+  /* ---------- Absorção ---------- */
+  var KT = "0;0.15;0.25;0.62;0.75;1", KS = ".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1";
+  function morph() { return '<animate attributeName="d" dur="3.6s" repeatCount="indefinite" calcMode="spline" keyTimes="' + KT + '" keySplines="' + KS + '" values="' + [MOCHI, MOCHI, SQUARE, SQUARE, MOCHI, MOCHI].join(";") + '"/>'; }
+  function absorbExtras() {
+    var slot = '<g opacity="' + (RM ? 1 : 0) + '">' + (RM ? "" : '<animate attributeName="opacity" dur="3.6s" repeatCount="indefinite" keyTimes="' + KT + '" values="0;0;1;1;0;0"/>') +
+      '<rect x="108" y="66" width="44" height="10" rx="5" fill="#3F7BFF" opacity=".55" filter="url(#odB3)"/><rect x="111" y="68" width="38" height="7" rx="3.5" fill="#232A6B"/><rect x="114" y="70" width="32" height="3" rx="1.5" fill="#8FD8FF"/></g>';
+    var trail = '<g fill="#8FD8FF">' + [[196, 46, 1.6], [208, 40, 1.2], [222, 44, 1.8], [214, 54, 1.1]].map(function (d) { return '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="' + d[2] + '"/>'; }).join("") +
+      (RM ? "" : '<animate attributeName="opacity" dur="3.6s" repeatCount="indefinite" keyTimes="0;0.1;0.3;0.4;1" values="0;1;1;0;0"/>') + "</g>";
+    var file = "<g>" + (RM ? "" :
+        '<animateTransform attributeName="transform" type="translate" dur="3.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.2;0.32;0.5;1" keySplines=".4 0 .2 1;.4 0 .2 1;.4 0 .2 1;.4 0 .2 1" values="74 -6;30 -12;0 0;0 22;0 22"/>' +
+        '<animate attributeName="opacity" dur="3.6s" repeatCount="indefinite" keyTimes="0;0.06;0.42;0.5;1" values="0;1;1;0;0"/>') +
+      '<rect x="118" y="34" width="24" height="30" rx="4" fill="#4F8BFF" opacity=".35" filter="url(#odB3)"/><rect x="119" y="35" width="22" height="28" rx="4" fill="#5B8CFF"/><path d="M134 35 L141 42 L134 42 Z" fill="#B9CEFF"/><path d="M123 46 H137 M123 51 H137 M123 56 H132" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/></g>';
+    var check = '<g class="fx"><circle cx="200" cy="56" r="10" fill="#2BD47F"/><path d="M195 56 L198.5 59.5 L205 52.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g>';
+    return { slot: slot, over: trail + file + check };
+  }
+
+  /* o: {expr, face, glow, tint, tintCls, acc, extras, cls, cheeksStrong, grey, label, oi, absorb} */
+  function dot(o) {
+    var id = "od" + (++uid);
+    var face = o.oi ? '<g class="e-n">' + eyes("neutral") + '</g><g class="e-s">' + eyes("squint") + '</g><g class="e-w">' + eyes("wink") + "</g>" : (o.face || eyes(o.expr || "neutral"));
+    var glow = o.glow || "#3F7BFF";
+    var abs = o.absorb ? absorbExtras() : null;
+    var shape = o.absorb && RM ? SQUARE : MOCHI;
+    var anim = o.absorb && !RM ? morph() : "";
+    var acc = o.acc === "glasses" ? GLASSES : o.acc === "cap" ? CAP : o.acc === "phones" ? PHONES : "";
+    var tint = "";
+    if (o.tint === "pink") tint = '<path d="' + shape + '" fill="#FFC9DE" opacity=".42"/>';
+    if (o.tint === "red") tint = '<ellipse class="tint" cx="130" cy="176" rx="104" ry="44" fill="#FF6B7E" opacity=".5" filter="url(#odB7)"/>';
+    return '<svg class="dot ' + (o.cls || "") + '" viewBox="0 0 260 205" role="img" aria-label="' + (o.label || "Dot") + '" style="--glow:' + glow + '">' +
+      '<defs><clipPath id="' + id + 'c"><path d="' + shape + '">' + anim + "</path></clipPath></defs>" +
+      '<ellipse class="ground" cx="130" cy="178" rx="96" ry="13" style="fill:var(--glow); opacity:var(--glow-op)" filter="url(#odB12)"/>' +
+      '<ellipse cx="130" cy="177" rx="74" ry="4.5" fill="#0A0F2E" style="opacity:var(--contact)" filter="url(#odB3)"/>' +
+      (o.under || "") +
+      '<g class="fig"' + (o.grey ? ' filter="url(#odGrey)" opacity=".75"' : "") + ">" +
+        '<path d="' + shape + '" fill="url(#odBody)" style="stroke:var(--edge)" stroke-width="1">' + anim + "</path>" +
+        '<g clip-path="url(#' + id + 'c)">' + tint +
+          '<ellipse cx="130" cy="190" rx="100" ry="26" style="fill:var(--glow)" opacity=".75" filter="url(#odB7)"/>' +
+          '<path d="' + shape + '" fill="none" style="stroke:var(--glow)" stroke-width="7" opacity=".55" filter="url(#odB3)" mask="url(#odLower)">' + anim + "</path>" +
+          '<ellipse cx="216" cy="122" rx="16" ry="56" fill="#B9B2F2" opacity=".4" filter="url(#odB7)"/>' +
+          '<ellipse cx="44" cy="126" rx="12" ry="48" fill="#C9C2F5" opacity=".3" filter="url(#odB7)"/>' +
+          '<ellipse cx="114" cy="76" rx="52" ry="14" fill="#FFFFFF" opacity=".95" filter="url(#odB7)"/>' +
+          '<ellipse cx="100" cy="72" rx="14" ry="4" fill="#FFFFFF" opacity=".9" filter="url(#odB2)"/>' +
+        "</g>" +
+        (abs ? abs.slot : "") +
+        cheeks(o.cheeksStrong) + '<g class="gaze">' + face + "</g>" + acc +
+      "</g>" + (o.extras || "") + (abs ? abs.over : "") + "</svg>";
+  }
+
+  /* ---------- Efeitos por estado ---------- */
+  var THINK = '<g class="pi bob">' + P("ball", "", 162, 46, 0, 1, ballArt(4.4)) + P("ball", "", 177, 39, 0, 1, ballArt(4.8)) + P("ball", "", 192, 31, 0, 1, ballArt(5.2)) + "</g>" +
+    P("twk", "--d:.4s;--t:2.4s", 206, 58, 0, 1, star4(5, "url(#odStarB)")) + P("twk", "--d:1.5s;--t:2.4s", 150, 30, 0, 1, star4(3.4, "url(#odStarB)"));
+  var WORK = P("wv", "", 36, 124, 0, 1, waveArt(-1, false)) + P("wv b", "", 28, 124, 0, 1, waveArt(-1, true)) +
+    P("wv", "", 224, 124, 0, 1, waveArt(1, false)) + P("wv b", "", 232, 124, 0, 1, waveArt(1, true)) +
+    P("rise", "--dx:-6px;--dy:-26px;--r:120deg;--t:2.2s", 58, 72, 15, 1, '<rect x="-2.8" y="-2.8" width="5.6" height="5.6" rx="1.4" fill="#5FE0FF"/><rect x="-1.8" y="-1.8" width="2" height="2" rx=".6" fill="#E6FBFF"/>') +
+    P("rise", "--dx:8px;--dy:-30px;--r:-140deg;--t:2.2s;--d:-1.1s", 206, 66, -20, .8, '<rect x="-2.8" y="-2.8" width="5.6" height="5.6" rx="1.4" fill="#36D8F4"/><rect x="-1.8" y="-1.8" width="2" height="2" rx=".6" fill="#E6FBFF"/>') +
+    P("twk", "--d:.7s;--t:1.8s", 196, 40, 0, 1, star4(4.4, "url(#odStarB)"));
+  var WAIT = P("bang", "", 190, 40, 0, 1, bangArt());
+  var OK = '<g filter="url(#odB2)" opacity=".5"><path class="chk" d="M48 50 L56 58 L72 40" fill="none" stroke="#2BD47F" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g>' +
+    '<path class="chk" d="M48 50 L56 58 L72 40" fill="none" stroke="#2BD47F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    P("twk", "--t:2.4s", 202, 42, 0, 1, star4(7, "url(#odStarY)")) + P("twk", "--t:2.4s;--d:.35s", 222, 66, 0, 1, star4(4.2, "url(#odStarY)")) + P("twk", "--t:2.4s;--d:.7s", 186, 72, 0, 1, star4(3.2, "url(#odStarY)"));
+  var SURP = '<g class="pp ray3">' +
+    fill(brush(seg([[112, 44], [107, 32]], 6), 3.6, .35), "#FFD23F") + fill(brush(seg([[130, 40], [130, 26]], 6), 3.8, .35), "#FFD23F") + fill(brush(seg([[148, 44], [154, 33]], 6), 3.4, .35), "#FFD23F") + "</g>" +
+    P("wv", "", 34, 120, 0, .8, fill(brush(qb(0, -10, -6, 0, 0, 10, 14), 3, .3), "#FFFFFF")) + P("wv b", "", 226, 120, 0, .8, fill(brush(qb(0, -10, 6, 0, 0, 10, 14), 3, .3), "#FFFFFF"));
+  var ERR =
+    P("clL", "", 52, 78, -8, 1, cloudArt(1)) + P("clR", "", 210, 72, 10, .9, cloudArt(2)) +
+    '<g class="pp rays">' +
+      P("", "", 166, 46, -55, 1, dashArt(6, 3)) + P("", "", 163, 58, -95, 1, dashArt(5, 2.6)) + P("", "", 172, 34, -20, 1, dashArt(5.5, 2.8)) +
+      P("", "", 208, 46, 55, 1, dashArt(6, 3)) + P("", "", 211, 58, 95, 1, dashArt(4.6, 2.6)) + P("", "", 202, 34, 20, 1, dashArt(5, 2.8)) + "</g>" +
+    P("ix", "", 187, 49, 0, 1, xArt()) +
+    P("sdot", "", 187, 49, 0, 1, '<circle r="7" fill="#FF4D6A" opacity=".5" filter="url(#odB3)"/><circle r="4" fill="#FF4D6A"/><circle cx="-1.2" cy="-1.3" r="1.2" fill="#FFC2CC"/>');
+  var LOVE = '<g class="pi beat" style="transform-origin:center">' + P("", "", 88, 40, -8, 1.05, heartArt(false)) + "</g>" +
+    P("rise", "--dx:-14px;--dy:-34px;--r:-14deg;--t:2.6s", 66, 70, -12, .55, heartArt(false)) +
+    P("rise", "--dx:12px;--dy:-40px;--r:18deg;--t:2.8s;--d:-.6s", 196, 64, 14, .7, heartArt(false)) +
+    P("rise", "--dx:20px;--dy:-26px;--r:10deg;--t:2.4s;--d:-1.4s", 216, 92, 22, .42, heartArt(false)) +
+    P("rise", "--dx:-8px;--dy:-30px;--r:-20deg;--t:3s;--d:-2s", 176, 40, -6, .45, heartArt(true)) +
+    P("rise", "--dx:-18px;--dy:-22px;--r:-10deg;--t:2.6s;--d:-1s", 54, 100, -18, .38, heartArt(false)) +
+    P("rise", "--dx:6px;--dy:-36px;--r:24deg;--t:3.2s;--d:-2.6s", 112, 44, 8, .36, heartArt(true));
+  var DIZZY = '<g class="pi bob">' + P("spin slow", "", 92, 40, 0, 1, '<g filter="url(#odB2)" opacity=".5">' + spiralArt(10, "#FF4F7E", 2.25, 1, 4.2) + "</g>" + spiralArt(10, "#FF4F7E", 2.25, 1, 4.2)) + "</g>" +
+    P("spin rev", "", 30, 96, 0, 1, spiralArt(6.6, "#9B6CFF", 2, -1, 2.8)) + P("spin", "", 232, 90, 0, 1, spiralArt(6.6, "#9B6CFF", 2, 1, 2.8));
+  var SLEEP = '<g style="color:var(--z)">' + P("zz", "--d:0s", 176, 62, -8, .9, zArt(1)) + P("zz", "--d:-1.4s", 190, 46, 6, 1, zArt(1.25)) + P("zz", "--d:-2.8s", 204, 30, -4, 1, zArt(1.5)) + "</g>";
+  var OI_LINES = P("fx", "", 230, 106, 0, 1, waveArt(1, false)) + P("fx", "", 238, 106, 0, 1, waveArt(1, true)) + P("fx", "", 30, 106, 0, 1, waveArt(-1, false));
+  var BUBBLE = '<g class="bub"><path d="M180 18 h40 a12 12 0 0 1 12 12 v6 a12 12 0 0 1 -12 12 h-22 l-8 9 l1 -9 h-11 a12 12 0 0 1 -12 -12 v-6 a12 12 0 0 1 12 -12 Z" style="fill:var(--bubble); stroke:var(--bubble-line)" stroke-width="1.2"/><text x="200" y="39" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="15" style="fill:var(--bubble-text)">oi!</text></g>';
+
+  document.getElementById("hero").innerHTML = dot({ oi: true, cls: "hero-dot a-oi a-blink", extras: OI_LINES + BUBBLE, label: "Dot quicando, balançando e dizendo oi" });
+
+  document.getElementById("wm-face").innerHTML =
+    '<svg viewBox="40 50 180 132" aria-hidden="true"><path d="' + MOCHI + '" fill="#FFFFFF" stroke="#B9C2F5" stroke-width="3"/>' +
+    '<path d="M 52 150 C 70 172, 190 172, 208 150 C 206 168, 184 177, 130 177 C 76 177, 54 168, 52 150 Z" fill="#B7C3FB"/>' +
+    '<ellipse cx="86" cy="137" rx="12" ry="7" fill="#FFB3CC"/><ellipse cx="174" cy="137" rx="12" ry="7" fill="#FFB3CC"/>' +
+    '<ellipse cx="111" cy="129" rx="7.2" ry="12" fill="' + INK + '"/><ellipse cx="149" cy="129" rx="7.2" ry="12" fill="' + INK + '"/></svg>';
+
+  document.getElementById("anat-dot").innerHTML = dot({ cls: "a-float a-blink", label: "Dot em repouso" });
+  document.getElementById("abs-dot").innerHTML = dot({ expr: "attentive", glow: "#3F7BFF", absorb: true, cls: "a-absorb a-blink", label: "Dot absorvendo arquivo: fica quadrado e abre o tracinho" });
+
+  var states = [
+    { t: "Repouso", d: "Respira devagar, pisca e segue o cursor com o olhar.", o: { cls: "a-float a-blink" } },
+    { t: "Pensando", d: "Olha para cima. Três bolinhas de vidro ciano pulando em sequência e brilhinhos.", o: { expr: "look_up", glow: "#9E83FF", extras: THINK, cls: "a-float s-think" } },
+    { t: "Trabalhando", d: "Olhos concentrados, balanço curto, ondas “(( ))” e quadradinhos subindo.", o: { expr: "focused", glow: "#36A8FF", extras: WORK, cls: "a-work s-work" } },
+    { t: "Esperando seu OK", d: "Calmo, quase parado. Um “!” âmbar balança acima. Nada sai sem você aprovar.", chip: ["amber", "Aguardando seu OK"], o: { expr: "neutral", glow: "#E9B75E", extras: WAIT, cls: "a-blink s-wait" } },
+    { t: "Concluído", d: "Pulinho, olhos felizes, check verde sendo desenhado e estrelinhas.", chip: ["mint", "Resumo das 08h pronto"], o: { expr: "happy", glow: "#2BD47F", extras: OK, cls: "a-ok s-ok", cheeksStrong: 1 } },
+    { t: "Surpreso", d: "Estica, olhos grandes, leque de raios amarelos e tremidinha branca.", o: { expr: "surprised", glow: "#FFC94D", extras: SURP, cls: "a-surp s-surp s-work" } },
+    { t: "Erro", d: "Amassa e treme, olhos bravos, nuvenzinhas de raiva, ✕ vermelho. Depois acalma e fica o pontinho vermelho.", chip: ["red", "Gmail não respondeu"], o: { face: layers("angry", "serious"), glow: "#FF4D6A", tint: "red", extras: ERR, cls: "s-err" } },
+    { t: "Tonto", d: "Três toques rápidos: olhos em espiral girando, corpo rosado balançando e espirais em volta.", o: { expr: "dizzy", glow: "#FF6FA3", tint: "pink", extras: DIZZY, cls: "s-dizzy", cheeksStrong: 1 } },
+    { t: "Carinho", d: "Pulinho, coração batendo, corações de vários tamanhos subindo e uma piscadinha.", o: { face: layers("happy", "wink"), glow: "#FF6FA3", tint: "pink", cheeksStrong: 1, extras: LOVE, cls: "s-love" } },
+    { t: "Desconectado", d: "Cores apagadas e olhos meio fechados até você reconectar.", chip: ["grey", "Reconecte o Gmail"], o: { expr: "half", glow: "#7E8090", grey: 1 } },
+    { t: "Dormindo", d: "Olhos fechados, respiração lenta e “z” desenhados à mão subindo.", o: { expr: "sleep", glow: "#4D5BD8", extras: SLEEP, cls: "a-sleep s-sleep" } },
+    { t: "Absorvendo", d: "Fica quadrado, abre o tracinho e engole o arquivo. Veja a seção acima.", o: { expr: "attentive", glow: "#3F7BFF", absorb: true, cls: "a-absorb a-blink" } }
+  ];
+  document.getElementById("states").innerHTML = states.map(function (s) {
+    s.o.label = "Dot: " + s.t;
+    return '<article class="card"><div class="mini-stage">' + dot(s.o) + '</div><div class="pad"><h3>' + s.t + "</h3><p>" + s.d + "</p>" +
+      (s.chip ? '<span class="chip ' + s.chip[0] + '">' + s.chip[1] + "</span>" : "") + "</div></article>";
+  }).join("");
+
+  var agents = [
+    { t: "Pessoal (Dot)", c: "#3F7BFF", d: "Sem acessório. Luz azul.", o: {} },
+    { t: "Correio", c: "#5B8CFF", d: "Boné de gomos no mesmo material do corpo, botão no topo e aba azul com espessura.", o: { acc: "cap" } },
+    { t: "Código", c: "#8C6BFF", d: "Óculos de aro grosso com reflexo nas lentes, ponte e hastes que somem atrás do corpo.", o: { acc: "glasses" } },
+    { t: "Sentinela", c: "#45E2BE", d: "Sem peça fixa. Um anel menta de vidro no chão enquanto verifica.", o: { extras: RING, cls: "a-scan" } },
+    { t: "Foco", c: "#A98BFF", d: "Fone lilás com arco acolchoado, regulagem e conchas com almofada.", o: { acc: "phones", expr: "calm" } }
+  ];
+  document.getElementById("agents").innerHTML = agents.map(function (a) {
+    a.o.glow = a.c; a.o.label = "Dot como " + a.t; a.o.cls = (a.o.cls || "") + " a-float" + (a.o.expr ? "" : " a-blink");
+    return '<article class="card"><div class="mini-stage">' + dot(a.o) + '</div><div class="pad"><h3><i class="swatch" style="background:' + a.c + '"></i>' + a.t + "</h3><p>" + a.d + "</p></div></article>";
+  }).join("");
+
+  document.getElementById("cmp-old").innerHTML =
+    '<svg viewBox="0 0 260 205" role="img" aria-label="Dot atual: caixa bege com fenda escura"><ellipse cx="130" cy="178" rx="70" ry="5" fill="#000" style="opacity:var(--contact)"/>' +
+    '<rect x="70" y="62" width="120" height="114" rx="30" fill="#DCD5CA"/><rect x="74" y="64" width="112" height="60" rx="26" fill="#E6E0D6"/>' +
+    '<rect x="116" y="74" width="28" height="5" rx="2.5" fill="#6E6A64"/>' +
+    '<circle cx="114" cy="152" r="5" fill="#1A1A1A"/><circle cx="146" cy="152" r="5" fill="#1A1A1A"/>' +
+    '<ellipse cx="97" cy="152" rx="7" ry="3.5" fill="#E58FA8" opacity=".8"/><ellipse cx="163" cy="152" rx="7" ry="3.5" fill="#E58FA8" opacity=".8"/></svg>';
+  document.getElementById("cmp-new").innerHTML = dot({ cls: "a-float a-blink", label: "Dot novo" });
+
+  /* ---------- Área interativa ---------- */
+  var play = document.getElementById("play"), mode = "idle", back = 0;
+  function renderPlay(m) {
+    mode = m;
+    play.innerHTML = m === "love" ? dot({ face: layers("happy", "wink"), glow: "#FF6FA3", tint: "pink", cheeksStrong: 1, extras: LOVE, cls: "s-love", label: "Dot recebendo carinho" })
+      : m === "dizzy" ? dot({ expr: "dizzy", glow: "#FF6FA3", tint: "pink", cheeksStrong: 1, extras: DIZZY, cls: "s-dizzy", label: "Dot tonto" })
+      : dot({ cls: "a-float a-blink", label: "Dot interativo" });
+  }
+  function reaction(m, ms) { renderPlay(m); clearTimeout(back); back = setTimeout(function () { renderPlay("idle"); }, ms); }
+  renderPlay("idle");
+  var taps = [], idleTimer = 0;
+  function gazeTo(dx, dy) { var g = play.querySelector(".gaze"); if (g) g.style.transform = "translate(" + dx + "px," + dy + "px)"; }
+  play.addEventListener("pointermove", function (e) {
+    if (mode !== "idle") return;
+    var r = play.getBoundingClientRect();
+    var nx = ((e.clientX - r.left) / r.width - .5) * 2, ny = ((e.clientY - r.top) / r.height - .55) * 2;
+    var m = Math.min(1, Math.hypot(nx, ny)), a = Math.atan2(ny, nx);
+    gazeTo(f(Math.cos(a) * m * 5), f(Math.sin(a) * m * 3.5));
+    clearTimeout(idleTimer); idleTimer = setTimeout(function () { gazeTo(0, 0); }, 8000);
+  });
+  play.addEventListener("pointerleave", function () { gazeTo(0, 0); });
+  function poke() {
+    if (mode !== "idle") return;
+    var now = Date.now();
+    taps = taps.filter(function (t) { return now - t < 900; }); taps.push(now);
+    if (taps.length >= 3) { taps = []; reaction("dizzy", 1600); return; }
+    var s = play.querySelector("svg"); if (!s) return;
+    s.classList.remove("poke"); void s.getBoundingClientRect(); s.classList.add("poke");
+    setTimeout(function () { s.classList.remove("poke"); }, 520);
+  }
+  play.addEventListener("click", poke);
+  play.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); poke(); } });
+  document.getElementById("pet").addEventListener("click", function () { reaction("love", 3000); });
+
+  function press(on, off) { on.setAttribute("aria-pressed", "true"); off.setAttribute("aria-pressed", "false"); }
+  var wm = document.getElementById("wm"), wa = document.getElementById("wm-a"), wb = document.getElementById("wm-b");
+  function replay() {
+    wm.classList.remove("play"); void wm.offsetWidth; wm.classList.add("play");
+    var h = document.querySelector("#hero svg"); h.classList.remove("a-oi"); void h.getBoundingClientRect(); h.classList.add("a-oi");
+  }
+  wa.addEventListener("click", function () { wm.dataset.v = "a"; press(wa, wb); replay(); });
+  wb.addEventListener("click", function () { wm.dataset.v = "b"; press(wb, wa); replay(); });
+  document.getElementById("replay").addEventListener("click", replay);
+})();
+</script>
+
+</body></html>
