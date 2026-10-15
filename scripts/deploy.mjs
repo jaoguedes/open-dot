@@ -56,6 +56,7 @@ run("npm", ["run", "test:workerd"]);
 run("npm", ["run", "ui:mobile"]);
 run("npm", ["run", "ui:fase-a"]);
 run("npm", ["run", "ui:fase-d"]);
+run("npm", ["run", "ui:fase-e"]);
 
 const listed = capture("npx", ["--yes", "wrangler@4", "deployments", "list", "--json"]);
 const previous = activeVersionId(parseDeploymentsJson(listed.stdout ?? ""));

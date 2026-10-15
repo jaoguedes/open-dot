@@ -127,3 +127,19 @@ Também: a ilha e o painel de contexto mostravam `not_connected` cru; agora `isl
 Primeira tela: 344,8 KB (paleta, central, aprovação, sobre/privacidade e absorção sob demanda).
 `ui:mobile`: a regra “botão coberto pela caixa” passou a falhar em botão inteiro escondido na primeira vista ou qualquer sobreposição depois de rolar até o fim (a caixa é fixa e o conteúdo rola por baixo; antes falhava com o “Copiar detalhes” parcialmente visível em Código/Sentinela).
 `npm run check`: 215 testes, 0 falhas.
+
+## Fase E (15/10/2026)
+
+`scripts/ui-fase-e.mjs` (`npm run ui:fase-e`, no deploy). Build de `9819d9d` (antes da E) → 1/5; atual → 5/5. O E3 de tela passava antes porque a frase vem do servidor (no mock já estava certa): a correção real do E3 é no Worker.
+
+| Item | Antes | Mudança | Teste |
+|---|---|---|---|
+| E1 registro | 6 listas de agentes escritas à mão (`App.tsx` ×2, `MyDay.tsx` ×2, `Mascot.tsx`, `/api/status`) | `AGENT_REGISTRY` + `agentsInPlace(lugar)` em `packages/core/src/registry.ts`; todas as telas e o `/api/status` derivam dele. A escolha opcional de agentes ativos e cores por dono **não foi feita**. | `packages/core/test/registry.test.ts`: agente falso aparece em todos os lugares e some de todos; paridade com as listas antigas; varredura que falha se uma tela voltar a ter lista à mão (falhou antes da troca). |
+| E2 fila | resumo no formato novo (JSON) **não tinha** botão de aprovação: pendente só pela URL | `approvalQueue`/`queuePosition` (core, puros); cartão “Aprovações” no Meu dia (até 5, “e mais N”, “Revisar resposta (1 de N)”); “1 de N” e “Próxima aprovação” na tela da aprovação; o segundo “Voltar” do cabeçalho saiu. | `packages/core/test/approval-queue.test.ts` (ordem, limite, duplicata, vencida); ui E2 falhava antes. |
+| E3 conflito | 409 sem objeto `error` → a tela mostraria “Erro 409” | `decideApproval`/`editApproval` devolvem `changed` ou `decided`; a rota responde `{result:"conflict", cause, error:{message}}`: “O conteúdo mudou. Aprove de novo.” / “Esta aprovação já foi decidida.” | `apps/worker/test/fase-e.test.ts` 0/3 → 3/3; teste de concorrência agora espera `decided`. |
+| E4 comportamento | sem documento; a ilha preferia “trabalhando” a “erro”; o Dot grande pegava o primeiro erro **ou** espera; o “Dispensar” da A2.6 não existia | `docs/DOT_COMPORTAMENTO.md`; `dominantVisual` (prioridade do resolvedor); `applyDismiss` + botão “Dispensar” (guarda a revisão da execução; volta na próxima). | `apps/web/test/presence-reason.test.ts` |
+| E5 progresso e pílulas | — | `runProgress` usa o estado real (na fila 1/3, executando 2/3); sem etapas inventadas, porque a execução não registra etapas internas e a tela atualiza de minuto em minuto. `SourcePill` com a carinha do agente e a origem; abre o Gmail ou a notícia. | ui E5 + teste unitário de `runProgress` |
+| E6 docs | — | `CHANGELOG.md`, `CONTRIBUTING.md` (regra “o app prepara, o usuário aprova”, como rodar/testar, como adicionar agente). | — |
+| E7 sons | sem player | `apps/web/src/sound.ts`: desligado por padrão, 0,25 (0–0,6), pré-carga no primeiro gesto, nada com aba oculta, ≤ 2/s, erro e atenção cortam e não são cortados por 1,5 s. Gatilhos: oi (1×/sessão), think/done (Revisar agora), attention (aprovação ou incidente a mais), notify (item novo), error (Dot de erro por ação), send/receive (perguntas), pop/close (diálogos), love (carinho). `dot-tap` e `dot-sleep` só no “Ouvir”. Mascote: chave, volume e “Ouvir” para os 13. Sons fora do service worker. MP3 não regerados. | `apps/web/test/sound.test.ts` (Audio falso: desligado, oculto, limite, prioridade, volume, pré-carga); ui E7 ×2 (espiona `HTMLMediaElement.play`). Não ouvi os sons num aparelho. |
+
+Também: Coucou registrado em `docs/LICENCAS.md` e `NOTICE` (URL não consta no repositório; a confirmar). Primeira tela 348,6 KB (painel de contexto sob demanda). `npm run check`: 235 testes, 0 falhas.
