@@ -126,6 +126,8 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* ---------------- Ilha (glass só aqui, menus e modal) ---------------- */
 .island { position: relative; left: auto; bottom: auto; transform: none; display: flex; align-items: center; gap: 10px; padding: 6px 16px 6px 6px; border-radius: var(--r-pill); background: var(--glass); border: 1px solid var(--glass-border); box-shadow: var(--shadow); z-index: 2; max-width: min(520px, 100%); }
+.palette { position: static; display: flex; flex-direction: column; align-items: stretch; width: min(520px, calc(100vw - 32px)); padding: 12px; border-radius: var(--r-float); background: var(--surface); border: 1px solid var(--border); color: var(--text); box-shadow: var(--shadow); }
+.palette input { width: 100%; }
 .island .txt { display: flex; flex-direction: column; min-width: 0; font-size: 13px; line-height: 18px; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; padding: 0; }
 .island .txt span:last-child { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .island .sep { width: 1px; height: 28px; background: var(--border); }
@@ -137,6 +139,7 @@ details > summary::-webkit-details-marker { display: none; }
 .banner { display: flex; align-items: center; gap: var(--s3); padding: 8px var(--s5); font-size: 13px; border-bottom: 1px solid var(--border); background: var(--surface); }
 .banner.demo { background: var(--accent-soft); }
 .banner.err { color: var(--err); }
+.banner.ok { color: var(--ok); }
 .state { border: 1px dashed var(--border); border-radius: var(--r-ctl); padding: var(--s5); text-align: center; color: var(--text-2); display: flex; flex-direction: column; gap: var(--s3); align-items: center; }
 .state h2 { color: var(--text); }
 .skeleton { background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%); background-size: 200% 100%; animation: shimmer 1.4s infinite linear; border-radius: 8px; height: 14px; }
@@ -203,12 +206,27 @@ details > summary::-webkit-details-marker { display: none; }
   .sidebar { display: none !important; }
   .icon-btn.menu-btn { display: none !important; }
   .island { display: none; }
+  .palette { display: flex; }
+  .content, .reading, .workspace, .card, .mail, .why, .subj { min-width: 0; max-width: 100%; }
+  .reading { position: static; }
+  .why, .subj, .card p, .banner, .chip.wrap { overflow-wrap: anywhere; }
+  .row-actions { flex-wrap: wrap; }
+  .row-actions .chip, .chip.wrap { white-space: normal; max-width: 100%; height: auto; }
+  .table-scroll { max-width: 100%; overflow-x: auto; }
   .content { padding: var(--s5) var(--s4) calc(var(--ask-bar) + var(--dock)); }
   .topbar { padding: var(--s2) var(--s3); flex-wrap: wrap; }
   .topbar .hide-sm { display: none; }
   .top-actions { margin-left: auto; }
   .week { grid-template-columns: 44px repeat(5, minmax(56px, 1fr)); overflow-x: auto; }
-  .composer { bottom: calc(var(--dock) + 8px); }
+  .composer {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    margin: 0;
+    bottom: calc(var(--dock) + 8px);
+    z-index: 40;
+  }
   .hero { flex-direction: column; text-align: center; }
   .hero-copy { order: 2; flex-basis: auto; }
   .hero-dot { order: 1; }
@@ -228,6 +246,7 @@ details > summary::-webkit-details-marker { display: none; }
     color: var(--text-2); font-size: 13px; white-space: nowrap;
     min-height: 44px; cursor: pointer;
   }
+  .agent-pill.is-off { opacity: 0.55; }
   .agent-pill.on { background: var(--accent); color: var(--on-accent); border-color: transparent; }
   .dock {
     display: flex; align-items: center; gap: 4px;
@@ -357,7 +376,7 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* Depois das regras do hero (56–64 px), para o celular da tela 02 prevalecer. */
 @media (max-width: 759px) {
-  :root { --ask-bar: 24px; }
+  :root { --ask-bar: 200px; }
   .hero { gap: 4px; margin-bottom: 10px; }
   .hero-copy { flex: 0 0 auto !important; width: 100%; align-items: center; text-align: center; gap: 4px; }
   .hero-copy > .meta { display: none; }

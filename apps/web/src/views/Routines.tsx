@@ -186,7 +186,7 @@ function RoutineEditor({ r }: { r: Routine }) {
         </button>
         {demo && <span className="tiny">Indisponível na demonstração.</span>}
         {msg && (
-          <span role="status" className={`chip ${msg.ok ? "ok" : "err"}`}>
+          <span role="status" className={`chip wrap ${msg.ok ? "ok" : "err"}`}>
             {msg.text}
           </span>
         )}
