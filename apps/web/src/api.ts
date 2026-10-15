@@ -264,7 +264,7 @@ export const api = {
   logout: () => req<{ ok: true }>("/api/logout", { method: "POST" }),
   sessions: () => req<{ sessions: SessionView[] }>("/api/sessions"),
   logoutAll: () => req<{ ok: true; removed: number }>("/api/sessions/logout-all", { method: "POST" }),
-  feed: () => req<{ items: FeedEntry[]; next: string | null }>("/api/feed"),
+  feed: (before?: string | null) => req<{ items: FeedEntry[]; next: string | null }>(before ? `/api/feed?before=${encodeURIComponent(before)}` : "/api/feed"),
   connections: () => req<{ configured: Configured; connections: Connection[]; agents: AgentCard[]; providers: ProviderCard[] }>("/api/connections"),
   testProvider: (id: string) =>
     req<{ ok: true; used: "fake"; realCall: false; note: string; result: { category: string; evidenceId: string } }>(`/api/ai/providers/${encodeURIComponent(id)}/test`, { method: "POST" }),

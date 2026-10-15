@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { DEFAULT_ACCESSORY, toVisual, type Accessory, type AgentId, type AgentVisual } from "@open-dot/core";
 import { ApiError, api, fetchSnapshot, loadSnapshot, type Snapshot } from "./api.ts";
 import { shouldRefresh, type RefreshTrigger } from "./refresh-policy.ts";
+import { setOwnerTimeZone } from "./format.ts";
 import { apiFailureMode } from "./failure-mode.ts";
 
 export type Mode = "loading" | "live" | "demo" | "login" | "setup" | "unreachable";
@@ -36,6 +37,9 @@ interface AppState {
   goBack: () => void;
   announce: (msg: string) => void;
   announcement: string;
+  /** Há mais itens antigos no feed (cursor do servidor). */
+  feedHasMore: boolean;
+  loadMoreFeed: () => Promise<void>;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -120,6 +124,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const etagRef = useRef<string | null>(null);
+  const olderRef = useRef<Snapshot["feed"]>([]);
   const lastTryRef = useRef<number | null>(null);
   const inFlight = useRef<Promise<void> | null>(null);
 
@@ -146,9 +151,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
       if (r.kind === "fresh") {
+        setOwnerTimeZone(r.snap.owner?.timeZone);
         etagRef.current = r.etag;
-        setSnap(r.snap);
-        setFeedNext(r.next);
+        // Páginas antigas já carregadas continuam na tela depois da atualização.
+        const firstIds = new Set(r.snap.feed.map((f) => f.id));
+        setSnap({ ...r.snap, feed: [...r.snap.feed, ...olderRef.current.filter((f) => !firstIds.has(f.id))] });
+        if (!olderRef.current.length) setFeedNext(r.next);
         setFailures(r.failures);
         setMode("live");
         setLast(Date.now());
@@ -157,6 +165,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Worker antigo (rollback): rotas separadas.
       const s = await api.session();
       if (!s.authenticated) return showLogin();
+      setOwnerTimeZone(s.owner?.timeZone);
       const { snap: data, failures: f } = await loadSnapshot(s.owner ?? null);
       setSnap(data);
       setFailures(f);
@@ -246,14 +255,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
   const accessoryFor = useCallback((a: AgentId): Accessory => (prefs.accessories ? DEFAULT_ACCESSORY[a] : "none"), [prefs.accessories]);
 
+  const loadMoreFeed = useCallback(async () => {
+    if (!feedNext || mode !== "live") return;
+    const r = await api.feed(feedNext);
+    olderRef.current = [...olderRef.current, ...r.items];
+    setSnap((old) => {
+      if (!old) return old;
+      const have = new Set(old.feed.map((f) => f.id));
+      return { ...old, feed: [...old.feed, ...r.items.filter((f) => !have.has(f.id))] };
+    });
+    setFeedNext(r.next);
+  }, [feedNext, mode]);
+
   const announce = useCallback((msg: string) => {
     setAnnouncement("");
     requestAnimationFrame(() => setAnnouncement(msg));
   }, []);
 
   const value = useMemo<AppState>(
-    () => ({ mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, setActivity, path, navigate, goBack, announce, announcement }),
-    [mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, path, navigate, goBack, announce, announcement],
+    () => ({ mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, setActivity, path, navigate, goBack, announce, announcement, feedHasMore: Boolean(feedNext) && mode === "live", loadMoreFeed }),
+    [mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, path, navigate, goBack, announce, announcement, feedNext, loadMoreFeed],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

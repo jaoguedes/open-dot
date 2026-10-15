@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AGENTS, type AgentId } from "@open-dot/core";
 import { useApp } from "../store.tsx";
 import { AgentDot } from "../dot/AgentDot.tsx";
-import { fmtTime, greeting, needYouLine } from "../format.ts";
+import { fmtTime, fmtWhen, greeting, needYouLine } from "../format.ts";
 import { agentConnected, agentPresence, type ConnectionFacts } from "../presence.ts";
 import type { FeedEntry } from "../api.ts";
 import { ApiError, api } from "../api.ts";
@@ -116,15 +116,10 @@ export function MyDay() {
       <div className="day-grid">
         <section className="day-feed" aria-labelledby="h-feed">
           <div className="feed-toolbar">
-            <h2 id="h-feed">Hoje</h2>
-            <div className="seg" role="tablist" aria-label="Filtrar o feed">
-              {([["all", "Tudo"], ["need", "Precisa de você"], ["sources", "Fontes"]] as const).map(([id, lab]) => (
-                <button key={id} role="tab" aria-selected={filter === id} onClick={() => setFilter(id)}>
-                  {lab}
-                </button>
-              ))}
-            </div>
+            <h2 id="h-feed">Recentes</h2>
+            <FilterTabs value={filter} onChange={setFilter} />
           </div>
+          <div role="tabpanel" id="feed-panel" aria-labelledby={`tab-${filter}`}>
           {!snap ? (
             <p className="meta">Carregando o dia…</p>
           ) : shown.length === 0 ? (
@@ -148,7 +143,7 @@ export function MyDay() {
             shown.map((it) => (
               <article key={it.id} className={`feed-card ${isNeed(it) ? "need" : ""}`}>
                 <div className="feed-kicker">
-                  {AGENTS[it.agentId].name} · {fmtTime(it.createdAt)}
+                  {AGENTS[it.agentId].name} · {fmtWhen(it.createdAt)}
                   {isNeed(it) && it.kind !== "ci_failure" && <span className="chip warn chip-push">Precisa de você</span>}
                   {it.kind === "ci_failure" && <span className="chip err chip-push">Falhou</span>}
                 </div>
@@ -157,6 +152,8 @@ export function MyDay() {
               </article>
             ))
           )}
+          {snap && app.feedHasMore && <MoreFeed />}
+          </div>
         </section>
         <aside className="day-aside">
           <div className="card">
@@ -165,9 +162,9 @@ export function MyDay() {
               <p className="meta">Nenhuma rotina cadastrada.</p>
             ) : (
               nextRoutines.map((r) => (
-                <div key={r.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 14 }}>
+                <div className="row-between gap-8 fs-14" key={r.id}>
                   <span>{r.kind === "email_review" ? "Revisão de e-mail" : r.kind === "news_review" ? "O mundo hoje" : r.kind}</span>
-                  <span className="mono" style={{ color: "var(--text-2)" }}>{r.nextRunAt ? fmtTime(r.nextRunAt) : r.times[0]}</span>
+                  <span className="mono text-2c">{r.nextRunAt ? fmtTime(r.nextRunAt) : r.times[0]}</span>
                 </div>
               ))
             )}
@@ -185,11 +182,11 @@ function FeedCardBody({ item, pendingAp }: { item: FeedEntry; pendingAp?: string
     return (
       <>
         {item.body.itens.map((it) => (
-          <article key={it.origem} style={{ display: "grid", gap: 4, marginTop: 8 }}>
-            <div className="tiny">{it.categoria} · {fmtTime(it.quando)}</div>
+          <article className="stack-4 mt-8" key={it.origem}>
+            <div className="tiny">{it.categoria} · {fmtWhen(it.quando)}</div>
             <div className="feed-title">{it.de ?? "Remetente"} — {it.titulo}</div>
-            <p className="meta" style={{ margin: 0 }}>{it.o_que_aconteceu}</p>
-            <p style={{ margin: 0 }}>{it.o_que_fazer}</p>
+            <p className="meta m-0">{it.o_que_aconteceu}</p>
+            <p className="m-0">{it.o_que_fazer}</p>
             <div className="row-actions">
               <GmailOpen gmailId={it.origem} rfc822={it.rfc822} demo={app.mode === "demo"} />
             </div>
@@ -205,9 +202,9 @@ function FeedCardBody({ item, pendingAp }: { item: FeedEntry; pendingAp?: string
   return (
     <>
       <div className="feed-title">{title}</div>
-      {text && <p className="meta" style={{ margin: 0 }}>{text}</p>}
+      {text && <p className="meta m-0">{text}</p>}
       {item.body.disclaimer && <p className="tiny">{item.body.disclaimer}</p>}
-      {item.body.correlation && <p className="meta" style={{ margin: 0 }}>{item.body.correlation}</p>}
+      {item.body.correlation && <p className="meta m-0">{item.body.correlation}</p>}
       {item.kind === "email_digest" && (
         <div className="row-actions">
           {pendingAp && (
@@ -263,6 +260,70 @@ function FeedActions({ id }: { id: string }) {
           {error}
         </p>
       )}
+    </div>
+  );
+}
+
+const FILTERS: ReadonlyArray<readonly [Filter, string]> = [
+  ["all", "Tudo"],
+  ["need", "Precisa de você"],
+  ["sources", "Com link"],
+];
+
+/** Abas do filtro: setas ←/→, Home e End movem e selecionam (padrão WAI-ARIA, foco itinerante). */
+function FilterTabs({ value, onChange }: { value: Filter; onChange: (f: Filter) => void }) {
+  const refs = useRef<Array<HTMLButtonElement | null>>([]);
+  const onKey = (e: React.KeyboardEvent, i: number) => {
+    const last = FILTERS.length - 1;
+    const next = e.key === "ArrowRight" ? (i === last ? 0 : i + 1) : e.key === "ArrowLeft" ? (i === 0 ? last : i - 1) : e.key === "Home" ? 0 : e.key === "End" ? last : -1;
+    if (next < 0) return;
+    e.preventDefault();
+    onChange(FILTERS[next]![0]);
+    refs.current[next]?.focus();
+  };
+  return (
+    <div className="seg" role="tablist" aria-label="Filtrar o feed">
+      {FILTERS.map(([id, label], i) => (
+        <button
+          key={id}
+          ref={(el) => void (refs.current[i] = el)}
+          id={`tab-${id}`}
+          role="tab"
+          type="button"
+          aria-selected={value === id}
+          aria-controls="feed-panel"
+          tabIndex={value === id ? 0 : -1}
+          onClick={() => onChange(id)}
+          onKeyDown={(e) => onKey(e, i)}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function MoreFeed() {
+  const app = useApp();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const more = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await app.loadMoreFeed();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Não consegui carregar mais.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="row-actions feed-more">
+      <button className="btn" type="button" disabled={busy} onClick={() => void more()}>
+        {busy ? "Carregando…" : "Mostrar mais"}
+      </button>
+      {error && <p className="tiny err-text" role="status">{error}</p>}
     </div>
   );
 }
