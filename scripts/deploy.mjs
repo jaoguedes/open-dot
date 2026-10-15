@@ -52,7 +52,6 @@ if (readFileSync(appJs, "utf8").includes("forcar")) {
   console.error("O dist tem o gancho de teste: não é build de produção. O deploy não foi feito.");
   process.exit(1);
 }
-run("npm", ["run", "test:workerd"]);
 run("npm", ["run", "ui:mobile"]);
 run("npm", ["run", "ui:fase-a"]);
 run("npm", ["run", "ui:fase-d"]);
@@ -83,7 +82,10 @@ if (hashOf() !== builtHash) {
   console.error(`O dist mudou depois do check (${builtHash} → ${hashOf()}). Pare o npm run dev e rode de novo. O deploy não foi feito.`);
   process.exit(1);
 }
+// Expandir antes de publicar: a migração é só aditiva e o Worker no ar aceita schema mais
+// novo (A7). Depois dela, o workerd local (que usa o mesmo banco) confere o health do código novo.
 run("npm", ["run", "db:migrate", "--", "--remote"]);
+run("npm", ["run", "test:workerd"]);
 run("npx", ["--yes", "wrangler@4", "deploy"]);
 
 const localHash = builtHash;
