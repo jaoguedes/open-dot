@@ -39,7 +39,7 @@ _Atualizado em 14/10/2026 · Etapa 1 visual (tela 02, feed, demo, ilha) no núcl
 | Núcleo (`packages/core`) | ✅ | Estados de execução, resolvedor visual com prioridade e revisão, corações independentes, absorção (selecionado → enviado → recebido → organizado), agenda por fuso IANA, aprovações por hash e CAS, supervisor de ferramentas, triagem por regras, resumo com cobertura, monitor anti-SSRF, roteador de IA |
 | Persistência | ✅ SQLite · 🟡 Turso | Migrações `0001`, `0002` (uploads) e `0003` (notícias/cotações/agentes) aditivas com prefixo `od_`; tudo filtrado por dono; segredos e trechos de e-mail cifrados (AES-GCM, chave versionada). Cliente Turso HTTP testado contra um servidor Hrana simulado |
 | API / Worker | ✅ local · 🟡 Cloudflare | Sessão (cookie HttpOnly), CSRF, feed, rotinas, execuções, uso, conexões, monitores, aprovações, perguntas com fontes, webhook do GitHub, cron |
-| Login | ✅ local (dev) · 🟡 Google | Login Google OIDC (PKCE, state, nonce, dono único). A entrada de desenvolvimento só funciona em localhost |
+| Login | ✅ local (dev) · 🟡 Google | Login Google OIDC (PKCE, state, nonce, dono único). A entrada de desenvolvimento só funciona em localhost. `/sobre` e `/privacidade` abrem sem login (D-015). Contato da privacidade = `OWNER_EMAIL` do ambiente via `GET /api/legal`, nunca no código. |
 | Gmail (somente leitura) | 🧪 testado com Google simulado · 🟡 real | OAuth com `gmail.readonly`, sync incremental (`historyId` como texto), dedupe, ressincronização após 404, lotes dentro do limite de subrequisições, renovação de token com lease, reconexão única quando revogado, resumo das 08h/17h com links para o Gmail |
 | Rotinas 08h/17h | ✅ | Chave única por slot; cron repetido não duplica; após dias offline gera um único resumo “atrasado”; mudar o horário cancela execuções futuras |
 | IA | ✅ lógica + eval falso · ⛔ chave | Allowlist Groq; ZDR para privado; 402 desliga; `max_completion_tokens`. Tela de provedores. Avaliação `scripts/eval-ai.ts` no provedor falso. Sem chave, resumo por regras |
@@ -64,7 +64,7 @@ Ambiente: workspace Linux na nuvem, Node 22.22, TypeScript 6.0.3, esbuild 0.28.2
 | Comando | Resultado |
 |---|---|
 | `npm run typecheck` | ✅ sem erros |
-| `npm test` | ✅ **121/121** (núcleo + worker SQLite + Hrana + notícias/mercado/marketing + eval-ai falso) |
+| `npm test` | ✅ (núcleo + worker + presença/demo da etapa 1: Código “1 build falhou”, Sentinela “Lento”, ilha “está lendo…”) |
 | `npm run test:blender` | ✅ 7/7 |
 | `npm run build` | ✅ app.js 320 KB, worker 176 KB, **sem APIs do Node** |
 | `npm run eval:ai` | ✅ provedor falso v1: 100 casos, recall importantes 100%, JSON 100%, unauthorized 0, paid false |
@@ -92,7 +92,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Etapa 2: páginas públicas `/sobre` e `/privacidade`. Depois Etapa 3 (setup:cloud --from-dev-vars + deploy Workers Free) e Etapa 4 (GitHub privado). Corrigir a causa dos timeouts Mascote/absorção no `test:ui` antes de publicar.
+Etapa 3: `setup:cloud --from-dev-vars`, testes locais (check, test:ui com causa dos timeouts do Mascote, eval:ai) e deploy Workers Free. Depois Etapa 4 (GitHub privado).
 
 ## Como retomar em outra sessão
 

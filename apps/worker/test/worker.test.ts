@@ -327,6 +327,16 @@ test("health não expõe segredos", async () => {
   assert.equal(r.json.configured.aiPrivate, false);
 });
 
+test("legal público: contato do ambiente, sem login e sem segredo", async () => {
+  const ctx = await makeCtx({ env: { GROQ_API_KEY: "gsk_super_secreta" } });
+  const r = await client(ctx).call("GET", "/api/legal");
+  assert.equal(r.status, 200);
+  assert.equal(r.json.contact, "joao@example.com");
+  assert.ok(!JSON.stringify(r.json).includes("gsk_super_secreta"));
+  const health = await client(ctx).call("GET", "/api/health");
+  assert.ok(!JSON.stringify(health.json).includes("joao@example.com"));
+});
+
 test("pergunta sem IA aprovada responde só com fontes do feed do próprio dono", async () => {
   const google = new FakeGoogle();
   google.addMessage({ id: "f1", subject: "Fatura do cartão vence sexta", from: "Banco <aviso@banco.com>" }, false);

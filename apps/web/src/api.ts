@@ -201,6 +201,7 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export const api = {
   session: () => req<{ authenticated: boolean; owner?: Snapshot["owner"]; devLoginAvailable?: boolean; googleLoginAvailable?: boolean }>("/api/session"),
+  legal: () => req<{ contact: string | null }>("/api/legal"),
   devLogin: () => req<{ ok: true }>("/api/session/dev", { method: "POST" }),
   logout: () => req<{ ok: true }>("/api/logout", { method: "POST" }),
   feed: () => req<{ items: FeedEntry[]; next: string | null }>("/api/feed"),

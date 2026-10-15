@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AGENTS, SEMANTIC_PRIORITY, type AgentId } from "@open-dot/core";
 import { useApp } from "./store.tsx";
 import { Icon, type IconName } from "./components/Icons.tsx";
@@ -11,12 +11,18 @@ import { Routines } from "./views/Routines.tsx";
 import { Connections } from "./views/Connections.tsx";
 import { Mascot } from "./views/Mascot.tsx";
 import { Approval } from "./views/Approval.tsx";
+import { About } from "./views/About.tsx";
+import { Privacy } from "./views/Privacy.tsx";
 import { ContextPanel } from "./components/ContextPanel.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
 import { agentPresence, islandLine } from "./presence.ts";
 
 function isMyDayPath(path: string): boolean {
   return path === "/" || path === "/meu-dia";
+}
+
+function isPublicPath(path: string): boolean {
+  return path === "/sobre" || path === "/privacidade";
 }
 
 function useSplash(loading: boolean, reduced: boolean): { show: boolean; fading: boolean } {
@@ -79,6 +85,14 @@ export function App() {
   const splash = useSplash(app.mode === "loading", app.reducedMotion);
   if (app.mode === "loading" && splash.show) {
     return <SplashScreen fading={splash.fading} reducedMotion={app.reducedMotion} />;
+  }
+  if (isPublicPath(app.path)) {
+    return (
+      <>
+        {splash.show && <SplashScreen fading={splash.fading} reducedMotion={app.reducedMotion} />}
+        <PublicShell path={app.path}>{app.path === "/privacidade" ? <Privacy /> : <About />}</PublicShell>
+      </>
+    );
   }
   if (app.mode === "login") {
     return (
@@ -405,8 +419,41 @@ function Login() {
         <button className="btn ghost" onClick={() => app.enterDemo("Você escolheu ver a demonstração.")}>
           Ver demonstração
         </button>
+        <p className="tiny">
+          <a href="/sobre">Sobre</a>
+          {" · "}
+          <a href="/privacidade">Privacidade</a>
+        </p>
       </div>
     </main>
+  );
+}
+
+function PublicShell({ path, children }: { path: string; children: ReactNode }) {
+  return (
+    <div className="public-shell">
+      <header className="public-bar">
+        <a className="brand" href="/sobre">
+          <span className="od-wordmark">
+            <span>open</span>
+            <b>dot</b>
+            <span className="od-wordmark-dot" />
+          </span>
+        </a>
+        <nav aria-label="Páginas públicas">
+          <a href="/sobre" aria-current={path === "/sobre" ? "page" : undefined}>
+            Sobre
+          </a>
+          <a href="/privacidade" aria-current={path === "/privacidade" ? "page" : undefined}>
+            Privacidade
+          </a>
+          <a href="/">Entrar</a>
+        </nav>
+      </header>
+      <main id="conteudo" className="public-main" tabIndex={-1}>
+        {children}
+      </main>
+    </div>
   );
 }
 

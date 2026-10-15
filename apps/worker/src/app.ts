@@ -78,6 +78,8 @@ route("GET", "/api/health", { auth: false }, async (ctx) => {
   return json({ ok: schema === REQUIRED_SCHEMA, schema, requiredSchema: REQUIRED_SCHEMA, env: ctx.env.APP_ENV, configured: configured(ctx.env), time: new Date(ctx.now()).toISOString() });
 });
 
+route("GET", "/api/legal", { auth: false }, async (ctx) => json({ contact: ctx.env.OWNER_EMAIL ?? null }));
+
 route("GET", "/api/session", { auth: false }, async (ctx, req, _p, ownerId) => {
   const local = isLocalRequest(ctx, req);
   if (!ownerId) return json({ authenticated: false, devLoginAvailable: ctx.env.APP_ENV === "development" && local, googleLoginAvailable: configured(ctx.env).google && configured(ctx.env).owner });

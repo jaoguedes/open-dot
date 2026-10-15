@@ -255,6 +255,17 @@ details > summary::-webkit-details-marker { display: none; }
 }
 .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 35; }
 
+.public-shell { min-height: 100%; display: flex; flex-direction: column; background: var(--bg); }
+.public-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px clamp(16px, 4vw, 40px); }
+.public-bar nav { display: flex; gap: 16px; font-size: 14px; }
+.public-bar nav a { color: var(--text-2); text-decoration: none; }
+.public-bar nav a[aria-current="page"] { color: var(--text); font-weight: 600; }
+.public-main { flex: 1; padding: 8px clamp(16px, 4vw, 40px) 48px; }
+.legal { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.legal h1 { font-size: clamp(36px, 6vw, 56px); line-height: 1.05; letter-spacing: -0.04em; }
+.legal h2 { margin-top: 8px; }
+.legal-kicker { font-size: 28px; color: var(--text-2); }
+
 /* ---------------- Motor SVG + splash (D-014) ---------------- */
 .dot-view { line-height: 0; flex-shrink: 0; }
 .splash {
