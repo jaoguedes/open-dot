@@ -142,7 +142,7 @@ Primeira tela: 344,8 KB (paleta, central, aprovação, sobre/privacidade e absor
 | E6 docs | — | `CHANGELOG.md`, `CONTRIBUTING.md` (regra “o app prepara, o usuário aprova”, como rodar/testar, como adicionar agente). | — |
 | E7 sons | sem player | `apps/web/src/sound.ts`: desligado por padrão, 0,25 (0–0,6), pré-carga no primeiro gesto, nada com aba oculta, ≤ 2/s, erro e atenção cortam e não são cortados por 1,5 s. Gatilhos: oi (1×/sessão), think/done (Revisar agora), attention (aprovação ou incidente a mais), notify (item novo), error (Dot de erro por ação), send/receive (perguntas), pop/close (diálogos), love (carinho). `dot-tap` e `dot-sleep` só no “Ouvir”. Mascote: chave, volume e “Ouvir” para os 13. Sons fora do service worker. MP3 não regerados. | `apps/web/test/sound.test.ts` (Audio falso: desligado, oculto, limite, prioridade, volume, pré-carga); ui E7 ×2 (espiona `HTMLMediaElement.play`). Não ouvi os sons num aparelho. |
 
-Também: Coucou registrado em `docs/LICENCAS.md` e `NOTICE` (URL não consta no repositório; a confirmar). Primeira tela 348,6 KB (painel de contexto sob demanda). `npm run check`: 235 testes, 0 falhas.
+Também: primeira tela 348,6 KB (painel de contexto sob demanda). `npm run check`: 235 testes, 0 falhas.
 
 ## Fase F (15/10/2026)
 
@@ -179,3 +179,10 @@ Base conferida: `65c05bb`, árvore limpa, `npm run check` verde (249 testes), li
 | d) `eval:correio` no check | Entra em `npm run check` e na CI; limiar 90% / 95%. Cabeçalho do script e `docs/DOT_COMPORTAMENTO.md` dizem que é regressão, não medida real. `packages/core/test/fixtures/correio-holdout/README.md` (conjunto cego, vazio). | `tests/eval-correio-gate.test.ts` 0/2 → 2/2 |
 | e) Contato público | `/api/legal` usa o valor salvo em Conexões → Contato público (e-mail ou link https); sem ele, o `CONTACT_EMAIL` do ambiente. Aviso quando é o e-mail de login. Segredo de produção **não** alterado. | `apps/worker/test/contato.test.ts` 0/1 → 1/1 |
 | f) Docs | `STATUS.md`, `DECISOES.md` (D-021), `ACOES_DO_JOAO.md` (seção 0). | — |
+
+### g) Publicação da parte 1 (15/10/2026)
+
+- 1ª tentativa: o `test:workerd` deu `{"ok":false}` antes de publicar. Causa: ele usa o banco remoto (ainda 0006) e o código novo exige 0007; o deploy só migrava depois do workerd. Correção (`d3d3846`): migração (só aditiva) depois das checagens de celular e antes do workerd. Nada foi alterado em produção.
+- 2ª tentativa: o axe do `ui:fase-d` acusou `link-in-text-block` no link “/privacidade” do cartão Contato público. Links dentro de texto passaram a ser sublinhados (`e86f77e`). Nada foi alterado em produção.
+- 3ª: publicado. `Aplicadas: 0007`. Worker `69ebaf7d-85b0-4cf7-9996-77899d97e1bd`, app `48b491adb418`, rollback `4c19544f-eb50-47a9-9961-7d77e75989a1`. `/api/health` `{"ok":true}`.
+- Reprodução do hash: worktree limpo em `e86f77e` com `npm ci` → `48b491adb418` (igual). Com `node_modules` em link simbólico o hash muda (só os nomes dos chunks), porque o esbuild usa o caminho dos módulos no hash; a reprodução precisa de `node_modules` próprio.
