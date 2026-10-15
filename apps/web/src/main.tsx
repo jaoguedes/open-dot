@@ -6,6 +6,9 @@ import { ScreenBoundary } from "./components/ScreenBoundary.tsx";
 import { chunkPlan, clearAppCache } from "./components/DotTrouble.tsx";
 import "./styles.css";
 import { sound } from "./sound.ts";
+import { watchKeyboard } from "./keyboard-inset.ts";
+
+watchKeyboard();
 
 // iOS só toca áudio depois de um gesto: pré-carrega os sons no primeiro toque ou tecla.
 const unlockSound = () => {
