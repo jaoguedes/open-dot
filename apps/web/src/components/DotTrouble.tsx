@@ -1,3 +1,4 @@
+import { ownerTimeZone } from "../format.ts";
 import { useEffect, useRef } from "react";
 import { explainError, sanitizeDetail, type AgentId } from "@open-dot/core";
 import { AgentDot } from "../dot/AgentDot.tsx";
@@ -40,7 +41,7 @@ export function DotTrouble({
   useEffect(() => {
     primary.current?.focus();
   }, [info.code]);
-  const when = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  const when = new Date().toLocaleString("pt-BR", { timeZone: ownerTimeZone() });
   const loaded = document.querySelector('meta[name="open-dot-build"]')?.getAttribute("content") ?? "desconhecida";
   const technical = sanitizeDetail([explained.code, info.route ?? location.pathname, when, `app ${loaded}`, info.detail ?? ""].filter(Boolean).join(" · "));
   const copy = async () => {
@@ -51,11 +52,11 @@ export function DotTrouble({
     }
   };
   return (
-    <section className="card dot-trouble" role="alert" style={{ display: "grid", gap: 10, margin: "16px 0" }}>
+    <section className="card dot-trouble stack-10 my-16" role="alert">
       <AgentDot visual={toVisual(agentId, "error", null, explained.code)} accessory="none" size={72} reducedMotion={reducedMotion} />
-      <p style={{ margin: 0 }}>{explained.frase}</p>
-      <p className="mono" style={{ margin: 0 }}>{explained.code}</p>
-      <p className="meta" style={{ margin: 0 }}>{explained.acao}</p>
+      <p className="m-0">{explained.frase}</p>
+      <p className="mono m-0">{explained.code}</p>
+      <p className="meta m-0">{explained.acao}</p>
       <div className="row-actions">
         <button ref={primary} className="btn primary" type="button" onClick={() => (onRetry ? onRetry() : location.reload())}>
           Tentar de novo

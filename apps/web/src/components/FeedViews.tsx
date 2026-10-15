@@ -1,7 +1,7 @@
 import { AGENTS } from "@open-dot/core";
 import type { FeedEntry } from "../api.ts";
 import { Icon, type IconName } from "./Icons.tsx";
-import { fmtDateTime, fmtTime, senderName } from "../format.ts";
+import { fmtDateTime, fmtTime, fmtWhen, senderName } from "../format.ts";
 import { useApp } from "../store.tsx";
 import { GmailOpen } from "./GmailOpen.tsx";
 
@@ -43,8 +43,8 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
         <h2 id={`h-${item.id}`}>{item.title}</h2>
         <p className="lead">{b.abertura ?? b.headline}</p>
         {b.itens.map((it) => (
-          <article key={it.origem} className="card" style={{ marginTop: 12 }}>
-            <div className="card-top">{it.categoria} · {fmtTime(it.quando)}</div>
+          <article key={it.origem} className="card mt-12">
+            <div className="card-top">{it.categoria} · {fmtWhen(it.quando)}</div>
             <h3>{it.de ?? "Remetente"}</h3>
             <p>{it.titulo}</p>
             <p className="meta">{it.o_que_aconteceu}</p>
@@ -56,7 +56,7 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
           </article>
         ))}
         {(b.sem_acao?.length || b.ruido?.contagem) ? (
-          <details style={{ marginTop: 12 }}>
+          <details className="mt-12">
             <summary>
               {b.sem_acao?.length ? `Sem ação (${b.sem_acao.length})` : ""}
               {b.sem_acao?.length && b.ruido?.contagem ? " · " : ""}
@@ -93,7 +93,7 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
           </div>
           <h3>{first.subject}</h3>
           <p>
-            {senderName(first.from)} · {first.reason} · {fmtTime(first.receivedAt)}
+            {senderName(first.from)} · {first.reason} · {fmtWhen(first.receivedAt)}
           </p>
           <div className="row-actions">
             {isDemo ? (
@@ -109,7 +109,7 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
         </div>
       )}
       {(others.length > 0 || (b.rest?.length ?? 0) > 0) && (
-        <details style={{ marginTop: 12 }}>
+        <details className="mt-12">
           <summary>Ver outras {others.length + (b.rest?.length ?? 0)}</summary>
           <ul className="list">
             {[...others, ...(b.rest ?? [])].map((m) => (
@@ -134,7 +134,7 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
             </span>
             <span>Sincronizado até {fmtTime(item.coverage.syncedUntil)}</span>
             <span>Lido: {item.coverage.fieldsRead.join(", ")}</span>
-            {item.coverage.partial && <span style={{ color: "var(--warn)" }}>{item.coverage.partialReason}</span>}
+            {item.coverage.partial && <span className="text-warn">{item.coverage.partialReason}</span>}
           </>
         )}
         <span>{b.aiUsed ? "Classificado com IA" : b.aiNote ?? "Classificado por regras"}</span>
@@ -159,7 +159,7 @@ export function FeedRow({ item }: { item: FeedEntry }) {
         <p>{b.summary ?? b.headline}</p>
         {b.disclaimer && <p className="tiny">{b.disclaimer}</p>}
         {item.kind === "news_digest" && b.worldToday && (
-          <ul className="list" style={{ marginTop: 8 }}>
+          <ul className="list mt-8">
             {b.worldToday.flatMap((s) =>
               s.items.map((n) => (
                 <li key={n.link} className="mail">
@@ -191,7 +191,7 @@ export function FeedRow({ item }: { item: FeedEntry }) {
           </p>
         ))}
         {b.correlation && <p>{b.correlation}</p>}
-        <div className="tiny" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div className="tiny row-wrap-12">
           <span>
             {AGENTS[item.agentId]?.name ?? item.agentId} · {fmtDateTime(item.createdAt)}
           </span>
