@@ -25,7 +25,8 @@ export interface UntrustedBlock {
 export function sanitizeUntrusted(sourceId: string, raw: string, maxChars = 2000): UntrustedBlock {
   // Remove controles invisíveis e tags que tentam imitar delimitadores.
   let text = raw
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F​-‏‪-‮⁠-⁤]/g, "")
+    // eslint-disable-next-line no-control-regex -- remover caracteres de controle é o objetivo
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u200B-\u200F\u202A-\u202E\u2060-\u2064]/g, "")
     .replace(/<\/?\s*(untrusted|system|instructions?)[^>]*>/gi, "[tag removida]");
   const truncated = text.length > maxChars;
   if (truncated) text = text.slice(0, maxChars);

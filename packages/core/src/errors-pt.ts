@@ -198,11 +198,11 @@ export function isKnownReason(code: string): boolean {
 export function sanitizeDetail(input: string): string {
   const noStack = input.split("\n")[0] ?? "";
   return noStack
-    .replace(/bearer\s+[a-z0-9._\-]{8,}/gi, "bearer [oculto]")
+    .replace(/bearer\s+[a-z0-9._-]{8,}/gi, "bearer [oculto]")
     .replace(/\b(sk|pk|rk)-[a-z0-9]{6,}/gi, "[oculto]")
-    .replace(/ya29\.[a-z0-9._\-]+/gi, "[oculto]")
-    .replace(/eyJ[a-z0-9_\-]{8,}\.[a-z0-9_\-.]{8,}/gi, "[oculto]")
-    .replace(/\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b/gi, "[oculto]")
+    .replace(/ya29\.[a-z0-9._-]+/gi, "[oculto]")
+    .replace(/eyJ[a-z0-9_-]{8,}\.[a-z0-9_.-]{8,}/gi, "[oculto]")
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[oculto]")
     .replace(/\b\d{13,19}\b/g, "[oculto]")
     .replace(/\b(token|senha|password|secret|authorization|api[_-]?key)\b\s*[:=]\s*\S+/gi, "$1=[oculto]")
     .replace(/\s+/g, " ")

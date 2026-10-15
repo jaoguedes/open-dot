@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-this-alias -- `const E = this` deixa o passo da física legível e é usado no laço quente */
 import { CX, RX, onSphere } from "./geometry.ts";
 import { clamp, easeIO, hexRgb, lerp, mulberry32, smooth, spring } from "./physics.ts";
 import { BLOCK_PLAY, STATES, type DotStateKey, type EyePair, type IndKind } from "./states.ts";

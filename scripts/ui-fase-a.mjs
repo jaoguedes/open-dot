@@ -6,7 +6,7 @@ import { startHarness } from "./lib/ui-harness.mjs";
 
 const { scenario, expect, T, finish } = await startHarness();
 
-await scenario("A1", "Voltar no agente tem 44 px e volta para Meu dia", async ({ page, open, state }) => {
+await scenario("A1", "Voltar no agente tem 44 px e volta para Meu dia", async ({ page, open }) => {
   await open("/meu-dia");
   await page.getByRole("button", { name: /^Correio/ }).first().click(T);
   await page.waitForURL(/\/agente\/correio/, T);
@@ -18,7 +18,7 @@ await scenario("A1", "Voltar no agente tem 44 px e volta para Meu dia", async ({
   await page.waitForURL(/\/meu-dia$/, T);
 });
 
-await scenario("A1", "Faixa de agentes marca o atual e troca sem passar por Meu dia; voltar do navegador funciona", async ({ page, open, state }) => {
+await scenario("A1", "Faixa de agentes marca o atual e troca sem passar por Meu dia; voltar do navegador funciona", async ({ page, open }) => {
   await open("/meu-dia");
   await page.getByRole("button", { name: /^Correio/ }).first().click(T);
   await page.waitForURL(/\/agente\/correio/, T);
@@ -31,7 +31,7 @@ await scenario("A1", "Faixa de agentes marca o atual e troca sem passar por Meu 
   await page.waitForURL(/\/agente\/correio/, T);
 });
 
-await scenario("A1", "Endereço malformado mostra aviso, nunca tela preta", async ({ page, open, state }) => {
+await scenario("A1", "Endereço malformado mostra aviso, nunca tela preta", async ({ page, open }) => {
   await open("/aprovacao/%E0%A4%A");
   await page.getByText("Endereço inválido").waitFor(T);
   await page.getByRole("button", { name: /Meu dia/ }).first().waitFor(T);
@@ -39,12 +39,12 @@ await scenario("A1", "Endereço malformado mostra aviso, nunca tela preta", asyn
   await page.getByText(/Não achei essa página|Endereço inválido/).first().waitFor(T);
 });
 
-await scenario("A1", "Rota desconhecida mostra Não achei essa página", async ({ page, open, state }) => {
+await scenario("A1", "Rota desconhecida mostra Não achei essa página", async ({ page, open }) => {
   await open("/isso-nao-existe");
   await page.getByText("Não achei essa página").waitFor(T);
 });
 
-await scenario("A2", "Contagem soma e-mails e incidentes e cai ao marcar Feito", async ({ page, open, state }) => {
+await scenario("A2", "Contagem soma e-mails e incidentes e cai ao marcar Feito", async ({ page, open }) => {
   await open("/meu-dia");
   const line = page.locator("p.serif").first();
   await line.waitFor(T);
@@ -89,13 +89,13 @@ await scenario("A8", "Login conhece os seis códigos novos", async ({ page, open
   }
 });
 
-await scenario("A8", "Conexões mostra o banner de ?erro= e limpa a URL", async ({ page, open, state }) => {
+await scenario("A8", "Conexões mostra o banner de ?erro= e limpa a URL", async ({ page, open }) => {
   await open("/conexoes?erro=sem_refresh_token");
   await page.getByText(/token de renovação/).waitFor(T);
   await page.waitForFunction(() => !location.search.includes("erro="), null, T);
 });
 
-await scenario("A9", "Teste de agente mostra Fonte: motivo, sem [object Object]", async ({ page, open, state }) => {
+await scenario("A9", "Teste de agente mostra Fonte: motivo, sem [object Object]", async ({ page, open }) => {
   await open("/conexoes");
   const card = page.locator('section[aria-labelledby="c-mercado"]');
   await card.getByRole("button", { name: /^Testar/ }).click(T);
@@ -106,7 +106,7 @@ await scenario("A9", "Teste de agente mostra Fonte: motivo, sem [object Object]"
   expect(!/CoinGeckoupstream/.test(text) && text.includes("CoinGecko: "), `separador ausente: ${text}`);
 });
 
-await scenario("A9", "Entregas sem Ship24 e com Copiar código", async ({ page, open, state }) => {
+await scenario("A9", "Entregas sem Ship24 e com Copiar código", async ({ page, open }) => {
   await open("/agente/entregas");
   await page.getByText("Abrir no site da transportadora").first().waitFor(T);
   await page.getByRole("button", { name: /Copiar código/ }).first().waitFor(T);

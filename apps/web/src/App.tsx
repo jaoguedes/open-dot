@@ -232,6 +232,7 @@ export function App() {
       </a>
       <ForcedBoom />
       <div className="app">
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- tocar fora fecha; no teclado, Esc fecha (useDialog) */}
         {menuOpen && <div className="scrim" onClick={() => setMenuOpen(false)} />}
         <Sidebar open={menuOpen} go={go} current={app.path} onClose={() => setMenuOpen(false)} />
         <div className="main">
@@ -446,6 +447,10 @@ function NameLine() {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(shown);
   const [error, setError] = useState<string | null>(null);
+  const nameInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (editing) nameInput.current?.focus();
+  }, [editing]);
   if (app.mode !== "live") {
     return (
       <div className="tiny">
@@ -486,7 +491,7 @@ function NameLine() {
       }}
     >
       <label className="tiny" htmlFor="display-name">Nome de exibição</label>
-      <input id="display-name" value={value} maxLength={40} onChange={(e) => setValue(e.target.value)} autoFocus />
+      <input id="display-name" ref={nameInput} value={value} maxLength={40} onChange={(e) => setValue(e.target.value)} />
       {error && <p className="tiny" role="alert">{error}</p>}
       <div className="row-actions">
         <button className="btn primary" type="submit">Salvar</button>

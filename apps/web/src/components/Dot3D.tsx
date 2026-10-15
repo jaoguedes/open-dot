@@ -135,6 +135,7 @@ export function Dot3D({ visual, accessory, size, reducedMotion, label, affection
   return (
     <div className="dot3d" data-dot-renderer={mode.kind} data-dot-fallback={mode.kind === "2d" ? mode.reason : undefined} style={{ width: size }}>
       {mode.kind !== "2d" && (
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- caminho GLB legado (DOT_RENDERER=glb); o motor SVG padrão não usa
         <div
           ref={wrap}
           className="dot3d-stage"

@@ -224,7 +224,7 @@ function layoutBeanie(m: number): AccLayout["beanie"] {
     top.push([x, y]);
     bot.push([x, y + H]);
   }
-  const lastT = top[40]!, lastB = bot[40]!, firstT = top[0]!, firstB = bot[0]!;
+  const lastT = top[40]!, lastB = bot[40]!, firstT = top[0]!;
   const band =
     poly(top) +
     ` Q${round2(Rx + 6)} ${round2(lastT[1] + H / 2)} ${round2(lastB[0])} ${round2(lastB[1])} ` +

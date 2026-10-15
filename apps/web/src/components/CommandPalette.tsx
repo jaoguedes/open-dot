@@ -71,8 +71,9 @@ export function CommandPalette({ onClose, go, destinations, agents }: { onClose:
 
   let lastGroup = "";
   return (
-    <div className="scrim palette-scrim" onClick={onClose}>
-      <div ref={box} role="dialog" aria-modal="true" aria-label="Buscar ou perguntar" className="palette" onClick={(e) => e.stopPropagation()}>
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- tocar fora fecha; no teclado, Esc fecha (useDialog)
+    <div className="scrim palette-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div ref={box} role="dialog" aria-modal="true" aria-label="Buscar ou perguntar" className="palette">
         <div className="palette-input">
           <Icon name="search" size={16} />
           <input
@@ -118,9 +119,11 @@ export function CommandPalette({ onClose, go, destinations, agents }: { onClose:
                     {head}
                   </div>
                 )}
+                {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events -- combobox: o teclado age no campo (↑↓ Enter), a opção só recebe clique */}
                 <div
                   id={`pal-${i}`}
                   role="option"
+                  tabIndex={-1}
                   aria-selected={i === current}
                   className={`palette-item ${i === current ? "on" : ""}`}
                   onMouseEnter={() => setActive(i)}

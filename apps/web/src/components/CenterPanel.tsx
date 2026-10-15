@@ -8,8 +8,9 @@ export function CenterPanel({ events, seenAt, onMarkAll, onClose, onPick }: { ev
   const box = useRef<HTMLDivElement>(null);
   useDialog(true, box, onClose);
   return (
-    <div className="scrim center-scrim" onClick={onClose}>
-      <div ref={box} role="dialog" aria-modal="true" aria-labelledby="center-title" className="center-panel" onClick={(e) => e.stopPropagation()}>
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- tocar fora fecha; no teclado, Esc fecha (useDialog)
+    <div className="scrim center-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div ref={box} role="dialog" aria-modal="true" aria-labelledby="center-title" className="center-panel">
         <div className="center-head">
           <h2 id="center-title">Central do Dot</h2>
           <button className="btn ghost" type="button" onClick={onClose}>

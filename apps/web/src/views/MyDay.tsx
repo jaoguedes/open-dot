@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { AGENTS, agentsInPlace, approvalQueue, type AgentId } from "@open-dot/core";
+import { AGENTS, agentsInPlace, approvalQueue } from "@open-dot/core";
 import { useApp } from "../store.tsx";
 import { AgentDot } from "../dot/AgentDot.tsx";
 import { fmtTime, fmtWhen, greeting, needYouLine } from "../format.ts";

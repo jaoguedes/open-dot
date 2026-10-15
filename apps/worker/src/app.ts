@@ -656,7 +656,10 @@ route("GET", "/api/status", { auth: true }, async (ctx, _r, _p, ownerId) => {
     }
     if (a === "correio") {
       const g = conns.find((c) => c.provider === "gmail" && c.status !== "disabled");
-      if (g?.status === "reauth_required" && semantic !== "error") ((semantic = "disconnected"), (reason = "Reconecte o Gmail"));
+      if (g?.status === "reauth_required" && semantic !== "error") {
+        semantic = "disconnected";
+        reason = "Reconecte o Gmail";
+      }
     }
     if (a === "entregas" && shipmentCount === 0 && !trackingOn) {
       semantic = "disconnected";

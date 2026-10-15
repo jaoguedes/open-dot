@@ -6,12 +6,12 @@ import { askDot, composerEnter, composerRows, isTouchPrimary, readLastAnswer, sa
 import { AnswerView } from "../components/AnswerView.tsx";
 import { sound } from "../sound.ts";
 import { useApp } from "../store.tsx";
-import { ApiError, api, type AskAnswer } from "../api.ts";
+import { ApiError, api } from "../api.ts";
 import { DigestBlock, FeedRow } from "../components/FeedViews.tsx";
 import { Icon } from "../components/Icons.tsx";
 import { AgentDot } from "../dot/AgentDot.tsx";
 import { DotTrouble } from "../components/DotTrouble.tsx";
-import { fmtTime, fmtWhen, greeting, ownerTimeZone } from "../format.ts";
+import { fmtWhen, greeting, ownerTimeZone } from "../format.ts";
 
 /** Conversa do agente: resumo curto, ações pendentes e perguntas com fontes. */
 export function Home({ agentId }: { agentId: AgentId }) {

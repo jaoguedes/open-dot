@@ -9,7 +9,7 @@ import { BudgetExhausted } from "./context.ts";
 export function scrubSecrets(text: string): string {
   return text
     .replace(/authorization\s*[:=]\s*(bearer\s+|basic\s+)?[^\s,;"']+/gi, "Authorization: [oculto]")
-    .replace(/\bbearer\s+[A-Za-z0-9._~+\/=-]+/gi, "Bearer [oculto]")
+    .replace(/\bbearer\s+[A-Za-z0-9._~+/=-]+/gi, "Bearer [oculto]")
     .replace(/\b(token|access_token|refresh_token|id_token|api[_-]?key|key|secret|client_secret|password|senha|code|cookie|session)(["']?\s*[:=]\s*["']?)[^\s&,;"']+/gi, "$1$2[oculto]")
     .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, "[e-mail]")
     .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)?/g, "[oculto]")
