@@ -15,7 +15,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --test --import tsx \"packages/**/test/*.test.ts\" \"apps/**/test/*.test.ts\" \"tests/*.test.ts\"",
     "test:ui": "node scripts/ui-check.mjs",
-    "check": "npm run typecheck && npm test && npm run test:blender && npm run build",
+    "check": "npm run typecheck && npm test && npm run eval:correio && npm run test:blender && npm run build",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "turso:inspect": "tsx scripts/turso-inspect.ts",
     "secrets:keygen": "node scripts/keygen.mjs",
@@ -38,7 +38,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "ui:fase-f": "node scripts/ui-fase-f.mjs",
-    "eval:correio": "tsx scripts/eval-correio.ts"
+    "eval:correio": "tsx scripts/eval-correio.ts",
+    "ui:fase-g": "node scripts/ui-fase-g.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",

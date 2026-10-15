@@ -41,3 +41,7 @@ A ilha não é região viva para leitor de tela: ela só anuncia quando o estado
 | D-013 diz “repouso sem loop de render”; isso valia para o GLB. O motor SVG (D-014) anima o Dot grande continuamente enquanto visível (flutuação). | Não alterado: é o comportamento aprovado do motor. Registrado aqui. |
 | `question`, `thinking` e `sleep` existem no motor e no resolvedor, mas nenhum gatilho do servidor os usa. | Não alterado (reservados). |
 | O botão “Dispensar” do erro (A2.6) não existia, apesar de citado na fase A. | Feito: `applyDismiss` + `dismissError` (guarda a revisão da execução no `localStorage`), botão no aviso de erro do agente. Teste em `apps/web/test/presence-reason.test.ts`. |
+
+## Resumo do Correio: o que o `eval:correio` mede (e o que não mede)
+
+`npm run eval:correio` roda no `check` e na CI e falha se a precisão de “precisa de você” cair abaixo de 90% ou a revocação de segurança+pagamento abaixo de 95% no conjunto `packages/core/test/fixtures/correio-gold.json`. **Não é medida de qualidade**: os 85 e-mails sintéticos foram escritos e ajustados junto com as regras, então o resultado (100%) só protege contra regressão. Quando 16 casos novos foram escritos depois das regras, a revocação de segurança+pagamento foi 0% antes do vocabulário ser ampliado. A medida real depende do conjunto cego em `packages/core/test/fixtures/correio-holdout/` (ainda vazio).

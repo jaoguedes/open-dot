@@ -1,7 +1,12 @@
 /**
  * Avalia o resumo do Correio (só regras, sem IA) no conjunto sintético rotulado.
- * Uso: npm run eval:correio. Falha se a precisão de "precisa de você" < 0,85 ou a
- * revocação de segurança/pagamento < 0,95.
+ * Uso: npm run eval:correio (também roda no npm run check e na CI).
+ * Falha se a precisão de "precisa de você" < 90% ou a revocação de segurança+pagamento < 95%.
+ *
+ * ATENÇÃO: isto é um teste de regressão, NÃO uma medida de qualidade. Os 85 e-mails de
+ * correio-gold.json foram escritos e ajustados junto com as regras; 100% aqui não diz
+ * nada sobre e-mail de verdade. A medida real exige o conjunto cego de
+ * packages/core/test/fixtures/correio-holdout/ (ainda vazio).
  */
 import { readFileSync } from "node:fs";
 import { CORREIO_THRESHOLDS, evaluateCorreio, type GoldEmail } from "../packages/core/src/correio-eval.ts";
@@ -19,5 +24,5 @@ if (m.errors.length) {
   for (const e of m.errors) console.log(`  ${e.id}: esperado ${e.expected}, veio ${e.got}${e.nota ? ` (${e.nota})` : ""}`);
 }
 const ok = m.needYou.precision >= CORREIO_THRESHOLDS.needYouPrecision && m.securityPaymentRecall >= CORREIO_THRESHOLDS.securityPaymentRecall;
-console.log(ok ? "\neval:correio ok" : "\neval:correio REPROVADO");
+console.log(ok ? "\neval:correio ok (regressão; não é medida real: o conjunto foi ajustado junto com as regras)" : "\neval:correio REPROVADO");
 process.exit(ok ? 0 : 1);

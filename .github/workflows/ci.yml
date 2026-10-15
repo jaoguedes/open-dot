@@ -33,6 +33,8 @@ jobs:
         run: npm run typecheck
       - name: Testes
         run: npm test
+      - name: Regressão do resumo do Correio (não é medida real)
+        run: npm run eval:correio
       - name: Testes do Blender (sem Blender)
         run: npm run test:blender
       - name: Build (falha acima de 400 KB na primeira tela)
@@ -45,3 +47,4 @@ jobs:
           npm run ui:fase-d
           npm run ui:fase-e
           npm run ui:fase-f
+          npm run ui:fase-g

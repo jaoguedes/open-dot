@@ -53,4 +53,4 @@ export function evaluateCorreio(gold: GoldEmail[]): Metrics {
   };
 }
 
-export const CORREIO_THRESHOLDS = { needYouPrecision: 0.85, securityPaymentRecall: 0.95 } as const;
+export const CORREIO_THRESHOLDS = { needYouPrecision: 0.9, securityPaymentRecall: 0.95 } as const;
