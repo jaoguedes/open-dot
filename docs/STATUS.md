@@ -92,7 +92,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Etapa 3 em andamento: `--from-dev-vars`, tinta imediata do motor (carinho/tonto/boné sem depender do rAF) e retry do organize. Falta test:ui + deploy + GitHub.
+Etapa 3: check + test:ui 83/83 + eval:ai verdes. Publicar no Workers Free e depois Etapa 4 (GitHub privado).
 
 ## Como retomar em outra sessão
 

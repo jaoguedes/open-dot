@@ -17,7 +17,7 @@
   "vars": {
     "APP_ENV": "production",
     // Troque <SEU-SUBDOMINIO> pelo subdomínio workers.dev da sua conta antes do primeiro deploy.
-    "APP_ORIGIN": "https://open-dot.<SEU-SUBDOMINIO>.workers.dev",
+    "APP_ORIGIN": "https://open-dot.jpguedesbarbieri.workers.dev",
     "SESSION_DAYS": "30",
     "AI_CALLS_PER_DAY": "50",
     "AI_TOKENS_PER_DAY": "100000",
