@@ -8,8 +8,8 @@ import { spawn } from "node:child_process";
 const PORT = 8799;
 const ORIGIN = `http://localhost:${PORT}`;
 
-function isHealth(v: unknown): v is { ok: boolean; schema: string | null; schemaError?: string | null } {
-  return typeof v === "object" && v !== null && "ok" in v && "schema" in v;
+function isHealth(v: unknown): v is { ok: boolean } {
+  return typeof v === "object" && v !== null && "ok" in v && typeof (v as { ok: unknown }).ok === "boolean";
 }
 
 async function waitReady(child: ReturnType<typeof spawn>, timeoutMs: number): Promise<void> {
@@ -42,8 +42,8 @@ async function main() {
     const resp = await fetch(`${ORIGIN}/api/health`);
     const body: unknown = await resp.json();
     if (!isHealth(body)) throw new Error("health com formato inesperado");
-    console.log(JSON.stringify({ ok: body.ok, schema: body.schema, schemaError: body.schemaError ?? null }));
-    if (!body.ok || body.schema !== "0006") process.exit(1);
+    console.log(JSON.stringify({ ok: body.ok }));
+    if (!body.ok) process.exit(1);
   } finally {
     child.kill("SIGTERM");
   }

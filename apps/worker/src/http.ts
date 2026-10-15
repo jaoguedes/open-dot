@@ -77,5 +77,5 @@ export const SECURITY_HEADERS: Record<string, string> = {
   "x-frame-options": "DENY",
   "permissions-policy": "camera=(), microphone=(), geolocation=()",
   "content-security-policy":
-    "default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+    "default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'; media-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
 };

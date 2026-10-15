@@ -5,7 +5,7 @@ import { z } from "zod";
  * ou `.dev.vars` (local). Nada disso vai para o bundle do navegador.
  */
 export const EnvSchema = z.object({
-  APP_ENV: z.enum(["development", "production"]).default("development"),
+  APP_ENV: z.enum(["development", "production"]).default("production"),
   /** URL pública do app, ex.: https://open-dot.<sub>.workers.dev */
   APP_ORIGIN: z.string().url(),
   TOKEN_KEYS: z.string().min(10),
@@ -20,6 +20,8 @@ export const EnvSchema = z.object({
   /** Único dono permitido: sub estável do Google (preferível) ou e-mail na primeira entrada. */
   OWNER_GOOGLE_SUB: z.string().optional(),
   OWNER_EMAIL: z.string().email().optional(),
+  /** Contato público opcional. Não reutilize o e-mail de login se não quiser publicá-lo. */
+  CONTACT_EMAIL: z.string().email().optional(),
 
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
   GITHUB_APP_ID: z.string().optional(),

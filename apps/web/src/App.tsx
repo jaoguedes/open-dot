@@ -521,7 +521,7 @@ function Island({ go }: { go: (p: string) => void }) {
 }
 
 function ForcedBoom() {
-  if (new URLSearchParams(location.search).get("forcar") === "render") {
+  if (import.meta.env.DEV && new URLSearchParams(location.search).get("forcar") === "render") {
     throw new Error("token=segredo-teste senha=abc pessoa@example.com");
   }
   return null;

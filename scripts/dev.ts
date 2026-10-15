@@ -58,7 +58,7 @@ async function buildWeb() {
     jsx: "automatic",
     external: ["/fonts/*"],
     tsconfig: join(root, "tsconfig.json"),
-    define: { "process.env.NODE_ENV": '"development"' },
+    define: { "process.env.NODE_ENV": '"development"', "import.meta.env.DEV": "true" },
     logLevel: "warning",
   });
   await ctx.watch();

@@ -350,11 +350,14 @@ test("health não expõe segredos", async () => {
   const r = await client(ctx).call("GET", "/api/health");
   assert.equal(r.status, 200);
   assert.equal(r.json.ok, true);
-  assert.equal(r.json.schema, "0006");
-  assert.equal(r.json.schemaError, null);
+  assert.equal(r.json.schema, undefined);
+  assert.equal(r.json.configured, undefined);
   assert.ok(!JSON.stringify(r.json).includes("gsk_super_secreta"));
-  assert.equal(r.json.configured.ai, true);
-  assert.equal(r.json.configured.aiPrivate, false);
+  const authed = client(ctx);
+  assert.equal((await authed.call("POST", "/api/session/dev")).status, 200);
+  const detail = await authed.call("GET", "/api/health");
+  assert.equal(detail.json.schema, "0006");
+  assert.equal(detail.json.configured.ai, true);
 });
 
 test("currentSchema devolve código curto sem mensagem, token ou URL", async () => {
@@ -381,8 +384,8 @@ test("health com tabela ausente expõe só schemaError curto", async () => {
   const r = await client(ctx).call("GET", "/api/health");
   assert.equal(r.status, 200);
   assert.equal(r.json.ok, false);
-  assert.equal(r.json.schema, null);
-  assert.equal(r.json.schemaError, "tabela_inexistente");
+  assert.equal(r.json.schema, undefined);
+  assert.equal(r.json.schemaError, undefined);
   const blob = JSON.stringify(r.json);
   assert.ok(!blob.includes("no such table"));
   assert.ok(!blob.includes("od_schema_migrations"));
@@ -392,7 +395,8 @@ test("legal público: contato do ambiente, sem login e sem segredo", async () =>
   const ctx = await makeCtx({ env: { GROQ_API_KEY: "gsk_super_secreta" } });
   const r = await client(ctx).call("GET", "/api/legal");
   assert.equal(r.status, 200);
-  assert.equal(r.json.contact, "joao@example.com");
+  assert.equal(r.json.contact, null);
+  assert.ok(!JSON.stringify(r.json).includes("joao@example.com"));
   assert.ok(!JSON.stringify(r.json).includes("gsk_super_secreta"));
   const health = await client(ctx).call("GET", "/api/health");
   assert.ok(!JSON.stringify(health.json).includes("joao@example.com"));

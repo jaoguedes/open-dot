@@ -28,7 +28,7 @@ await build({
   jsx: "automatic",
   external: ["/fonts/*"],
   tsconfig: join(root, "tsconfig.json"),
-  define: { "process.env.NODE_ENV": '"production"' },
+  define: { "process.env.NODE_ENV": '"production"', "import.meta.env.DEV": "false" },
   logLevel: "warning",
   legalComments: "external",
 });
@@ -46,7 +46,7 @@ writeFileSync(
     "  Referrer-Policy: no-referrer",
     "  X-Frame-Options: DENY",
     "  Permissions-Policy: camera=(), microphone=(), geolocation=()",
-    "  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+    "  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'; media-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
     "/assets/*",
     "  Cache-Control: public, max-age=3600",
     "/fonts/*",

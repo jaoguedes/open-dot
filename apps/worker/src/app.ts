@@ -82,10 +82,18 @@ const redirectUri = (ctx: Ctx) => `${ctx.env.APP_ORIGIN}/api/oauth/google/callba
 
 // ---------------------------------------------------------------- Saúde e sessão
 
-route("GET", "/api/health", { auth: false }, async (ctx) => {
+route("GET", "/api/health", { auth: false }, async (ctx, req) => {
   const { version, error } = await currentSchema(ctx.db);
+  const ok = schemaCompatible(version, REQUIRED_SCHEMA);
+  let ownerId: string | null = null;
+  try {
+    ownerId = await currentOwner(ctx, req);
+  } catch {
+    ownerId = null;
+  }
+  if (!ownerId) return json({ ok });
   return json({
-    ok: schemaCompatible(version, REQUIRED_SCHEMA),
+    ok,
     schema: version,
     schemaError: error ?? null,
     requiredSchema: REQUIRED_SCHEMA,
@@ -95,7 +103,7 @@ route("GET", "/api/health", { auth: false }, async (ctx) => {
   });
 });
 
-route("GET", "/api/legal", { auth: false }, async (ctx) => json({ contact: ctx.env.OWNER_EMAIL ?? null }));
+route("GET", "/api/legal", { auth: false }, async (ctx) => json({ contact: ctx.env.CONTACT_EMAIL ?? null }));
 
 route("GET", "/api/session", { auth: false }, async (ctx, req, _p, ownerId) => {
   const local = isLocalRequest(ctx, req);
