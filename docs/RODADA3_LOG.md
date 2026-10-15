@@ -27,6 +27,11 @@
 - A fumaça do script falhou na hora porque o health ainda era o Worker anterior (`ok:false` com schema 0006). Segundos depois: `ok:true`, `schema:0006`, hash do `app.js` igual, `/sw.js` contém o hash, `/assets/inexistente` é 404 texto. Flags `GROQ_ZDR_CONFIRMED` e `PACOTEVICIO_TERMS_CONFIRMED` seguem `false`.
 - Os MP3 em `public/sounds/` subiram como arquivo estático neste deploy. O player da fase E ainda não existe.
 
+## Retomada pelo Claude Code (15/10/2026)
+
+- O `npm run typecheck` estava vermelho no `d9337a1`: `tests/deploy-script.test.ts` importava `scripts/lib/deploy-plan.mjs` sem declaração. Corrigido com `deploy-plan.d.mts` (`f1324bf`). Base: 164 testes, 0 falhas.
+- O agente anterior deixou `apps/worker/test/fase-b.test.ts` (4 testes) e um `scrubSecrets` que devolvia o texto intacto. Os 4 estavam vermelhos.
+
 ## Fase B (parcial, ainda não publicada)
 
 - `/api/health` sem sessão responde só `{ok}`. Com sessão devolve schema e `configured`. Testes de health atualizados e passando.
@@ -36,3 +41,20 @@
 - O gancho `?forcar=render` só entra no bundle quando `import.meta.env.DEV` é verdadeiro.
 
 
+
+## Fase B (concluída no código, 15/10/2026)
+
+Prova vermelha: o mesmo `apps/worker/test/fase-b.test.ts` rodado contra o código anterior (stash das mudanças, `scrubSecrets` vazio) deu 0/6. Depois, 6/6.
+
+| Item | Antes (o que o teste viu) | Depois |
+|---|---|---|
+| B3 cookie | `od_session=…; Secure`, sem `__Host-` | `__Host-od_session` em origem https, `Path=/`, sem `Domain`. O cookie antigo `od_session` ainda é lido uma vez (não desloga ninguém) e é apagado na próxima entrada/saída. |
+| B3 sair de todos | `POST /api/sessions/logout-all` → 404 | 200; as duas sessões do teste deixam de autenticar. `GET /api/sessions` lista aparelho (Safari no iPhone etc.) e data, nunca o token. Cartão “Sessões” em Conexões. |
+| B3 rotação | entrada nova mantinha o token antigo válido | `startSession` apaga a sessão que veio na requisição antes de criar a nova. |
+| B5 nome | `displayNameFor` devolvia “João” fixo | vem de `OWNER_NAME` (no `wrangler.jsonc`, público); vazio mostra só “Bom dia”. Demonstração usa “Alex”. |
+| B5 domínio | `OPEN_DOT_HEALTH_URL` fixo com o subdomínio do João | `selfHealthUrl(APP_ORIGIN)`; origem local responde 409. `setup-cloud` lê o `APP_ORIGIN` do `wrangler.jsonc`. |
+| B7 isca | callback do Google com erro → 500 (JSON cru); 4 `console.*` diretos | callback com falha → 302 `?erro=callback_invalido`; todo log passa por `logSafe` → `scrubSecrets`. Varredura com isca (token, e-mail, Bearer, chave longa) em respostas, logs, `od_connections.last_error`, `od_runs.error_message`, `od_audit_events.detail`, `od_agent_settings.last_error`: nada vaza. |
+| B1, B2, B4, B6 | já estavam no código (commits `fa0ce11` e anteriores) | conferidos: health público `{ok}`, `/api/legal` só `CONTACT_EMAIL`, `APP_ENV` padrão `production`, `media-src 'self'` em `_headers` e `SECURITY_HEADERS`, `?forcar=render` só com `import.meta.env.DEV`. |
+
+Também: o 503 de configuração incompleta não lista mais os nomes das variáveis ausentes para o público (vai só para o log).
+`npm run check`: 171 testes, 0 falhas. `ui:mobile` ok.
