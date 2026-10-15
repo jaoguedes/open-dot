@@ -75,13 +75,20 @@ async function openDemo(path) {
   await page.locator(".splash").waitFor({ state: "detached", timeout: 8_000 }).catch(() => {});
 }
 
-await openDemo("/?demo=1&forcar=render");
-const boom = page.getByRole("alert");
-await boom.waitFor({ timeout: 8_000 });
-const boomText = await boom.innerText();
-if (!boomText.includes("A tela quebrou ao desenhar") || !boomText.includes("render_error")) fail("erro de render: explicação do dicionário ausente");
-if (/segredo-teste|pessoa@example\.com|senha=abc/.test(boomText)) fail("erro de render: segredo na tela");
-else console.log("ok   erro de render");
+// O gancho ?forcar=render só existe no build de desenvolvimento (B4). Contra o build
+// de produção (o que o deploy publica) este passo é pulado e dito, não fingido.
+const servedJs = await (await fetch(BASE + "/assets/app.js")).text();
+if (!servedJs.includes("forcar")) {
+  console.log("pulado erro de render (build de produção não tem o gancho de teste; coberto por npm run test:ui)");
+} else {
+  await openDemo("/?demo=1&forcar=render");
+  const boom = page.getByRole("alert");
+  await boom.waitFor({ timeout: 8_000 });
+  const boomText = await boom.innerText();
+  if (!boomText.includes("A tela quebrou ao desenhar") || !boomText.includes("render_error")) fail("erro de render: explicação do dicionário ausente");
+  if (/segredo-teste|pessoa@example\.com|senha=abc/.test(boomText)) fail("erro de render: segredo na tela");
+  else console.log("ok   erro de render");
+}
 
 await openDemo("/?demo=1");
 await page.evaluate(() => window.dispatchEvent(new CustomEvent("od-trouble", { detail: { code: "subrequest_limit" } })));

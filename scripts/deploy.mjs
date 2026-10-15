@@ -42,8 +42,16 @@ function capture(cmd, args) {
   return spawnSync(cmd, args, { cwd: root, encoding: "utf8" });
 }
 
+const appJs = join(root, "apps/web/dist/assets/app.js");
+const hashOf = () => createHash("sha256").update(readFileSync(appJs)).digest("hex").slice(0, 12);
+
 run("npm", ["run", "build"]);
 run("npm", ["run", "check"]);
+const builtHash = hashOf();
+if (readFileSync(appJs, "utf8").includes("forcar")) {
+  console.error("O dist tem o gancho de teste: não é build de produção. O deploy não foi feito.");
+  process.exit(1);
+}
 run("npm", ["run", "test:workerd"]);
 run("npm", ["run", "ui:mobile"]);
 
@@ -64,10 +72,16 @@ if (status.includes("Versão do Worker antes deste deploy")) {
 writeFileSync(statusPath, status);
 console.log("Versão anterior registrada para rollback.");
 
+// O `npm run dev` observa o código e escreve no mesmo dist. Se algo mudou o bundle
+// depois do check, não publica.
+if (hashOf() !== builtHash) {
+  console.error(`O dist mudou depois do check (${builtHash} → ${hashOf()}). Pare o npm run dev e rode de novo. O deploy não foi feito.`);
+  process.exit(1);
+}
 run("npm", ["run", "db:migrate", "--", "--remote"]);
 run("npx", ["--yes", "wrangler@4", "deploy"]);
 
-const localHash = createHash("sha256").update(readFileSync(join(root, "apps/web/dist/assets/app.js"))).digest("hex").slice(0, 12);
+const localHash = builtHash;
 const smoke = await waitForSmoke({ origin, appHash: localHash, timeoutMs: 60_000, fetchImpl: fetch });
 if (!smoke) {
   console.error("Fumaça: em 60 s o health ou o hash publicado não bateram.");
