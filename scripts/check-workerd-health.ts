@@ -43,7 +43,7 @@ async function main() {
     const body: unknown = await resp.json();
     if (!isHealth(body)) throw new Error("health com formato inesperado");
     console.log(JSON.stringify({ ok: body.ok, schema: body.schema, schemaError: body.schemaError ?? null }));
-    if (!body.ok || body.schema !== "0005") process.exit(1);
+    if (!body.ok || body.schema !== "0006") process.exit(1);
   } finally {
     child.kill("SIGTERM");
   }

@@ -9,7 +9,28 @@ import { createHash } from "node:crypto";
 import { join } from "node:path";
 
 const root = new URL("..", import.meta.url).pathname;
-const origin = "https://open-dot.jpguedesbarbieri.workers.dev";
+const wranglerText = readFileSync(join(root, "wrangler.jsonc"), "utf8");
+const origin = wranglerText.match(/"APP_ORIGIN":\s*"(https:[^"]+)"/)?.[1];
+const required = readFileSync(join(root, "apps/worker/src/db/migrate.ts"), "utf8").match(/REQUIRED_SCHEMA = "(\d+)"/)?.[1];
+if (!origin || !required) {
+  console.error("Não achei APP_ORIGIN ou REQUIRED_SCHEMA.");
+  process.exit(1);
+}
+
+function loadDevVars() {
+  const text = readFileSync(join(root, ".dev.vars"), "utf8");
+  for (const line of text.split("\n")) {
+    const t = line.trim();
+    if (!t || t.startsWith("#")) continue;
+    const i = t.indexOf("=");
+    if (i < 1) continue;
+    const key = t.slice(0, i).trim();
+    let value = t.slice(i + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) value = value.slice(1, -1);
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+}
+loadDevVars();
 
 function run(cmd, args) {
   const r = spawnSync(cmd, args, { cwd: root, stdio: "inherit" });
@@ -22,13 +43,14 @@ function capture(cmd, args) {
 
 run("npm", ["run", "build"]);
 run("npm", ["run", "check"]);
+run("npm", ["run", "db:migrate", "--", "--remote"]);
 run("npm", ["run", "test:workerd"]);
 run("npm", ["run", "ui:mobile"]);
 
 const listed = capture("npx", ["--yes", "wrangler@4", "deployments", "list"]);
 const blob = `${listed.stdout}\n${listed.stderr}`;
 const versions = [...blob.matchAll(/Version\(s\):\s+\(100%\)\s+([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi)].map((m) => m[1]);
-const previous = versions[0];
+const previous = versions.at(-1);
 if (!previous) {
   console.error("Não consegui ler a versão atual do Worker. O deploy não foi feito.");
   process.exit(1);
@@ -46,8 +68,13 @@ console.log("Versão anterior registrada para rollback.");
 
 run("npx", ["--yes", "wrangler@4", "deploy"]);
 
-const health = await fetch(`${origin}/api/health`).then((r) => r.json());
-if (!health.ok || health.schema !== "0005") {
+let health = { ok: false, schema: "" };
+for (let i = 0; i < 6; i++) {
+  health = await fetch(`${origin}/api/health`).then((r) => r.json());
+  if (health.ok) break;
+  await new Promise((r) => setTimeout(r, 2000));
+}
+if (!health.ok) {
   console.error("Fumaça: /api/health não veio no schema esperado.");
   process.exit(1);
 }
