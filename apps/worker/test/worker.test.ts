@@ -4,8 +4,9 @@ import { client, makeCtx, loadMigrations } from "./harness.ts";
 import { FakeGoogle } from "./fake-google.ts";
 import { tick } from "../src/jobs.ts";
 import * as repo from "../src/repo.ts";
-import { applyMigrations } from "../src/db/migrate.ts";
+import { applyMigrations, classifySchemaError, currentSchema } from "../src/db/migrate.ts";
 import { SqliteDb } from "../src/db/sqlite.ts";
+import { HranaError } from "../src/db/hrana.ts";
 import { hashProposal } from "@open-dot/core";
 
 async function connectGmail(google: FakeGoogle, ctx: Awaited<ReturnType<typeof makeCtx>>) {
@@ -322,9 +323,43 @@ test("health não expõe segredos", async () => {
   const ctx = await makeCtx({ env: { GROQ_API_KEY: "gsk_super_secreta" } });
   const r = await client(ctx).call("GET", "/api/health");
   assert.equal(r.status, 200);
+  assert.equal(r.json.ok, true);
+  assert.equal(r.json.schema, "0003");
+  assert.equal(r.json.schemaError, null);
   assert.ok(!JSON.stringify(r.json).includes("gsk_super_secreta"));
   assert.equal(r.json.configured.ai, true);
   assert.equal(r.json.configured.aiPrivate, false);
+});
+
+test("currentSchema devolve código curto sem mensagem, token ou URL", async () => {
+  const empty = new SqliteDb(":memory:");
+  const missing = await currentSchema(empty);
+  assert.equal(missing.version, null);
+  assert.equal(missing.error, "tabela_inexistente");
+  assert.ok(!JSON.stringify(missing).includes("od_schema"));
+
+  const db = new SqliteDb(":memory:");
+  await applyMigrations(db, loadMigrations());
+  assert.deepEqual(await currentSchema(db), { version: "0003" });
+
+  assert.equal(classifySchemaError(new HranaError("Turso respondeu 401", 401)), "http_401");
+  assert.equal(classifySchemaError(new HranaError("Turso respondeu 403", 403)), "http_401");
+  assert.equal(classifySchemaError(new HranaError("Turso respondeu 404", 404)), "http_404");
+  assert.equal(classifySchemaError(new TypeError("fetch failed")), "rede");
+  assert.equal(classifySchemaError(new Error("no such table: od_schema_migrations")), "tabela_inexistente");
+});
+
+test("health com tabela ausente expõe só schemaError curto", async () => {
+  const ctx = await makeCtx();
+  ctx.db = new SqliteDb(":memory:");
+  const r = await client(ctx).call("GET", "/api/health");
+  assert.equal(r.status, 200);
+  assert.equal(r.json.ok, false);
+  assert.equal(r.json.schema, null);
+  assert.equal(r.json.schemaError, "tabela_inexistente");
+  const blob = JSON.stringify(r.json);
+  assert.ok(!blob.includes("no such table"));
+  assert.ok(!blob.includes("od_schema_migrations"));
 });
 
 test("legal público: contato do ambiente, sem login e sem segredo", async () => {

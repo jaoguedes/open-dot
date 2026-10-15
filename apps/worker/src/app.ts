@@ -74,8 +74,16 @@ const redirectUri = (ctx: Ctx) => `${ctx.env.APP_ORIGIN}/api/oauth/google/callba
 // ---------------------------------------------------------------- Saúde e sessão
 
 route("GET", "/api/health", { auth: false }, async (ctx) => {
-  const schema = await currentSchema(ctx.db).catch(() => null);
-  return json({ ok: schema === REQUIRED_SCHEMA, schema, requiredSchema: REQUIRED_SCHEMA, env: ctx.env.APP_ENV, configured: configured(ctx.env), time: new Date(ctx.now()).toISOString() });
+  const { version, error } = await currentSchema(ctx.db);
+  return json({
+    ok: version === REQUIRED_SCHEMA,
+    schema: version,
+    schemaError: error ?? null,
+    requiredSchema: REQUIRED_SCHEMA,
+    env: ctx.env.APP_ENV,
+    configured: configured(ctx.env),
+    time: new Date(ctx.now()).toISOString(),
+  });
 });
 
 route("GET", "/api/legal", { auth: false }, async (ctx) => json({ contact: ctx.env.OWNER_EMAIL ?? null }));

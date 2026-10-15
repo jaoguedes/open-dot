@@ -70,11 +70,28 @@ export async function applyMigrations(db: Db, migrations: Migration[], opts: { a
   return { applied, skipped };
 }
 
-export async function currentSchema(db: Db): Promise<string | null> {
+/** Código curto de falha no schema. Nunca inclui token, URL ou mensagem bruta. */
+export type SchemaError = "http_401" | "http_404" | "tabela_inexistente" | "rede";
+
+export interface SchemaStatus {
+  version: string | null;
+  error?: SchemaError;
+}
+
+export function classifySchemaError(err: unknown): SchemaError {
+  const status = err && typeof err === "object" && "status" in err && typeof (err as { status: unknown }).status === "number" ? (err as { status: number }).status : undefined;
+  if (status === 401 || status === 403) return "http_401";
+  if (status === 404) return "http_404";
+  const msg = err instanceof Error ? err.message.toLowerCase() : "";
+  if (msg.includes("no such table")) return "tabela_inexistente";
+  return "rede";
+}
+
+export async function currentSchema(db: Db): Promise<SchemaStatus> {
   try {
     const rows = await db.query<{ v: string | null }>("SELECT MAX(version) AS v FROM od_schema_migrations");
-    return rows[0]?.v ?? null;
-  } catch {
-    return null;
+    return { version: rows[0]?.v ?? null };
+  } catch (err) {
+    return { version: null, error: classifySchemaError(err) };
   }
 }

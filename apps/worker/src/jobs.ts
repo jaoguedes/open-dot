@@ -27,8 +27,8 @@ export interface TickReport {
 
 export async function tick(ctx: Ctx): Promise<TickReport> {
   const report: TickReport = { planned: 0, synced: [], runs: [], monitors: 0, deployments: 0, subrequests: 0 };
-  const schema = await currentSchema(ctx.db);
-  if (schema !== REQUIRED_SCHEMA) return { ...report, skipped: `schema ${schema ?? "ausente"}; esperado ${REQUIRED_SCHEMA}` };
+  const { version } = await currentSchema(ctx.db);
+  if (version !== REQUIRED_SCHEMA) return { ...report, skipped: `schema ${version ?? "ausente"}; esperado ${REQUIRED_SCHEMA}` };
   const budget = new SubrequestBudget(40);
   const f = budget.wrap(ctx.fetch);
   const now = ctx.now();

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { HranaDb } from "../apps/worker/src/db/hrana.ts";
-import { applyMigrations } from "../apps/worker/src/db/migrate.ts";
+import { applyMigrations, currentSchema } from "../apps/worker/src/db/migrate.ts";
 import { loadMigrations } from "../scripts/lib/migrations.ts";
 import { DbLedger } from "../apps/worker/src/repo.ts";
 
@@ -99,6 +99,10 @@ test("cliente Turso: token inválido não vaza e falha com erro claro", async ()
   const t = fakeTurso("certo");
   const h = new HranaDb("https://db.turso.io", "errado", t.fetchImpl);
   await assert.rejects(h.query("SELECT 1"), (e: Error) => /401/.test(e.message) && !e.message.includes("errado"));
+  const schema = await currentSchema(h);
+  assert.equal(schema.version, null);
+  assert.equal(schema.error, "http_401");
+  assert.ok(!JSON.stringify(schema).includes("errado"));
 });
 
 test("migrações e reserva atômica de orçamento funcionam pelo caminho HTTP do Turso", async () => {
@@ -106,6 +110,7 @@ test("migrações e reserva atômica de orçamento funcionam pelo caminho HTTP d
   const h = new HranaDb("https://db.turso.io", "tok", t.fetchImpl);
   const r = await applyMigrations(h, loadMigrations());
   assert.deepEqual(r.applied, ["0001", "0002", "0003"]);
+  assert.deepEqual(await currentSchema(h), { version: "0003" });
   const ledger = new DbLedger(h, { ownerCalls: 2, ownerTokens: 1000, modelRequests: () => 10, modelTokens: () => 10_000 }, () => Date.now());
   const res = [];
   for (let i = 0; i < 4; i++) res.push(await ledger.reserve({ ownerId: "o", providerId: "groq", modelId: "m", day: "2026-10-13", tokens: 50 }));
