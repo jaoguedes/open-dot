@@ -258,10 +258,25 @@ export async function tick(outer: Ctx): Promise<TickReport> {
     }
 
     report.subrequests = budget.used;
+    await saveTick(outer, report, now);
     return report;
   } catch (e) {
     report.subrequests = budget.used;
-    if (e instanceof BudgetExhausted) return { ...report, skipped: "subrequest_limit" };
+    if (e instanceof BudgetExhausted) {
+      const out = { ...report, skipped: "subrequest_limit" };
+      await saveTick(outer, out, now);
+      return out;
+    }
     throw e;
+  }
+}
+
+/** Última rodada do cron para o Diagnóstico (F4). Só contagens e códigos. Falhar aqui não derruba o tique. */
+async function saveTick(outer: Ctx, report: TickReport, now: number): Promise<void> {
+  try {
+    const summary = { at: new Date(now).toISOString(), planned: report.planned, runs: report.runs.length, monitors: report.monitors, subrequests: report.subrequests, stepErrors: report.stepErrors, skipped: report.skipped ?? null };
+    await repo.setSystemState(outer.db, "last_tick", JSON.stringify(summary), now);
+  } catch {
+    /* sem o registro, o Diagnóstico só mostra "sem rodada registrada" */
   }
 }

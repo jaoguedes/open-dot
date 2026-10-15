@@ -39,8 +39,9 @@ jobs:
         run: npm run build
       - name: Navegador
         run: npx playwright install --with-deps chromium
-      - name: Celular com API simulada (fases A, D com axe, E)
+      - name: Celular com API simulada (fases A, D com axe, E, F)
         run: |
           npm run ui:fase-a
           npm run ui:fase-d
           npm run ui:fase-e
+          npm run ui:fase-f

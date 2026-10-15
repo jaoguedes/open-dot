@@ -36,6 +36,7 @@ import { REQUIRED_SCHEMA, currentSchema, schemaCompatible } from "./db/migrate.t
 import { pkceChallenge, randomToken } from "./crypto.ts";
 import { csrfOk, currentOwner, currentSessionHash, endSession, json, problem, redirect, SECURITY_HEADERS, startSession, sessionCookie, withSessionCookie } from "./http.ts";
 import * as repo from "./repo.ts";
+import * as account from "./services/account.ts";
 import { makeRouter, runEmailReview } from "./services/email-review.ts";
 import { syncGmail } from "./services/gmail.ts";
 import * as shipments from "./services/shipments.ts";
@@ -491,6 +492,26 @@ route("POST", "/api/connections/:id/disconnect", { auth: true }, async (ctx, _r,
   await repo.disconnect(ctx.db, ownerId!, conn.id, ctx.now());
   await repo.audit(ctx.db, { ownerId, actor: "user", action: "disconnect", target: conn.id, outcome: revoked ? "revoked" : "local_only", now: ctx.now() });
   return json({ ok: true, revokedAtProvider: revoked });
+});
+
+// ---------------------------------------------------------------- Diagnóstico e dados (F4, F6)
+
+route("GET", "/api/diagnostics", { auth: true }, async (ctx, _r, _p, ownerId) => json(await account.diagnostics(ctx, ownerId!)));
+
+route("GET", "/api/export", { auth: true }, async (ctx, _r, _p, ownerId) => {
+  const data = await account.exportData(ctx, ownerId!);
+  await repo.audit(ctx.db, { ownerId, actor: "user", action: "export", outcome: "ok", now: ctx.now() });
+  const day = new Date(ctx.now()).toISOString().slice(0, 10);
+  return json(data, 200, { "content-disposition": `attachment; filename="open-dot-${day}.json"` });
+});
+
+const DeleteInput = z.object({ confirm: z.literal("APAGAR TUDO") });
+
+route("POST", "/api/account/delete", { auth: true }, async (ctx, req, _p, ownerId) => {
+  const parsed = DeleteInput.safeParse(await req.json());
+  if (!parsed.success) return problem(400, "confirm_required", "Digite APAGAR TUDO para confirmar.");
+  const r = await account.deleteAccount(ctx, ownerId!);
+  return withSessionCookie(ctx, json({ ok: true, ...r }), sessionCookie(ctx, "", 0));
 });
 
 // ---------------------------------------------------------------- Snapshot único (C1)

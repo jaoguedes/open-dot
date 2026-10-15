@@ -199,6 +199,13 @@ async function req<T>(path: string, init: RequestInit = {}, quiet = false): Prom
   return data as T;
 }
 
+export interface Diagnostics {
+  health: { ok: boolean; schema: string | null; requiredSchema: string; schemaError: string | null; env: string; configured: Record<string, boolean | string> };
+  lastTick: { at: string; planned: number; runs: number; monitors: number; subrequests: number; stepErrors: Array<{ step: string; reason: string }>; skipped: string | null; savedAt: string } | null;
+  failures: Array<{ runId: string; agentId: string; kind: string; state: string; at: string; code: string; frase: string; acao: string }>;
+  time: string;
+}
+
 export const api = {
   session: () => req<{ authenticated: boolean; owner?: Snapshot["owner"]; devLoginAvailable?: boolean; googleLoginAvailable?: boolean }>("/api/session"),
   version: () => req<{ app: string; worker: string }>("/api/version"),
@@ -206,6 +213,8 @@ export const api = {
   devLogin: () => req<{ ok: true }>("/api/session/dev", { method: "POST" }),
   logout: () => req<{ ok: true }>("/api/logout", { method: "POST" }),
   sessions: () => req<{ sessions: SessionView[] }>("/api/sessions"),
+  diagnostics: () => req<Diagnostics>("/api/diagnostics"),
+  deleteAccount: () => req<{ ok: true; revoked: number }>("/api/account/delete", { method: "POST", body: JSON.stringify({ confirm: "APAGAR TUDO" }) }),
   logoutAll: () => req<{ ok: true; removed: number }>("/api/sessions/logout-all", { method: "POST" }),
   feed: (before?: string | null) => req<{ items: FeedEntry[]; next: string | null }>(before ? `/api/feed?before=${encodeURIComponent(before)}` : "/api/feed"),
   connections: () => req<{ configured: Configured; connections: Connection[]; agents: AgentCard[]; providers: ProviderCard[] }>("/api/connections"),

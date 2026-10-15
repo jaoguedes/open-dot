@@ -36,7 +36,8 @@
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "ui:fase-f": "node scripts/ui-fase-f.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",

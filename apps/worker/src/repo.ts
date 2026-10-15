@@ -1079,3 +1079,53 @@ export async function recentMailTexts(db: Db, keys: Keyring, ownerId: string, li
 export async function runBySlot(db: Db, ownerId: string, slotKey: string): Promise<RunRow | null> {
   return (await db.query<RunRow>("SELECT * FROM od_runs WHERE owner_id = ? AND slot_key = ?", [ownerId, slotKey]))[0] ?? null;
 }
+
+// ---------------- Estado do sistema (Diagnóstico) ----------------
+
+export async function setSystemState(db: Db, key: string, value: string, now: number) {
+  await db.run("INSERT INTO od_system_state (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at", [key, value.slice(0, 4000), iso(now)]);
+}
+
+export async function getSystemState(db: Db, key: string): Promise<{ value: string; updated_at: string } | null> {
+  return (await db.query<{ value: string; updated_at: string }>("SELECT value, updated_at FROM od_system_state WHERE key = ?", [key]))[0] ?? null;
+}
+
+// ---------------- Retorno do dono sobre a triagem (G) ----------------
+
+export type TriageLabel = "importante" | "nao_importa" | "desfazer";
+
+export async function recordTriageFeedback(db: Db, keys: Keyring, p: { ownerId: string; domainHash: string; domainLabel: string | null; categoria: string; rotulo: TriageLabel; now: number }) {
+  const enc = p.domainLabel ? await seal(keys, p.domainLabel, `fb:${p.ownerId}:${p.domainHash}`) : null;
+  await db.run("INSERT INTO od_triage_feedback (owner_id, sender_domain_hash, sender_label_enc, categoria, rotulo, at) VALUES (?, ?, ?, ?, ?, ?)", [p.ownerId, p.domainHash, enc, p.categoria.slice(0, 40), p.rotulo, iso(p.now)]);
+}
+
+/**
+ * Remetentes que o dono marcou "Não importa" duas vezes seguidas (desde o último
+ * "Era importante" ou "desfazer"). O rótulo do domínio volta decifrado só para a tela.
+ */
+export async function silencedSenders(db: Db, keys: Keyring, ownerId: string): Promise<Array<{ domainHash: string; label: string }>> {
+  const rows = await db.query<{ sender_domain_hash: string; sender_label_enc: string | null; rotulo: string; at: string }>(
+    "SELECT sender_domain_hash, sender_label_enc, rotulo, at FROM od_triage_feedback WHERE owner_id = ? ORDER BY at ASC, id ASC LIMIT 2000",
+    [ownerId],
+  );
+  const streak = new Map<string, { n: number; enc: string | null }>();
+  for (const r of rows) {
+    const cur = streak.get(r.sender_domain_hash) ?? { n: 0, enc: null };
+    if (r.rotulo === "nao_importa") streak.set(r.sender_domain_hash, { n: cur.n + 1, enc: r.sender_label_enc ?? cur.enc });
+    else streak.set(r.sender_domain_hash, { n: 0, enc: r.sender_label_enc ?? cur.enc });
+  }
+  const out: Array<{ domainHash: string; label: string }> = [];
+  for (const [hash, s] of streak) {
+    if (s.n < 2) continue;
+    let label = "remetente";
+    if (s.enc) {
+      try {
+        label = await open(keys, s.enc, `fb:${ownerId}:${hash}`);
+      } catch {
+        label = "remetente";
+      }
+    }
+    out.push({ domainHash: hash, label });
+  }
+  return out;
+}

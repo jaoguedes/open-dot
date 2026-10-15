@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { explainError, providerCards, runFictitiousProviderTest, type ProviderCard } from "@open-dot/core";
 import { useApp } from "../store.tsx";
-import { api, ApiError, type SessionView } from "../api.ts";
+import { api, ApiError, type Diagnostics, type SessionView } from "../api.ts";
 import { Icon } from "../components/Icons.tsx";
 import { fmtDateTime } from "../format.ts";
 
@@ -135,6 +135,10 @@ export function Connections() {
       <Providers demo={demo} />
 
       <Sessions demo={demo} />
+
+      <DiagnosticsCard demo={demo} />
+
+      <MyDataCard demo={demo} />
     </>
   );
 }
@@ -539,6 +543,160 @@ function PacoteCard() {
       <p className="meta">
         Consultas neste mês: {calls} de {limit}. O app para em 900. Nada é comprado daqui.
       </p>
+    </section>
+  );
+}
+
+/** Conexões > Diagnóstico (F4): só autenticado. O relatório copiado não leva segredo nem e-mail. */
+function DiagnosticsCard({ demo }: { demo: boolean }) {
+  const [d, setD] = useState<Diagnostics | null>(null);
+  const [version, setVersion] = useState<{ app: string; worker: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const load = async () => {
+    setError(null);
+    try {
+      const [diag, v] = await Promise.all([api.diagnostics(), api.version().catch(() => null)]);
+      setD(diag);
+      setVersion(v);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Não consegui ler o diagnóstico.");
+    }
+  };
+  const report = () => {
+    if (!d) return "";
+    const lines = [
+      `Open Dot · diagnóstico · ${d.time}`,
+      `Saúde: ${d.health.ok ? "ok" : "com problema"} · schema ${d.health.schema ?? "?"} (exige ${d.health.requiredSchema}) · ${d.health.env}`,
+      `Versão: app ${version?.app ?? "?"} · worker ${version?.worker ?? "?"}`,
+      `Integrações configuradas: ${Object.entries(d.health.configured)
+        .filter(([, v]) => v === true)
+        .map(([k]) => k)
+        .join(", ") || "nenhuma"}`,
+      d.lastTick ? `Última rodada do cron: ${d.lastTick.at} · ${d.lastTick.runs} execuções · ${d.lastTick.subrequests} subrequisições${d.lastTick.stepErrors.length ? ` · passos com erro: ${d.lastTick.stepErrors.map((x) => `${x.step}:${x.reason}`).join(", ")}` : ""}` : "Última rodada do cron: sem registro",
+      ...d.failures.map((f) => `Falha ${f.at} · ${f.agentId} · ${f.code}: ${f.frase}`),
+    ];
+    return lines.join("\n");
+  };
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(report());
+      setCopied(true);
+    } catch {
+      setError("Não consegui copiar. Selecione o texto abaixo.");
+    }
+  };
+  return (
+    <section className="card section-gap" aria-labelledby="c-diag">
+      <div className="card-top">
+        <Icon name="alert" size={14} /> Diagnóstico
+      </div>
+      <h3 id="c-diag">Saúde do Open Dot</h3>
+      {demo ? (
+        <p>Indisponível na demonstração.</p>
+      ) : !d ? (
+        <>
+          {error && <p className="banner err">{error}</p>}
+          <div className="row-actions">
+            <button className="btn" type="button" onClick={() => void load()}>
+              Ver diagnóstico
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <ul className="plain-list">
+            <li>
+              Saúde: <b>{d.health.ok ? "ok" : "com problema"}</b> · schema {d.health.schema ?? "?"} (exige {d.health.requiredSchema})
+            </li>
+            <li>
+              Versão: app <span className="mono">{version?.app ?? "?"}</span> · worker <span className="mono">{version?.worker?.slice(0, 8) ?? "?"}</span>
+            </li>
+            <li>{d.lastTick ? `Última rodada do cron: ${fmtDateTime(d.lastTick.at)} · ${d.lastTick.runs} execuções${d.lastTick.stepErrors.length ? ` · ${d.lastTick.stepErrors.length} passo(s) com erro` : ""}` : "Última rodada do cron: sem registro ainda."}</li>
+          </ul>
+          {d.failures.length > 0 ? (
+            <ul className="plain-list">
+              {d.failures.map((f) => (
+                <li key={f.runId}>
+                  <span className="tiny mono">{fmtDateTime(f.at)} · {f.code}</span>
+                  <span className="block">{f.frase}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="meta">Nenhuma execução com falha nas últimas 30.</p>
+          )}
+          <div className="row-actions">
+            <button className="btn" type="button" onClick={() => void copy()}>
+              {copied ? "Relatório copiado" : "Copiar relatório"}
+            </button>
+            <button className="btn ghost" type="button" onClick={() => void load()}>
+              Atualizar
+            </button>
+          </div>
+          {error && <p className="banner err">{error}</p>}
+        </>
+      )}
+    </section>
+  );
+}
+
+/** Meus dados (F6): exportar em JSON e apagar tudo, com confirmação dupla. */
+function MyDataCard({ demo }: { demo: boolean }) {
+  const [step, setStep] = useState<0 | 1>(0);
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const erase = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.deleteAccount();
+      location.assign("/");
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Não consegui apagar. Nada foi apagado.");
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="card section-gap" aria-labelledby="c-dados">
+      <div className="card-top">
+        <Icon name="layers" size={14} /> Meus dados
+      </div>
+      <h3 id="c-dados">Exportar ou apagar</h3>
+      {demo ? (
+        <p>Indisponível na demonstração.</p>
+      ) : (
+        <>
+          <p>O arquivo traz tudo o que o Open Dot guarda sobre você, já legível. Tokens de acesso ficam de fora.</p>
+          <div className="row-actions">
+            <a className="btn" href="/api/export" download>
+              Exportar meus dados (JSON)
+            </a>
+            {step === 0 && (
+              <button className="btn" type="button" onClick={() => setStep(1)}>
+                Apagar tudo…
+              </button>
+            )}
+          </div>
+          {step === 1 && (
+            <div className="stack-10 mt-12">
+              <p className="err-text">Isso apaga resumos, rotinas, conexões, encomendas e o histórico, e tira o acesso ao Gmail. Não dá para desfazer.</p>
+              <label htmlFor="erase-confirm">Digite APAGAR TUDO para confirmar</label>
+              <input id="erase-confirm" type="text" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
+              <div className="row-actions">
+                <button className="btn" type="button" disabled={busy || typed !== "APAGAR TUDO"} onClick={() => void erase()}>
+                  Apagar tudo agora
+                </button>
+                <button className="btn ghost" type="button" onClick={() => (setStep(0), setTyped(""))}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+          {error && <p className="banner err">{error}</p>}
+        </>
+      )}
     </section>
   );
 }
