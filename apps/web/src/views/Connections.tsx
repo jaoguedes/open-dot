@@ -67,11 +67,11 @@ export function Connections() {
   return (
     <>
       <h1>Conexões</h1>
-      <p className="meta" style={{ margin: "4px 0 16px" }}>
+      <p className="meta intro-gap">
         Cada serviço tem consentimento próprio e permissões mínimas. Escritas exigem sua aprovação do conteúdo exato.
       </p>
       {msg && (
-        <p role="status" className={`banner ${msg.ok ? "ok" : "err"}`} style={{ whiteSpace: "normal", overflowWrap: "anywhere", marginBottom: 16 }}>
+        <p role="status" className={`banner ${msg.ok ? "ok" : "err"} ws-normal wrap-anywhere mb-16`}>
           {msg.text}
         </p>
       )}
@@ -113,7 +113,7 @@ export function Connections() {
 
       <Monitors />
 
-      <section className="card" style={{ marginTop: 16 }} aria-labelledby="c-gh">
+      <section className="card mt-16" aria-labelledby="c-gh">
         <div className="card-top">
           <Icon name="code" size={14} /> Código · GitHub
           <span className={`chip ${cfg?.github ? "info" : ""}`}>{cfg?.github ? "Webhook configurado no servidor" : "Não configurado"}</span>
@@ -122,7 +122,7 @@ export function Connections() {
         <p>Leitura de PRs, issues, workflows e checks. Sem merge, push ou alteração de configurações. Configuração no GitHub feita por você (docs/ACOES_DO_JOAO.md).</p>
       </section>
 
-      <section className="card" style={{ marginTop: 16 }} aria-labelledby="c-vc">
+      <section className="card mt-16" aria-labelledby="c-vc">
         <div className="card-top">
           <Icon name="layers" size={14} /> Sentinela · Vercel
           <span className={`chip ${cfg?.vercel ? "info" : ""}`}>{cfg?.vercel ? "Token configurado no servidor" : "Não configurado"}</span>
@@ -230,7 +230,7 @@ function Monitors() {
     }
   };
   return (
-    <section className="card" style={{ marginTop: 16 }} aria-labelledby="c-mon">
+    <section className="card mt-16" aria-labelledby="c-mon">
       <div className="card-top">
         <Icon name="globe" size={14} /> Sentinela · Sites
         <span className="chip">{list.length}/3</span>
@@ -238,7 +238,7 @@ function Monitors() {
       <h3 id="c-mon">Verificação HTTP a cada 5 minutos</h3>
       <p>Só HTTPS, só os endereços que você cadastrar. Alerta depois de 3 falhas seguidas. Uma origem de medição não representa todos os visitantes.</p>
       {list.length > 0 && (
-        <ul className="list" style={{ marginBottom: 12 }}>
+        <ul className="list mb-12">
           {list.map((m) => (
             <li key={m.id} className="mail">
               <span className="subj">{m.label}</span>
@@ -259,21 +259,21 @@ function Monitors() {
           void add();
         }}
       >
-        <label className="field" style={{ flex: "2 1 220px" }}>
+        <label className="field flex-2-220">
           Endereço (https://)
           <input type="url" required placeholder="https://seusite.vercel.app" value={url} onChange={(e) => setUrl(e.target.value)} disabled={demo || list.length >= 3} />
         </label>
-        <label className="field" style={{ flex: "1 1 140px" }}>
+        <label className="field flex-1-140">
           Nome
           <input type="text" placeholder="Meu site" value={label} onChange={(e) => setLabel(e.target.value)} disabled={demo || list.length >= 3} maxLength={60} />
         </label>
-        <button className="btn primary" type="submit" disabled={demo || list.length >= 3} style={{ alignSelf: "end" }}>
+        <button className="btn primary self-end" type="submit" disabled={demo || list.length >= 3}>
           Cadastrar
         </button>
       </form>
-      {demo && <p className="tiny" style={{ marginTop: 8 }}>Indisponível na demonstração.</p>}
+      {demo && <p className="tiny mt-8">Indisponível na demonstração.</p>}
       {msg && (
-        <p role="status" className={`chip ${msg.ok ? "ok" : "err"}`} style={{ marginTop: 8, whiteSpace: "normal" }}>
+        <p role="status" className={`chip ${msg.ok ? "ok" : "err"} mt-8 ws-normal`}>
           {msg.text}
         </p>
       )}
@@ -326,7 +326,7 @@ function ExtraAgents({ demo, cfgGoogle }: { demo: boolean; cfgGoogle: boolean })
   return (
     <>
       {cards.map((a) => (
-        <section key={a.id} className="card" style={{ marginTop: 16 }} aria-labelledby={`c-${a.id}`}>
+        <section key={a.id} className="card mt-16" aria-labelledby={`c-${a.id}`}>
           <div className="card-top">
             {a.name}
             <span className={`chip ${!a.enabled ? "" : a.lastError ? "warn" : a.lastTestAt ? "ok" : ""}`}>
@@ -337,7 +337,7 @@ function ExtraAgents({ demo, cfgGoogle }: { demo: boolean; cfgGoogle: boolean })
           <p>{a.description}</p>
           <SourceFailures raw={a.lastError} />
           {a.sources.length > 0 && (
-            <ul className="list" style={{ marginBottom: 12 }}>
+            <ul className="list mb-12">
               {a.sources.map((s) => (
                 <li key={s.id} className="mail">
                   <span className="subj">{s.label}</span>
@@ -355,7 +355,7 @@ function ExtraAgents({ demo, cfgGoogle }: { demo: boolean; cfgGoogle: boolean })
           {a.missing.length > 0 && (
             <p className="meta">
               {a.missing.map((m) => (
-                <span key={m} style={{ display: "block" }}>
+                <span className="block" key={m}>
                   {m}
                 </span>
               ))}
@@ -378,7 +378,7 @@ function ExtraAgents({ demo, cfgGoogle }: { demo: boolean; cfgGoogle: boolean })
             {demo && <span className="tiny">Indisponível na demonstração.</span>}
           </div>
           {msg?.id === a.id && (
-            <p role="status" className={`chip ${msg.ok ? "ok" : "err"}`} style={{ marginTop: 8, whiteSpace: "normal" }}>
+            <p role="status" className={`chip ${msg.ok ? "ok" : "err"} mt-8 ws-normal`}>
               {msg.text}
             </p>
           )}
@@ -427,15 +427,15 @@ function Providers({ demo }: { demo: boolean }) {
 
   return (
     <>
-      <h2 style={{ margin: "28px 0 8px", fontSize: 17 }}>Provedores de IA</h2>
-      <p className="meta" style={{ marginBottom: 12 }}>
+      <h2 className="section-h2">Provedores de IA</h2>
+      <p className="meta mb-12">
         Sem IA, o feed mostra fontes, assuntos e a classificação por regras, com “Resumo por IA pendente”. Nenhuma rota paga. A chave nunca é digitada aqui.
       </p>
       {list.map((p) => {
         const chip = providerChip(p, demo, Boolean(cfg?.ai), Boolean(cfg?.aiPrivate));
         const exhausted = p.quota && p.quota.calls >= p.quota.limit;
         return (
-          <section key={p.id} className="card" style={{ marginTop: 12 }} aria-labelledby={`p-${p.id}`}>
+          <section key={p.id} className="card mt-12" aria-labelledby={`p-${p.id}`}>
             <div className="card-top">
               {p.label}
               <span className={`chip ${chip.cls}`}>{chip.text}</span>
@@ -469,12 +469,12 @@ function Providers({ demo }: { demo: boolean }) {
               </button>
             </div>
             {cred === p.id && (
-              <p className="meta" style={{ marginTop: 8 }}>
+              <p className="meta mt-8">
                 A chave não é digitada no app nem exibida. No terminal: <code>npm run setup:cloud</code> (docs/ACOES_DO_JOAO.md, grupo F).
               </p>
             )}
             {msg?.id === p.id && (
-              <p role="status" className={`chip ${msg.ok ? "ok" : "err"}`} style={{ marginTop: 8, whiteSpace: "normal" }}>
+              <p role="status" className={`chip ${msg.ok ? "ok" : "err"} mt-8 ws-normal`}>
                 {msg.text}
               </p>
             )}
@@ -533,7 +533,7 @@ function PacoteCard() {
   const limit = app.snap?.shipments.tracking.limit ?? 1000;
   const label = state === "ligado" ? "Ligado" : state === "sem_chave" ? "Sem chave" : state === "termos" ? "Termos não confirmados" : "Desligado";
   return (
-    <section className="card" style={{ marginTop: 16 }} aria-labelledby="c-pacote">
+    <section className="card mt-16" aria-labelledby="c-pacote">
       <div className="card-top">
         Entregas · PacoteVício
         <span className={`chip ${state === "ligado" ? "ok" : ""}`}>{app.mode === "demo" ? "Desligado (demonstração)" : label}</span>
