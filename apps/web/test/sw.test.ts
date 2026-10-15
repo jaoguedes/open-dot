@@ -24,3 +24,20 @@ test("asset html de um arquivo que não existe vira 404", async () => {
   const js = await assetOrReal404(new Response("export {}", { status: 200, headers: { "content-type": "text/javascript" } }));
   assert.equal(js.status, 200);
 });
+
+test("fontes, sons e arquivos do Dot inexistentes são 404, não index.html", async () => {
+  const { default: worker } = await import("../../worker/src/index.ts");
+  const assets = { fetch: async () => new Response("<!doctype html>", { status: 200, headers: { "content-type": "text/html" } }) };
+  for (const p of ["/fonts/nao-existe.woff2", "/sounds/nao-existe.mp3", "/dot/nao-existe.glb", "/assets/x.js", "/chunks/y.js"]) {
+    const r = await worker.fetch(new Request(`https://exemplo.invalid${p}`), { ASSETS: assets });
+    assert.equal(r.status, 404, p);
+  }
+  const page = await worker.fetch(new Request("https://exemplo.invalid/meu-dia"), { ASSETS: assets });
+  assert.equal(page.status, 200);
+});
+
+test("wrangler manda esses prefixos ao Worker antes do fallback de SPA", async () => {
+  const { readFileSync } = await import("node:fs");
+  const text = readFileSync(new URL("../../../wrangler.jsonc", import.meta.url), "utf8");
+  for (const p of ["/api/*", "/assets/*", "/chunks/*", "/fonts/*", "/sounds/*", "/dot/*"]) assert.ok(text.includes(`"${p}"`), p);
+});

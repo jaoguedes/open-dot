@@ -60,7 +60,7 @@ export default {
       }
       return handleApi(ctx, req);
     }
-    if ((url.pathname.startsWith("/assets/") || url.pathname.startsWith("/chunks/")) && bindings.ASSETS) {
+    if (/^\/(assets|chunks|fonts|sounds|dot)\//.test(url.pathname) && bindings.ASSETS) {
       return assetOrReal404(await bindings.ASSETS.fetch(req));
     }
     if (bindings.ASSETS) return bindings.ASSETS.fetch(req);
