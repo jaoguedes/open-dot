@@ -2,6 +2,7 @@
  * Assistente de configuração da nuvem (rode no SEU terminal, nunca cole segredos no chat):
  *   npm run setup:cloud
  *   npm run setup:cloud -- --from-dev-vars
+ *   npm run setup:cloud -- --from-dev-vars --publish
  *
  * 1. Confere o login no Cloudflare (`wrangler whoami`; se faltar, abre `wrangler login`).
  * 2. Pede os valores com entrada oculta — ou lê `.dev.vars` com `--from-dev-vars` (nunca imprime valores).
@@ -44,7 +45,11 @@ function ask(question: string, hidden = false): Promise<string> {
 }
 
 function npx(args: string[], input?: string) {
-  return spawnSync("npx", [...WRANGLER, ...args], { input, encoding: "utf8", stdio: input === undefined ? "inherit" : ["pipe", "inherit", "inherit"] });
+  return spawnSync("npx", [...WRANGLER, ...args], {
+    input,
+    encoding: "utf8",
+    stdio: input === undefined ? ["ignore", "inherit", "inherit"] : ["pipe", "inherit", "inherit"],
+  });
 }
 
 async function main() {
@@ -121,7 +126,7 @@ async function main() {
   console.log("\nTudo configurado. Redirect URI para cadastrar no Google:");
   console.log(`  ${origin}/api/oauth/google/callback\n`);
 
-  const go = await ask("Publicar agora no Cloudflare (workers.dev, plano Free)? [s/N] ");
+  const go = process.argv.includes("--publish") ? "s" : await ask("Publicar agora no Cloudflare (workers.dev, plano Free)? [s/N] ");
   if (go.toLowerCase() !== "s") {
     console.log("Não publiquei. Quando quiser: npm run worker:deploy");
     return;
