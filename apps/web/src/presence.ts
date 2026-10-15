@@ -1,4 +1,4 @@
-import { AGENTS, type AgentId, type AgentVisual, type SemanticState } from "@open-dot/core";
+import { explainError, AGENTS, type AgentId, type AgentVisual, type SemanticState } from "@open-dot/core";
 import type { FeedEntry, Monitor } from "./api.ts";
 
 export type PresenceTone = "need" | "error" | "working" | "idle" | "off";
@@ -113,4 +113,11 @@ export function islandLine(visual: AgentVisual): string {
   if (visual.semantic === "working" || visual.semantic === "thinking") return `${name} está lendo…`;
   if (visual.semantic === "success") return `${name} concluído`;
   return `${name} ${visual.label.toLowerCase()}`;
+}
+
+/** O `reason` do /api/status pode ser um código (`not_connected`); na tela vira a frase do dicionário. */
+export function islandReason(reason: string | null | undefined): string | null {
+  if (!reason) return null;
+  if (/^[a-z][a-z0-9_]*$/.test(reason)) return explainError(reason).frase;
+  return reason;
 }

@@ -9,19 +9,22 @@ import { api } from "./api.ts";
 import { Home } from "./views/Home.tsx";
 
 import { MyDay } from "./views/MyDay.tsx";
-import { Approval } from "./views/Approval.tsx";
-import { About } from "./views/About.tsx";
-import { Privacy } from "./views/Privacy.tsx";
 import { ContextPanel } from "./components/ContextPanel.tsx";
+import { NotificationBell } from "./components/NotificationCenter.tsx";
+import { useDialog } from "./components/useDialog.ts";
 
 // Telas menos visitadas carregam sob demanda (C5): a primeira tela baixa menos.
 const Entregas = lazy(() => import("./views/Entregas.tsx").then((m) => ({ default: m.Entregas })));
 const Routines = lazy(() => import("./views/Routines.tsx").then((m) => ({ default: m.Routines })));
 const Connections = lazy(() => import("./views/Connections.tsx").then((m) => ({ default: m.Connections })));
+const CommandPalette = lazy(() => import("./components/CommandPalette.tsx").then((m) => ({ default: m.CommandPalette })));
+const Approval = lazy(() => import("./views/Approval.tsx").then((m) => ({ default: m.Approval })));
+const About = lazy(() => import("./views/About.tsx").then((m) => ({ default: m.About })));
+const Privacy = lazy(() => import("./views/Privacy.tsx").then((m) => ({ default: m.Privacy })));
 const Mascot = lazy(() => import("./views/Mascot.tsx").then((m) => ({ default: m.Mascot })));
 import { DotTrouble, type TroubleInfo } from "./components/DotTrouble.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
-import { agentConnected, agentPresence, islandLine, sortAgents } from "./presence.ts";
+import { agentConnected, agentPresence, islandLine, islandReason, sortAgents } from "./presence.ts";
 
 function isMyDayPath(path: string): boolean {
   return path === "/" || path === "/meu-dia";
@@ -70,6 +73,13 @@ interface NavDef {
   label: string;
   icon: IconName;
 }
+const PALETTE_DESTINATIONS = [
+  { label: "Conversa com o Dot", path: "/agente/dot" },
+  { label: "Meu dia", path: "/meu-dia" },
+  { label: "Rotinas", path: "/rotinas" },
+  { label: "Conexões", path: "/conexoes" },
+  { label: "Mascote e aparência", path: "/mascote" },
+];
 const NAV: NavDef[] = [
   { path: "/meu-dia", label: "Meu dia", icon: "home" },
   { path: "/rotinas", label: "Rotinas", icon: "clock" },
@@ -123,7 +133,11 @@ export function App() {
 
   const splash = useSplash(app.mode === "loading" && !isPublicPath(app.path), app.reducedMotion);
   if (isPublicPath(app.path)) {
-    return <PublicShell path={app.path}>{app.path === "/privacidade" ? <Privacy /> : <About />}</PublicShell>;
+    return (
+      <PublicShell path={app.path}>
+        <Suspense fallback={<p className="meta" role="status">Carregando…</p>}>{app.path === "/privacidade" ? <Privacy /> : <About />}</Suspense>
+      </PublicShell>
+    );
   }
   if (app.mode === "loading" && splash.show) {
     return <SplashScreen fading={splash.fading} reducedMotion={app.reducedMotion} />;
@@ -132,7 +146,7 @@ export function App() {
   if (app.mode === "loading") return <div className="boot-blank" aria-busy="true" />;
   if (app.mode === "unreachable") {
     return (
-      <main className="reading" style={{ padding: 24 }}>
+      <main className="reading pad-24">
         <DotTrouble
           info={{ code: "offline", route: app.path }}
           reducedMotion={app.reducedMotion}
@@ -215,7 +229,7 @@ export function App() {
       <ForcedBoom />
       <div className="app">
         {menuOpen && <div className="scrim" onClick={() => setMenuOpen(false)} />}
-        <Sidebar open={menuOpen} go={go} current={app.path} />
+        <Sidebar open={menuOpen} go={go} current={app.path} onClose={() => setMenuOpen(false)} />
         <div className="main">
           <div>
             {app.mode === "demo" && (
@@ -263,9 +277,7 @@ export function App() {
                     <Icon name="panel" />
                   </button>
                 )}
-                <button className="icon-btn" aria-label="Notificações" type="button">
-                  <Icon name="bell" />
-                </button>
+                <NotificationBell go={go} />
                 <ThemeButton />
               </div>
             </header>
@@ -289,7 +301,11 @@ export function App() {
         </div>
       </div>
       {!hideDock && <Dock go={go} current={app.path} onAsk={() => setPalette(true)} />}
-      {palette && <Palette onClose={() => setPalette(false)} go={go} />}
+      {palette && (
+        <Suspense fallback={null}>
+          <CommandPalette onClose={() => setPalette(false)} go={go} destinations={PALETTE_DESTINATIONS} agents={LIST_AGENTS} />
+        </Suspense>
+      )}
       <div className="sr-only" aria-live="polite">
         {app.announcement}
       </div>
@@ -334,8 +350,11 @@ function AgentRail({ current, go }: { current: AgentId; go: (p: string) => void 
   );
 }
 
-function Sidebar({ open, go, current }: { open: boolean; go: (p: string) => void; current: string }) {
+function Sidebar({ open, go, current, onClose }: { open: boolean; go: (p: string) => void; current: string; onClose: () => void }) {
   const app = useApp();
+  const navRef = useRef<HTMLElement>(null);
+  // No celular a barra vira gaveta: modal enquanto aberta (D4).
+  useDialog(open, navRef, onClose);
   const pending = app.snap?.feed.filter((f) => f.kind !== "notice" && f.kind !== "file_organized").length ?? 0;
   const usage = app.snap?.usage;
   const pct = usage ? Math.min(100, Math.round((usage.calls / Math.max(1, usage.limits.calls)) * 100)) : 0;
@@ -345,7 +364,7 @@ function Sidebar({ open, go, current }: { open: boolean; go: (p: string) => void
     agentPresence(a, app.visualFor(a), app.snap?.feed ?? [], app.snap?.monitors ?? [], { connected: agentConnected(a, facts), pendingShipments: waiting });
   const ordered = sortAgents(LIST_AGENTS, presenceOf);
   return (
-    <nav className={`sidebar ${open ? "open" : ""}`} aria-label="Navegação principal">
+    <nav ref={navRef} className={`sidebar ${open ? "open" : ""}`} aria-label="Navegação principal" aria-modal={open ? true : undefined} role={open ? "dialog" : undefined}>
       <a className="brand" href="/meu-dia" onClick={(e) => (e.preventDefault(), go("/meu-dia"))}>
         <AgentDot visual={app.visualFor("dot")} accessory="none" size={30} animate={false} reducedMotion={app.reducedMotion} label="Open Dot" />
         <span className="od-wordmark"><span>open</span><b>dot</b><span className="od-wordmark-dot" /></span>
@@ -379,14 +398,14 @@ function Sidebar({ open, go, current }: { open: boolean; go: (p: string) => void
       </div>
       <div className="sidebar-foot">
         <div>
-          <div className="tiny" style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="tiny row-between">
             <span>IA hoje{app.mode === "demo" ? " · exemplo" : ""}</span>
             <span className="mono">{usage ? `${usage.calls} / ${usage.limits.calls}` : "—"}</span>
           </div>
           <div className="meter" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Chamadas de IA usadas hoje">
             <i style={{ width: `${pct}%` }} />
           </div>
-          <div className="tiny" style={{ marginTop: 6 }}>
+          <div className="tiny mt-6">
             Custo R$ 0. {usage && !usage.aiConfigured ? "Resumos por regras." : "Sem cobrança extra."}
           </div>
         </div>
@@ -422,16 +441,16 @@ function NameLine() {
   if (app.mode !== "live") {
     return (
       <div className="tiny">
-        <div style={{ color: "var(--text)", fontWeight: 500 }}>{shown}</div>
+        <div className="text-strong">{shown}</div>
         Demonstração
       </div>
     );
   }
   if (!editing) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div className="tiny" style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ color: "var(--text)", fontWeight: 500 }}>{shown}</div>
+      <div className="row-center-8">
+        <div className="tiny grow-min0">
+          <div className="text-strong">{shown}</div>
           Espaço pessoal
         </div>
         <button className="btn ghost" type="button" onClick={() => (setValue(shown), setError(null), setEditing(true))}>
@@ -517,8 +536,17 @@ function Island({ go }: { go: (p: string) => void }) {
   }, [app]);
   const shown = app.activity ?? dom;
   const digest = app.snap?.feed.find((f) => f.kind === "email_digest");
-      const line1 = islandLine(shown);
-      const line2 = shown.reason ?? (digest ? `${digest.body.counts?.important ?? 0} mensagens desde as 17h` : "Nada pendente agora");
+  const line1 = islandLine(shown);
+  const line2 = islandReason(shown.reason) ?? (digest ? `${digest.body.counts?.important ?? 0} mensagens desde as 17h` : "Nada pendente agora");
+  // A ilha não é região viva: só erro e "precisa de você" são anunciados, uma vez por mudança (D4).
+  const spoken = useRef<string>("");
+  const { announce } = app;
+  useEffect(() => {
+    const key = `${shown.agentId}:${shown.semantic}`;
+    const important = shown.semantic === "error" || shown.semantic === "waiting";
+    if (important && spoken.current !== key) announce(`${line1}. ${line2}`);
+    spoken.current = key;
+  }, [shown.agentId, shown.semantic, line1, line2, announce]);
   return (
     <aside className="island" aria-label="Ilha do Dot">
       <AgentDot
@@ -529,7 +557,7 @@ function Island({ go }: { go: (p: string) => void }) {
         interactive
         onAffection={(r) => r === "suppressed" && app.announce("Carinho pausado: há algo que precisa da sua atenção.")}
       />
-      <button type="button" className="txt" role="status" onClick={() => go("/agente/dot")} aria-label="Abrir conversa com o Dot">
+      <button type="button" className="txt" aria-live="off" onClick={() => go("/agente/dot")} aria-label={`${line1}. ${line2}. Abrir conversa com o Dot`}>
         <span>{line1}</span>
         <span>{line2}</span>
       </button>
@@ -542,35 +570,6 @@ function ForcedBoom() {
     throw new Error("token=segredo-teste senha=abc pessoa@example.com");
   }
   return null;
-}
-
-function Palette({ onClose, go }: { onClose: () => void; go: (p: string) => void }) {
-  const [q, setQ] = useState("");
-  const input = useRef<HTMLInputElement>(null);
-  useEffect(() => input.current?.focus(), []);
-  const items = [
-    { label: "Conversa com o Dot", path: "/agente/dot" },
-    ...NAV.map((n) => ({ label: n.label, path: n.path })),
-    { label: "Mascote & aparência", path: "/mascote" },
-    ...SIDEBAR_AGENTS.filter((a) => a !== "dot").map((a) => ({ label: `Agente ${AGENTS[a].name}`, path: `/agente/${a}` })),
-  ].filter((i) => i.label.toLowerCase().includes(q.toLowerCase()));
-  return (
-    <div className="scrim" onClick={onClose} style={{ display: "grid", placeItems: "start center", paddingTop: "12vh" }}>
-      <div role="dialog" aria-modal="true" aria-label="Buscar ou ir para" className="palette" onClick={(e) => e.stopPropagation()}>
-        <input ref={input} type="text" placeholder="Ir para…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Ir para" onKeyDown={(e) => e.key === "Enter" && items[0] && (go(items[0].path), onClose())} />
-        <ul className="list" style={{ marginTop: 8 }}>
-          {items.map((i) => (
-            <li key={i.path}>
-              <button className="nav-item" onClick={() => (go(i.path), onClose())}>
-                <Icon name="arrow" size={14} /> {i.label}
-              </button>
-            </li>
-          ))}
-          {!items.length && <li className="meta" style={{ padding: 8 }}>Nada encontrado.</li>}
-        </ul>
-      </div>
-    </div>
-  );
 }
 
 function Login() {
@@ -589,8 +588,8 @@ function Login() {
     permissao_gsc_negada: "O Google não concedeu a leitura do Search Console. Nada foi conectado.",
   };
   return (
-    <main style={{ display: "grid", placeItems: "center", minHeight: "100%", padding: 16 }}>
-      <div style={{ width: "min(400px, 100%)", display: "flex", flexDirection: "column", gap: 16, alignItems: "center", textAlign: "center" }}>
+    <main className="center-screen">
+      <div className="login-col">
         <AgentDot visual={app.visualFor("dot")} accessory="none" size={120} reducedMotion={app.reducedMotion} label="Dot" />
         <h1>Open Dot</h1>
         <p className="meta">Seu contexto. Um companheiro. Entre para ver suas revisões.</p>
@@ -654,8 +653,8 @@ function PublicShell({ path, children }: { path: string; children: ReactNode }) 
 function Setup() {
   const app = useApp();
   return (
-    <main style={{ display: "grid", placeItems: "center", minHeight: "100%", padding: 16 }}>
-      <div className="state" style={{ maxWidth: 480 }}>
+    <main className="center-screen">
+      <div className="state maxw-480">
         <h2>Configuração incompleta</h2>
         <p>O servidor está rodando, mas faltam variáveis privadas. Nenhum valor é mostrado aqui, só os nomes:</p>
         <code>{app.setupMissing.join(", ") || "—"}</code>

@@ -1,3 +1,6 @@
+import { useRef } from "react";
+import { useDialog } from "./useDialog.ts";
+import { islandReason } from "../presence.ts";
 import type { AgentId } from "@open-dot/core";
 import { useApp } from "../store.tsx";
 import { AgentDot } from "../dot/AgentDot.tsx";
@@ -6,6 +9,10 @@ import { fmtTime, RUN_LABEL } from "../format.ts";
 
 export function ContextPanel({ open, onClose, agentId }: { open: boolean; onClose: () => void; agentId: AgentId }) {
   const app = useApp();
+  const ref = useRef<HTMLElement>(null);
+  // Abaixo de 1200 px o painel cobre a tela: vira modal (foco preso, fundo inert, Esc fecha).
+  const overlay = open && typeof matchMedia !== "undefined" && matchMedia("(max-width: 1199px)").matches;
+  useDialog(overlay, ref, onClose);
   const snap = app.snap;
   const visual = app.visualFor(agentId);
   const routine = snap?.routines.find((r) => r.kind === "email_review");
@@ -13,16 +20,16 @@ export function ContextPanel({ open, onClose, agentId }: { open: boolean; onClos
   const gmail = snap?.connections.find((c) => c.provider === "gmail" && c.status !== "disabled");
   const demo = app.mode === "demo";
   return (
-    <aside className={`context ${open ? "open" : ""}`} aria-label="Contexto">
+    <aside ref={ref} className={`context ${open ? "open" : ""}`} aria-label="Contexto" role={overlay ? "dialog" : undefined} aria-modal={overlay ? true : undefined}>
       {open && (
-        <button className="icon-btn" aria-label="Fechar contexto" onClick={onClose} style={{ alignSelf: "flex-end" }}>
+        <button className="icon-btn ctx-close" aria-label="Fechar contexto" onClick={onClose}>
           <Icon name="x" />
         </button>
       )}
       <div className="ctx-dot">
         <AgentDot visual={visual} accessory={app.accessoryFor(agentId)} size={130} reducedMotion={app.reducedMotion} interactive />
-        <h2 style={{ marginTop: 8 }}>{visual.semantic === "idle" ? "Tudo no seu tempo." : visual.label}</h2>
-        <p className="meta">{visual.reason ?? "Eu organizo. Você decide."}</p>
+        <h2 className="ctx-title">{visual.semantic === "idle" ? "Tudo no seu tempo." : visual.label}</h2>
+        <p className="meta">{islandReason(visual.reason) ?? "Eu organizo. Você decide."}</p>
       </div>
       <section className="ctx-section">
         <h2>Rotina de hoje</h2>
@@ -44,7 +51,7 @@ export function ContextPanel({ open, onClose, agentId }: { open: boolean; onClos
         ) : (
           <p className="meta">Sem rotina ativa.</p>
         )}
-        <a href="/rotinas" className="btn ghost" style={{ marginTop: 8, paddingLeft: 0 }} onClick={(e) => (e.preventDefault(), app.navigate("/rotinas"))}>
+        <a href="/rotinas" className="btn ghost mt-8 pl-0" onClick={(e) => (e.preventDefault(), app.navigate("/rotinas"))}>
           Ajustar rotina <Icon name="arrow" size={14} />
         </a>
       </section>
