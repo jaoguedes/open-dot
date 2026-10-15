@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AGENTS, SEMANTIC_PRIORITY, toVisual, type AgentId } from "@open-dot/core";
+import { AGENTS, SEMANTIC_PRIORITY, toVisual, versionChanged, type AgentId } from "@open-dot/core";
 import { useApp } from "./store.tsx";
 import { Icon, type IconName } from "./components/Icons.tsx";
 import { AgentDot } from "./dot/AgentDot.tsx";
@@ -15,6 +15,7 @@ import { Approval } from "./views/Approval.tsx";
 import { About } from "./views/About.tsx";
 import { Privacy } from "./views/Privacy.tsx";
 import { ContextPanel } from "./components/ContextPanel.tsx";
+import { DotTrouble, type TroubleInfo } from "./components/DotTrouble.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
 import { agentConnected, agentPresence, islandLine, sortAgents } from "./presence.ts";
 
@@ -66,6 +67,28 @@ export function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [ctxOpen, setCtxOpen] = useState(false);
   const [palette, setPalette] = useState(false);
+  const [update, setUpdate] = useState(false);
+  const [trouble, setTrouble] = useState<TroubleInfo | null>(null);
+  useEffect(() => {
+    const loaded = document.querySelector('meta[name="open-dot-build"]')?.getAttribute("content") ?? "";
+    const look = () => {
+      void api.version().then((v) => setUpdate(versionChanged(loaded, v.app))).catch(() => {});
+    };
+    look();
+    const onVis = () => {
+      if (document.visibilityState === "visible") look();
+    };
+    const onTrouble = (ev: Event) => {
+      const detail = (ev as CustomEvent<TroubleInfo>).detail;
+      if (detail?.code) setTrouble({ code: detail.code, route: location.pathname });
+    };
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("od-trouble", onTrouble);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("od-trouble", onTrouble);
+    };
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -150,6 +173,7 @@ export function App() {
       <a className="skip" href="#conteudo">
         Pular para o conteúdo
       </a>
+      <ForcedBoom />
       <div className="app">
         {menuOpen && <div className="scrim" onClick={() => setMenuOpen(false)} />}
         <Sidebar open={menuOpen} go={go} current={app.path} />
@@ -166,6 +190,13 @@ export function App() {
             {!app.online && (
               <div className="banner err" role="status">
                 <Icon name="alert" /> Você está offline. Mostrando os últimos dados carregados{app.lastLoadedAt ? ` (${fmtTime(new Date(app.lastLoadedAt).toISOString())})` : ""}.
+              </div>
+            )}
+            {trouble && <DotTrouble info={trouble} reducedMotion={app.reducedMotion} onRetry={() => { setTrouble(null); void app.refresh(); }} />}
+            {update && (
+              <div className="banner" role="status">
+                Nova versão disponível
+                <button className="btn" type="button" onClick={() => location.reload()}>Atualizar</button>
               </div>
             )}
             {app.online && app.failures.length > 0 && (
@@ -420,6 +451,13 @@ function Island({ go }: { go: (p: string) => void }) {
   );
 }
 
+function ForcedBoom() {
+  if (new URLSearchParams(location.search).get("forcar") === "render") {
+    throw new Error("token=segredo-teste senha=abc pessoa@example.com");
+  }
+  return null;
+}
+
 function Palette({ onClose, go }: { onClose: () => void; go: (p: string) => void }) {
   const [q, setQ] = useState("");
   const input = useRef<HTMLInputElement>(null);
@@ -432,7 +470,7 @@ function Palette({ onClose, go }: { onClose: () => void; go: (p: string) => void
   ].filter((i) => i.label.toLowerCase().includes(q.toLowerCase()));
   return (
     <div className="scrim" onClick={onClose} style={{ display: "grid", placeItems: "start center", paddingTop: "12vh" }}>
-      <div role="dialog" aria-modal="true" aria-label="Buscar ou ir para" className="island" style={{ position: "static", transform: "none", flexDirection: "column", alignItems: "stretch", width: "min(520px, calc(100vw - 32px))", padding: 12 }} onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label="Buscar ou ir para" className="palette" onClick={(e) => e.stopPropagation()}>
         <input ref={input} type="text" placeholder="Ir para…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Ir para" onKeyDown={(e) => e.key === "Enter" && items[0] && (go(items[0].path), onClose())} />
         <ul className="list" style={{ marginTop: 8 }}>
           {items.map((i) => (
