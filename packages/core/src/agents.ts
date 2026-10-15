@@ -190,3 +190,63 @@ export function authorizeTool(req: ToolRequest): ToolDecision {
 function isToolName(t: string): t is ToolName {
   return Object.prototype.hasOwnProperty.call(TOOL_KIND, t);
 }
+
+// ------------------------------------------------------------------ Registro único (E1)
+
+/**
+ * Lugares da interface onde um agente aparece. Barra lateral, faixa, busca, pílulas,
+ * a ilha, o /api/status e a tela Mascote derivam todos daqui (antes eram listas soltas).
+ */
+export type AgentPlace =
+  | "list" // barra lateral, faixa de agentes e busca
+  | "pills" // pílulas do Meu dia
+  | "mood" // agentes que podem mudar o humor do Dot grande do Meu dia
+  | "presence" // agentes que disputam a ilha
+  | "status" // agentes com estado no /api/status
+  | "mascot"; // tela Mascote
+
+export interface AgentEntry {
+  id: string;
+  name: string;
+  description: string;
+  tools: readonly string[];
+  /** Cor de arte (sRGB), a mesma do corpo do Dot. */
+  color: string;
+  /** Acessório padrão (rosto/peça). */
+  accessory: string;
+  route: string;
+  places: readonly AgentPlace[];
+}
+
+const PLACES: Record<AgentId, readonly AgentPlace[]> = {
+  dot: ["presence", "status", "mascot"],
+  correio: ["list", "pills", "mood", "presence", "status", "mascot"],
+  codigo: ["list", "pills", "mood", "presence", "status", "mascot"],
+  sentinela: ["list", "pills", "mood", "presence", "status", "mascot"],
+  foco: ["list", "mascot"],
+  noticias: ["list", "pills", "mood", "presence", "status", "mascot"],
+  mercado: ["list", "pills", "mood", "presence", "status", "mascot"],
+  marketing: ["list", "pills", "mood", "presence", "status", "mascot"],
+  entregas: ["list", "pills", "presence", "status", "mascot"],
+  social: [],
+};
+
+const ORDER: readonly AgentId[] = ["dot", "correio", "codigo", "sentinela", "foco", "noticias", "mercado", "marketing", "entregas", "social"];
+
+export function buildRegistry(colors: Record<AgentId, string>, accessories: Record<AgentId, string>): AgentEntry[] {
+  return ORDER.map((id) => ({
+    id,
+    name: AGENTS[id].name,
+    description: AGENTS[id].description,
+    tools: AGENTS[id].tools,
+    color: colors[id],
+    accessory: accessories[id],
+    route: `/agente/${id}`,
+    places: PLACES[id],
+  }));
+}
+
+/** Ids, na ordem do registro, dos agentes que aparecem num lugar. */
+export function agentsIn<T extends string = AgentId>(place: AgentPlace, registry: readonly AgentEntry[]): T[] {
+  return registry.filter((a) => a.places.includes(place)).map((a) => a.id as T);
+}

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AGENTS, GMAIL_CAN_SEND, selfHealthUrl, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, countsAsAgentError, displayNameFor, hashProposal, isValidTimeZone, localParts, nextSlot, parseHHMM, providerCards, renderUntrusted, runFictitiousProviderTest, sanitizeUntrusted, sha256Hex, toVisual, zonedTimeToUtc, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
+import { AGENTS, agentsInPlace, GMAIL_CAN_SEND, selfHealthUrl, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, countsAsAgentError, displayNameFor, hashProposal, isValidTimeZone, localParts, nextSlot, parseHHMM, providerCards, renderUntrusted, runFictitiousProviderTest, sanitizeUntrusted, sha256Hex, toVisual, zonedTimeToUtc, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
 import { GMAIL_READ_SCOPES, GSC_READ_SCOPES, LOGIN_SCOPES, authUrl, exchangeCode, readIdToken, revoke } from "@open-dot/connectors/google.ts";
 import { getProfile } from "@open-dot/connectors/gmail.ts";
 import { normalizeEvent, verifySignature, isNewer } from "@open-dot/connectors/github.ts";
@@ -640,7 +640,7 @@ route("GET", "/api/status", { auth: true }, async (ctx, _r, _p, ownerId) => {
   const conns = await repo.listConnections(ctx.db, ownerId!);
   const shipmentCount = await repo.countShipments(ctx.db, ownerId!);
   const trackingOn = configured(ctx.env).tracking;
-  const agents: AgentId[] = ["dot", "correio", "codigo", "sentinela", "noticias", "mercado", "marketing", "entregas"];
+  const agents: AgentId[] = agentsInPlace("status");
   const out = agents.map((a) => {
     let semantic: SemanticState = "idle";
     let reason: string | null = null;
@@ -690,6 +690,18 @@ route("POST", "/api/feed/:id/snooze", { auth: true }, async (ctx, _req, p, owner
 
 const DecisionInput = z.object({ decision: z.enum(["approve", "reject"]), expectedVersion: z.number().int(), payloadHash: z.string().length(64) });
 
+/** Recusa de aprovação com a causa em português (E3). Nada foi enviado. */
+function approvalProblem(r: "changed" | "decided" | "expired" | "not_found"): Response {
+  const map = {
+    changed: { status: 409, code: "approval_changed", message: "O conteúdo mudou. Aprove de novo." },
+    decided: { status: 409, code: "approval_decided", message: "Esta aprovação já foi decidida." },
+    expired: { status: 409, code: "approval_expired", message: "Esta aprovação expirou. Peça de novo." },
+    not_found: { status: 404, code: "not_found", message: "Aprovação não encontrada." },
+  } as const;
+  const m = map[r];
+  return json({ result: r === "not_found" ? "not_found" : "conflict", cause: r, executed: false, sent: false, error: { code: m.code, message: m.message } }, m.status);
+}
+
 route("GET", "/api/approvals", { auth: true }, async (ctx, _r, _p, ownerId) => json({ approvals: await repo.listApprovals(ctx.db, ctx.keys, ownerId!), canSend: GMAIL_CAN_SEND }));
 
 const EditInput = z.object({
@@ -709,20 +721,20 @@ route("POST", "/api/approvals/:id/edit", { auth: true }, async (ctx, req, p, own
   const proposal = body.proposal as ActionProposal;
   const payloadHash = await hashProposal(proposal);
   const r = await repo.editApproval(ctx.db, ctx.keys, { ownerId: ownerId!, id: p.id!, proposal, payloadHash, expectedVersion: body.expectedVersion, now: ctx.now() });
-  const status = r === "ok" ? 200 : r === "not_found" ? 404 : 409;
   await repo.audit(ctx.db, { ownerId, actor: "user", action: "approval_edit", target: p.id!, outcome: r, now: ctx.now() });
-  return json({ result: r, payloadHash: r === "ok" ? payloadHash : undefined, version: r === "ok" ? body.expectedVersion + 1 : undefined }, status);
+  if (r !== "ok") return approvalProblem(r);
+  return json({ result: r, payloadHash, version: body.expectedVersion + 1 });
 });
 
 route("POST", "/api/approvals/:id/decision", { auth: true }, async (ctx, req, p, ownerId) => {
   const body = DecisionInput.parse(await req.json());
   const r = await repo.decideApproval(ctx.db, { ownerId: ownerId!, id: p.id!, ...body, now: ctx.now() });
-  const status = r === "ok" ? 200 : r === "not_found" ? 404 : 409;
   await repo.audit(ctx.db, { ownerId, actor: "user", action: `approval_${body.decision}`, target: p.id!, outcome: r, now: ctx.now() });
-  if (body.decision === "approve" && r === "ok") {
-    return json({ result: r, executed: false, sent: false, note: GMAIL_CAN_SEND ? null : "Envio ainda não habilitado. O Gmail continua só leitura." }, status);
+  if (r !== "ok") return approvalProblem(r);
+  if (body.decision === "approve") {
+    return json({ result: r, executed: false, sent: false, note: GMAIL_CAN_SEND ? null : "Envio ainda não habilitado. O Gmail continua só leitura." });
   }
-  return json({ result: r, executed: false, sent: false }, status);
+  return json({ result: r, executed: false, sent: false });
 });
 
 // ---------------------------------------------------------------- Absorção de arquivos
