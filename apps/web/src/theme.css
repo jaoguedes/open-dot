@@ -63,14 +63,16 @@
   --text-2: #9aa0ae;
   --text-3: #80869a;
   --border: #1a1d24;
-  --accent: #3361ff;
-  --accent-soft: rgba(51, 97, 255, 0.16);
-  --on-accent: #ffffff;
-  --link: #6e95ff;
+  /* Rodada 4: acento amarelo do ícone. Texto sobre amarelo é sempre --on-accent. */
+  --accent: #ffbc03;
+  --accent-soft: rgba(255, 188, 3, 0.14);
+  --on-accent: #1a1400;
+  --link: #ffd24a;
   --ok: #2bd47f;
-  --warn: #ffb627;
+  /* "Precisa de você" e alertas: laranja, nunca o amarelo do acento. */
+  --warn: #ff7a2f;
   --err: #ff4d6a;
-  --info: #5b8cff;
+  --info: #ffd24a;
   --muted: #6b7181;
   --agent-correio: #5b8cff;
   --agent-codigo: #8c6bff;
@@ -83,14 +85,16 @@
   --glass: #000000;
   --glass-border: #22252e;
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-  --focus: #8ea6ff;
+  --focus: #ffbc03;
+  /* Vidro da caixa de perguntas e do dock: opacidade mínima que mantém 4,5:1 no pior fundo. */
+  --glass-alpha: 0.88;
   --hero: none;
   --btn-primary-bg: #f3f4f7;
   --btn-primary-fg: #0b0c10;
   --glow-mail: radial-gradient(closest-side, rgba(54, 216, 244, 0.45), rgba(63, 123, 255, 0.25) 50%, transparent);
-  --glow-need: radial-gradient(closest-side, rgba(255, 182, 39, 0.42), rgba(255, 111, 163, 0.2) 55%, transparent);
+  --glow-need: radial-gradient(closest-side, rgba(255, 122, 47, 0.42), rgba(255, 111, 163, 0.2) 55%, transparent);
   --glow-site: radial-gradient(closest-side, rgba(69, 226, 190, 0.4), rgba(140, 107, 255, 0.2) 55%, transparent);
-  --wordmark-dot: linear-gradient(135deg, #36d8f4, #3f7bff 50%, #9e83ff);
+  --wordmark-dot: linear-gradient(135deg, #ffd24a, #ffbc03 50%, #ff9f1a);
   --need-border: #2a2414;
   color-scheme: dark;
 }
@@ -103,19 +107,20 @@
   --text-2: #5c6370;
   --text-3: #5f6673;
   --border: #d8dce6;
-  --accent: #3361ff;
-  --accent-soft: rgba(51, 97, 255, 0.1);
-  --on-accent: #ffffff;
-  --link: #2f56e0;
+  --accent: #ffbc03;
+  --accent-soft: rgba(255, 188, 3, 0.24);
+  --on-accent: #1a1400;
+  /* No claro, amarelo nunca é cor de texto: links e destaques usam --link. */
+  --link: #7a5300;
   --ok: #117044;
-  --warn: #8a5c00;
+  --warn: #a84300;
   --err: #c22745;
-  --info: #3361ff;
+  --info: #7a5300;
   --muted: #5c6370;
   --glass: #ffffff;
   --glass-border: #d8dce6;
   --shadow: 0 8px 28px rgba(18, 20, 26, 0.08);
-  --focus: #2748c7;
+  --focus: #7a5300;
   --btn-primary-bg: #12141a;
   --btn-primary-fg: #f3f4f7;
   --need-border: #e8d7a8;

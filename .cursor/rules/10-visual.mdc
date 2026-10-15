@@ -6,7 +6,7 @@ alwaysApply: false
 # Direção visual (D-015 · telas em docs/referencias/design/)
 
 - Tema **escuro como padrão**: fundo #050608, superfícies #0E1014, borda #1A1D24, texto #F3F4F7 / #9AA0AE / #6B7181.
-- Estado: ação #3361FF, âmbar #FFB627 = precisa do seu OK, erro #FF4D6A, pronto #2BD47F.
+- Estado (rodada 4): acento amarelo #FFBC03 com texto #1A1400 por cima (nunca branco); laranja #FF7A2F (claro #A84300) = precisa do seu OK; erro #FF4D6A; pronto #2BD47F. No claro, links #7A5300. Fundo #050608. Vidro só na caixa de perguntas e no dock.
 - Agentes: Correio #5B8CFF, Código #8C6BFF, Sentinela #45E2BE, Foco #A98BFF.
 - Tipografia local (sem CDN): Inter na interface (títulos 600, tracking negativo); Instrument Serif itálico só na segunda linha da saudação; JetBrains Mono em rótulos, horários e fontes.
 - Navegação em pílula com o item ativo azul. Botão principal branco em pílula; secundário escuro com borda. Cartões 20–22 px. Brilho radial só nos 3 cartões de resumo. Ilha preta do Dot no topo.

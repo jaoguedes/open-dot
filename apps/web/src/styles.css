@@ -557,7 +557,7 @@ label.field {
 }
 details > summary {
   cursor: pointer;
-  color: var(--accent);
+  color: var(--link);
   font-size: 14px;
   list-style: none;
   padding: 6px 0;
@@ -1890,8 +1890,8 @@ details > summary::-webkit-details-marker {
   margin: 6px 0;
 }
 .send-btn {
-  background: var(--text);
-  color: var(--bg);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 .composer-hint {
   grid-column: 1 / -1;
@@ -1946,7 +1946,7 @@ details > summary::-webkit-details-marker {
 }
 .palette-item.on {
   background: var(--surface-2);
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus);
   outline-offset: -2px;
 }
 .palette-empty {
@@ -2274,3 +2274,66 @@ a.source-pill {
   min-height: 44px;
 }
 p a:not(.btn), li a:not(.btn):not(.nav-item):not(.source-pill) { text-decoration: underline; text-underline-offset: 2px; }
+
+/* ---------------- Rodada 4: amarelo e vidro ---------------- */
+::selection {
+  background: #ffbc03;
+  color: #1a1400;
+}
+:root {
+  accent-color: var(--accent);
+}
+:focus-visible {
+  outline-color: var(--focus);
+}
+/* No claro, o amarelo preenchido tem 1,55:1 sobre o fundo: o contorno em --link garante que o
+   estado "selecionado" não dependa só da cor. */
+:root[data-theme="light"] .nav-item[aria-current="page"],
+:root[data-theme="light"] .agent-pill.on,
+:root[data-theme="light"] .dock-item.on,
+:root[data-theme="light"] .dock-icon[aria-current="page"],
+:root[data-theme="light"] .send-btn {
+  box-shadow: inset 0 0 0 1px var(--link);
+}
+
+/* Vidro: só a caixa "Pergunte ao Dot" e o dock (no máximo 2 camadas de desfoque por tela).
+   Opacidade em --glass-alpha (88%): o mínimo que mantém 4,5:1 com o corpo branco do Dot ou
+   texto escuro passando por baixo. Sem vidro em cartões, modais ou listas. */
+.composer,
+.dock {
+  background: color-mix(in srgb, var(--surface) calc(var(--glass-alpha) * 100%), transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid color-mix(in srgb, var(--text) 16%, transparent);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+.composer textarea::placeholder {
+  color: var(--text-2);
+  opacity: 1;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .composer,
+  .dock {
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .composer,
+  .dock {
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+:root[data-transparency="reduced"] .composer,
+:root[data-transparency="reduced"] .dock {
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@media (max-width: 759px) {
+  /* Com o teclado aberto (iOS), a caixa sobe a altura dele (--kb, ver keyboard-inset.ts). */
+  .composer {
+    bottom: calc(var(--dock) + 8px + var(--kb, 0px));
+  }
+}
