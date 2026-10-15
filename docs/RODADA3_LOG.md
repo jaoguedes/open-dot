@@ -194,3 +194,4 @@ Base conferida: `65c05bb`, árvore limpa, `npm run check` verde (249 testes), li
 - Reescrito de forma neutra: NOTICE e LICENCAS (só dependências reais), CHANGELOG (fase E: “Registro de agentes, fila de aprovações e sons”), DECISOES (D-014), prompts da rodada 3 e do visual, `dot_motor.html` (sem a tabela de comparação nem comentários de origem), `physics.ts`, README dos sons, `.cursor/rules/10-visual.mdc`.
 - Teste novo: `tests/sem-projeto-removido.test.ts` (o nome é montado por partes; exclui `package-lock.json`). Falhava antes (restava `physics.ts`) → passa.
 - Histórico do git não foi reescrito (decisão adiada para antes do open source). O app publicado muda (valores do motor), então vai no próximo deploy.
+- Publicado (parte 2): Worker `06234ec1-e640-4084-b501-51c8b478e0f7`, app `8fda6e7a44bd` (build de `ff86bb1`; worktree limpo com `npm ci` → `8fda6e7a44bd`), rollback `69ebaf7d-85b0-4cf7-9996-77899d97e1bd`, schema 0007.

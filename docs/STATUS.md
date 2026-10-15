@@ -1,6 +1,6 @@
 # STATUS — Open Dot
 
-_Atualizado em 15/10/2026, fim da rodada 3 (parte 1). Produção `ok:true`, schema `0007`, Worker `69ebaf7d-85b0-4cf7-9996-77899d97e1bd`, app `48b491adb418` (build de `e86f77e`, reproduzido em worktree limpo com `npm ci`). Rollback: `4c19544f-eb50-47a9-9961-7d77e75989a1`. `GROQ_ZDR_CONFIRMED` e `PACOTEVICIO_TERMS_CONFIRMED` seguem `false`. Auditorias 1–3 ficam para outra sessão._
+_Atualizado em 15/10/2026, fim da rodada 3 (parte 1). Produção `ok:true`, schema `0007`, Worker `06234ec1-e640-4084-b501-51c8b478e0f7`, app `8fda6e7a44bd` (build de `ff86bb1`, reproduzido em worktree limpo com `npm ci`). Rollback: `69ebaf7d-85b0-4cf7-9996-77899d97e1bd`. `GROQ_ZDR_CONFIRMED` e `PACOTEVICIO_TERMS_CONFIRMED` seguem `false`. Auditorias 1–3 ficam para outra sessão._
 
 ## Rodada 3 (15/10/2026)
 
@@ -129,7 +129,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 - ⛔ **Rede de pacotes nesta sessão:** npm e PyPI estavam bloqueados. Não deu para instalar o Vite, o Wrangler, o three.js nem o validador da Khronos aqui. O projeto usa o que estava disponível; o `npm install` no seu Mac baixa o resto normalmente.
 - ⛔ **Blender:** a VM ligada ao Mac é Linux e não executa o Blender.app. O build precisa rodar no Terminal do macOS (um comando).
 
-Versão do Worker antes deste deploy (rollback com `wrangler rollback`): `4c19544f-eb50-47a9-9961-7d77e75989a1`.
+Versão do Worker antes deste deploy (rollback com `wrangler rollback`): `69ebaf7d-85b0-4cf7-9996-77899d97e1bd`.
 
 ## Próxima ação exata
 
