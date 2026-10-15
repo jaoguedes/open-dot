@@ -1,6 +1,6 @@
 # STATUS — Open Dot
 
-_Atualizado em 15/10/2026, fim da rodada 3 (parte 1). Produção `ok:true`, schema `0007`, Worker `06234ec1-e640-4084-b501-51c8b478e0f7`, app `8fda6e7a44bd` (build de `ff86bb1`, reproduzido em worktree limpo com `npm ci`). Rollback: `69ebaf7d-85b0-4cf7-9996-77899d97e1bd`. `GROQ_ZDR_CONFIRMED` e `PACOTEVICIO_TERMS_CONFIRMED` seguem `false`. Auditorias 1–3 ficam para outra sessão._
+_Atualizado em 15/10/2026, rodada 3 concluída (sem as auditorias) e rodada 4 (amarelo, vidro, ícones). Produção `ok:true`, schema `0007`, Worker `bbb21323-cacb-4b48-abc2-739e843ea29a`, app `046d7bc64f45` (build de `f69bc9f`, reproduzido em worktree limpo com `npm ci`). Rollback: `06234ec1-e640-4084-b501-51c8b478e0f7`. `GROQ_ZDR_CONFIRMED` e `PACOTEVICIO_TERMS_CONFIRMED` seguem `false`. Auditorias 1–3 ficam para outra sessão._
 
 ## Rodada 3 (15/10/2026)
 
@@ -16,6 +16,7 @@ Prova de cada item (antes → depois) em `docs/RODADA3_LOG.md`.
 | F1–F6 (CI, lint, contratos, diagnóstico, dados) | ✅ · 🟡 CI nunca rodou no GitHub | testes da F 0/3 → 3/3; `npm run lint` 0 erros |
 | G (Correio) | ✅ · 🟡 qualidade real desconhecida | `eval:correio` é só regressão (conjunto ajustado com as regras); conjunto cego vazio. `ui:fase-g` 1/4 → 4/4 |
 | Contato público | ✅ editável em Conexões | `apps/worker/test/contato.test.ts`. Produção ainda mostra o Gmail pessoal (decisão do João) |
+| Rodada 4 (amarelo, vidro, ícones) | ✅ publicado · 🟡 iPhone | `tests/theme-rodada4.test.ts` 2/8 → 8/8; `ui:rodada4` escuro e claro; diário em `docs/RODADA4_LOG.md` |
 | Testado só em simulação | 🟡 | sons, ícones e “Abrir no Gmail” não foram testados num iPhone |
 
 ## Rodada 2 (15/10/2026)
@@ -129,7 +130,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 - ⛔ **Rede de pacotes nesta sessão:** npm e PyPI estavam bloqueados. Não deu para instalar o Vite, o Wrangler, o three.js nem o validador da Khronos aqui. O projeto usa o que estava disponível; o `npm install` no seu Mac baixa o resto normalmente.
 - ⛔ **Blender:** a VM ligada ao Mac é Linux e não executa o Blender.app. O build precisa rodar no Terminal do macOS (um comando).
 
-Versão do Worker antes deste deploy (rollback com `wrangler rollback`): `69ebaf7d-85b0-4cf7-9996-77899d97e1bd`.
+Versão do Worker antes deste deploy (rollback com `wrangler rollback`): `06234ec1-e640-4084-b501-51c8b478e0f7`.
 
 ## Próxima ação exata
 

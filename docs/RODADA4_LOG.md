@@ -32,3 +32,9 @@ Também arte, fora do padrão pedido e sem mudança: brilho de repouso do Dot `#
 - No iPhone: ícone novo (remover o app e adicionar de novo), leitura da caixa de vidro, seleção, modo claro, a caixa subindo com o teclado e ausência de jank. O emulador do Chromium não reproduz o teclado do iOS.
 - Força do desfoque: decisão do João depois de ver no aparelho.
 - O `maskable-512` é igual ao ícone comum e a bochecha direita passa da zona segura de 80% do Android: decisão de arte do João.
+
+## Publicação
+
+- Worker `bbb21323-cacb-4b48-abc2-739e843ea29a`, app `046d7bc64f45`, rollback `06234ec1-e640-4084-b501-51c8b478e0f7`, schema `0007`. Todas as checagens do deploy verdes (check, `ui:mobile`, fases A/D/E/F/G, `ui:rodada4`, workerd, fumaça).
+- Commit de origem `f69bc9f`; worktree limpo com `npm ci` → `046d7bc64f45` (igual).
+- No ar: `/icons/icon-512.png?v=4` tem o mesmo sha-256 do arquivo do João; `/favicon.ico` e o manifest respondem 200.
