@@ -1,6 +1,6 @@
 # STATUS — Open Dot
 
-_Atualizado em 15/10/2026, rodada 2. Migração `0005` já aplicada no Turso (coluna `rfc822_id`). O Worker publicado ainda exige `0004`, então `/api/health` de produção está `ok:false` até o deploy desta rodada. Rollback do Worker anterior: `e065a2e9-70dc-479d-9fd7-f44bf2e6cc4d` (`wrangler rollback`). Rastreio automático continua desligado._
+_Atualizado em 15/10/2026, rodada 2. Produção `ok:true`, schema `0005`, Worker `da21bebf-d11a-4fdc-abad-c87022130c56`, app `6b4e0f771bdb`. Rollback com `wrangler rollback`: `e065a2e9-70dc-479d-9fd7-f44bf2e6cc4d`. Rastreio automático desligado (`trackingState: desligado`)._
 
 ## Rodada 2 (15/10/2026)
 
@@ -58,7 +58,7 @@ _Atualizado em 15/10/2026, rodada 2. Migração `0005` já aplicada no Turso (co
 | Repositório, regras e docs | ✅ | `.cursor/rules/*.mdc` no formato atual, `CLAUDE.md`, `AGENTS.md`, `.env.example`, decisões, licenças, guia do Cursor |
 | Núcleo (`packages/core`) | ✅ | Estados de execução, resolvedor visual com prioridade e revisão, corações independentes, absorção (selecionado → enviado → recebido → organizado), agenda por fuso IANA, aprovações por hash e CAS, supervisor de ferramentas, triagem por regras, resumo com cobertura, monitor anti-SSRF, roteador de IA |
 | Persistência | ✅ SQLite · ✅ Turso (Worker) | Migrações `0001`–`0005` com prefixo `od_`. `0004` acrescenta encomendas. `0005` acrescenta `od_email_messages.rfc822_id` (aditiva; aplicada no Turso em 15/10/2026). `HranaDb` não guarda o `fetch` global cru. |
-| API / Worker | ✅ local (workerd) · 🟡 produção até o deploy da rodada 2 | https://open-dot.jpguedesbarbieri.workers.dev (Workers Free). Versão publicada antes desta rodada: `e065a2e9-70dc-479d-9fd7-f44bf2e6cc4d` (exige schema `0004`). O Turso já está em `0005`, então o health de produção fica `ok:false` até publicar o Worker que exige `0005`. `npm run dev` não reproduz o workerd; use `npm run test:workerd`. |
+| API / Worker | ✅ local (workerd) · ✅ Cloudflare | https://open-dot.jpguedesbarbieri.workers.dev (Workers Free), versão `da21bebf-d11a-4fdc-abad-c87022130c56`. `/api/health`: `ok:true`, `schema:"0005"`, `schemaError:null`, `configured.tracking:false`, `trackingState:"desligado"`. A versão imediatamente anterior, para `wrangler rollback`, é `e065a2e9-70dc-479d-9fd7-f44bf2e6cc4d` (100% em 15/10/2026 14:27 UTC). `npm run dev` não reproduz o workerd; use `npm run test:workerd`. |
 | Login | ✅ start em produção · 🟡 OAuth real | `GET /api/auth/google/start` em produção redireciona para `accounts.google.com`. `redirect_uri` = `https://open-dot.jpguedesbarbieri.workers.dev/api/oauth/google/callback`. Escopos do login: `openid email` (sem `profile`). Um segundo e-mail é recusado no teste (comparação com `OWNER_EMAIL`). Nome de exibição inicial “João”, editável em Configurações da barra (`PATCH /api/profile`). Gmail `gmail.readonly` continua na conexão à parte. Entrada de desenvolvimento só em localhost. |
 | Gmail (somente leitura) | 🧪 testado com Google simulado · 🟡 real | OAuth com `gmail.readonly`, sync incremental (`historyId` como texto), dedupe, ressincronização após 404, lotes dentro do limite de subrequisições, renovação de token com lease, reconexão única quando revogado, resumo das 08h/17h com links para o Gmail |
 | Rotinas 08h/17h | ✅ | Chave única por slot; cron repetido não duplica; após dias offline gera um único resumo “atrasado”; mudar o horário cancela execuções futuras |
@@ -91,7 +91,7 @@ Ambiente: workspace Linux na nuvem, Node 22.22, TypeScript 6.0.3, esbuild 0.28.2
 | `npm run test:ui` | ✅ 83/83 no Chromium (login, demo rotulada, Meu dia, 320/390, dock, aprovação sem envio, carinho, upload, PWA) |
 | `npm run test:workerd` | ✅ `ok:true`, `schema:"0005"`, `schemaError:null` (15/10/2026, workerd local no Turso já migrado) |
 | `npm run ui:mobile` | ✅ 390×844: páginas, busca, erro de render, reason, chunk e aviso de versão |
-| `https://open-dot.jpguedesbarbieri.workers.dev/api/health` | 🟡 `ok:false`, `schema:"0005"`, `requiredSchema:"0004"` às 15:42 UTC de 15/10/2026, porque a migração adiantou o banco. O deploy desta rodada corrige. `configured.tracking:false`. |
+| `https://open-dot.jpguedesbarbieri.workers.dev/api/health` | ✅ `ok:true`, `schema:"0005"`, `schemaError:null`, `tracking:false` (15/10/2026, versão `da21bebf-d11a-4fdc-abad-c87022130c56`). `/api/version` bate com o app local `6b4e0f771bdb`. `/assets/inexistente` devolve 404 `text/plain`. |
 
 Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveitado, escopo negado, acesso revogado (uma única notificação), webhook com assinatura inválida, entrega duplicada, evento fora de ordem, 429 do Gmail, falha parcial de sincronização, cursor expirado, cron repetido, lease disputado, aprovações concorrentes, orçamento concorrente (memória e SQL), 429 em provedor privado sem envio a outro, timeout e circuit breaker, cancelamento, injeção de prompt, ID de evidência inventado, prioridade visual de erro, cancelamento independente de efeitos, movimento reduzido, segredos ausentes do banco e do health.
 
@@ -113,9 +113,11 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 - ⛔ **Rede de pacotes nesta sessão:** npm e PyPI estavam bloqueados. Não deu para instalar o Vite, o Wrangler, o three.js nem o validador da Khronos aqui. O projeto usa o que estava disponível; o `npm install` no seu Mac baixa o resto normalmente.
 - ⛔ **Blender:** a VM ligada ao Mac é Linux e não executa o Blender.app. O build precisa rodar no Terminal do macOS (um comando).
 
+Versão do Worker antes deste deploy (rollback com `wrangler rollback`): `e065a2e9-70dc-479d-9fd7-f44bf2e6cc4d`.
+
 ## Próxima ação exata
 
-Publicar com `npm run deploy` (um deploy, sem `--force`). Depois, conferir `/api/health` com `ok:true` e `schema:"0005"`. O João ainda liga o PacoteVício e a Groq, se quiser (`docs/ACOES_DO_JOAO.md`). Não testar o link `googlegmail://` como se já tivesse passado num iPhone.
+Conferir no iPhone o botão “Abrir no app do Gmail” (abre a caixa de entrada, não a mensagem). Ligar PacoteVício e Groq só se você quiser, pelos passos I e F de `docs/ACOES_DO_JOAO.md`. As flags em produção continuam `"false"`.
 
 ## Como retomar em outra sessão
 

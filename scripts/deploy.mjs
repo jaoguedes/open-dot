@@ -26,8 +26,9 @@ run("npm", ["run", "test:workerd"]);
 run("npm", ["run", "ui:mobile"]);
 
 const listed = capture("npx", ["--yes", "wrangler@4", "deployments", "list"]);
-const ids = `${listed.stdout}\n${listed.stderr}`.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi) ?? [];
-const previous = ids[0];
+const blob = `${listed.stdout}\n${listed.stderr}`;
+const versions = [...blob.matchAll(/Version\(s\):\s+\(100%\)\s+([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi)].map((m) => m[1]);
+const previous = versions[0];
 if (!previous) {
   console.error("Não consegui ler a versão atual do Worker. O deploy não foi feito.");
   process.exit(1);
