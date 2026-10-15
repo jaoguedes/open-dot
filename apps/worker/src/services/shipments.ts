@@ -44,7 +44,7 @@ function publicError(e: unknown): string {
 /** Varre assunto e trecho já guardados. Só grava código, loja e transportadora. */
 export async function extractShipments(ctx: Ctx, ownerId: string): Promise<number> {
   const mails = await repo.recentMailTexts(ctx.db, ctx.keys, ownerId, 40);
-  let created = 0;
+  const pending: Array<{ id: string; code: string; carrier: string; confidence: string; store: string | null }> = [];
   for (const mail of mails) {
     const found = detectInText(`${mail.subject}\n${mail.snippet}`);
     const byCode = new Map<string, typeof found>();
@@ -58,36 +58,40 @@ export async function extractShipments(ctx: Ctx, ownerId: string): Promise<numbe
       if (decision.kind !== "match") continue;
       const pick = decision.candidates[0];
       if (!pick || pick.checksum === "invalid") continue;
-      const store = shopLabel(mail.from);
-      const ok = await repo.insertShipment(ctx.db, {
-        id: randomId("shp_"),
-        ownerId,
-        code,
-        carrier: pick.carrier,
-        confidence: pick.confidence,
-        storeLabel: store,
-        needsCarrier: false,
-        now: ctx.now(),
-      });
-      if (!ok) continue;
-      created++;
-      await repo.insertFeed(ctx.db, ctx.keys, {
-        ownerId,
-        agentId: "entregas",
-        runId: `ship:${code}:posted`,
-        kind: "shipment",
-        title: "Encomenda postada",
-        body: {
-          summary: store ? `${CARRIER_LABEL[pick.carrier]} · ${store}` : CARRIER_LABEL[pick.carrier],
-          code,
-          carrier: pick.carrier,
-          actions: [{ kind: "open_agent", label: "Ver Entregas" }],
-        },
-        freshness: "fresh",
-        coverage: null,
-        now: ctx.now(),
-      });
+      pending.push({ id: randomId("shp_"), code, carrier: pick.carrier, confidence: pick.confidence, store: shopLabel(mail.from) });
     }
+  }
+  if (!pending.length) return 0;
+  const nowIso = new Date(ctx.now()).toISOString();
+  const results = await ctx.db.batch(
+    pending.map((p) => ({
+      sql: `INSERT OR IGNORE INTO od_shipments
+      (id, owner_id, code, carrier, confidence, store_label, events_json, active, needs_carrier, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, '[]', 1, 0, ?, ?)`,
+      args: [p.id, ownerId, p.code, p.carrier, p.confidence, p.store, nowIso, nowIso],
+    })),
+  );
+  let created = 0;
+  for (let i = 0; i < pending.length; i++) {
+    if (results[i]?.changes !== 1) continue;
+    created++;
+    const p = pending[i]!;
+    await repo.insertFeed(ctx.db, ctx.keys, {
+      ownerId,
+      agentId: "entregas",
+      runId: `ship:${p.code}:posted`,
+      kind: "shipment",
+      title: "Encomenda postada",
+      body: {
+        summary: p.store ? `${CARRIER_LABEL[p.carrier as keyof typeof CARRIER_LABEL]} · ${p.store}` : CARRIER_LABEL[p.carrier as keyof typeof CARRIER_LABEL],
+        code: p.code,
+        carrier: p.carrier,
+        actions: [{ kind: "open_agent", label: "Ver Entregas" }],
+      },
+      freshness: "fresh",
+      coverage: null,
+      now: ctx.now(),
+    });
   }
   return created;
 }

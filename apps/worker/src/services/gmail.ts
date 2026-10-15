@@ -85,20 +85,28 @@ export async function syncGmail(ctx: Ctx, conn: repo.ConnectionRow, fetchImpl: t
       report.discovered = collected.length;
     }
     const pending = await repo.pendingIds(ctx.db, conn.owner_id, conn.id, maxFetch);
+    const got: import("@open-dot/core").EmailMeta[] = [];
+    const drops: string[] = [];
+    let stopped: unknown = null;
     for (const p of pending) {
       try {
-        const meta = await getMetadata(fetchImpl, token, p.message_id, ctx.now());
-        await repo.storeMessage(ctx.db, ctx.keys, { ownerId: conn.owner_id, connectionId: conn.id, m: meta, now: ctx.now() });
+        got.push(await getMetadata(fetchImpl, token, p.message_id, ctx.now()));
         report.fetched++;
       } catch (e) {
-        if (e instanceof ConnectorError && e.code === "not_found") await repo.dropPending(ctx.db, conn.owner_id, conn.id, p.message_id);
+        if (e instanceof ConnectorError && e.code === "not_found") drops.push(p.message_id);
         else if (e instanceof BudgetExhausted) break;
         else {
           await repo.bumpPending(ctx.db, conn.owner_id, conn.id, p.message_id);
-          throw e;
+          stopped = e;
+          break;
         }
       }
     }
+    if (got.length) await repo.storeMessages(ctx.db, ctx.keys, got.map((m) => ({ ownerId: conn.owner_id, connectionId: conn.id, m, now: ctx.now() })));
+    if (drops.length) {
+      await ctx.db.batch(drops.map((id) => ({ sql: "DELETE FROM od_email_pending WHERE owner_id = ? AND connection_id = ? AND message_id = ?", args: [conn.owner_id, conn.id, id] })));
+    }
+    if (stopped) throw stopped;
     report.pendingLeft = await repo.countPending(ctx.db, conn.owner_id);
     return report;
   } catch (e) {

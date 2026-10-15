@@ -29,6 +29,28 @@ export class SubrequestBudget {
   remaining(): number {
     return this.max - this.used;
   }
+
+  /** Cada query, run ou batch do Turso é uma subrequisição. */
+  watch(inner: Db): Db {
+    const take = () => {
+      if (this.used >= this.max) throw new BudgetExhausted();
+      this.used++;
+    };
+    return {
+      query: async (sql, args) => {
+        take();
+        return inner.query(sql, args);
+      },
+      run: async (sql, args) => {
+        take();
+        return inner.run(sql, args);
+      },
+      batch: async (stmts) => {
+        take();
+        return inner.batch(stmts);
+      },
+    };
+  }
 }
 
 export class BudgetExhausted extends Error {

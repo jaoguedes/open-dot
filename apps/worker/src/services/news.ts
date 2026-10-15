@@ -1,11 +1,19 @@
 import { NEWS_FEEDS, dedupeNews, groupPolitics, normalizeTitle, parseFeedXml, randomId, worldToday, type NewsItem } from "@open-dot/core";
-import type { Ctx } from "../context.ts";
+import { BudgetExhausted, type Ctx } from "../context.ts";
 import type { Db } from "../db/types.ts";
 import * as repo from "../repo.ts";
+import { safeReason } from "../reasons.ts";
 
-export async function ingestNews(ctx: Ctx, ownerId: string, fetchImpl: typeof fetch, opts: { feedIds?: string[]; maxFeeds?: number } = {}): Promise<{ fetched: number; stored: number; failures: string[] }> {
+export interface SourceFailure {
+  source: string;
+  reason: string;
+}
+
+const PER_FEED = 15;
+
+export async function ingestNews(ctx: Ctx, ownerId: string, fetchImpl: typeof fetch, opts: { feedIds?: string[]; maxFeeds?: number } = {}): Promise<{ fetched: number; stored: number; failures: SourceFailure[] }> {
   const settings = await repo.agentSettings(ctx.db, ownerId, "noticias");
-  if (settings && settings.enabled === 0) return { fetched: 0, stored: 0, failures: ["Notícias desativado."] };
+  if (settings && settings.enabled === 0) return { fetched: 0, stored: 0, failures: [{ source: "Notícias", reason: "disabled" }] };
   const now = ctx.now();
   const allowed = opts.feedIds?.length ? NEWS_FEEDS.filter((f) => opts.feedIds!.includes(f.id)) : NEWS_FEEDS;
   const max = opts.maxFeeds ?? 4;
@@ -13,37 +21,40 @@ export async function ingestNews(ctx: Ctx, ownerId: string, fetchImpl: typeof fe
   const start = minute % Math.max(1, allowed.length);
   const slice = [...allowed.slice(start), ...allowed.slice(0, start)].slice(0, max);
   const got: NewsItem[] = [];
-  const failures: string[] = [];
+  const failures: SourceFailure[] = [];
   let fetched = 0;
   for (const spec of slice) {
     try {
       const res = await fetchImpl(spec.url, { headers: { accept: "application/rss+xml, application/atom+xml, application/xml, text/xml" } });
       fetched++;
       if (!res.ok) {
-        failures.push(`${spec.outlet}: feed indisponível (${res.status}).`);
+        failures.push({ source: spec.outlet, reason: `upstream_http_${res.status}` });
         continue;
       }
       const xml = await res.text();
       const parsed = parseFeedXml(xml, spec.id);
-      if (parsed.error) failures.push(`${spec.outlet}: ${parsed.error}`);
-      got.push(...parsed.items);
+      if (parsed.error) failures.push({ source: spec.outlet, reason: "invalid_feed" });
+      got.push(...parsed.items.slice(0, PER_FEED));
     } catch (e) {
-      failures.push(`${spec.outlet}: ${e instanceof Error ? e.message : "falha de rede"}`);
+      if (e instanceof BudgetExhausted) throw e;
+      failures.push({ source: spec.outlet, reason: safeReason(e) });
     }
   }
   const unique = dedupeNews(got);
   let stored = 0;
-  for (const it of unique) {
-    const id = randomId("news_");
-    const r = await ctx.db.run(
-      "INSERT OR IGNORE INTO od_news_items (id, owner_id, feed_id, theme, outlet, title, title_norm, link, published_at, fetched_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [id, ownerId, it.feedId, it.theme, it.outlet, it.title, normalizeTitle(it.title), it.link, it.publishedAt, new Date(now).toISOString()],
+  if (unique.length) {
+    const iso = new Date(now).toISOString();
+    const results = await ctx.db.batch(
+      unique.map((it) => ({
+        sql: "INSERT OR IGNORE INTO od_news_items (id, owner_id, feed_id, theme, outlet, title, title_norm, link, published_at, fetched_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        args: [randomId("news_"), ownerId, it.feedId, it.theme, it.outlet, it.title, normalizeTitle(it.title), it.link, it.publishedAt, iso],
+      })),
     );
-    if (r.changes === 1) stored++;
+    stored = results.reduce((n, r) => n + (r.changes === 1 ? 1 : 0), 0);
   }
   await repo.touchAgentSettings(ctx.db, ownerId, "noticias", {
     lastTestAt: new Date(now).toISOString(),
-    lastError: failures.length ? failures.join(" ") : null,
+    lastError: failures.length ? failures.map((f) => `${f.source}:${f.reason}`).join(" ") : null,
     now,
   });
   return { fetched, stored, failures };

@@ -31,7 +31,7 @@ test("notícias: ingestão deduplica, feed indisponível vira falha parcial", as
   assert.equal((await c.call("POST", "/api/session/dev")).status, 200);
   const ownerId = (await ctx.db.query<{ id: string }>("SELECT id FROM od_owners"))[0]!.id;
   const r = await ingestNews(ctx, ownerId, newsFetch, { maxFeeds: 8 });
-  assert.ok(r.failures.some((f) => /indisponível|403/.test(f)));
+  assert.ok(r.failures.some((f) => f.reason === "upstream_http_403"));
   assert.ok(r.stored >= 1);
   const n = await ctx.db.query<{ n: number }>("SELECT COUNT(*) AS n FROM od_news_items");
   const again = await ingestNews(ctx, ownerId, newsFetch, { maxFeeds: 8 });
