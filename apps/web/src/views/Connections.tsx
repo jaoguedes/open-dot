@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { providerCards, runFictitiousProviderTest, type ProviderCard } from "@open-dot/core";
+import { explainError, providerCards, runFictitiousProviderTest, type ProviderCard } from "@open-dot/core";
 import { useApp } from "../store.tsx";
 import { api, ApiError } from "../api.ts";
 import { Icon } from "../components/Icons.tsx";
@@ -59,7 +59,7 @@ export function Connections() {
         Cada serviço tem consentimento próprio e permissões mínimas. Escritas exigem sua aprovação do conteúdo exato.
       </p>
       {msg && (
-        <p role="status" className={`chip ${msg.ok ? "ok" : "err"}`} style={{ whiteSpace: "normal", marginBottom: 16 }}>
+        <p role="status" className={`banner ${msg.ok ? "ok" : "err"}`} style={{ whiteSpace: "normal", overflowWrap: "anywhere", marginBottom: 16 }}>
           {msg.text}
         </p>
       )}
@@ -119,6 +119,7 @@ export function Connections() {
         <p>Consulta a cada ~15 min. Sem redeploy ou rollback automático. Webhooks de conta da Vercel são Pro/Enterprise; aqui usamos consulta periódica.</p>
       </section>
 
+      <PacoteCard />
       <ExtraAgents demo={demo} cfgGoogle={Boolean(cfg?.google)} />
 
       <Providers demo={demo} />
@@ -245,11 +246,12 @@ function ExtraAgents({ demo, cfgGoogle }: { demo: boolean; cfgGoogle: boolean })
           <div className="card-top">
             {a.name}
             <span className={`chip ${!a.enabled ? "" : a.lastError ? "warn" : a.lastTestAt ? "ok" : ""}`}>
-              {demo ? "Demonstração (fictício)" : !a.enabled ? "Desativado" : a.lastError ? "Falha parcial" : a.lastTestAt ? "Testado" : "Aguardando teste"}
+              {demo ? "Demonstração (fictício)" : !a.enabled ? "Desativado" : a.lastError ? "Fontes com falha" : a.lastTestAt ? "Testado" : "Aguardando teste"}
             </span>
           </div>
           <h3 id={`c-${a.id}`}>{a.name}</h3>
           <p>{a.description}</p>
+          <SourceFailures raw={a.lastError} />
           {a.sources.length > 0 && (
             <ul className="list" style={{ marginBottom: 12 }}>
               {a.sources.map((s) => (
@@ -396,5 +398,46 @@ function Providers({ demo }: { demo: boolean }) {
         );
       })}
     </>
+  );
+}
+
+function SourceFailures({ raw }: { raw: string | null }) {
+  if (!raw) return null;
+  const rows = raw.split(" ").flatMap((part) => {
+    const i = part.lastIndexOf(":");
+    if (i <= 0) return [];
+    const source = part.slice(0, i);
+    const reason = part.slice(i + 1);
+    return [{ source, ...explainError(reason) }];
+  });
+  if (!rows.length) return null;
+  return (
+    <ul className="list" aria-label="Fontes que falharam">
+      {rows.map((r) => (
+        <li key={`${r.source}-${r.code}`}>
+          <span className="subj">{r.source}</span>
+          <span className="mono">{r.code}</span>
+          <span className="why">{r.frase}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PacoteCard() {
+  const app = useApp();
+  const state = app.snap?.configured.trackingState ?? "desligado";
+  const calls = app.snap?.shipments.tracking.calls ?? 0;
+  const limit = app.snap?.shipments.tracking.limit ?? 1000;
+  const label = state === "ligado" ? "Ligado" : state === "sem_chave" ? "Sem chave" : state === "termos" ? "Termos não confirmados" : "Desligado";
+  return (
+    <section className="card" style={{ marginTop: 16 }} aria-labelledby="c-pacote">
+      <div className="card-top">
+        Entregas · PacoteVício
+        <span className={`chip ${state === "ligado" ? "ok" : ""}`}>{app.mode === "demo" ? "Desligado (demonstração)" : label}</span>
+      </div>
+      <h3 id="c-pacote">Rastreio automático</h3>
+      <p className="meta">Consultas neste mês: {calls} de {limit}. O app para em 900. Nada é comprado daqui.</p>
+    </section>
   );
 }

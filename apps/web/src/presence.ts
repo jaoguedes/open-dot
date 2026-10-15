@@ -41,7 +41,8 @@ export function agentPresence(
   const digest = mine.find((f) => f.kind === "email_digest");
   const quoteAlerts = mine.filter((f) => f.kind === "quote_alert").length;
   const shipmentsWaiting = agentId === "entregas" ? (opts?.pendingShipments ?? 0) : 0;
-  const needN = (digest?.body.counts?.important ?? 0) + quoteAlerts + shipmentsWaiting;
+  const mailNeed = digest?.body.itens?.length ?? digest?.body.counts?.important ?? 0;
+  const needN = mailNeed + quoteAlerts + shipmentsWaiting;
   const openInc = agentId === "sentinela" ? monitors.filter((m) => m.incident?.open).length : 0;
 
   if (visual.semantic === "error" || builds > 0 || sites > 0 || openInc > 0) {
