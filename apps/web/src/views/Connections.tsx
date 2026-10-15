@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { explainError, providerCards, runFictitiousProviderTest, type ProviderCard } from "@open-dot/core";
 import { useApp } from "../store.tsx";
-import { api, ApiError } from "../api.ts";
+import { api, ApiError, type SessionView } from "../api.ts";
 import { Icon } from "../components/Icons.tsx";
 import { fmtDateTime } from "../format.ts";
 
@@ -21,9 +21,21 @@ export function Connections() {
       permissao_gsc_negada: "O Google não concedeu a permissão de leitura do Search Console. Nada foi conectado.",
       sem_refresh_token: "O Google não enviou um token de renovação. Remova o acesso em myaccount.google.com/permissions e conecte de novo.",
       sessao_trocada: "A sessão mudou durante a conexão. Tente de novo.",
+      callback_invalido: "O retorno do Google veio incompleto. Nada foi conectado. Tente de novo.",
+      sem_id_token: "O Google não confirmou a conta. Nada foi conectado. Tente de novo.",
+      estado_expirado: "A conexão demorou demais e expirou. Tente de novo.",
+      consentimento_negado: "A permissão foi negada no Google. Nada foi conectado.",
     };
     return err && map[err] ? { ok: false, text: map[err] } : null;
   });
+  useEffect(() => {
+    const p = new URLSearchParams(location.search);
+    if (!p.has("ok") && !p.has("erro")) return;
+    p.delete("ok");
+    p.delete("erro");
+    const q = p.toString();
+    history.replaceState(history.state, "", location.pathname + (q ? `?${q}` : "") + location.hash);
+  }, []);
   const [busy, setBusy] = useState(false);
 
   const connect = async () => {
@@ -123,7 +135,79 @@ export function Connections() {
       <ExtraAgents demo={demo} cfgGoogle={Boolean(cfg?.google)} />
 
       <Providers demo={demo} />
+
+      <Sessions demo={demo} />
     </>
+  );
+}
+
+/** Aparelhos com sessão aberta e "Sair de todos". O token nunca aparece. */
+function Sessions({ demo }: { demo: boolean }) {
+  const [list, setList] = useState<SessionView[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (demo) return;
+    let alive = true;
+    api
+      .sessions()
+      .then((r) => alive && setList(r.sessions))
+      .catch((e) => alive && setError(e instanceof ApiError ? e.message : "Não consegui listar as sessões."));
+    return () => {
+      alive = false;
+    };
+  }, [demo]);
+  const logoutAll = async () => {
+    if (!confirming) return setConfirming(true);
+    setBusy(true);
+    try {
+      await api.logoutAll();
+      location.assign("/");
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Não consegui encerrar as sessões.");
+      setBusy(false);
+      setConfirming(false);
+    }
+  };
+  return (
+    <section className="card section-gap" aria-labelledby="c-sessions">
+      <div className="card-top">
+        <Icon name="layers" size={14} /> Sessões
+      </div>
+      <h3 id="c-sessions">Aparelhos conectados</h3>
+      {demo ? (
+        <p>Indisponível na demonstração.</p>
+      ) : error ? (
+        <p className="banner err">{error}</p>
+      ) : list === null ? (
+        <p className="meta">Carregando…</p>
+      ) : list.length === 0 ? (
+        <p className="meta">Nenhuma sessão aberta.</p>
+      ) : (
+        <ul className="plain-list">
+          {list.map((s) => (
+            <li key={s.id}>
+              {s.device}
+              {s.current && <span className="chip ok chip-gap">Este aparelho</span>}
+              <span className="tiny block">Entrou em {fmtDateTime(s.createdAt)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!demo && (
+        <div className="row-actions">
+          <button className="btn" type="button" disabled={busy} onClick={() => void logoutAll()}>
+            {confirming ? "Confirmar: sair de todos" : "Sair de todos os aparelhos"}
+          </button>
+          {confirming && (
+            <button className="btn ghost" type="button" onClick={() => setConfirming(false)}>
+              Cancelar
+            </button>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 

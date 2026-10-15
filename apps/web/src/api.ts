@@ -225,12 +225,22 @@ async function req<T>(path: string, init: RequestInit = {}, quiet = false): Prom
   return data as T;
 }
 
+export interface SessionView {
+  id: string;
+  device: string;
+  createdAt: string;
+  expiresAt: string;
+  current: boolean;
+}
+
 export const api = {
   session: () => req<{ authenticated: boolean; owner?: Snapshot["owner"]; devLoginAvailable?: boolean; googleLoginAvailable?: boolean }>("/api/session"),
   version: () => req<{ app: string; worker: string }>("/api/version"),
   legal: () => req<{ contact: string | null }>("/api/legal"),
   devLogin: () => req<{ ok: true }>("/api/session/dev", { method: "POST" }),
   logout: () => req<{ ok: true }>("/api/logout", { method: "POST" }),
+  sessions: () => req<{ sessions: SessionView[] }>("/api/sessions"),
+  logoutAll: () => req<{ ok: true; removed: number }>("/api/sessions/logout-all", { method: "POST" }),
   feed: () => req<{ items: FeedEntry[]; next: string | null }>("/api/feed"),
   connections: () => req<{ configured: Configured; connections: Connection[]; agents: AgentCard[]; providers: ProviderCard[] }>("/api/connections"),
   testProvider: (id: string) =>
