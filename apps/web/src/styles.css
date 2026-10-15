@@ -2273,3 +2273,4 @@ a.source-pill {
   align-items: center;
   min-height: 44px;
 }
+p a:not(.btn), li a:not(.btn):not(.nav-item):not(.source-pill) { text-decoration: underline; text-underline-offset: 2px; }
