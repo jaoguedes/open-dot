@@ -1,4 +1,4 @@
-/** Molas e suavização independentes da taxa de quadros (Coucou / motor aprovado). */
+/** Molas subamortecidas e suavização independentes da taxa de quadros. */
 
 export function clamp(v: number, a: number, b: number): number {
   return v < a ? a : v > b ? b : v;
@@ -18,7 +18,7 @@ export function spring(x: number, v: number, alvo: number, k: number, c: number,
   return [x + v * h, v];
 }
 
-/** Fração restante cai para `rest` em 1 s. Cores usam 0,002. */
+/** Fração restante cai para `rest` em 1 s. Cores usam 0,003. */
 export function smooth(rest: number, dt: number): number {
   return 1 - Math.pow(rest, dt);
 }

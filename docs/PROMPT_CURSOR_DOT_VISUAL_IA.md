@@ -1,4 +1,4 @@
-Leia CLAUDE.md, docs/STATUS.md e docs/DECISOES.md. Esta tarefa tem três partes, nesta ordem: (A) trocar o motor do Dot por um motor em código, como o do Coucou; (B) aplicar o novo visual aprovado ao web app e transformá-lo em PWA; (C) atualizar a camada de IA conforme a pesquisa de 14/10/2026. A e B foram APROVADOS pelo João: porte com fidelidade, sem reinventar.
+Leia CLAUDE.md, docs/STATUS.md e docs/DECISOES.md. Esta tarefa tem três partes, nesta ordem: (A) trocar o motor do Dot por um motor em código; (B) aplicar o novo visual aprovado ao web app e transformá-lo em PWA; (C) atualizar a camada de IA conforme a pesquisa de 14/10/2026. A e B foram APROVADOS pelo João: porte com fidelidade, sem reinventar.
 
 ## 0. Fontes da verdade (abra no navegador do Cursor e leia o código)
 - docs/referencias/dot_motor.html → o Dot aprovado: classe DotEngine, tabelas STATES/TL/STILL, bodyD, proj, bodyPt, EYE/EXPR, arte 2D (art2) e acessórios (acc3d). Mexa em tudo: estados, reações, acessórios, mouse e 3 cliques.
@@ -12,7 +12,7 @@ Leia CLAUDE.md, docs/STATUS.md e docs/DECISOES.md. Esta tarefa tem três partes,
 
 D-011 Dot:
 1. O Dot principal é o motor em código (SVG). O runtime three.js/GLB (apps/web/src/dot3d, Dot3D.tsx, blender/) fica atrás da chave DOT_RENDERER = "engine" | "glb", com padrão "engine". NÃO apague esses arquivos; só tire do caminho padrão, para o chunk do three.js não carregar.
-2. Forma igual à do Coucou: superelipse |x/rx|^n + |y/ry|^n = 1, com n = 2,7 no normal e 4,5 na absorção. Largura ≈ 1,3 × altura.
+2. Forma: superelipse |x/rx|^n + |y/ry|^n = 1, com n = 2,6 no normal e 4,2 na absorção. Largura ≈ 1,3 × altura.
 3. Corpo com cara de 3D: degradê #FFFFFF → #BCC6F8, bordas escurecendo para lilás, luz principal no alto à esquerda, reflexo da cor do agente embaixo e sombra de contato. Rosto, símbolos e partículas são ARTE 2D desenhada: fofa, em degradê suave, SEM pontos de brilho.
 4. Mãos SÓ no "oi": duas mãozinhas, a direita acena e as duas somem no fim. Nenhum balão de fala.
 5. Tracinho SÓ durante a absorção: o corpo vira quadrado e o tracinho abre brilhando.
@@ -48,7 +48,7 @@ D-013 IA:
 
 packages/core/src/dot/ (TypeScript puro, sem DOM, testável):
 - geometry.ts: bodyPoints(m), proj, onSphere, bodyPt e as constantes (CY 113, RX 83, RY 64, SPH 80, base 177, viewBox 260×220).
-- physics.ts: spring(x, v, alvo, k, c, h) e smooth(rest, dt) = 1 − rest^dt. As cores usam 0,002, igual ao Coucou.
+- physics.ts: spring(x, v, alvo, k, c, h) e smooth(rest, dt) = 1 − rest^dt.
 - states.ts: repouso, pensando, perguntando, trabalhando, esperando OK, erro (com entrada própria), desconectado e dormindo.
 - reactions.ts:
   - reações: oi, concluído, surpreso, carinho, tonto, cutucão, empurrão e absorver;

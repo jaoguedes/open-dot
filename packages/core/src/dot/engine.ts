@@ -381,7 +381,7 @@ export class DotEngine implements EngineMut {
         E.spinYaw = 0;
       }
     }
-    const kc = smooth(0.002, h);
+    const kc = smooth(0.003, h);
     for (let j = 0; j < 3; j++) {
       E.glowC[j]! += (E.glowT[j]! - E.glowC[j]!) * kc;
       E.tintC[j]! += (E.tintT[j]! - E.tintC[j]!) * kc;

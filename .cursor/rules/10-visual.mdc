@@ -14,7 +14,7 @@ alwaysApply: false
 - Cor nunca é o único sinal: todo estado tem texto. Teste 320/390 px, zoom 200%, teclado e movimento reduzido.
 
 # Dot (D-014 · fonte docs/referencias/dot_motor.html)
-- Motor em código (SVG). Superelipse n = 2,7 (4,5 na absorção), largura ≈ 1,3 × altura. Corpo com cara de 3D; rosto/símbolos/partículas são arte 2D em degradê, sem pontos de brilho.
+- Motor em código (SVG). Superelipse n = 2,6 (4,2 na absorção), largura ≈ 1,3 × altura. Corpo com cara de 3D; rosto/símbolos/partículas são arte 2D em degradê, sem pontos de brilho.
 - **Sem boca e sem sobrancelhas.** Mãos só no “oi”. Tracinho só durante a absorção. Símbolos em selo redondo no alto à esquerda, só enquanto o estado dura.
 - Acessórios pela geometria do corpo (assentam, giram com o olhar, amassam, sombra de contato). Anel da Sentinela só enquanto ela verifica.
 - Prioridade: erro > aprovação > pergunta > desconectado > execução > pensando > sucesso > carinho > repouso. Evento antigo não sobrescreve estado novo.

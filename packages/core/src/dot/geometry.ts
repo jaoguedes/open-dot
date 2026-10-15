@@ -9,9 +9,9 @@ export const BASE = 177;
 export const VIEW_W = 260;
 export const VIEW_H = 220;
 export const BODY_SAMPLES = 96;
-/** n = 2,7 no normal; 4,5 na absorção (m = 1). */
-export const N_REST = 2.7;
-export const N_ABSORB = 4.5;
+/** n = 2,6 no normal; 4,2 na absorção (m = 1). Valores próprios do motor do Dot (D-022). */
+export const N_REST = 2.6;
+export const N_ABSORB = 4.2;
 
 export function round2(n: number): number {
   return Math.round(n * 100) / 100;

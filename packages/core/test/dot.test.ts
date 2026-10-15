@@ -120,13 +120,19 @@ test("question no resolvedor fica abaixo de waiting e bloqueia carinho", () => {
   assert.equal(s.resolve("dot", 10).semantic, "waiting");
 });
 
-test("superelipse: n 2,7 no normal e 4,5 na absorção; largura ≈ 1,3 × altura", () => {
-  assert.equal(superN(0), 2.7);
-  assert.equal(superN(1), 4.5);
+test("superelipse: n 2,6 no normal e 4,2 na absorção; largura ≈ 1,3 × altura", () => {
+  // Valores próprios do motor do Dot (D-022).
+  assert.equal(superN(0), 2.6);
+  assert.equal(superN(1), 4.2);
   const pts = bodyPoints(0);
   const xs = pts.map((p) => p[0]);
   const ys = pts.map((p) => p[1]);
   const w = Math.max(...xs) - Math.min(...xs);
   const h = Math.max(...ys) - Math.min(...ys);
   assert.ok(Math.abs(w / h - 83 / 64) < 0.02);
+});
+
+test("cores do motor suavizam com 1 − 0,003^dt (valor próprio do Dot)", async () => {
+  const src = (await import("node:fs")).readFileSync(new URL("../src/dot/engine.ts", import.meta.url), "utf8");
+  assert.match(src, /const kc = smooth\(0\.003, h\);/);
 });
