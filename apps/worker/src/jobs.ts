@@ -1,10 +1,10 @@
-import { applySample, backoffMs, correlateDeploy, initialIncident, planDue, type IncidentState } from "@open-dot/core";
+import { applySample, correlateDeploy, explainError, initialIncident, planDue, type IncidentState } from "@open-dot/core";
 import { checkSite } from "@open-dot/connectors/http-check.ts";
 import { listDeployments } from "@open-dot/connectors/vercel.ts";
-import { ConnectorError } from "@open-dot/connectors/errors.ts";
-import { SubrequestBudget, type Ctx } from "./context.ts";
+import { BudgetExhausted, SubrequestBudget, type Ctx } from "./context.ts";
 import { REQUIRED_SCHEMA, currentSchema } from "./db/migrate.ts";
 import * as repo from "./repo.ts";
+import { safeReason } from "./reasons.ts";
 import { syncGmail } from "./services/gmail.ts";
 import { runEmailReview } from "./services/email-review.ts";
 import { organizeUpload } from "./services/uploads.ts";
@@ -27,13 +27,16 @@ export interface TickReport {
   subrequests: number;
 }
 
-export async function tick(ctx: Ctx): Promise<TickReport> {
+export async function tick(outer: Ctx): Promise<TickReport> {
   const report: TickReport = { planned: 0, synced: [], runs: [], monitors: 0, deployments: 0, shipments: 0, subrequests: 0 };
-  const { version } = await currentSchema(ctx.db);
+  const { version } = await currentSchema(outer.db);
   if (version !== REQUIRED_SCHEMA) return { ...report, skipped: `schema ${version ?? "ausente"}; esperado ${REQUIRED_SCHEMA}` };
-  const budget = new SubrequestBudget(40);
-  const f = budget.wrap(ctx.fetch);
+  const budget = new SubrequestBudget(44);
+  const ctx: Ctx = { ...outer, db: budget.watch(outer.db), fetch: budget.wrap(outer.fetch) };
+  const f = ctx.fetch;
   const now = ctx.now();
+  try {
+  await repo.expireStaleRuns(ctx.db, now);
 
   // 1) Planejar slots vencidos (chave única impede duplicata).
   for (const r of await repo.enabledRoutines(ctx.db)) {
@@ -57,6 +60,7 @@ export async function tick(ctx: Ctx): Promise<TickReport> {
   for (const run of await repo.dueRuns(ctx.db, now, 2)) {
     const claimed = await repo.claimRun(ctx.db, run, now);
     if (!claimed) continue;
+    let closed = false;
     try {
       if (claimed.kind === "email_review") {
         const r = await runEmailReview(ctx, claimed, f);
@@ -72,19 +76,25 @@ export async function tick(ctx: Ctx): Promise<TickReport> {
         await repo.finishRun(ctx.db, claimed, { state: "succeeded", now: ctx.now() });
         report.runs.push({ id: claimed.id, state: "succeeded" });
       } else {
-        await repo.finishRun(ctx.db, claimed, { state: "failed", errorCode: "not_supported", errorMessage: `tipo ${claimed.kind} não implementado`, now: ctx.now() });
+        await repo.finishRun(ctx.db, claimed, { state: "failed", errorCode: "not_supported", errorMessage: explainError("not_supported").frase, now: ctx.now() });
+        report.runs.push({ id: claimed.id, state: "failed" });
       }
+      closed = true;
     } catch (e) {
-      const retryable = claimed.attempt < 4;
-      const retryAfter = e instanceof ConnectorError ? e.retryAfterMs : null;
+      const code = safeReason(e);
       await repo.finishRun(ctx.db, claimed, {
-        state: retryable ? "retry_scheduled" : "failed",
-        errorCode: e instanceof ConnectorError ? e.code : "internal",
-        errorMessage: e instanceof Error ? e.message : "erro",
-        nextAttemptAt: ctx.now() + backoffMs(claimed.attempt, { baseMs: 60_000, retryAfterMs: retryAfter }),
+        state: "failed",
+        errorCode: code,
+        errorMessage: explainError(code).frase,
         now: ctx.now(),
       });
-      report.runs.push({ id: claimed.id, state: retryable ? "retry_scheduled" : "failed" });
+      report.runs.push({ id: claimed.id, state: "failed" });
+      closed = true;
+    } finally {
+      if (!closed) {
+        await repo.finishRun(ctx.db, claimed, { state: "failed", errorCode: "unknown", errorMessage: explainError("unknown").frase, now: ctx.now() });
+        report.runs.push({ id: claimed.id, state: "failed" });
+      }
     }
   }
 
@@ -153,20 +163,28 @@ export async function tick(ctx: Ctx): Promise<TickReport> {
           }
         }
       } catch (e) {
-        await repo.audit(ctx.db, { ownerId, actor: "system", action: "vercel_poll", outcome: "error", detail: e instanceof Error ? e.message : "erro", now: ctx.now() });
+        await repo.audit(ctx.db, { ownerId, actor: "system", action: "vercel_poll", outcome: "error", detail: safeReason(e), now: ctx.now() });
       }
     }
   }
 
-  // 5b) Notícias (RSS allowlist) e cotações públicas — respeitando o teto de subrequisições.
-  const owners = await ctx.db.query<{ id: string }>("SELECT id FROM od_owners LIMIT 3");
-  for (const o of owners) {
-    if (budget.remaining() >= 5) await ingestNews(ctx, o.id, f, { maxFeeds: Math.min(4, budget.remaining() - 1) });
-    if (budget.remaining() >= 3) await ingestQuotes(ctx, o.id, f);
+  // 5) Encomendas antes das leituras públicas, para o orçamento não deixar o rastreio de fora.
+  const ownersEarly = await ctx.db.query<{ id: string }>("SELECT id FROM od_owners LIMIT 3");
+  for (const o of ownersEarly) {
     await extractShipments(ctx, o.id);
     if (budget.remaining() >= 1) {
       const poll = await pollShipments(ctx, o.id, f, Math.min(2, budget.remaining()));
       report.shipments += poll.checked;
+    }
+  }
+
+  // 5b) Notícias e cotações. Falha aqui não derruba o tique: a execução já foi marcada.
+  for (const o of ownersEarly) {
+    try {
+      if (budget.remaining() >= 5) await ingestNews(ctx, o.id, f, { maxFeeds: Math.min(4, budget.remaining() - 1) });
+      if (budget.remaining() >= 3) await ingestQuotes(ctx, o.id, f);
+    } catch (e) {
+      if (e instanceof BudgetExhausted) throw e;
     }
   }
 
@@ -175,4 +193,9 @@ export async function tick(ctx: Ctx): Promise<TickReport> {
 
   report.subrequests = budget.used;
   return report;
+  } catch (e) {
+    report.subrequests = budget.used;
+    if (e instanceof BudgetExhausted) return { ...report, skipped: "subrequest_limit" };
+    throw e;
+  }
 }

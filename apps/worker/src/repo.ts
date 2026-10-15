@@ -1,6 +1,6 @@
 import { randomId, type BudgetLedger, type ReserveInput, type ReserveResult, type UsageRecord } from "@open-dot/core";
 import { open, seal, type Keyring } from "./crypto.ts";
-import type { Db, SqlValue } from "./db/types.ts";
+import type { Db, SqlValue, Stmt } from "./db/types.ts";
 
 /**
  * Acesso a dados. Toda função de leitura/escrita de dados do usuário recebe ownerId
@@ -332,6 +332,20 @@ export async function dueRuns(db: Db, now: number, limit = 3): Promise<RunRow[]>
   );
 }
 
+export async function expireStaleRuns(db: Db, now: number): Promise<number> {
+  const cutoff = iso(now - 10 * 60_000);
+  const nowIso = iso(now);
+  const running = await db.run(
+    "UPDATE od_runs SET state = 'failed', error_code = 'stale_run', error_message = 'Execução passou de 10 minutos.', version = version + 1, lease_until = NULL, updated_at = ? WHERE state = 'running' AND updated_at <= ?",
+    [nowIso, cutoff],
+  );
+  const queued = await db.run(
+    "UPDATE od_runs SET state = 'uncertain', error_code = 'stale_run', error_message = 'Execução na fila passou de 10 minutos do horário.', version = version + 1, updated_at = ? WHERE state = 'queued' AND scheduled_at IS NOT NULL AND scheduled_at <= ? AND updated_at <= ?",
+    [nowIso, cutoff, cutoff],
+  );
+  return running.changes + queued.changes;
+}
+
 /** Toma a execução com compare-and-set de versão + lease. */
 export async function claimRun(db: Db, run: RunRow, now: number, leaseMs = 4 * 60_000): Promise<RunRow | null> {
   const r = await db.run("UPDATE od_runs SET state = 'running', version = version + 1, attempt = attempt + 1, lease_until = ?, updated_at = ? WHERE id = ? AND version = ?", [
@@ -378,27 +392,37 @@ export async function countPending(db: Db, ownerId: string): Promise<number> {
 }
 
 export async function storeMessage(db: Db, keys: Keyring, p: { ownerId: string; connectionId: string; m: import("@open-dot/core").EmailMeta; now: number }) {
-  const aad = `msg:${p.ownerId}:${p.m.id}`;
-  await db.batch([
-    {
-      sql: "INSERT OR IGNORE INTO od_email_messages (owner_id, connection_id, message_id, thread_id, from_enc, subject_enc, snippet_enc, received_at, labels, list_unsub, bulk, fetched_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      args: [
-        p.ownerId,
-        p.connectionId,
-        p.m.id,
-        p.m.threadId,
-        await seal(keys, p.m.from, aad),
-        await seal(keys, p.m.subject, aad),
-        await seal(keys, p.m.snippet, aad),
-        p.m.receivedAt,
-        JSON.stringify(p.m.labels),
-        p.m.listUnsubscribe ? 1 : 0,
-        p.m.precedenceBulk ? 1 : 0,
-        iso(p.now),
-      ],
-    },
-    { sql: "DELETE FROM od_email_pending WHERE owner_id = ? AND connection_id = ? AND message_id = ?", args: [p.ownerId, p.connectionId, p.m.id] },
-  ]);
+  await storeMessages(db, keys, [p]);
+}
+
+export async function storeMessages(db: Db, keys: Keyring, rows: Array<{ ownerId: string; connectionId: string; m: import("@open-dot/core").EmailMeta; now: number }>) {
+  if (!rows.length) return;
+  const stmts: Stmt[] = [];
+  for (const p of rows) {
+    const aad = `msg:${p.ownerId}:${p.m.id}`;
+    stmts.push(
+      {
+        sql: "INSERT OR IGNORE INTO od_email_messages (owner_id, connection_id, message_id, thread_id, from_enc, subject_enc, snippet_enc, received_at, labels, list_unsub, bulk, fetched_at, rfc822_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        args: [
+          p.ownerId,
+          p.connectionId,
+          p.m.id,
+          p.m.threadId,
+          await seal(keys, p.m.from, aad),
+          await seal(keys, p.m.subject, aad),
+          await seal(keys, p.m.snippet, aad),
+          p.m.receivedAt,
+          JSON.stringify(p.m.labels),
+          p.m.listUnsubscribe ? 1 : 0,
+          p.m.precedenceBulk ? 1 : 0,
+          iso(p.now),
+          p.m.rfc822Id ?? null,
+        ],
+      },
+      { sql: "DELETE FROM od_email_pending WHERE owner_id = ? AND connection_id = ? AND message_id = ?", args: [p.ownerId, p.connectionId, p.m.id] },
+    );
+  }
+  await db.batch(stmts);
 }
 
 export async function dropPending(db: Db, ownerId: string, connectionId: string, messageId: string) {
@@ -410,8 +434,8 @@ export async function bumpPending(db: Db, ownerId: string, connectionId: string,
 }
 
 export async function untriagedMessages(db: Db, keys: Keyring, ownerId: string, limit = 50) {
-  const rows = await db.query<{ connection_id: string; message_id: string; thread_id: string; from_enc: string; subject_enc: string; snippet_enc: string | null; received_at: string; labels: string; list_unsub: number; bulk: number }>(
-    "SELECT connection_id, message_id, thread_id, from_enc, subject_enc, snippet_enc, received_at, labels, list_unsub, bulk FROM od_email_messages WHERE owner_id = ? AND digest_run_id IS NULL ORDER BY received_at DESC LIMIT ?",
+  const rows = await db.query<{ connection_id: string; message_id: string; thread_id: string; from_enc: string; subject_enc: string; snippet_enc: string | null; received_at: string; labels: string; list_unsub: number; bulk: number; rfc822_id: string | null }>(
+    "SELECT connection_id, message_id, thread_id, from_enc, subject_enc, snippet_enc, received_at, labels, list_unsub, bulk, rfc822_id FROM od_email_messages WHERE owner_id = ? AND digest_run_id IS NULL ORDER BY received_at DESC LIMIT ?",
     [ownerId, limit],
   );
   const out: Array<import("@open-dot/core").EmailMeta & { connectionId: string }> = [];
@@ -429,6 +453,7 @@ export async function untriagedMessages(db: Db, keys: Keyring, ownerId: string, 
       labels: JSON.parse(r.labels) as string[],
       listUnsubscribe: r.list_unsub === 1,
       precedenceBulk: r.bulk === 1,
+      rfc822Id: r.rfc822_id,
     });
   }
   return out;
@@ -449,6 +474,18 @@ export async function insertFeed(db: Db, keys: Keyring, p: { ownerId: string; ag
   }
   const res = await db.batch(stmts);
   return res[0]?.changes === 1 ? id : null;
+}
+
+export async function insertFeeds(db: Db, keys: Keyring, items: Array<{ ownerId: string; agentId: string; runId: string | null; kind: string; title: string; body: unknown; freshness: string; coverage: unknown; now: number; retentionDays?: number }>): Promise<void> {
+  if (!items.length) return;
+  const stmts: Stmt[] = [];
+  for (const p of items) {
+    stmts.push({
+      sql: "INSERT OR IGNORE INTO od_feed_items (id, owner_id, agent_id, run_id, kind, title, body_enc, freshness, coverage, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      args: [randomId("fd_"), p.ownerId, p.agentId, p.runId, p.kind, p.title, await seal(keys, JSON.stringify(p.body), `feed:${p.ownerId}`), p.freshness, p.coverage ? JSON.stringify(p.coverage) : null, iso(p.now), iso(p.now + (p.retentionDays ?? 30) * 86_400_000)],
+    });
+  }
+  await db.batch(stmts);
 }
 
 export async function listFeed(db: Db, keys: Keyring, ownerId: string, p: { before?: { createdAt: string; id: string } | null; limit: number; now: number }) {
