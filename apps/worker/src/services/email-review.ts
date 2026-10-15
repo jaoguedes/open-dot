@@ -9,11 +9,12 @@ import {
   renderUntrusted,
   sanitizeUntrusted,
   validateProviders,
+  senderDomain,
 } from "@open-dot/core";
 import { gmailWebHref } from "@open-dot/connectors/gmail.ts";
 import type { Ctx } from "../context.ts";
 import * as repo from "../repo.ts";
-import { domainsMatching } from "./triage-feedback.ts";
+import { domainHash, domainsMatching } from "./triage-feedback.ts";
 
 export interface ReviewResult {
   state: "succeeded" | "failed" | "retry_scheduled";
@@ -100,6 +101,12 @@ export async function runEmailReview(ctx: Ctx, run: repo.RunRow, fetchImpl: type
     else aiNote = "Aviso por regras. A IA privada não está disponível.";
   }
 
+  // Hash do domínio de cada item (nunca o domínio): a tela tira da contagem quem foi silenciado.
+  const senderHash = new Map<string, string>();
+  for (const i of resumo.itens) {
+    const d = senderDomain(messages.find((x) => x.id === i.origem)?.from ?? "");
+    if (d) senderHash.set(i.origem, await domainHash(run.owner_id, d));
+  }
   const slotLabel = run.scheduled_at && run.slot_key && !run.slot_key.includes(":manual:") ? `${String(localParts(Date.parse(run.scheduled_at), tz).hour).padStart(2, "0")}h` : "agora";
   const nome = (from: string) => {
     const n = from.split("<")[0]?.trim().replace(/^"|"$/g, "") ?? "";
@@ -109,7 +116,7 @@ export async function runEmailReview(ctx: Ctx, run: repo.RunRow, fetchImpl: type
     abertura: resumo.abertura,
     itens: resumo.itens.map((i) => {
       const m = messages.find((x) => x.id === i.origem);
-      return { ...i, de: m ? nome(m.from) : "Remetente", href: gmailWebHref(i.origem, i.rfc822 ?? m?.rfc822Id) };
+      return { ...i, de: m ? nome(m.from) : "Remetente", href: gmailWebHref(i.origem, i.rfc822 ?? m?.rfc822Id), remetente: senderHash.get(i.origem) ?? null };
     }),
     sem_acao: resumo.sem_acao,
     ruido: resumo.ruido,

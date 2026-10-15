@@ -4,6 +4,7 @@ import { ApiError, api, fetchSnapshot, loadSnapshot, type Snapshot } from "./api
 import { shouldRefresh, type RefreshTrigger } from "./refresh-policy.ts";
 import { setOwnerTimeZone } from "./format.ts";
 import { applyDismiss } from "./presence.ts";
+import { openDigestItems, type TriageMark } from "./digest-open.ts";
 import { DEFAULT_VOLUME, sound } from "./sound.ts";
 import { apiFailureMode } from "./failure-mode.ts";
 
@@ -47,6 +48,15 @@ interface AppState {
   loadMoreFeed: () => Promise<void>;
   /** Some com o erro do agente até a próxima execução dele. */
   dismissError: (a: AgentId) => void;
+  /** Itens abertos do resumo do Correio (G): base da abertura e de todas as contagens. */
+  mailOpen: ReturnType<typeof openDigestItems>;
+  triageMarks: Record<string, TriageMark>;
+  markTriage: (origem: string, mark: TriageMark) => void;
+  /** Ao voltar a avisar um remetente, limpa as marcas "Não importa" dos itens dele. */
+  clearTriageFor: (remetente: string) => void;
+  /** Aviso curto no topo (ex.: "Silenciei X", com Desfazer). */
+  notice: { text: string; undoHash?: string } | null;
+  setNotice: (n: { text: string; undoHash?: string } | null) => void;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -59,6 +69,7 @@ export function useApp(): AppState {
 
 const PREFS_KEY = "open-dot:prefs";
 const DISMISS_KEY = "open-dot:dismissed-errors";
+const TRIAGE_KEY = "open-dot:triage-marks";
 function readPrefs(): Prefs {
   const base: Prefs = { theme: "dark", motion: "system", transparency: "system", accessories: true, sound: false, soundVolume: DEFAULT_VOLUME };
   try {
@@ -94,6 +105,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [announcement, setAnnouncement] = useState("");
   const [activity, setActivity] = useState<AgentVisual | null>(null);
   const [feedNext, setFeedNext] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ text: string; undoHash?: string } | null>(null);
+  const [triageMarks, setTriageMarks] = useState<Record<string, TriageMark>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(TRIAGE_KEY) ?? "{}") as Record<string, TriageMark>;
+    } catch {
+      return {};
+    }
+  });
+  const markTriage = useCallback((origem: string, mark: TriageMark) => {
+    setTriageMarks((old) => {
+      const next = { ...old, [origem]: mark };
+      try {
+        localStorage.setItem(TRIAGE_KEY, JSON.stringify(next));
+      } catch {
+        /* sem armazenamento: vale até recarregar */
+      }
+      return next;
+    });
+  }, []);
+  const clearTriageFor = useCallback(
+    (remetente: string) => {
+      const ids = new Set(
+        (snap?.feed ?? [])
+          .flatMap((f) => f.body.itens ?? [])
+          .filter((i) => i.remetente === remetente)
+          .map((i) => i.origem),
+      );
+      setTriageMarks((old) => {
+        const next = Object.fromEntries(Object.entries(old).filter(([k]) => !ids.has(k)));
+        try {
+          localStorage.setItem(TRIAGE_KEY, JSON.stringify(next));
+        } catch {
+          /* sem armazenamento */
+        }
+        return next;
+      });
+    },
+    [snap],
+  );
+  const mailOpen = useMemo(() => openDigestItems(snap?.feed.find((f) => f.kind === "email_digest"), new Set(snap?.silenced ?? []), triageMarks), [snap, triageMarks]);
   const [dismissed, setDismissed] = useState<Partial<Record<AgentId, number>>>(() => {
     try {
       return JSON.parse(localStorage.getItem(DISMISS_KEY) ?? "{}") as Partial<Record<AgentId, number>>;
@@ -359,6 +410,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       feedHasMore: Boolean(feedNext) && mode === "live",
       loadMoreFeed,
       dismissError,
+      mailOpen,
+      triageMarks,
+      markTriage,
+      clearTriageFor,
+      notice,
+      setNotice,
     }),
     [
       mode,
@@ -385,6 +442,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       feedNext,
       loadMoreFeed,
       dismissError,
+      mailOpen,
+      triageMarks,
+      markTriage,
+      clearTriageFor,
+      notice,
     ],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

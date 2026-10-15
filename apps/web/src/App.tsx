@@ -268,6 +268,7 @@ export function App() {
                 onDismiss={() => setTrouble(null)}
               />
             )}
+            {app.notice && <NoticeBar />}
             {update && (
               <div className="banner" role="status">
                 Nova versão disponível
@@ -602,7 +603,8 @@ function Island({ go }: { go: (p: string) => void }) {
   // Execução ativa mais recente, pelo estado real (E5).
   const activeRun = app.snap?.runs.find((r) => r.state === "running" || r.state === "queued" || r.state === "retry_scheduled") ?? null;
   const progress = runProgress(activeRun);
-  const line2 = islandReason(shown.reason) ?? (digest ? `${digest.body.counts?.important ?? 0} mensagens desde as 17h` : "Nada pendente agora");
+  const openMail = digest?.body.itens ? app.mailOpen.length : digest && digest.state !== "done" && digest.state !== "snoozed" ? (digest.body.counts?.important ?? 0) : 0;
+  const line2 = islandReason(shown.reason) ?? (openMail ? `${openMail} ${openMail === 1 ? "e-mail pede" : "e-mails pedem"} você` : "Nada pendente agora");
   // A ilha não é região viva: só erro e "precisa de você" são anunciados, uma vez por mudança (D4).
   const spoken = useRef<string>("");
   const { announce } = app;
@@ -730,5 +732,38 @@ function Setup() {
         </button>
       </div>
     </main>
+  );
+}
+
+/** Aviso curto da triagem (G) com Desfazer quando um remetente foi silenciado. */
+function NoticeBar() {
+  const app = useApp();
+  const [busy, setBusy] = useState(false);
+  const n = app.notice!;
+  const undo = async () => {
+    setBusy(true);
+    try {
+      await api.undoSilence(n.undoHash!);
+      app.clearTriageFor(n.undoHash!);
+      app.setNotice({ text: "Desfeito. Voltei a avisar sobre esse remetente." });
+      await app.refresh();
+    } catch {
+      app.setNotice({ text: "Não consegui desfazer. Tente em Conexões > Remetentes silenciados." });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="banner" role="status">
+      <span>{n.text}</span>
+      {n.undoHash && (
+        <button className="btn" type="button" disabled={busy} onClick={() => void undo()}>
+          Desfazer
+        </button>
+      )}
+      <button className="btn ghost" type="button" onClick={() => app.setNotice(null)}>
+        Fechar
+      </button>
+    </div>
   );
 }

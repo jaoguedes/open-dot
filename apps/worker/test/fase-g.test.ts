@@ -49,3 +49,16 @@ test("retorno sobre mensagem de outro dono ou inexistente é 404", async () => {
   assert.equal((await c.call("POST", "/api/correio/feedback", { messageId: "nao-existe", categoria: "outro", rotulo: "importante" })).status, 404);
   assert.equal((await c.call("POST", "/api/correio/feedback", { messageId: "x", categoria: "outro", rotulo: "qualquer" })).status, 400);
 });
+
+test("cada item do resumo traz o hash do domínio (nunca o domínio) e o snapshot traz os silenciados", async () => {
+  const google = new FakeGoogle();
+  google.addMessage({ id: "p1", subject: "Sua fatura vence amanhã", from: "Banco <faturas@banco-x.test>", snippet: "R$ 10,00" }, false);
+  const { c } = await connected(google);
+  await c.call("POST", "/api/correio/review-now");
+  const snap = (await c.call("GET", "/api/snapshot")).json;
+  const digest = snap.feed.items.find((i: { kind: string }) => i.kind === "email_digest");
+  const it = digest.body.itens.find((i: { origem: string }) => i.origem === "p1");
+  assert.match(it.remetente, /^[a-f0-9]{64}$/);
+  assert.equal(JSON.stringify(digest).includes("banco-x"), false);
+  assert.deepEqual(snap.silenced, { senders: [] });
+});

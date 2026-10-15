@@ -555,6 +555,7 @@ const SNAPSHOT_PARTS = [
   ["status", "/api/status"],
   ["approvals", "/api/approvals"],
   ["shipments", "/api/shipments"],
+  ["silenced", "/api/correio/silenced"],
 ] as const;
 
 async function internalGet(ctx: Ctx, req: Request, path: string, ownerId: string): Promise<unknown> {

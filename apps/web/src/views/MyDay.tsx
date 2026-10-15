@@ -8,12 +8,14 @@ import { agentConnected, agentPresence, dominantVisual, type ConnectionFacts } f
 import type { ApprovalView, FeedEntry } from "../api.ts";
 import { ApiError, api } from "../api.ts";
 import { GmailOpen } from "../components/GmailOpen.tsx";
+import { aberturaFor, openDigestItems } from "../digest-open.ts";
 
 type Filter = "all" | "need" | "sources";
 
-function isNeed(it: FeedEntry): boolean {
+/** Pede você? Para o resumo do Correio vale a contagem de itens ABERTOS (G). */
+function isNeedWith(it: FeedEntry, mailOpenCount: number): boolean {
   if (it.kind === "ci_failure" || it.kind === "site_incident" || it.kind === "quote_alert") return true;
-  if (it.kind === "email_digest") return (it.body.itens?.length ?? it.body.counts?.important ?? 0) > 0;
+  if (it.kind === "email_digest") return it.body.itens ? mailOpenCount > 0 : (it.body.counts?.important ?? 0) > 0;
   return false;
 }
 
@@ -24,9 +26,10 @@ export function MyDay() {
   const snap = app.snap;
   const name = snap?.owner?.name?.split(" ")[0];
   const digest = snap?.feed.find((f) => f.kind === "email_digest");
+  const isNeed = (it: FeedEntry) => isNeedWith(it, it === digest ? app.mailOpen.length : openDigestItems(it, new Set(snap?.silenced ?? []), app.triageMarks).length);
   const items = (snap?.feed ?? []).filter((f) => f.kind !== "notice");
   const shown = items.filter((it) => (filter === "all" ? true : filter === "need" ? isNeed(it) : Boolean(it.body.href) || it.kind === "email_digest" || it.kind === "news_digest"));
-  const mailNeed = digest && digest.state !== "done" && digest.state !== "snoozed" ? (digest.body.itens?.length ?? digest.body.counts?.important ?? 0) : 0;
+  const mailNeed = !digest || digest.state === "done" || digest.state === "snoozed" ? 0 : digest.body.itens ? app.mailOpen.length : (digest.body.counts?.important ?? 0);
   const otherNeed = items.filter((it) => it.kind !== "email_digest" && isNeed(it) && it.state !== "done" && it.state !== "snoozed").length;
   const need = mailNeed + otherNeed;
   const reviewed = digest?.body.total ?? 0;
@@ -59,7 +62,7 @@ export function MyDay() {
           <p className="serif">{needYouLine(need)}</p>
           {digest && (
             <p className="meta">
-              {digest.body.abertura ?? digest.body.headline} {monitors.length ? `${up}/${monitors.length} sites no ar.` : ""}
+              {digest.body.itens ? aberturaFor(mailNeed) : (digest.body.abertura ?? digest.body.headline)} {monitors.length ? `${up}/${monitors.length} sites no ar.` : ""}
             </p>
           )}
         </div>
@@ -196,9 +199,11 @@ export function MyDay() {
 function FeedCardBody({ item }: { item: FeedEntry }) {
   const app = useApp();
   if (item.kind === "email_digest" && item.body.itens?.length) {
+    const open = openDigestItems(item, new Set(app.snap?.silenced ?? []), app.triageMarks);
+    const hidden = item.body.itens.length - open.length;
     return (
       <>
-        {item.body.itens.map((it) => (
+        {open.map((it) => (
           <article className="stack-4 mt-8" key={it.origem}>
             <div className="tiny">
               {it.categoria} · {fmtWhen(it.quando)}
@@ -214,6 +219,7 @@ function FeedCardBody({ item }: { item: FeedEntry }) {
             <TriageButtons messageId={it.origem} categoria={it.categoria} />
           </article>
         ))}
+        {hidden > 0 && <p className="tiny mt-8">{hidden === 1 ? "1 item fora da lista" : `${hidden} itens fora da lista`} (feito, adiado, silenciado ou “Não importa”).</p>}
       </>
     );
   }

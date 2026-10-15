@@ -49,6 +49,8 @@ export interface FeedEntry {
       de?: string;
       href?: string;
       rfc822?: string | null;
+      /** Hash do domínio do remetente (nunca o domínio). */
+      remetente?: string | null;
     }>;
     sem_acao?: string[];
     ruido?: { contagem: number };
@@ -107,6 +109,8 @@ export interface Snapshot {
   approvals: ApprovalView[];
   canSend: boolean;
   shipments: ShipmentSnapshot;
+  /** Hashes de domínio dos remetentes silenciados (G). */
+  silenced?: string[];
 }
 
 export interface ApprovalView {
@@ -367,6 +371,7 @@ export async function fetchSnapshot(etag: string | null): Promise<SnapshotFetch>
       approvals: approvals.approvals,
       canSend: approvals.canSend,
       shipments: data.shipments ?? emptyShipments,
+      silenced: Array.isArray(data.silenced?.senders) ? data.silenced.senders.map((s: { domainHash: string }) => s.domainHash) : [],
     },
   };
 }

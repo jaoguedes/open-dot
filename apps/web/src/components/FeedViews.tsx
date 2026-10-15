@@ -1,3 +1,4 @@
+import { aberturaFor, openDigestItems } from "../digest-open.ts";
 import { TriageButtons } from "./TriageButtons.tsx";
 import { SourcePill } from "./SourcePill.tsx";
 import { gmailWebHref } from "@open-dot/connectors/gmail.ts";
@@ -41,11 +42,13 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
   const app = useApp();
   const b = item.body;
   if (b.itens) {
+    const open = openDigestItems(item, new Set(app.snap?.silenced ?? []), app.triageMarks);
+    const hidden = b.itens.length - open.length;
     return (
       <section aria-labelledby={`h-${item.id}`}>
         <h2 id={`h-${item.id}`}>{item.title}</h2>
-        <p className="lead">{b.abertura ?? b.headline}</p>
-        {b.itens.map((it) => (
+        <p className="lead">{aberturaFor(open.length)}</p>
+        {open.map((it) => (
           <article key={it.origem} className="card mt-12">
             <div className="card-top">
               {it.categoria} · {fmtWhen(it.quando)}
@@ -62,6 +65,7 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
             <TriageButtons messageId={it.origem} categoria={it.categoria} />
           </article>
         ))}
+        {hidden > 0 && <p className="tiny mt-8">{hidden === 1 ? "1 item fora da lista" : `${hidden} itens fora da lista`} (feito, adiado, silenciado ou “Não importa”).</p>}
         {b.sem_acao?.length || b.ruido?.contagem ? (
           <details className="mt-12">
             <summary>
