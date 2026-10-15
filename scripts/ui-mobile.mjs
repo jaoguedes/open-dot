@@ -40,19 +40,34 @@ for (const [path, name] of paths) {
   await page.locator(".splash").waitFor({ state: "detached", timeout: 8_000 }).catch(() => {});
   const wide = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
   if (wide) fail(`${name}: rolagem horizontal`);
-  const covered = await page.evaluate(() => {
-    const box = document.querySelector(".composer");
-    if (!box) return false;
-    const br = box.getBoundingClientRect();
-    return [...document.querySelectorAll("button, a.btn")].some((el) => {
-      const r = el.getBoundingClientRect();
-      if (r.width < 2 || r.height < 2) return false;
-      if (r.bottom < 0 || r.top > window.innerHeight) return false;
-      const hit = !(r.bottom <= br.top + 1 || r.top >= br.bottom - 1 || r.right <= br.left || r.left >= br.right);
-      return hit && el.closest(".composer") == null;
+  // A caixa é fixa e o conteúdo rola por baixo dela. Falha se um botão estiver inteiro
+  // escondido na primeira vista, ou se ainda houver sobreposição depois de rolar até o fim
+  // (aí ele seria inalcançável).
+  const coveredNow = (whole) =>
+    page.evaluate((whole) => {
+      const box = document.querySelector(".composer");
+      if (!box) return null;
+      const br = box.getBoundingClientRect();
+      const hit = [...document.querySelectorAll("button, a.btn")].find((el) => {
+        if (el.closest(".composer")) return false;
+        const r = el.getBoundingClientRect();
+        if (r.width < 2 || r.height < 2 || r.bottom < 0 || r.top > window.innerHeight) return false;
+        if (r.right <= br.left || r.left >= br.right) return false;
+        return whole ? r.top >= br.top - 1 && r.bottom <= br.bottom + 1 : !(r.bottom <= br.top + 1 || r.top >= br.bottom - 1);
+      });
+      return hit ? hit.textContent.trim().slice(0, 40) : null;
+    }, whole);
+  let covered = await coveredNow(true);
+  if (!covered) {
+    await page.evaluate(() => {
+      const c = document.getElementById("conteudo");
+      if (c) c.scrollTop = c.scrollHeight;
+      window.scrollTo(0, document.body.scrollHeight);
     });
-  });
-  if (covered) fail(`${name}: botão coberto pela caixa de perguntas`);
+    await page.waitForTimeout(150);
+    covered = await coveredNow(false);
+  }
+  if (covered) fail(`${name}: botão "${covered}" coberto pela caixa de perguntas`);
   if (errors.length) fail(`${name}: console ${errors[0]}`);
   else console.log("ok   " + name);
 }
@@ -61,13 +76,14 @@ errors.length = 0;
 await page.goto(BASE + "/?demo=1", { waitUntil: "domcontentloaded" });
 await page.locator(".splash").waitFor({ state: "detached", timeout: 8_000 }).catch(() => {});
 await page.getByRole("button", { name: "Perguntar ao Dot" }).click();
-const dialog = page.getByRole("dialog", { name: "Buscar ou ir para" });
+const dialog = page.getByRole("dialog", { name: "Buscar ou perguntar" });
 await dialog.waitFor({ timeout: 5_000 });
 const box = await dialog.boundingBox();
 if (!box || box.width < 40 || box.height < 40) fail("busca: diálogo invisível");
 else console.log("ok   Busca");
-await page.mouse.click(8, 8);
-await dialog.waitFor({ state: "hidden", timeout: 3_000 }).catch(() => fail("busca: não fechou ao tocar fora"));
+if (box && (box.width < 380 || box.height < 800)) fail("busca: no celular deveria ocupar a tela");
+await dialog.getByRole("button", { name: "Fechar" }).click();
+await dialog.waitFor({ state: "hidden", timeout: 3_000 }).catch(() => fail("busca: não fechou no Fechar"));
 
 async function openDemo(path) {
   errors.length = 0;

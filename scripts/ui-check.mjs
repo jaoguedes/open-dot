@@ -172,7 +172,7 @@ for (const [w, label] of [[320, "320px"], [390, "390px"], [640, "zoom200-1280"]]
   const outline = await p.evaluate(() => getComputedStyle(document.activeElement).outlineStyle);
   check("foco visível no próximo controle", outline !== "none", outline);
   await p.keyboard.press("Control+k");
-  check("Ctrl/⌘+K abre 'Ir para'", await p.getByRole("dialog", { name: "Buscar ou ir para" }).isVisible());
+  check("Ctrl/⌘+K abre 'Ir para'", await p.getByRole("dialog", { name: "Buscar ou perguntar" }).isVisible());
   await p.keyboard.type("rot");
   await p.keyboard.press("Enter");
   check("navegação por teclado no 'Ir para'", p.url().includes("/rotinas"));
