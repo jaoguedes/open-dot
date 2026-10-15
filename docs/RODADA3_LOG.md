@@ -156,3 +156,13 @@ Também: Coucou registrado em `docs/LICENCAS.md` e `NOTICE` (URL não consta no 
 | F6 dados | nada | `GET /api/export` (JSON legível e decifrado, sem tokens, sem hash de sessão, sem texto integral dos arquivos) e `POST /api/account/delete` com `{confirm:"APAGAR TUDO"}`: revoga o Google (cortesia) e apaga, numa transação, as 28 tabelas do dono, o contador de cota e o dono. | `fase-f.test.ts`: exportar 0/1 → 1/1; apagar exige a frase e não toca outro dono 0/1 → 1/1; ui F6. **Não executei em produção.** |
 
 Migração `0007` (aditiva) e `REQUIRED_SCHEMA = "0007"`. O Worker anterior (exige 0006) segue saudável com banco 0007.
+
+## Fase G (parcial, 15/10/2026) — sessão interrompida por limite de uso
+
+Feito e testado (não publicado):
+- `classify()`: massa primeiro; em massa só entra segurança/pagamento com sinal forte ou domínio de confiança (visto fora de massa ou marcado “Era importante”); código de rastreio vale mesmo em massa; pergunta de pessoa antes de “cobrança”. Conversa agrupada por `threadId` com “(+N na conversa)”.
+- `redactMail`/`resumoHasSecret`: só código de login (4–8 dígitos perto de código/senha/entrar…), cartão (13–19 dígitos, com espaços), link e e-mail completo. R$, CEP e nº de pedido ficam. `packages/core/test/correio.test.ts`.
+- `npm run eval:correio` + `packages/core/test/fixtures/correio-gold.json` (85 e-mails sintéticos). Linha de base antes da mudança: precisão “precisa de você” 80,4%, revocação seg+pag 94,4% → REPROVADO. Depois: 100%/100%. **Honestidade:** um conjunto separado de 16 casos escrito depois das regras deu revocação seg+pag 0% e “precisa de você” 33%; o vocabulário foi ampliado ao vê-lo e os 16 casos foram para o conjunto principal. Não existe mais conjunto não ajustado; o número real em e-mail de verdade é desconhecido.
+- Retorno do dono: `POST /api/correio/feedback`, `GET /api/correio/silenced`, `POST /api/correio/silenced/:hash/undo`; domínio só como hash + cifrado (`od_triage_feedback`, migração 0007); revisão seguinte trata silenciados como ruído. `apps/worker/test/fase-g.test.ts` (rotas não existiam antes → falhava). Botões “Era importante”/“Não importa” nos itens do resumo (`TriageButtons`).
+
+Não feito: lista “Remetentes silenciados” em Conexões (a rota existe, a tela não); “abertura e contagens só com itens abertos” no `DigestBlock`/ilha; teste de navegador da G; `eval:correio` no `check`/CI; auditorias 1–3; deploy final das fases D–G; atualização de STATUS/DECISOES/ACOES_DO_JOAO.

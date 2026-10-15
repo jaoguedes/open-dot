@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   AGENTS,
+  senderDomain,
   agentsInPlace,
   GMAIL_CAN_SEND,
   selfHealthUrl,
@@ -37,6 +38,7 @@ import { pkceChallenge, randomToken } from "./crypto.ts";
 import { csrfOk, currentOwner, currentSessionHash, endSession, json, problem, redirect, SECURITY_HEADERS, startSession, sessionCookie, withSessionCookie } from "./http.ts";
 import * as repo from "./repo.ts";
 import * as account from "./services/account.ts";
+import * as triage from "./services/triage-feedback.ts";
 import { makeRouter, runEmailReview } from "./services/email-review.ts";
 import { syncGmail } from "./services/gmail.ts";
 import * as shipments from "./services/shipments.ts";
@@ -492,6 +494,32 @@ route("POST", "/api/connections/:id/disconnect", { auth: true }, async (ctx, _r,
   await repo.disconnect(ctx.db, ownerId!, conn.id, ctx.now());
   await repo.audit(ctx.db, { ownerId, actor: "user", action: "disconnect", target: conn.id, outcome: revoked ? "revoked" : "local_only", now: ctx.now() });
   return json({ ok: true, revokedAtProvider: revoked });
+});
+
+// ---------------------------------------------------------------- Retorno sobre a triagem (G)
+
+const FeedbackInput = z.object({ messageId: z.string().min(1).max(200), categoria: z.string().min(1).max(40), rotulo: z.enum(["importante", "nao_importa"]) });
+
+route("POST", "/api/correio/feedback", { auth: true }, async (ctx, req, _p, ownerId) => {
+  const body = FeedbackInput.parse(await req.json());
+  const from = await repo.messageSender(ctx.db, ctx.keys, ownerId!, body.messageId);
+  const domain = from ? senderDomain(from) : null;
+  if (!domain) return problem(404, "not_found", "Não achei essa mensagem.");
+  const hash = await triage.domainHash(ownerId!, domain);
+  await repo.recordTriageFeedback(ctx.db, ctx.keys, { ownerId: ownerId!, domainHash: hash, domainLabel: domain, categoria: body.categoria, rotulo: body.rotulo, now: ctx.now() });
+  const silenced = (await repo.silencedSenders(ctx.db, ctx.keys, ownerId!)).some((s) => s.domainHash === hash);
+  await repo.audit(ctx.db, { ownerId, actor: "user", action: "triage_feedback", outcome: body.rotulo, now: ctx.now() });
+  return json({ ok: true, silenced, label: silenced ? domain : null, ...(silenced ? { hash } : {}) });
+});
+
+route("GET", "/api/correio/silenced", { auth: true }, async (ctx, _r, _p, ownerId) => json({ senders: await repo.silencedSenders(ctx.db, ctx.keys, ownerId!) }));
+
+route("POST", "/api/correio/silenced/:hash/undo", { auth: true }, async (ctx, _r, p, ownerId) => {
+  if (!/^[a-f0-9]{64}$/.test(p.hash!)) return problem(400, "invalid_input", "Remetente inválido.");
+  const listed = (await repo.silencedSenders(ctx.db, ctx.keys, ownerId!)).find((s) => s.domainHash === p.hash);
+  if (!listed) return problem(404, "not_found", "Esse remetente não está silenciado.");
+  await repo.recordTriageFeedback(ctx.db, ctx.keys, { ownerId: ownerId!, domainHash: p.hash!, domainLabel: null, categoria: "outro", rotulo: "desfazer", now: ctx.now() });
+  return json({ ok: true });
 });
 
 // ---------------------------------------------------------------- Diagnóstico e dados (F4, F6)

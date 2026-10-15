@@ -13,6 +13,7 @@ import {
 import { gmailWebHref } from "@open-dot/connectors/gmail.ts";
 import type { Ctx } from "../context.ts";
 import * as repo from "../repo.ts";
+import { domainsMatching } from "./triage-feedback.ts";
 
 export interface ReviewResult {
   state: "succeeded" | "failed" | "retry_scheduled";
@@ -64,7 +65,11 @@ export async function runEmailReview(ctx: Ctx, run: repo.RunRow, fetchImpl: type
 
   let aiUsed = false;
   let aiNote: string | null = "Aviso por regras. A IA privada não entrou nesta revisão.";
-  let resumo = buildCorreioResumo(messages);
+  // Retorno do dono (G): "Não importa" 2× silencia o domínio; "Era importante" o torna de confiança.
+  const froms = messages.map((m) => m.from);
+  const silenced = await domainsMatching(run.owner_id, froms, new Set((await repo.silencedSenders(ctx.db, ctx.keys, run.owner_id)).map((s) => s.domainHash)));
+  const trusted = await domainsMatching(run.owner_id, froms, await repo.importantDomainHashes(ctx.db, run.owner_id));
+  let resumo = buildCorreioResumo(messages, { silenced, trusted });
 
   if (messages.length) {
     const router = makeRouter(ctx, fetchImpl);

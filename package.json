@@ -37,7 +37,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "ui:fase-f": "node scripts/ui-fase-f.mjs"
+    "ui:fase-f": "node scripts/ui-fase-f.mjs",
+    "eval:correio": "tsx scripts/eval-correio.ts"
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",

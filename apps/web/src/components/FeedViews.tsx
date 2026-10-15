@@ -1,3 +1,4 @@
+import { TriageButtons } from "./TriageButtons.tsx";
 import { SourcePill } from "./SourcePill.tsx";
 import { gmailWebHref } from "@open-dot/connectors/gmail.ts";
 import { AGENTS } from "@open-dot/core";
@@ -58,6 +59,7 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
             <div className="row-actions">
               <GmailOpen gmailId={it.origem} rfc822={it.rfc822} demo={app.mode === "demo"} />
             </div>
+            <TriageButtons messageId={it.origem} categoria={it.categoria} />
           </article>
         ))}
         {b.sem_acao?.length || b.ruido?.contagem ? (

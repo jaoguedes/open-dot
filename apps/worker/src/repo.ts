@@ -1129,3 +1129,21 @@ export async function silencedSenders(db: Db, keys: Keyring, ownerId: string): P
   }
   return out;
 }
+
+/** Remetente de uma mensagem do dono (decifrado), para o retorno da triagem. Só o "De:". */
+export async function messageSender(db: Db, keys: Keyring, ownerId: string, messageId: string): Promise<string | null> {
+  const r = (await db.query<{ from_enc: string }>("SELECT from_enc FROM od_email_messages WHERE owner_id = ? AND message_id = ?", [ownerId, messageId]))[0];
+  if (!r) return null;
+  return open(keys, r.from_enc, `msg:${ownerId}:${messageId}`);
+}
+
+/** Domínios que o dono marcou "Era importante" por último: viram remetentes de confiança. */
+export async function importantDomainHashes(db: Db, ownerId: string): Promise<Set<string>> {
+  const rows = await db.query<{ sender_domain_hash: string; rotulo: string }>(
+    "SELECT sender_domain_hash, rotulo FROM od_triage_feedback WHERE owner_id = ? ORDER BY at ASC, id ASC LIMIT 2000",
+    [ownerId],
+  );
+  const last = new Map<string, string>();
+  for (const r of rows) last.set(r.sender_domain_hash, r.rotulo);
+  return new Set([...last].filter(([, l]) => l === "importante").map(([h]) => h));
+}

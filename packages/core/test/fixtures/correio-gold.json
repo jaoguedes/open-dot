@@ -1,0 +1,1451 @@
+{
+ "versao": 1,
+ "nota": "E-mails 100% sintéticos (domínios .test). Nenhum dado real. g01–g69 foram escritos junto com as regras; h01–h16 depois, e as regras foram ampliadas ao vê-los (ver docs/RODADA3_LOG.md).",
+ "emails": [
+  {
+   "id": "g01",
+   "threadId": "t01",
+   "from": "Banco Exemplo <seguranca@bancoexemplo.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Novo login na sua conta",
+   "snippet": "Detectamos um novo login a partir de um dispositivo desconhecido.",
+   "receivedAt": "2026-10-15T07:01:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "seguranca",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g02",
+   "threadId": "t02",
+   "from": "Loja Teste <conta@lojateste.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Senha alterada",
+   "snippet": "A senha da sua conta foi alterada agora.",
+   "receivedAt": "2026-10-15T08:02:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "seguranca",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g03",
+   "threadId": "t03",
+   "from": "Nuvem <no-reply@nuvem.test>",
+   "to": "voce@exemplo.test",
+   "subject": "A verificação em duas etapas foi desativada",
+   "snippet": "2FA desativado na sua conta. Se não foi você, aja agora.",
+   "receivedAt": "2026-10-15T09:03:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "seguranca",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g04",
+   "threadId": "t04",
+   "from": "Correio Web <security@correioweb.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Tentativa de acesso bloqueada",
+   "snippet": "Uma tentativa de acesso suspeita foi bloqueada.",
+   "receivedAt": "2026-10-15T10:04:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "seguranca",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g05",
+   "threadId": "t05",
+   "from": "Rede Social <alertas@rede.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Login suspeito detectado",
+   "snippet": "Login suspeito em São Paulo às 03:12.",
+   "receivedAt": "2026-10-15T11:05:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "seguranca",
+   "importante": true,
+   "nota": "massa, sinal forte"
+  },
+  {
+   "id": "g06",
+   "threadId": "t06",
+   "from": "Cloud <noreply@cloud.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Sign-in attempt",
+   "snippet": "New sign-in attempt to your account from an unknown device.",
+   "receivedAt": "2026-10-15T12:06:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "seguranca",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g07",
+   "threadId": "t07",
+   "from": "App Fit <ajuda@appfit.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Sua senha foi alterada",
+   "snippet": "Confirmamos a alteração da senha.",
+   "receivedAt": "2026-10-15T13:07:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "seguranca",
+   "importante": true,
+   "nota": "massa, sinal forte"
+  },
+  {
+   "id": "g08",
+   "threadId": "t08",
+   "from": "Provedor <contas@provedor.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Acesso suspeito no seu e-mail",
+   "snippet": "Houve acesso suspeito; revise as sessões.",
+   "receivedAt": "2026-10-15T14:08:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "seguranca",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g09",
+   "threadId": "t09",
+   "from": "Streaming <cobranca@streaming.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Pagamento recusado",
+   "snippet": "Não conseguimos processar o pagamento da sua assinatura.",
+   "receivedAt": "2026-10-15T15:09:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": "massa, sinal forte"
+  },
+  {
+   "id": "g10",
+   "threadId": "t10",
+   "from": "Música <billing@musica.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Falha no pagamento",
+   "snippet": "Seu cartão foi recusado. Atualize a forma de pagamento.",
+   "receivedAt": "2026-10-15T16:10:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g11",
+   "threadId": "t11",
+   "from": "Banco Exemplo <faturas@bancoexemplo.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Sua fatura vence amanhã",
+   "snippet": "Fatura de outubro: R$ 1.234,56 com vencimento em 16/10.",
+   "receivedAt": "2026-10-15T17:11:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": "massa, sinal forte; domínio também confiável"
+  },
+  {
+   "id": "g12",
+   "threadId": "t12",
+   "from": "Condomínio Sol <adm@condominiosol.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Boleto disponível",
+   "snippet": "Seu boleto de R$ 89,90 já está disponível. Vencimento 20/10.",
+   "receivedAt": "2026-10-15T18:12:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g13",
+   "threadId": "t13",
+   "from": "Cartão Azul <fatura@cartaoazul.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Fatura fechada",
+   "snippet": "Sua fatura fechou em R$ 2.010,00.",
+   "receivedAt": "2026-10-15T19:13:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g14",
+   "threadId": "t14",
+   "from": "Editor <assinaturas@editor.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Não foi possível cobrar sua assinatura",
+   "snippet": "Não foi possível cobrar o plano anual.",
+   "receivedAt": "2026-10-15T06:14:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g15",
+   "threadId": "t15",
+   "from": "Internet Rápida <cobranca@internet.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Cobrança em atraso",
+   "snippet": "Identificamos uma cobrança em atraso de R$ 45,00.",
+   "receivedAt": "2026-10-15T07:15:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": "massa, sinal forte"
+  },
+  {
+   "id": "g16",
+   "threadId": "t16",
+   "from": "Hospedagem <billing@hosting.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Invoice #4821",
+   "snippet": "Your invoice for October is ready. Amount due: US$ 12.00.",
+   "receivedAt": "2026-10-15T08:16:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g17",
+   "threadId": "t17",
+   "from": "Seguro Bom <financeiro@segurobom.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Débito automático agendado",
+   "snippet": "Débito de R$ 120,00 agendado para 18/10.",
+   "receivedAt": "2026-10-15T09:17:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g18",
+   "threadId": "t18",
+   "from": "SaaS <billing@saas.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Payment failed",
+   "snippet": "We couldn't process your payment.",
+   "receivedAt": "2026-10-15T10:18:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": "massa, sinal forte"
+  },
+  {
+   "id": "g19",
+   "threadId": "t19",
+   "from": "Universidade <secretaria@universidade.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Prazo da inscrição termina sexta",
+   "snippet": "A inscrição do curso vence na sexta, 17/10.",
+   "receivedAt": "2026-10-15T11:19:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "prazo",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g20",
+   "threadId": "t20",
+   "from": "Carla Gestora <carla@empresa.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Entrega do relatório até dia 20",
+   "snippet": "Lembrete: o relatório deve ser entregue até dia 20.",
+   "receivedAt": "2026-10-15T12:20:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "prazo",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g21",
+   "threadId": "t21",
+   "from": "Pedro <pedro@empresa.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Reunião amanhã às 9h",
+   "snippet": "Confirmando a reunião amanhã às 9h na sala 3.",
+   "receivedAt": "2026-10-15T13:21:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "prazo",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g22",
+   "threadId": "t22",
+   "from": "Detran <avisos@detran.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Vencimento do documento",
+   "snippet": "Sua CNH tem vencimento em 30 dias.",
+   "receivedAt": "2026-10-15T14:22:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "prazo",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g23",
+   "threadId": "t23",
+   "from": "Cliente <compras@cliente.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Deadline da proposta",
+   "snippet": "Deadline for the proposal is Friday.",
+   "receivedAt": "2026-10-15T15:23:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "prazo",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g24",
+   "threadId": "t24",
+   "from": "Registro <avisos@registro.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Renovação vence hoje",
+   "snippet": "A renovação do domínio vence hoje às 23h.",
+   "receivedAt": "2026-10-15T16:24:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "prazo",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g25",
+   "threadId": "t25",
+   "from": "Loja Teste <pedidos@lojateste.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Seu pedido foi postado",
+   "snippet": "Código de rastreio NN427247410BR.",
+   "receivedAt": "2026-10-15T17:25:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "encomenda",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g26",
+   "threadId": "t26",
+   "from": "Marketplace <envios@market.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Pedido enviado",
+   "snippet": "Acompanhe: LB123456789CN",
+   "receivedAt": "2026-10-15T18:26:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "encomenda",
+   "importante": true,
+   "nota": "massa com código de rastreio"
+  },
+  {
+   "id": "g27",
+   "threadId": "t27",
+   "from": "Correios <naoresponda@correios.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Saiu para entrega",
+   "snippet": "Objeto QB123456785BR saiu para entrega.",
+   "receivedAt": "2026-10-15T19:27:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "encomenda",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g28",
+   "threadId": "t28",
+   "from": "Loja Gringa <ship@gringa.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Seu pacote está a caminho",
+   "snippet": "UPS 1Z999AA10123456784",
+   "receivedAt": "2026-10-15T06:28:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "encomenda",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g29",
+   "threadId": "t29",
+   "from": "Livraria <pedidos@livraria.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Atualização da entrega",
+   "snippet": "Rastreie NN123456789BR no site.",
+   "receivedAt": "2026-10-15T07:29:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "encomenda",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g30",
+   "threadId": "t30",
+   "from": "Shop <orders@shop.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Your order has shipped",
+   "snippet": "Tracking 1Z999AA10123456784 via UPS.",
+   "receivedAt": "2026-10-15T08:30:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "encomenda",
+   "importante": true,
+   "nota": "massa com código de rastreio"
+  },
+  {
+   "id": "g31",
+   "threadId": "t31",
+   "from": "Ana <ana@amigos.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Almoço na quinta?",
+   "snippet": "Você pode almoçar comigo na quinta?",
+   "receivedAt": "2026-10-15T09:31:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g32",
+   "threadId": "t32",
+   "from": "Bruno <bruno@empresa.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Pergunta sobre o projeto",
+   "snippet": "Consegue me mandar a versão final até amanhã?",
+   "receivedAt": "2026-10-15T10:32:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g33",
+   "threadId": "t33",
+   "from": "Marcos <marcos@fornecedor.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Re: orçamento",
+   "snippet": "Poderia confirmar se o valor de R$ 3.500,00 está ok?",
+   "receivedAt": "2026-10-15T11:33:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g34",
+   "threadId": "t34",
+   "from": "Júlia <julia@amigos.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Você vai à festa?",
+   "snippet": "A festa é sábado. Vai?",
+   "receivedAt": "2026-10-15T12:34:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g35",
+   "threadId": "t35",
+   "from": "Cliente Paula <paula@cliente.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Dúvida sobre a fatura",
+   "snippet": "Pode me explicar a cobrança do item 3?",
+   "receivedAt": "2026-10-15T13:35:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": "pessoa perguntando; palavras de cobrança"
+  },
+  {
+   "id": "g36",
+   "threadId": "t36",
+   "from": "Dev Time <dev@empresa.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Ajuda com o código",
+   "snippet": "Consegue revisar meu PR hoje?",
+   "receivedAt": "2026-10-15T14:36:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g37",
+   "threadId": "t37",
+   "from": "Org Evento <contato@evento.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Convite para palestra",
+   "snippet": "Poderia falar no nosso evento em novembro?",
+   "receivedAt": "2026-10-15T15:37:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g38",
+   "threadId": "t38",
+   "from": "Mãe <mae@familia.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Foto da viagem",
+   "snippet": "Achou a foto que te mandei?",
+   "receivedAt": "2026-10-15T16:38:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": ""
+  },
+  {
+   "id": "g39",
+   "threadId": "t39",
+   "from": "Loja Promo <ofertas@promo.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Última chance! Prazo termina hoje",
+   "snippet": "Só hoje: 50% de desconto. Prazo termina à meia-noite.",
+   "receivedAt": "2026-10-15T17:39:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "promo com prazo"
+  },
+  {
+   "id": "g40",
+   "threadId": "t40",
+   "from": "Clube <news@clube.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Cashback na sua fatura",
+   "snippet": "Ganhe 10% de cashback na próxima fatura do cartão parceiro.",
+   "receivedAt": "2026-10-15T18:40:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "promo com fatura"
+  },
+  {
+   "id": "g41",
+   "threadId": "t41",
+   "from": "Eletro <promo@eletro.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Oferta vence amanhã",
+   "snippet": "Os preços desta oferta vencem amanhã.",
+   "receivedAt": "2026-10-15T19:41:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "promo com vence"
+  },
+  {
+   "id": "g42",
+   "threadId": "t42",
+   "from": "Jornal <newsletter@jornal.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Newsletter da semana",
+   "snippet": "As notícias mais lidas da semana.",
+   "receivedAt": "2026-10-15T06:42:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g43",
+   "threadId": "t43",
+   "from": "App Fit <news@appfit.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Novidades no app",
+   "snippet": "Confira os recursos novos.",
+   "receivedAt": "2026-10-15T07:43:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g44",
+   "threadId": "t44",
+   "from": "Moda <ofertas@moda.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Black Friday antecipada",
+   "snippet": "Descontos de até 70% até dia 30.",
+   "receivedAt": "2026-10-15T08:44:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "promo com até dia"
+  },
+  {
+   "id": "g45",
+   "threadId": "t45",
+   "from": "Mercado <promo@mercado.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Pague com Pix e ganhe desconto",
+   "snippet": "Pagamento via Pix com 5% off.",
+   "receivedAt": "2026-10-15T09:45:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "promo com pagamento"
+  },
+  {
+   "id": "g46",
+   "threadId": "t46",
+   "from": "Cursos <marketing@cursos.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Seu boleto de desconto chegou",
+   "snippet": "Use o cupom no boleto e economize.",
+   "receivedAt": "2026-10-15T10:46:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "promo com boleto"
+  },
+  {
+   "id": "g47",
+   "threadId": "t47",
+   "from": "Tech Talks <eventos@tech.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Webinar gratuito",
+   "snippet": "Inscreva-se no webinar de quinta.",
+   "receivedAt": "2026-10-15T11:47:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g48",
+   "threadId": "t48",
+   "from": "Fidelidade <pontos@fidelidade.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Você tem pontos expirando",
+   "snippet": "Seus pontos vencem em 30 dias. Troque agora!",
+   "receivedAt": "2026-10-15T12:48:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "promo com vencem"
+  },
+  {
+   "id": "g49",
+   "threadId": "t49",
+   "from": "Marketplace <recomenda@market.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Recomendações para você",
+   "snippet": "Produtos que combinam com você.",
+   "receivedAt": "2026-10-15T13:49:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g50",
+   "threadId": "t50",
+   "from": "Rede Social <notificacoes@rede.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Alguém curtiu sua foto",
+   "snippet": "Veja quem curtiu.",
+   "receivedAt": "2026-10-15T14:50:00.000Z",
+   "labels": [
+    "CATEGORY_SOCIAL"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g51",
+   "threadId": "t51",
+   "from": "Rede Social <grupos@rede.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Resumo semanal do grupo",
+   "snippet": "5 novas publicações no grupo.",
+   "receivedAt": "2026-10-15T15:51:00.000Z",
+   "labels": [
+    "CATEGORY_SOCIAL"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g52",
+   "threadId": "t52",
+   "from": "Games <promo@games.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Promoção relâmpago termina hoje às 18h",
+   "snippet": "Corra, termina hoje às 18h.",
+   "receivedAt": "2026-10-15T16:52:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "promo com hoje às"
+  },
+  {
+   "id": "g53",
+   "threadId": "t53",
+   "from": "Fintech <growth@fintech.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Invoice your clients faster",
+   "snippet": "Try our invoicing tool free.",
+   "receivedAt": "2026-10-15T17:53:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "promo com invoice"
+  },
+  {
+   "id": "g54",
+   "threadId": "t54",
+   "from": "App Fit <news@appfit.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Novo login? Conheça a nova tela de login",
+   "snippet": "Redesenhamos a tela de entrada do app.",
+   "receivedAt": "2026-10-15T18:54:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "promo com palavra de segurança sem sinal real"
+  },
+  {
+   "id": "g55",
+   "threadId": "t55",
+   "from": "Livraria <promo@livraria.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Cupom de frete grátis",
+   "snippet": "Use até domingo.",
+   "receivedAt": "2026-10-15T19:55:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g56",
+   "threadId": "t56",
+   "from": "Podcast <news@podcast.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Podcast novo no ar",
+   "snippet": "Episódio 42 disponível.",
+   "receivedAt": "2026-10-15T06:56:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g57",
+   "threadId": "t57",
+   "from": "Nuvem <no-reply@nuvem.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Seu código de verificação",
+   "snippet": "Seu código de verificação é 482913. Ele expira em 10 minutos.",
+   "receivedAt": "2026-10-15T07:57:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": "código de login: deve ser apagado"
+  },
+  {
+   "id": "g58",
+   "threadId": "t58",
+   "from": "Loja Teste <pedidos@lojateste.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Recibo do pedido #883421",
+   "snippet": "Recebemos o pagamento do pedido 883421. Obrigado!",
+   "receivedAt": "2026-10-15T08:58:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": "número de pedido não é segredo"
+  },
+  {
+   "id": "g59",
+   "threadId": "t59",
+   "from": "Serviço <ola@servico.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Bem-vindo!",
+   "snippet": "Sua conta foi criada.",
+   "receivedAt": "2026-10-15T09:59:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g60",
+   "threadId": "t60",
+   "from": "Universidade <secretaria@universidade.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Confirmação de inscrição",
+   "snippet": "Sua inscrição foi confirmada.",
+   "receivedAt": "2026-10-15T10:00:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g61",
+   "threadId": "t61",
+   "from": "Nuvem <no-reply@nuvem.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Backup concluído",
+   "snippet": "O backup semanal terminou sem erros.",
+   "receivedAt": "2026-10-15T11:01:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g62",
+   "threadId": "t62",
+   "from": "Banco Exemplo <comprovantes@bancoexemplo.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Comprovante de transferência",
+   "snippet": "Transferência de R$ 300,00 realizada.",
+   "receivedAt": "2026-10-15T12:02:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g63",
+   "threadId": "t63",
+   "from": "Ana <ana@amigos.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Oi, tudo bem",
+   "snippet": "Só passando para dar um oi.",
+   "receivedAt": "2026-10-15T13:03:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g64",
+   "threadId": "t64",
+   "from": "Carla Gestora <carla@empresa.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Ata da reunião",
+   "snippet": "Segue a ata da reunião de hoje.",
+   "receivedAt": "2026-10-15T14:04:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g65",
+   "threadId": "t65",
+   "from": "SaaS <reports@saas.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Seu relatório mensal",
+   "snippet": "Relatório de uso do mês anexo.",
+   "receivedAt": "2026-10-15T15:05:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": ""
+  },
+  {
+   "id": "g66",
+   "threadId": "t66",
+   "from": "Rede Social <seguranca@rede.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Código de acesso",
+   "snippet": "Use 7731 para entrar.",
+   "receivedAt": "2026-10-15T16:06:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": "código de login"
+  },
+  {
+   "id": "g67",
+   "threadId": "tv",
+   "from": "Leo <leo@amigos.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Viagem de dezembro",
+   "snippet": "Vamos fechar as datas?",
+   "receivedAt": "2026-10-15T08:07:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": "mesma conversa"
+  },
+  {
+   "id": "g68",
+   "threadId": "tv",
+   "from": "Leo <leo@amigos.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Re: Viagem de dezembro",
+   "snippet": "Pode ser dia 20?",
+   "receivedAt": "2026-10-15T09:08:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": "mesma conversa"
+  },
+  {
+   "id": "g69",
+   "threadId": "tv",
+   "from": "Leo <leo@amigos.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Re: Viagem de dezembro",
+   "snippet": "Consegue confirmar hoje?",
+   "receivedAt": "2026-10-15T10:09:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": "mesma conversa, a mais recente"
+  },
+  {
+   "id": "h01",
+   "threadId": "h01",
+   "from": "Banco Dois <alerta@bancodois.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Atividade incomum na conta",
+   "snippet": "Notamos atividade incomum. Verifique seus acessos.",
+   "receivedAt": "2026-10-14T09:00:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "seguranca",
+   "importante": true,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h02",
+   "threadId": "h02",
+   "from": "Banco Dois <alerta@bancodois.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Seu PIN foi redefinido",
+   "snippet": "O PIN do seu cartão foi redefinido hoje.",
+   "receivedAt": "2026-10-14T10:00:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "seguranca",
+   "importante": true,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h03",
+   "threadId": "h03",
+   "from": "Vídeos <conta@videos.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Assinatura suspensa por falta de pagamento",
+   "snippet": "Regularize para continuar.",
+   "receivedAt": "2026-10-14T11:00:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h04",
+   "threadId": "h04",
+   "from": "Escola <financeiro@escola.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Lembrete: mensalidade de novembro",
+   "snippet": "Mensalidade de R$ 250,00 vence dia 10.",
+   "receivedAt": "2026-10-14T12:00:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "pagamento",
+   "importante": true,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h05",
+   "threadId": "h05",
+   "from": "Cursinho <marketing@cursinho.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Último dia para garantir sua vaga",
+   "snippet": "Inscrições encerram hoje!",
+   "receivedAt": "2026-10-14T13:00:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h06",
+   "threadId": "h06",
+   "from": "Cartão Verde <promo@cartaoverde.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Sua fatura com desconto exclusivo",
+   "snippet": "Pague sua fatura no app e ganhe pontos.",
+   "receivedAt": "2026-10-14T14:00:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h07",
+   "threadId": "h07",
+   "from": "Rita Advogada <rita@escritorio.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Pode revisar o contrato?",
+   "snippet": "Mandei o contrato; dá uma olhada quando puder.",
+   "receivedAt": "2026-10-14T15:00:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "resposta",
+   "importante": true,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h08",
+   "threadId": "h08",
+   "from": "Loja X <pedidos@lojax.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Seu pedido saiu do centro de distribuição",
+   "snippet": "Objeto OA987654321BR em trânsito.",
+   "receivedAt": "2026-10-14T16:00:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "encomenda",
+   "importante": true,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h09",
+   "threadId": "h09",
+   "from": "Clínica <agenda@clinica.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Confirmação de agendamento",
+   "snippet": "Consulta confirmada para 22/10 às 14h.",
+   "receivedAt": "2026-10-14T17:00:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "prazo",
+   "importante": true,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h10",
+   "threadId": "h10",
+   "from": "TI Empresa <ti@empresa.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Sua senha expira em 3 dias",
+   "snippet": "Troque a senha antes de 18/10.",
+   "receivedAt": "2026-10-14T18:00:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "prazo",
+   "importante": true,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h11",
+   "threadId": "h11",
+   "from": "Banco Dois <news@bancodois.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Resumo do mês",
+   "snippet": "Você economizou R$ 40,00 este mês.",
+   "receivedAt": "2026-10-14T19:00:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h12",
+   "threadId": "h12",
+   "from": "Loja X <no-reply@lojax.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Código para entrar: 551203",
+   "snippet": "Não compartilhe este código.",
+   "receivedAt": "2026-10-14T08:00:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h13",
+   "threadId": "h13",
+   "from": "Loja X <pedidos@lojax.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Obrigado pela compra",
+   "snippet": "Pedido 77812 confirmado.",
+   "receivedAt": "2026-10-14T09:00:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h14",
+   "threadId": "h14",
+   "from": "Bia <bia@amigos.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Convite: aniversário da Bia",
+   "snippet": "Sábado às 16h, traga o guarda-chuva!",
+   "receivedAt": "2026-10-14T10:00:00.000Z",
+   "labels": [
+    "INBOX"
+   ],
+   "listUnsubscribe": false,
+   "precedenceBulk": false,
+   "expected": "sem_acao",
+   "importante": false,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h15",
+   "threadId": "h15",
+   "from": "Rede Dois <security@rede2.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Alerta de segurança: novo dispositivo",
+   "snippet": "Um novo dispositivo entrou na sua conta.",
+   "receivedAt": "2026-10-14T11:00:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "seguranca",
+   "importante": true,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  },
+  {
+   "id": "h16",
+   "threadId": "h16",
+   "from": "Outlet <ofertas@outlet.test>",
+   "to": "voce@exemplo.test",
+   "subject": "Liquidação: estoque vence amanhã",
+   "snippet": "Últimas peças com preço de outlet.",
+   "receivedAt": "2026-10-14T12:00:00.000Z",
+   "labels": [
+    "CATEGORY_PROMOTIONS"
+   ],
+   "listUnsubscribe": true,
+   "precedenceBulk": false,
+   "expected": "ruido",
+   "importante": false,
+   "nota": "(veio do conjunto separado; as regras foram ampliadas depois de vê-lo)"
+  }
+ ]
+}

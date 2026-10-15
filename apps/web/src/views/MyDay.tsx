@@ -1,3 +1,4 @@
+import { TriageButtons } from "../components/TriageButtons.tsx";
 import { useRef, useState } from "react";
 import { AGENTS, agentsInPlace, approvalQueue } from "@open-dot/core";
 import { useApp } from "../store.tsx";
@@ -210,6 +211,7 @@ function FeedCardBody({ item }: { item: FeedEntry }) {
             <div className="row-actions">
               <GmailOpen gmailId={it.origem} rfc822={it.rfc822} demo={app.mode === "demo"} />
             </div>
+            <TriageButtons messageId={it.origem} categoria={it.categoria} />
           </article>
         ))}
       </>

@@ -33,12 +33,22 @@ function senderName(from: string): string {
   return name.slice(0, 80);
 }
 
-/** Tira link, código de login e número de cartão antes de mostrar ou enviar ao modelo. */
+/** Palavras que, perto de 4 a 8 dígitos, indicam código de acesso. */
+const CODE_WORDS = "c(ó|o)digo|codigo|verifica(c|ç)(ã|a)o|token|senha|code|otp|pin|entrar|acesso|login";
+const LOGIN_CODE = new RegExp(`((?:${CODE_WORDS})[^0-9\\n]{0,30})\\b\\d{4,8}\\b|\\b\\d{4,8}\\b(?=[^0-9\\n]{0,20}(?:${CODE_WORDS}))`, "gi");
+/** 13 a 19 dígitos, juntos ou em grupos separados por espaço ou hífen (cartão). */
+const CARD = /\b(?:\d[ -]?){12,18}\d\b/g;
+const EMAIL_ADDR = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/;
+
+/**
+ * Tira link, código de login (4 a 8 dígitos perto de "código", "senha", "entrar"…) e
+ * cartão antes de mostrar ou enviar ao modelo. Valor em R$, CEP e número de pedido ficam.
+ */
 export function redactMail(input: string): string {
   return input
     .replace(/https?:\/\/\S+/gi, "")
-    .replace(/\b\d{13,19}\b/g, "")
-    .replace(/\b\d{5,8}\b/g, "")
+    .replace(CARD, "")
+    .replace(LOGIN_CODE, (_m, before: string | undefined) => (before ? `${before}[código]` : "[código]"))
     .replace(/\b[A-Z0-9]{24,}\b/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -67,44 +77,105 @@ function item(m: EmailMeta, categoria: CorreioCategoria, aconteceu: string, faze
   };
 }
 
-function classify(m: EmailMeta): CorreioItem | "ruido" | "sem_acao" {
+export interface CorreioOptions {
+  /** Domínios de confiança vindos de fora do lote (ex.: o dono marcou "Era importante"). */
+  trusted?: ReadonlySet<string>;
+  /** Domínios silenciados pelo dono ("Não importa" 2×): viram ruído. */
+  silenced?: ReadonlySet<string>;
+}
+
+/** Domínio do remetente em minúsculas ("Banco <a@b.c>" → "b.c"). */
+export function senderDomain(from: string): string | null {
+  const m = /@([a-z0-9.-]+\.[a-z]{2,})/i.exec(from);
+  return m ? m[1]!.toLowerCase() : null;
+}
+
+function isBulk(m: EmailMeta): boolean {
+  return m.listUnsubscribe || m.precedenceBulk || m.labels.includes("CATEGORY_PROMOTIONS") || m.labels.includes("CATEGORY_SOCIAL");
+}
+
+const SEC_ANY = /novo login|login suspeito|acesso suspeito|tentativa de acesso|sign-in attempt|senha (foi )?(alterada|redefinida)|altera(c|ç)(a|ã)o da senha|password (was )?changed|atividade (incomum|suspeita)|novo dispositivo|pin (foi )?(redefinido|alterado)|conta (foi )?bloqueada/;
+const SEC_STRONG = /login suspeito|acesso suspeito|tentativa de acesso|sign-in attempt|novo login (a partir|em |de um dispositivo|no )|senha (foi )?(alterada|redefinida)|password (was )?changed|atividade (incomum|suspeita)|novo dispositivo (entrou|acessou|conectado)|pin (foi )?(redefinido|alterado)|conta (foi )?bloqueada/;
+const MFA_OFF = /(mfa|2fa|duas etapas|dois fatores|verifica(c|ç)(a|ã)o em duas).*(desativ|alterad|removid|disabled|turned off|mudou)|(desativ|removid).*(mfa|2fa|duas etapas|dois fatores)/;
+const PAY_FAIL = /falha no pagamento|pagamento recusado|pagamento falhou|n(ã|a)o foi poss(í|i)vel (cobrar|processar o pagamento)|n(ã|a)o conseguimos processar o pagamento|payment failed|couldn'?t process your payment|cart(ã|a)o (foi )?recusado|suspens[ao] por falta de pagamento|falta de pagamento/;
+const PAY_STRONG = new RegExp(`${PAY_FAIL.source}|em atraso|vencid[oa]|fatura (vence|fechou|fechada)|vence (hoje|amanh(ã|a))`);
+const PAY_ANY = /boleto|fatura|cobran(c|ç)a|invoice|d(é|e)bito|mensalidade|parcela|anuidade/;
+const PRAZO = /prazo|vence|vencimento|deadline|at(é|e) dia|amanh(ã|a) (à|a)s|hoje (à|a)s|expira em \d+ (dias?|semanas?)|agendad[oa]|consulta (confirmada|marcada)|antes de \d{1,2}\/\d{1,2}|(dia|em) \d{1,2}\/\d{1,2} (à|a)s/;
+const AUTOMATED = /no-?reply|n(a|ã)o-?responda|naoresponda|notifications?@|notificacoes@|mailer-daemon|billing@|cobranca@|financeiro@|faturas?@|invoice@|news(letter)?@|promo|ofertas@|marketing@/;
+
+function asksSomething(m: EmailMeta, t: string): boolean {
+  return /\?/.test(m.subject) || /\?/.test(m.snippet) || /\b(pode|poderia|consegue|vai)\b.*\?|\b(pode|poderia|consegue)\b/.test(t);
+}
+
+function classify(m: EmailMeta, trusted: ReadonlySet<string>, opts: CorreioOptions): CorreioItem | "ruido" | "sem_acao" {
   const t = textOf(m);
-  const bulk = m.listUnsubscribe || m.precedenceBulk || m.labels.includes("CATEGORY_PROMOTIONS") || m.labels.includes("CATEGORY_SOCIAL");
-  if (/mfa|2fa|duas etapas|dois fatores|verifica(c|ç)(a|ã)o em duas/.test(t) && /desativ|alterad|removid|disabled|turned off|mudou/.test(t)) {
-    return item(m, "seguranca", "A verificação em duas etapas mudou.", "Confira o original.", true);
-  }
-  if (/login suspeito|acesso suspeito|novo login|tentativa de acesso|sign-in attempt|senha alterada/.test(t)) {
-    return item(m, "seguranca", "Chegou um aviso de acesso.", "Confira o original.", true);
-  }
-  if (/falha no pagamento|pagamento recusado|pagamento falhou|não foi possível cobrar|nao foi possivel cobrar|payment failed|cartão recusado|cartao recusado/.test(t)) {
-    return item(m, "pagamento", "Um pagamento não passou.", "Confira a cobrança no serviço.", true);
-  }
-  if (/boleto|fatura|cobran[cç]a|invoice|d[eé]bito/.test(t)) {
-    return item(m, "pagamento", "Chegou uma cobrança.", "Veja o valor no original.", true);
-  }
-  if (/prazo|vence|vencimento|deadline|até dia|ate dia|amanhã às|amanha as|hoje às|hoje as/.test(t)) {
-    return item(m, "prazo", "Há um prazo nesta mensagem.", "Veja a data no original.", false);
-  }
-  if (detectInText(`${m.subject}\n${m.snippet}`).length) {
-    return item(m, "encomenda", "Um código de rastreio chegou.", "Acompanhe em Entregas.", false);
-  }
+  const domain = senderDomain(m.from);
+  if (domain && opts.silenced?.has(domain)) return "ruido";
+  const bulk = isBulk(m);
+  // Em massa só passa com sinal forte ou remetente de confiança (domínio visto fora de massa).
+  const trustedSender = Boolean(domain && trusted.has(domain));
+  const allow = (strong: boolean) => !bulk || strong || trustedSender;
+
+  if (MFA_OFF.test(t) && allow(true)) return item(m, "seguranca", "A verificação em duas etapas mudou.", "Confira o original.", true);
+  if (SEC_ANY.test(t) && allow(SEC_STRONG.test(t))) return item(m, "seguranca", "Chegou um aviso de acesso.", "Confira o original.", true);
+  if (PAY_FAIL.test(t) && allow(true)) return item(m, "pagamento", "Um pagamento não passou.", "Confira a cobrança no serviço.", true);
+  const person = !bulk && !AUTOMATED.test(m.from.toLowerCase());
+  // Pergunta de uma pessoa vem antes de "cobrança": "Pode me explicar a fatura?" é resposta.
+  if (person && asksSomething(m, t) && !PAY_STRONG.test(t)) return item(m, "resposta", `${senderName(m.from)} fez uma pergunta.`, "Responda se fizer sentido.", false);
+  if (PAY_ANY.test(t) && allow(PAY_STRONG.test(t))) return item(m, "pagamento", "Chegou uma cobrança.", "Veja o valor no original.", true);
+  if (!bulk && PRAZO.test(t)) return item(m, "prazo", "Há um prazo nesta mensagem.", "Veja a data no original.", false);
+  // Código de rastreio é sinal forte mesmo em mensagem de loja com descadastro.
+  if (detectInText(`${m.subject}\n${m.snippet}`).length) return item(m, "encomenda", "Um código de rastreio chegou.", "Acompanhe em Entregas.", false);
   if (bulk) return "ruido";
-  if (/\?/.test(m.subject) || /\b(pode|poderia|consegue)\b/.test(t)) {
-    return item(m, "resposta", `${senderName(m.from)} fez uma pergunta.`, "Responda se fizer sentido.", false);
-  }
-  if (/no-?reply|nao-?responda|notifications?@|mailer-daemon/.test(m.from.toLowerCase())) return "sem_acao";
   return "sem_acao";
 }
 
-export function buildCorreioResumo(messages: EmailMeta[]): CorreioResumo {
+/** Domínios de confiança do lote: remetentes que mandaram alguma mensagem que não é em massa. */
+function trustedDomains(messages: EmailMeta[], extra?: ReadonlySet<string>): Set<string> {
+  const out = new Set<string>(extra ?? []);
+  for (const m of messages) {
+    const d = senderDomain(m.from);
+    if (d && !isBulk(m)) out.add(d);
+  }
+  return out;
+}
+
+/** Uma conversa vira um item: a mensagem mais recente, com quantas outras há. */
+function latestPerThread(messages: EmailMeta[]): Array<{ m: EmailMeta; more: number }> {
+  const byThread = new Map<string, EmailMeta[]>();
+  for (const m of messages) {
+    const key = m.threadId || m.id;
+    const list = byThread.get(key) ?? [];
+    list.push(m);
+    byThread.set(key, list);
+  }
+  return [...byThread.values()].map((list) => {
+    list.sort((a, b) => b.receivedAt.localeCompare(a.receivedAt));
+    return { m: list[0]!, more: list.length - 1 };
+  });
+}
+
+/** Destino de cada mensagem (categoria, "ruido" ou "sem_acao"). Usado pela avaliação. */
+export function classifyBatch(messages: EmailMeta[], opts: CorreioOptions = {}): Map<string, string> {
+  const trusted = trustedDomains(messages, opts.trusted);
+  const out = new Map<string, string>();
+  for (const m of messages) {
+    const c = classify(m, trusted, opts);
+    out.set(m.id, typeof c === "string" ? c : c.categoria);
+  }
+  return out;
+}
+
+export function buildCorreioResumo(messages: EmailMeta[], opts: CorreioOptions = {}): CorreioResumo {
+  const trusted = trustedDomains(messages, opts.trusted);
   const itens: CorreioItem[] = [];
   const sem_acao: string[] = [];
   let ruido = 0;
-  for (const m of messages) {
-    const c = classify(m);
+  for (const { m, more } of latestPerThread(messages)) {
+    const c = classify(m, trusted, opts);
     if (c === "ruido") ruido++;
     else if (c === "sem_acao") sem_acao.push(m.id);
-    else itens.push(c);
+    else itens.push(more > 0 ? { ...c, titulo: `${c.titulo} (+${more} na conversa)`.slice(0, 140) } : c);
   }
   itens.sort((a, b) => CORREIO_CATEGORIAS.indexOf(a.categoria) - CORREIO_CATEGORIAS.indexOf(b.categoria) || a.quando.localeCompare(b.quando));
   const n = itens.length;
@@ -117,9 +188,12 @@ export function buildCorreioResumo(messages: EmailMeta[]): CorreioResumo {
   };
 }
 
+/** Na resposta da IA, só o realmente sensível derruba o JSON: link, e-mail completo, cartão, código de login. */
 export function resumoHasSecret(resumo: CorreioResumo): boolean {
   const raw = JSON.stringify(resumo);
-  return /\b\d{5,8}\b/.test(raw) || /\b\d{13,19}\b/.test(raw) || /https?:\/\//.test(raw) || /@/.test(raw);
+  LOGIN_CODE.lastIndex = 0;
+  CARD.lastIndex = 0;
+  return /https?:\/\//.test(raw) || EMAIL_ADDR.test(raw) || CARD.test(raw) || LOGIN_CODE.test(raw);
 }
 
 /** Aceita JSON da IA só com ids conhecidos, categorias válidas e sem código de login. */
