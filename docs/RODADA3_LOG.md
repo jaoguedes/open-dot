@@ -65,3 +65,16 @@ Também: o 503 de configuração incompleta não lista mais os nomes das variáv
 - Achado: `npm run dev` observa o código e escreve no mesmo `apps/web/dist`. `scripts/deploy.mjs` agora guarda o hash depois do check, recusa dist com gancho de teste e aborta se o hash mudar antes do `wrangler deploy`.
 - Publicado: Worker `509e4b64-2ff9-44a1-8a24-9dfcc0b8c84d`, app `bcfc3da9a745` (commit `a6fe017`), rollback `4d1dbc6e-b55d-475f-8e27-ec36659eb036`. Fumaça do script ok. `/api/health` público = `{"ok":true}`. CSP com `media-src 'self'`.
 - `/api/legal` devolve um contato porque o segredo `CONTACT_EMAIL` existe em produção com o mesmo Gmail do login. É configuração (a B1 permite); se o João não quiser publicar esse endereço, basta `wrangler secret delete CONTACT_EMAIL` ou trocar.
+
+## Fase C (15/10/2026)
+
+| Item | Reproduzido antes | Mudança | Teste (antes → depois) |
+|---|---|---|---|
+| C1 snapshot | No navegador, cada atualização fazia `GET /api/session` + 9 rotas. | `GET /api/snapshot` monta as mesmas 9 partes chamando os handlers existentes; cada parte falha sozinha (`failures: [{part, reason}]`); ETag fraca (sha-256 do corpo) e 304. O cliente manda `If-None-Match`; 404 do Worker antigo (rollback) volta às rotas separadas. Intervalo de 60 s só com a aba visível; foco/visibilidade no máximo 1 vez a cada 15 s; uma busca por vez. | `apps/worker/test/fase-c.test.ts` (4) — rota não existia (404) → passa. `apps/web/test/refresh-policy.test.ts` (3). No navegador local: depois de entrar, 1 requisição `/api/snapshot`; `curl` com a ETag devolve 304. |
+| C2 timeout/retry | `HranaDb.pipeline` e `req()` sem timeout nem nova tentativa. | Turso: `AbortSignal.timeout(8000)`; só `SELECT/WITH/PRAGMA` repetem uma vez em 5xx/429/rede, `Retry-After` até 2 s, no máximo 3 novas tentativas por instância (44 + 3 < 50 subrequisições). Cliente: `fetchWithRetry`, 8 s, GET repete uma vez, `Retry-After` até 3 s; POST/PUT/DELETE nunca. | `tests/hrana-retry.test.ts` 1/5 → 5/5. `apps/web/test/api-retry.test.ts` 4. |
+| C3 cache | Produção: chunk com hash `max-age=3600`; `/sounds/*.mp3` `max-age=0`; `/fonts/inexistente` devolvia `index.html` com `immutable` de 1 ano (fallback de SPA). | `_headers` gerado por `scripts/lib/static-headers.mjs`: chunks 1 ano `immutable` (com `! Cache-Control`), `app.js`/`app.css` `max-age=0, must-revalidate`, sons 1 dia. `/fonts`, `/sounds`, `/dot` passam pelo Worker e inexistente vira 404. | `tests/static-headers.test.ts` 3/4 → 4/4; `apps/web/test/sw.test.ts` +2 (falhavam) → passam. |
+| C4 splash | 1,2 s em toda abertura. | 1ª abertura da sessão: 1,2 s; depois só aparece se a carga passar de 400 ms (antes disso, fundo liso). | `apps/web/test/splash-policy.test.ts`. Sem teste de navegador do atraso de 400 ms. |
+| C5 bundle | Medido com a régua certa (app.js + chunks estáticos): **387,6 KB** na primeira tela (o `app.js` sozinho tinha 353 KB, mas importava chunks). | Conexões, Rotinas, Mascote, Entregas e a demonstração viram `import()`. Primeira tela: **349,9 KB**. O build calcula esse total e falha acima de 400 KB. | `tests/bundle-budget.test.ts` (4). |
+
+Achado para a fase D: a ilha mostrou “Correio com erro · not_connected” (código cru) no ambiente local.
+`npm run check`: 199 testes, 0 falhas. `ui:mobile` ok.
