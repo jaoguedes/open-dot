@@ -493,7 +493,7 @@ if (!ONLY || ONLY === "absorb") {
   await shot(p,{ path: `${OUT}/compare-02-app-390.png` });
   await p.goto(`file://${join(ROOT, "docs/referencias/design/02-pwa-inicio.html")}`);
   await p.waitForTimeout(400);
-  const phone = p.locator("div").filter({ hasText: "Bom dia, João" }).first();
+  const phone = p.locator("div").filter({ hasText: /Bo(m dia|a tarde|a noite), Alex/ }).first();
   await shot(phone, { path: `${OUT}/compare-02-ref-390.png` }).catch(async () => {
     await shot(p, { path: `${OUT}/compare-02-ref-390.png` });
   });

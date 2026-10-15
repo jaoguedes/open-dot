@@ -83,9 +83,9 @@ test("provedor só liga com chave e confirmação de termos", () => {
 });
 
 test("nome de exibição começa em João e respeita o que a pessoa gravou", () => {
-  assert.equal(displayNameFor("guedes@example.com", "guedes", false), "João");
-  assert.equal(displayNameFor("guedes@example.com", null, false), "João");
-  assert.equal(displayNameFor("alguem@example.com", "guedes", false), "João");
+  assert.equal(displayNameFor("guedes@example.com", "guedes", false, "João"), "João");
+  assert.equal(displayNameFor("guedes@example.com", null, false), "");
+  assert.equal(displayNameFor("alguem@example.com", "guedes", false, "Ana"), "Ana");
   assert.equal(displayNameFor("guedes@example.com", "Maria", true), "Maria");
   assert.equal(displayNameFor("dev@localhost", "Desenvolvimento local", false), "Desenvolvimento local");
 });

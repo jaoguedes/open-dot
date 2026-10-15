@@ -325,10 +325,10 @@ export interface TrackingEvent {
   attribution: boolean;
 }
 
-/** Nome mostrado na saudação. "João" até a pessoa salvar outro nas configurações. */
-export function displayNameFor(email: string, stored: string | null | undefined, custom: boolean): string {
+/** Nome mostrado na saudação. O padrão vem da configuração (OWNER_NAME) até a pessoa salvar outro. */
+export function displayNameFor(email: string, stored: string | null | undefined, custom: boolean, fallback = ""): string {
   const name = (stored ?? "").trim();
   if (name === "Desenvolvimento local" && !custom) return name;
   if (custom && name && !name.includes("@") && name.toLowerCase() !== email.toLowerCase()) return name.slice(0, 40);
-  return "João";
+  return fallback.trim().slice(0, 40);
 }

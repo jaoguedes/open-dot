@@ -76,8 +76,16 @@ export interface IncidentPolicy {
 
 export const DEFAULT_INCIDENT_POLICY: IncidentPolicy = { openAfterFailures: 3, closeAfterSuccesses: 2, slowMs: 1500 };
 
-/** Atalho do Sentinela: o próprio Open Dot, só leitura do health. */
-export const OPEN_DOT_HEALTH_URL = "https://open-dot.jpguedesbarbieri.workers.dev/api/health";
+/** Atalho do Sentinela: o próprio Open Dot, só leitura do health. Vem do APP_ORIGIN; origem local não vale. */
+export function selfHealthUrl(appOrigin: string): string | null {
+  try {
+    const u = new URL(appOrigin);
+    if (u.protocol !== "https:") return null;
+    return `${u.origin}/api/health`;
+  } catch {
+    return null;
+  }
+}
 
 export type IncidentTransition = "opened" | "closed" | null;
 

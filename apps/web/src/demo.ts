@@ -142,7 +142,7 @@ export function demoSnapshot(): Snapshot {
     },
   ];
   return {
-    owner: { email: "exemplo@demo.local", name: "João", timeZone: "America/Sao_Paulo" },
+    owner: { email: "exemplo@demo.local", name: "Alex", timeZone: "America/Sao_Paulo" },
     configured: { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false, tracking: false, trackingState: "desligado" },
     connections: [],
     monitors,
@@ -209,7 +209,7 @@ export function demoSnapshot(): Snapshot {
           payload: {
             to: "entregas@lojaexemplo.com.br",
             subject: "Re: Confirmação de entrega",
-            body: "Olá! Confirmo a entrega para amanhã, quinta, no período da tarde. Alguém estará em casa a partir das 13h.\n\nObrigado,\nJoão",
+            body: "Olá! Confirmo a entrega para amanhã, quinta, no período da tarde. Alguém estará em casa a partir das 13h.\n\nObrigado,\nAlex",
           },
           consequence: "A loja pediu confirmação até 14h. Usei o horário da sua agenda de amanhã. Exemplo fictício.",
         },

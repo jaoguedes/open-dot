@@ -21,7 +21,8 @@ import { loadMigrations } from "./lib/migrations.ts";
 import { parseDevVars } from "./lib/dev-vars.ts";
 
 const WRANGLER = ["--yes", "wrangler@4"];
-const PROD_ORIGIN = "https://open-dot.jpguedesbarbieri.workers.dev";
+/** Origem publicada lida do wrangler.jsonc (APP_ORIGIN), não de um domínio fixo no código. */
+const PROD_ORIGIN = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8").match(/"APP_ORIGIN":\s*"(https:[^"]+)"/)?.[1] ?? "";
 const FROM_DEV = process.argv.includes("--from-dev-vars");
 const REQUIRED = ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "OWNER_EMAIL"] as const;
 const OPTIONAL = ["GROQ_API_KEY", "FINNHUB_API_KEY", "PACOTEVICIO_API_KEY"] as const;

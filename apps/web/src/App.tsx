@@ -398,7 +398,7 @@ function factsFrom(snap: ReturnType<typeof useApp>["snap"], demo: boolean) {
 
 function NameLine() {
   const app = useApp();
-  const shown = app.snap?.owner?.name || "João";
+  const shown = app.snap?.owner?.name || "Seu nome";
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(shown);
   const [error, setError] = useState<string | null>(null);

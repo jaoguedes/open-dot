@@ -3,11 +3,11 @@ import assert from "node:assert/strict";
 import { client, jsonResponse, makeCtx } from "./harness.ts";
 import { FakeGoogle } from "./fake-google.ts";
 import { tick } from "../src/jobs.ts";
-import { OPEN_DOT_HEALTH_URL } from "@open-dot/core";
+import * as repo from "../src/repo.ts";
 
 test("login pede só openid email e recusa um segundo e-mail", async () => {
   const google = new FakeGoogle();
-  const ctx = await makeCtx({ fetch: google.fetch });
+  const ctx = await makeCtx({ fetch: google.fetch, env: { OWNER_NAME: "João" } });
   const c = client(ctx);
   const start = await c.call("GET", "/api/auth/google/start");
   assert.equal(start.status, 302);
@@ -43,10 +43,13 @@ test("revisar agora sem Gmail responde 409 e não chama a rede", async () => {
   assert.equal(r.json.error.code, "not_connected");
 });
 
-test("atalho Vigiar o próprio Open Dot é idempotente", async () => {
-  const ctx = await makeCtx();
+test("atalho Vigiar o próprio Open Dot é idempotente e usa o APP_ORIGIN, não um domínio fixo", async () => {
+  const origin = "https://meu-dot.exemplo-sub.workers.dev";
+  const ctx = await makeCtx({ env: { APP_ORIGIN: origin } });
+  const ownerId = await repo.upsertOwner(ctx.db, { sub: "sub-x", email: "x@example.com", name: null, now: ctx.now() });
   const c = client(ctx);
-  await c.call("POST", "/api/session/dev");
+  const { startSession } = await import("../src/http.ts");
+  c.setCookie((await startSession(ctx, new Request(`${origin}/`), ownerId)).split(";")[0]!);
   const first = await c.call("POST", "/api/monitors/self");
   assert.equal(first.status, 201);
   assert.equal(first.json.created, true);
@@ -55,7 +58,14 @@ test("atalho Vigiar o próprio Open Dot é idempotente", async () => {
   assert.equal(second.json.created, false);
   assert.equal(second.json.id, first.json.id);
   const rows = (await c.call("GET", "/api/monitors")).json.monitors;
-  assert.equal(rows.filter((m: { url: string }) => m.url === OPEN_DOT_HEALTH_URL).length, 1);
+  assert.deepEqual(rows.map((m: { url: string }) => m.url), [`${origin}/api/health`]);
+});
+
+test("atalho do próprio Open Dot recusa origem local", async () => {
+  const ctx = await makeCtx();
+  const c = client(ctx);
+  await c.call("POST", "/api/session/dev");
+  assert.equal((await c.call("POST", "/api/monitors/self")).status, 409);
 });
 
 test("encomenda: provedor desligado não consulta; ligado respeita cobertura, atribuição e o teto", async () => {

@@ -20,6 +20,8 @@ export const EnvSchema = z.object({
   /** Único dono permitido: sub estável do Google (preferível) ou e-mail na primeira entrada. */
   OWNER_GOOGLE_SUB: z.string().optional(),
   OWNER_EMAIL: z.string().email().optional(),
+  /** Nome mostrado na saudação até o dono salvar outro. Vazio = só "Bom dia". */
+  OWNER_NAME: z.string().max(40).optional(),
   /** Contato público opcional. Não reutilize o e-mail de login se não quiser publicá-lo. */
   CONTACT_EMAIL: z.string().email().optional(),
 
