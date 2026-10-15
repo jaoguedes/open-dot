@@ -6,7 +6,7 @@ export function serviceWorkerSource(build) {
       .slice(0, 32) || "dev";
   return `/* Open Dot — shell ${id}. Nunca guarda /api. Navegação: network-first. Assets: stale-while-revalidate. */
 const CACHE = "open-dot-shell-${id}";
-const SHELL = ["/", "/index.html", "/assets/app.css", "/assets/app.js", "/assets/theme.js", "/favicon.svg", "/manifest.webmanifest"];
+const SHELL = ["/", "/index.html", "/assets/app.css", "/assets/app.js", "/assets/theme.js", "/icons/favicon-32.png?v=4", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

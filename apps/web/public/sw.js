@@ -1,6 +1,6 @@
 /* Open Dot — shell dev. Nunca guarda /api. Navegação: network-first. Assets: stale-while-revalidate. */
 const CACHE = "open-dot-shell-dev";
-const SHELL = ["/", "/index.html", "/assets/app.css", "/assets/app.js", "/assets/theme.js", "/favicon.svg", "/manifest.webmanifest"];
+const SHELL = ["/", "/index.html", "/assets/app.css", "/assets/app.js", "/assets/theme.js", "/icons/favicon-32.png?v=4", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

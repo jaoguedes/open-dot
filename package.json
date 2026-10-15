@@ -31,7 +31,7 @@
     "eval:ai": "tsx scripts/eval-ai.ts",
     "ui:fase-a": "node scripts/ui-fase-a.mjs",
     "ui:fase-d": "node scripts/ui-fase-d.mjs",
-    "icons": "node scripts/icons/make-icons.mjs",
+    "icons": "node scripts/icons/make-ico.mjs",
     "ui:fase-e": "node scripts/ui-fase-e.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "lint": "eslint .",
@@ -39,7 +39,8 @@
     "format:check": "prettier --check .",
     "ui:fase-f": "node scripts/ui-fase-f.mjs",
     "eval:correio": "tsx scripts/eval-correio.ts",
-    "ui:fase-g": "node scripts/ui-fase-g.mjs"
+    "ui:fase-g": "node scripts/ui-fase-g.mjs",
+    "ui:rodada4": "node scripts/ui-rodada4.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",

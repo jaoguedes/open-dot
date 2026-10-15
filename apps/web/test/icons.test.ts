@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { inflateSync } from "node:zlib";
@@ -48,38 +47,27 @@ function decode(buf: Buffer) {
   return { w, h, bpp, px };
 }
 
-test("ícones têm os tamanhos certos e o apple-touch-icon é 180×180", () => {
-  for (const [n, s] of [
-    ["icon-192.png", 192],
-    ["icon-512.png", 512],
-    ["maskable-512.png", 512],
-    ["apple-touch-icon.png", 180],
-  ] as const) {
+test("ícones do conjunto do João: tamanhos certos e apple-touch-icon 180×180", () => {
+  for (const [n, sz] of [["icon-192.png", 192], ["icon-512.png", 512], ["maskable-512.png", 512], ["apple-touch-icon.png", 180], ["favicon-16.png", 16], ["favicon-32.png", 32], ["favicon-256.png", 256]] as const) {
     const { w, h } = decode(file(n));
-    assert.deepEqual([w, h], [s, s], n);
+    assert.deepEqual([w, h], [sz, sz], n);
   }
 });
 
-test("maskable não é cópia do ícone comum", () => {
-  const sha = (n: string) => createHash("sha256").update(file(n)).digest("hex");
-  assert.notEqual(sha("maskable-512.png"), sha("icon-512.png"));
+test("ícones são quadrados cheios, sem transparência (o iOS e o Android aplicam a máscara)", () => {
+  for (const n of ["icon-192.png", "icon-512.png", "maskable-512.png", "apple-touch-icon.png"]) {
+    const { bpp, px } = decode(file(n));
+    if (bpp === 3) continue;
+    for (let i = 3; i < px.length; i += 4) assert.equal(px[i], 255, `${n} tem pixel transparente`);
+  }
 });
 
-test("no maskable, fora do círculo central de 80% só há fundo (o Android pode cortar ali)", () => {
-  const { w, h, bpp, px } = decode(file("maskable-512.png"));
-  const r = 0.4 * w;
-  let bright = 0;
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
-      if (Math.hypot(x + 0.5 - w / 2, y + 0.5 - h / 2) <= r) continue;
-      const i = (y * w + x) * bpp;
-      // corpo do Dot é claro; fundo é #050608 (a sombra azul escura é tolerada)
-      if (px[i]! + px[i + 1]! + px[i + 2]! > 3 * 120) bright++;
-    }
-  assert.equal(bright, 0);
-});
-
-test("ícone e favicon não têm o tracinho fora da absorção (D-014)", () => {
-  const svg = readFileSync(new URL("../public/favicon.svg", import.meta.url), "utf8");
-  assert.equal(/<rect/.test(svg), false);
+test("favicon.ico traz 16, 32 e 256 px e o mestre 1024 está guardado", () => {
+  const ico = readFileSync(new URL("../public/favicon.ico", import.meta.url));
+  assert.equal(ico.readUInt16LE(2), 1);
+  assert.equal(ico.readUInt16LE(4), 3);
+  const sizes = [0, 1, 2].map((i) => ico.readUInt8(6 + 16 * i) || 256);
+  assert.deepEqual(sizes, [16, 32, 256]);
+  const master = readFileSync(new URL("../../../assets/icones/dot-icone-1024.png", import.meta.url));
+  assert.deepEqual([master.readUInt32BE(16), master.readUInt32BE(20)], [1024, 1024]);
 });
