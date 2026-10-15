@@ -48,12 +48,12 @@ async function buildCtx(bindings: Bindings): Promise<Ctx | { error: string[] }> 
 
 export default {
   async fetch(req: Request, bindings: Bindings): Promise<Response> {
+    try {
     const url = new URL(req.url);
     if (url.pathname === "/api/version" && req.method === "GET") return versionResponse(url, bindings);
     if (url.pathname.startsWith("/api/")) {
       const ctx = await buildCtx(bindings);
       if ("error" in ctx) {
-        // Não revela valores; só os nomes das variáveis que faltam.
         return new Response(JSON.stringify({ error: { code: "not_configured", message: "Configuração incompleta do servidor.", missing: ctx.error } }), { status: 503, headers: { "content-type": "application/json" } });
       }
       return handleApi(ctx, req);
@@ -63,9 +63,13 @@ export default {
     }
     if (bindings.ASSETS) return bindings.ASSETS.fetch(req);
     return new Response("Interface não publicada.", { status: 404 });
+    } catch {
+      return new Response(JSON.stringify({ error: { code: "internal", message: "Não consegui falar com o servidor." } }), { status: 500, headers: { "content-type": "application/json; charset=utf-8" } });
+    }
   },
 
   async scheduled(_controller: unknown, bindings: Bindings): Promise<void> {
+    try {
     const ctx = await buildCtx(bindings);
     if ("error" in ctx) {
       console.error(JSON.stringify({ cron: "skipped", missing: ctx.error }));
@@ -73,5 +77,8 @@ export default {
     }
     const report = await tick(ctx);
     console.log(JSON.stringify({ cron: "tick", ...report }));
+    } catch (e) {
+      console.error(JSON.stringify({ cron: "error", reason: e instanceof Error ? e.name : "unknown" }));
+    }
   },
 };

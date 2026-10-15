@@ -115,12 +115,6 @@ export function Entregas() {
           ))}
         </ul>
       )}
-
-      {snap.disabledProviders.length > 0 && (
-        <p className="tiny">
-          {snap.disabledProviders.map((p) => `${p.name}: ${p.reason}`).join(" ")} A API oficial dos Correios exige contrato do remetente e não está ligada.
-        </p>
-      )}
     </>
   );
 }
@@ -140,6 +134,18 @@ function ShipmentRow({ row, onChanged, onError }: { row: ShipmentView; onChanged
         {row.page && (
           <a className="btn" href={row.page} target="_blank" rel="noreferrer">Abrir no site da transportadora</a>
         )}
+        <button
+          className="btn"
+          type="button"
+          onClick={() => {
+            void navigator.clipboard.writeText(row.code).then(
+              () => onChanged("Código copiado."),
+              () => onError("Não consegui copiar o código."),
+            );
+          }}
+        >
+          Copiar código
+        </button>
         <button
           className="btn ghost"
           type="button"

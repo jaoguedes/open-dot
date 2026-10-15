@@ -207,7 +207,7 @@ function ExtraAgents({ demo, cfgGoogle }: { demo: boolean; cfgGoogle: boolean })
     setBusy(id);
     try {
       const r = await api.testAgent(id);
-      const extra = r.failures?.length ? r.failures.join(" ") : r.missing?.length ? r.missing.join(" ") : r.note ?? "Teste concluído.";
+      const extra = formatAgentTest(r);
       setMsg({ id, ok: true, text: extra });
       await app.refresh();
     } catch (e) {
@@ -401,6 +401,26 @@ function Providers({ demo }: { demo: boolean }) {
   );
 }
 
+function formatAgentTest(r: { failures?: unknown; missing?: string[]; note?: string }): string {
+  if (Array.isArray(r.failures) && r.failures.length) {
+    return r.failures
+      .map((f) => {
+        if (typeof f === "string") return f;
+        if (f && typeof f === "object" && "source" in f) {
+          const row = f as { source?: unknown; reason?: unknown };
+          const source = typeof row.source === "string" ? row.source : "Fonte";
+          const reason = typeof row.reason === "string" ? row.reason : "unknown";
+          return `${source}: ${explainError(reason).frase}`;
+        }
+        return "";
+      })
+      .filter(Boolean)
+      .join(" · ");
+  }
+  if (r.missing?.length) return r.missing.join(" · ");
+  return r.note ?? "Teste concluído.";
+}
+
 function SourceFailures({ raw }: { raw: string | null }) {
   if (!raw) return null;
   const rows = raw.split(" ").flatMap((part) => {
@@ -415,9 +435,7 @@ function SourceFailures({ raw }: { raw: string | null }) {
     <ul className="list" aria-label="Fontes que falharam">
       {rows.map((r) => (
         <li key={`${r.source}-${r.code}`}>
-          <span className="subj">{r.source}</span>
-          <span className="mono">{r.code}</span>
-          <span className="why">{r.frase}</span>
+          <span className="subj">{r.source}: {r.frase}</span>
         </li>
       ))}
     </ul>

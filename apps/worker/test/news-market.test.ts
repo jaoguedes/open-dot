@@ -14,7 +14,7 @@ const newsFetch: typeof fetch = async (input) => {
   const url = String(input);
   if (url.includes("bbci.co.uk") || url.includes("npr.org")) {
     const host = url.includes("npr") ? "npr" : "bbc";
-    return new Response(rss(`Chip novo ${host}`, `https://www.example.com/${host}/chip`), { headers: { "content-type": "application/rss+xml" } });
+    return new Response(rss(`Chip novo ${host}`, host === "npr" ? "https://www.npr.org/chip" : "https://www.bbc.com/chip"), { headers: { "content-type": "application/rss+xml" } });
   }
   if (url.includes("folha")) return new Response("paywall", { status: 403 });
   if (url.includes("coingecko.com")) {
@@ -95,6 +95,10 @@ test("código do worker: ingestQuotes não negocia", async () => {
   const r = await ingestQuotes(ctx, ownerId, newsFetch);
   assert.ok(r.quotes.length >= 2);
   assert.ok(r.quotes.every((q) => q.disclaimer.includes("não é recomendação")));
+  assert.equal(r.notices.some((n) => n.reason === "b3_fora_do_plano"), true);
+  assert.equal(r.failures.some((f) => f.source === "PETR4.SA"), false);
+  const again = await ingestQuotes(ctx, ownerId, newsFetch);
+  assert.equal(again.skipped, true);
   const order = await c.call("POST", "/api/orders", { symbol: "BTC", side: "buy" });
   assert.ok(order.status >= 400);
 });

@@ -31,8 +31,10 @@ export const EnvSchema = z.object({
 
   GROQ_API_KEY: z.string().optional(),
   GROQ_ZDR_CONFIRMED: z.enum(["true", "false"]).optional(),
-  /** Finnhub free (ações). Sem chave, cripto e câmbio continuam. */
+  /** Finnhub free (ações dos EUA). Sem chave, cripto e câmbio continuam. B3 não entra neste plano. */
   FINNHUB_API_KEY: z.string().optional(),
+  /** Chave demo opcional da CoinGecko. Nunca vai para o navegador nem para o log. */
+  COINGECKO_DEMO_API_KEY: z.string().optional(),
 
   /** Rastreio PacoteVício. Sem a chave ou sem a flag, o provedor fica desligado. */
   PACOTEVICIO_API_KEY: z.string().optional(),

@@ -2,7 +2,7 @@ import { applySample, correlateDeploy, explainError, initialIncident, planDue, t
 import { checkSite } from "@open-dot/connectors/http-check.ts";
 import { listDeployments } from "@open-dot/connectors/vercel.ts";
 import { BudgetExhausted, SubrequestBudget, type Ctx } from "./context.ts";
-import { REQUIRED_SCHEMA, currentSchema } from "./db/migrate.ts";
+import { REQUIRED_SCHEMA, currentSchema, schemaCompatible } from "./db/migrate.ts";
 import * as repo from "./repo.ts";
 import { safeReason } from "./reasons.ts";
 import { syncGmail } from "./services/gmail.ts";
@@ -25,12 +25,13 @@ export interface TickReport {
   deployments: number;
   shipments: number;
   subrequests: number;
+  stepErrors: Array<{ step: string; reason: string }>;
 }
 
 export async function tick(outer: Ctx): Promise<TickReport> {
-  const report: TickReport = { planned: 0, synced: [], runs: [], monitors: 0, deployments: 0, shipments: 0, subrequests: 0 };
+  const report: TickReport = { planned: 0, synced: [], runs: [], monitors: 0, deployments: 0, shipments: 0, subrequests: 0, stepErrors: [] };
   const { version } = await currentSchema(outer.db);
-  if (version !== REQUIRED_SCHEMA) return { ...report, skipped: `schema ${version ?? "ausente"}; esperado ${REQUIRED_SCHEMA}` };
+  if (!schemaCompatible(version, REQUIRED_SCHEMA)) return { ...report, skipped: `schema ${version ?? "ausente"}; esperado ${REQUIRED_SCHEMA}` };
   const budget = new SubrequestBudget(44);
   const ctx: Ctx = { ...outer, db: budget.watch(outer.db), fetch: budget.wrap(outer.fetch) };
   const f = ctx.fetch;
@@ -38,7 +39,20 @@ export async function tick(outer: Ctx): Promise<TickReport> {
   try {
   await repo.expireStaleRuns(ctx.db, now);
 
+  const failStep = async (step: string, e: unknown) => {
+    if (e instanceof BudgetExhausted) throw e;
+    const reason = safeReason(e);
+    report.stepErrors.push({ step, reason });
+    try {
+      const owners = await outer.db.query<{ id: string }>("SELECT id FROM od_owners LIMIT 1");
+      if (owners[0]) await repo.audit(outer.db, { ownerId: owners[0].id, actor: "system", action: "tick_step", outcome: "error", detail: `${step}:${reason}`, now });
+    } catch {
+      /* o passo já está em stepErrors; a auditoria não pode derrubar o tique */
+    }
+  };
+
   // 1) Planejar slots vencidos (chave única impede duplicata).
+  try {
   for (const r of await repo.enabledRoutines(ctx.db)) {
     const spec = { routineId: r.id, ownerId: r.owner_id, times: JSON.parse(r.times) as string[], timeZone: r.time_zone, weekdays: JSON.parse(r.weekdays) as number[] };
     const last = Date.parse(r.last_planned_at ?? r.created_at);
@@ -48,15 +62,19 @@ export async function tick(outer: Ctx): Promise<TickReport> {
     }
     await repo.setPlanned(ctx.db, r.id, now);
   }
+  } catch (e) { await failStep("1", e); }
 
   // 2) Sincronizar Gmail (antes da revisão, para o resumo ter dados frescos).
+  try {
   for (const c of await repo.connectionsByProvider(ctx.db, "gmail")) {
     if (budget.remaining() < 5) break;
     const s = await syncGmail(ctx, c, f);
     report.synced.push({ connectionId: c.id, status: s.status, fetched: s.fetched });
   }
+  } catch (e) { await failStep("2", e); }
 
   // 3) Executar runs vencidos com lease + CAS.
+  try {
   for (const run of await repo.dueRuns(ctx.db, now, 2)) {
     const claimed = await repo.claimRun(ctx.db, run, now);
     if (!claimed) continue;
@@ -97,8 +115,10 @@ export async function tick(outer: Ctx): Promise<TickReport> {
       }
     }
   }
+  } catch (e) { await failStep("3", e); }
 
   // 4) Monitores HTTP.
+  try {
   for (const m of await repo.dueMonitors(ctx.db, now, 3)) {
     if (budget.remaining() < 4) break;
     const sample = await checkSite(f, { url: m.url, allowedHosts: [m.host], now: ctx.now });
@@ -121,6 +141,7 @@ export async function tick(outer: Ctx): Promise<TickReport> {
         now: ctx.now(),
       });
     } else if (transition === "closed") {
+      await repo.markFeedDone(ctx.db, m.owner_id, "site_incident", `incident:${m.id}:%`, ctx.now());
       await repo.insertFeed(ctx.db, ctx.keys, {
         ownerId: m.owner_id,
         agentId: "sentinela",
@@ -134,8 +155,10 @@ export async function tick(outer: Ctx): Promise<TickReport> {
       });
     }
   }
+  } catch (e) { await failStep("4", e); }
 
   // 5) Vercel (leitura) a cada ~15 min, se configurado.
+  try {
   if (ctx.env.VERCEL_TOKEN && ctx.env.VERCEL_PROJECT_ID && new Date(now).getUTCMinutes() % 15 < 5 && budget.remaining() >= 2) {
     const owners = await ctx.db.query<{ id: string }>("SELECT id FROM od_owners LIMIT 1");
     const ownerId = owners[0]?.id;
@@ -167,9 +190,12 @@ export async function tick(outer: Ctx): Promise<TickReport> {
       }
     }
   }
+  } catch (e) { await failStep("5", e); }
 
   // 5) Encomendas antes das leituras públicas, para o orçamento não deixar o rastreio de fora.
-  const ownersEarly = await ctx.db.query<{ id: string }>("SELECT id FROM od_owners LIMIT 3");
+  let ownersEarly: { id: string }[] = [];
+  try {
+  ownersEarly = await ctx.db.query<{ id: string }>("SELECT id FROM od_owners LIMIT 3");
   for (const o of ownersEarly) {
     await extractShipments(ctx, o.id);
     if (budget.remaining() >= 1) {
@@ -177,19 +203,25 @@ export async function tick(outer: Ctx): Promise<TickReport> {
       report.shipments += poll.checked;
     }
   }
+  } catch (e) { await failStep("5b", e); }
 
-  // 5b) Notícias e cotações. Falha aqui não derruba o tique: a execução já foi marcada.
+  // 5c) Notícias e cotações.
+  try {
   for (const o of ownersEarly) {
     try {
       if (budget.remaining() >= 5) await ingestNews(ctx, o.id, f, { maxFeeds: Math.min(4, budget.remaining() - 1) });
       if (budget.remaining() >= 3) await ingestQuotes(ctx, o.id, f);
     } catch (e) {
       if (e instanceof BudgetExhausted) throw e;
+      await failStep("5c", e);
     }
   }
+  } catch (e) { await failStep("5c", e); }
 
   // 6) Retenção uma vez por hora.
+  try {
   if (new Date(now).getUTCMinutes() < 5) await repo.applyRetention(ctx.db, now);
+  } catch (e) { await failStep("6", e); }
 
   report.subrequests = budget.used;
   return report;

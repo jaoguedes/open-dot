@@ -9,18 +9,41 @@ function num(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export async function ingestQuotes(ctx: Ctx, ownerId: string, fetchImpl: typeof fetch): Promise<{ quotes: Quote[]; failures: SourceFailure[] }> {
+export const QUOTE_INTERVAL_MS = 15 * 60_000;
+
+export function quotesDue(lastTestAt: string | null | undefined, now: number): boolean {
+  if (!lastTestAt) return true;
+  const t = Date.parse(lastTestAt);
+  return !Number.isFinite(t) || now - t >= QUOTE_INTERVAL_MS;
+}
+
+export async function ingestQuotes(ctx: Ctx, ownerId: string, fetchImpl: typeof fetch): Promise<{ quotes: Quote[]; failures: SourceFailure[]; notices: SourceFailure[]; skipped?: boolean }> {
   if (hasTradeCapability()) throw new Error("incapacidade de ordem violada");
   const settings = await repo.agentSettings(ctx.db, ownerId, "mercado");
-  if (settings && settings.enabled === 0) return { quotes: [], failures: [{ source: "Mercado", reason: "disabled" }] };
+  if (settings && settings.enabled === 0) return { quotes: [], failures: [{ source: "Mercado", reason: "disabled" }], notices: [] };
   const nowIso = new Date(ctx.now()).toISOString();
+  if (!quotesDue(settings?.last_test_at, ctx.now())) {
+    const rows = await ctx.db.query<{ symbol: string; price: number; change_pct: number | null; source: string; quoted_at: string; fetched_at: string }>(
+      "SELECT symbol, price, change_pct, source, quoted_at, fetched_at FROM od_quotes WHERE owner_id = ?",
+      [ownerId],
+    );
+    return {
+      quotes: rows.map((q) => ({ symbol: q.symbol, price: q.price, changePct: q.change_pct, source: q.source, quotedAt: q.quoted_at, fetchedAt: q.fetched_at, disclaimer: QUOTE_DISCLAIMER })),
+      failures: [],
+      notices: [],
+      skipped: true,
+    };
+  }
   const quotes: Quote[] = [];
   const failures: SourceFailure[] = [];
+  const notices: SourceFailure[] = [];
 
   const crypto = DEFAULT_ASSETS.filter((a) => a.source === "coingecko");
   try {
     const ids = crypto.map((a) => a.externalId).join(",");
-    const res = await fetchImpl(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+    const headers: Record<string, string> = { "user-agent": "OpenDot/1.0 (uso pessoal)", accept: "application/json" };
+    if (ctx.env.COINGECKO_DEMO_API_KEY) headers["x-cg-demo-api-key"] = ctx.env.COINGECKO_DEMO_API_KEY;
+    const res = await fetchImpl(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`, { headers });
     if (!res.ok) failures.push({ source: "CoinGecko", reason: `upstream_http_${res.status}` });
     else {
       const data = (await res.json()) as Record<string, { usd?: number; usd_24h_change?: number }>;
@@ -78,6 +101,10 @@ export async function ingestQuotes(ctx: Ctx, ownerId: string, fetchImpl: typeof 
 
   const key = ctx.env.FINNHUB_API_KEY;
   for (const a of DEFAULT_ASSETS.filter((x) => x.source === "finnhub")) {
+    if (a.symbol === "PETR4.SA") {
+      notices.push({ source: a.symbol, reason: "b3_fora_do_plano" });
+      continue;
+    }
     if (!key) {
       failures.push({ source: a.symbol, reason: "missing_key" });
       continue;
@@ -145,5 +172,5 @@ export async function ingestQuotes(ctx: Ctx, ownerId: string, fetchImpl: typeof 
     lastError: failures.length ? failures.map((f) => `${f.source}:${f.reason}`).join(" ") : null,
     now: ctx.now(),
   });
-  return { quotes, failures };
+  return { quotes, failures, notices };
 }
