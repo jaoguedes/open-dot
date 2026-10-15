@@ -21,8 +21,9 @@
     "secrets:keygen": "node scripts/keygen.mjs",
     "blender:check": "python3 blender/run_blender.py preflight",
     "blender:build": "python3 blender/run_blender.py build",
-    "worker:deploy": "npm run check && npx --yes wrangler@4 deploy",
-    "worker:dev": "npx --yes wrangler@4 dev",
+    "worker:deploy": "npm run check && npm run test:workerd && npx --yes wrangler@4 deploy",
+    "worker:dev": "npx --yes wrangler@4 dev --local --port 8799",
+    "test:workerd": "tsx scripts/check-workerd-health.ts",
     "setup:cloud": "tsx scripts/setup-cloud.ts",
     "test:blender": "python3 blender/test_spec.py",
     "eval:ai": "tsx scripts/eval-ai.ts"

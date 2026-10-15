@@ -105,6 +105,21 @@ test("cliente Turso: token inválido não vaza e falha com erro claro", async ()
   assert.ok(!JSON.stringify(schema).includes("errado"));
 });
 
+test("HranaDb não chama fetch como método (workerd Illegal invocation)", async () => {
+  const t = fakeTurso("tok");
+  const workerdish = function (this: unknown, input: RequestInfo | URL, init?: RequestInit) {
+    if (this !== undefined && this !== globalThis) throw new TypeError("Illegal invocation");
+    return t.fetchImpl(String(input), init ?? {});
+  } as typeof fetch;
+  assert.throws(
+    () => workerdish.call({}, "https://db.turso.io/v2/pipeline", { method: "POST", body: "{}" }),
+    /Illegal invocation/,
+  );
+  const h = new HranaDb("https://db.turso.io", "tok", workerdish);
+  await h.run("CREATE TABLE z (id INTEGER PRIMARY KEY)");
+  assert.deepEqual(await h.query<{ n: number }>("SELECT COUNT(*) AS n FROM z"), [{ n: 0 }]);
+});
+
 test("migrações e reserva atômica de orçamento funcionam pelo caminho HTTP do Turso", async () => {
   const t = fakeTurso("tok");
   const h = new HranaDb("https://db.turso.io", "tok", t.fetchImpl);

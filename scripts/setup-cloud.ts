@@ -133,6 +133,8 @@ async function main() {
   }
   const check = spawnSync("npm", ["run", "check"], { stdio: "inherit" });
   if (check.status !== 0) throw new Error("Verificações falharam; não publiquei.");
+  const workerd = spawnSync("npm", ["run", "test:workerd"], { stdio: "inherit" });
+  if (workerd.status !== 0) throw new Error("Health no wrangler dev --local falhou; não publiquei.");
   if (npx(["deploy"]).status !== 0) throw new Error("Deploy falhou.");
   const health = await fetch(`${origin}/api/health`).then((x) => x.json()).catch(() => null);
   console.log("Smoke test /api/health:", JSON.stringify(health));

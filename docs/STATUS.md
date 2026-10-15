@@ -1,6 +1,6 @@
 # STATUS — Open Dot
 
-_Atualizado em 15/10/2026 · Worker publicado; health de produção ainda `ok:false` (`schemaError: rede`)._
+_Atualizado em 15/10/2026 · Health de produção `ok:true`, schema `0003`._
 
 ## Sessão autônoma 13→14/10 (em andamento)
 
@@ -37,9 +37,9 @@ _Atualizado em 15/10/2026 · Worker publicado; health de produção ainda `ok:fa
 | Revisão do PDF | ✅ | `docs/REVISAO_DO_PDF.md`: 46 pontos com página, decisão, motivo, impacto, fonte oficial (conferida em 13/10/2026) e critério de aceite |
 | Repositório, regras e docs | ✅ | `.cursor/rules/*.mdc` no formato atual, `CLAUDE.md`, `AGENTS.md`, `.env.example`, decisões, licenças, guia do Cursor |
 | Núcleo (`packages/core`) | ✅ | Estados de execução, resolvedor visual com prioridade e revisão, corações independentes, absorção (selecionado → enviado → recebido → organizado), agenda por fuso IANA, aprovações por hash e CAS, supervisor de ferramentas, triagem por regras, resumo com cobertura, monitor anti-SSRF, roteador de IA |
-| Persistência | ✅ SQLite · 🟡 Turso (Mac lê; Worker não) | Migrações `0001`–`0003` com prefixo `od_`. Do Mac, HTTPS no Turso: HTTP 200, 28 tabelas `od_*`, `MAX(version)=0003`. `currentSchema` agora devolve `{ version, error? }` com código curto (`http_401` / `http_404` / `tabela_inexistente` / `rede`), exposto em `/api/health` como `schemaError`. Cliente Hrana testado contra servidor simulado |
-| API / Worker | ✅ local · 🟡 Cloudflare (`schemaError: rede`) | https://open-dot.jpguedesbarbieri.workers.dev (Workers Free), versão `60ab4d5e-13a1-4c96-be45-db2e8e1b46fe`. Segredos `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN` existem (lista de nomes) e foram regravados uma vez a partir do `.dev.vars` + um deploy. `/api/health`: `ok:false`, `schema:null`, `schemaError:"rede"`, `configured.database:true`. Login Google não conferido (health não está `ok`). |
-| Login | ✅ local (dev) · 🟡 Google | Login Google OIDC (PKCE, state, nonce, dono único). A entrada de desenvolvimento só funciona em localhost. `/sobre` e `/privacidade` abrem sem login (D-015). Contato da privacidade = `OWNER_EMAIL` do ambiente via `GET /api/legal`, nunca no código. |
+| Persistência | ✅ SQLite · ✅ Turso (Worker) | Migrações `0001`–`0003` com prefixo `od_`. `HranaDb` não guarda o `fetch` global cru: o workerd lança `Illegal invocation` se `fetch` for chamado como método. `currentSchema` devolve código curto em `schemaError`. Teste simula o workerd. |
+| API / Worker | ✅ local (workerd) · ✅ Cloudflare | https://open-dot.jpguedesbarbieri.workers.dev (Workers Free), versão `26260a24-2ee7-4bf6-9276-937a4151c78c`. `/api/health` produção: `ok:true`, `schema:"0003"`, `schemaError:null`. **`npm run dev` roda em Node e não reproduz o workerd; use `npx wrangler dev --local --port 8799` e confira `/api/health` antes de publicar** (`npm run test:workerd`, ligado em `worker:deploy` e `setup:cloud --publish`). |
+| Login | ✅ start em produção · 🟡 OAuth real | `GET /api/auth/google/start` em produção redireciona para `accounts.google.com`. `redirect_uri` = `https://open-dot.jpguedesbarbieri.workers.dev/api/oauth/google/callback`. Escopos do login: `openid email profile` (Gmail `gmail.readonly` é a conexão à parte). Entrada de desenvolvimento só em localhost. `/sobre` e `/privacidade` sem login. Contato = `OWNER_EMAIL` via `GET /api/legal`. |
 | Gmail (somente leitura) | 🧪 testado com Google simulado · 🟡 real | OAuth com `gmail.readonly`, sync incremental (`historyId` como texto), dedupe, ressincronização após 404, lotes dentro do limite de subrequisições, renovação de token com lease, reconexão única quando revogado, resumo das 08h/17h com links para o Gmail |
 | Rotinas 08h/17h | ✅ | Chave única por slot; cron repetido não duplica; após dias offline gera um único resumo “atrasado”; mudar o horário cancela execuções futuras |
 | IA | ✅ lógica + eval falso · ⛔ chave | Allowlist Groq; ZDR para privado; 402 desliga; `max_completion_tokens`. Tela de provedores. Avaliação `scripts/eval-ai.ts` no provedor falso. Sem chave, resumo por regras |
@@ -69,10 +69,12 @@ Ambiente: workspace Linux na nuvem, Node 22.22, TypeScript 6.0.3, esbuild 0.28.2
 | `npm run build` | ✅ app.js 320 KB, worker 176 KB, **sem APIs do Node** |
 | `npm run eval:ai` | ✅ provedor falso v1: 100 casos, recall importantes 100%, JSON 100%, unauthorized 0, paid false |
 | `npm run test:ui` | 🟡 parcial no Chromium local: login, demo rotulada, Meu dia em `aria-current`, 320/390 sem rolagem horizontal, dock, aprovação sem envio, ⌘K. Prints 1440 (h1 64 px) e 390 (h1 20 px, dock). Falhas sob carga: carinho/tonto/boné no Mascote e organize do upload (timeout). GPU real 🟡 |
+| `npx wrangler dev --local --port 8799` + `GET /api/health` | ✅ `ok:true`, `schema:"0003"` (reproduz o workerd; o Node do `npm run dev` não pega `Illegal invocation`) |
+| `https://open-dot.jpguedesbarbieri.workers.dev/api/health` | ✅ `ok:true`, `schema:"0003"` (15/10/2026, após o conserto do fetch) |
 
 Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveitado, escopo negado, acesso revogado (uma única notificação), webhook com assinatura inválida, entrega duplicada, evento fora de ordem, 429 do Gmail, falha parcial de sincronização, cursor expirado, cron repetido, lease disputado, aprovações concorrentes, orçamento concorrente (memória e SQL), 429 em provedor privado sem envio a outro, timeout e circuit breaker, cancelamento, injeção de prompt, ID de evidência inventado, prioridade visual de erro, cancelamento independente de efeitos, movimento reduzido, segredos ausentes do banco e do health.
 
-**Não foi testado:** OAuth real do Google (produção), Gmail real, consulta Turso **a partir do Worker** (do Mac a leitura HTTPS passou), CPU do cron no Cloudflare (10 ms), GitHub App real, Vercel real, Groq real, Blender/GLB nesta sessão, Mac e Windows como app, leitor de tela real.
+**Não foi testado:** completar o OAuth real do Google (só o start 302), Gmail real, CPU do cron no Cloudflare (10 ms), GitHub App real, Vercel real, Groq real, Blender/GLB nesta sessão, Mac e Windows como app, leitor de tela real.
 
 ## Pendências
 
@@ -92,11 +94,12 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Próxima ação exata
 
-Investigar por que o Worker classifica a consulta ao Turso como `rede` (não é 401, 404 nem tabela inexistente). Do Mac o mesmo `.dev.vars` lê `0003` com HTTP 200. Sem novo deploy até haver hipótese nova. Depois: cadastrar a URI OAuth no Google e conferir `/api/auth/google/start`.
+Cadastrar no Google a URI `https://open-dot.jpguedesbarbieri.workers.dev/api/oauth/google/callback` e completar um login real (ainda não seguido). Antes de qualquer publish: `npm run test:workerd` (`npx wrangler dev --local --port 8799` + `/api/health`).
 
 ## Como retomar em outra sessão
 
 1. Leia `CLAUDE.md`, este arquivo e `docs/REVISAO_DO_PDF.md`.
 2. Rode `npm run check` para confirmar a base.
-3. Use `npm run dev` e abra http://localhost:8787 (entrada local de desenvolvimento).
-4. Continue pela “Próxima ação exata” e atualize este arquivo ao terminar.
+3. Use `npm run dev` e abra http://localhost:8787 (entrada local de desenvolvimento; Node, não workerd).
+4. Antes de publicar: `npx wrangler dev --local --port 8799` e confira `GET /api/health` (`ok:true`, `schema:"0003"`), ou `npm run test:workerd`.
+5. Continue pela “Próxima ação exata” e atualize este arquivo ao terminar.

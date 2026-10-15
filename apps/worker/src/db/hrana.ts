@@ -51,15 +51,18 @@ export class HranaError extends Error {
 
 export class HranaDb implements Db {
   private readonly url: string;
+  private readonly fetchImpl: typeof fetch;
 
   constructor(
     dbUrl: string,
     private readonly token: string,
-    private readonly fetchImpl: typeof fetch = fetch,
+    fetchImpl: typeof fetch = (input, init) => fetch(input, init),
   ) {
     const u = dbUrl.replace(/^libsql:\/\//, "https://").replace(/\/$/, "");
     if (!u.startsWith("https://")) throw new HranaError("TURSO_DATABASE_URL precisa ser libsql:// ou https://");
     this.url = `${u}/v2/pipeline`;
+    // workerd lança Illegal invocation se o fetch global for chamado como método (this.fetchImpl()).
+    this.fetchImpl = (input, init) => fetchImpl(input, init);
   }
 
   private async pipeline(requests: unknown[]): Promise<Array<{ type: string; response?: { type: string; result?: unknown }; error?: { message: string } }>> {
