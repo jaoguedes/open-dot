@@ -49,15 +49,34 @@ export class HranaError extends Error {
   }
 }
 
+const TIMEOUT_MS = 8_000;
+/** Teto de novas tentativas por instância (uma por requisição ou tique): 44 + 3 < 50. */
+const MAX_RETRIES = 3;
+
+function retryable(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+function retryWaitMs(resp: Response | null): number {
+  const raw = resp?.headers.get("retry-after");
+  const sec = raw ? Number(raw) : NaN;
+  if (Number.isFinite(sec) && sec >= 0) return Math.min(2_000, sec * 1000);
+  return 300;
+}
+
 export class HranaDb implements Db {
   private readonly url: string;
   private readonly fetchImpl: typeof fetch;
+  private readonly sleep: (ms: number) => Promise<void>;
+  private retriesLeft = MAX_RETRIES;
 
   constructor(
     dbUrl: string,
     private readonly token: string,
     fetchImpl: typeof fetch = (input, init) => fetch(input, init),
+    opts: { sleep?: (ms: number) => Promise<void> } = {},
   ) {
+    this.sleep = opts.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
     const u = dbUrl.replace(/^libsql:\/\//, "https://").replace(/\/$/, "");
     if (!u.startsWith("https://")) throw new HranaError("TURSO_DATABASE_URL precisa ser libsql:// ou https://");
     this.url = `${u}/v2/pipeline`;
@@ -65,12 +84,40 @@ export class HranaDb implements Db {
     this.fetchImpl = (input, init) => fetchImpl(input, init);
   }
 
-  private async pipeline(requests: unknown[]): Promise<Array<{ type: string; response?: { type: string; result?: unknown }; error?: { message: string } }>> {
-    const resp = await this.fetchImpl(this.url, {
-      method: "POST",
-      headers: { authorization: `Bearer ${this.token}`, "content-type": "application/json" },
-      body: JSON.stringify({ requests: [...requests, { type: "close" }] }),
-    });
+  /**
+   * Um pedido ao Turso com timeout de 8 s. Leituras (`read`) têm UMA nova tentativa em
+   * 5xx, 429 ou falha de rede, respeitando Retry-After. Escritas nunca repetem sozinhas.
+   */
+  private async pipeline(requests: unknown[], read = false): Promise<Array<{ type: string; response?: { type: string; result?: unknown }; error?: { message: string } }>> {
+    const attempt = async () =>
+      this.fetchImpl(this.url, {
+        method: "POST",
+        headers: { authorization: `Bearer ${this.token}`, "content-type": "application/json" },
+        body: JSON.stringify({ requests: [...requests, { type: "close" }] }),
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+    let resp: Response | null = null;
+    let failure: unknown = null;
+    try {
+      resp = await attempt();
+    } catch (e) {
+      failure = e;
+    }
+    const failed = failure !== null || (resp !== null && retryable(resp.status));
+    if (failed && read && this.retriesLeft > 0) {
+      this.retriesLeft--;
+      await this.sleep(retryWaitMs(resp));
+      failure = null;
+      try {
+        resp = await attempt();
+      } catch (e) {
+        failure = e;
+      }
+    }
+    if (failure !== null || !resp) {
+      const timedOut = failure instanceof Error && (failure.name === "TimeoutError" || failure.name === "AbortError");
+      throw new HranaError(timedOut ? "Turso: tempo esgotado" : "Turso: falha de rede");
+    }
     if (!resp.ok) throw new HranaError(`Turso respondeu ${resp.status}`, resp.status);
     const body = (await resp.json()) as { results: Array<{ type: string; response?: { type: string; result?: unknown }; error?: { message: string } }> };
     return body.results;
@@ -81,7 +128,7 @@ export class HranaDb implements Db {
   }
 
   async query<T = Record<string, SqlValue>>(sql: string, args: SqlValue[] = []): Promise<T[]> {
-    const [r] = await this.pipeline([{ type: "execute", stmt: this.stmt({ sql, args }) }]);
+    const [r] = await this.pipeline([{ type: "execute", stmt: this.stmt({ sql, args }) }], /^\s*(select|with|pragma)\b/i.test(sql));
     if (!r || r.type !== "ok") throw new HranaError(r?.error?.message ?? "falha na consulta");
     const res = r.response?.result as ExecuteResult;
     return res.rows.map((row) => Object.fromEntries(res.cols.map((c, i) => [c.name, fromHrana(row[i]!)])) as T);
