@@ -3,6 +3,8 @@ import { DEFAULT_ACCESSORY, toVisual, type Accessory, type AgentId, type AgentVi
 import { ApiError, api, fetchSnapshot, loadSnapshot, type Snapshot } from "./api.ts";
 import { shouldRefresh, type RefreshTrigger } from "./refresh-policy.ts";
 import { setOwnerTimeZone } from "./format.ts";
+import { applyDismiss } from "./presence.ts";
+import { DEFAULT_VOLUME, sound } from "./sound.ts";
 import { apiFailureMode } from "./failure-mode.ts";
 
 export type Mode = "loading" | "live" | "demo" | "login" | "setup" | "unreachable";
@@ -12,6 +14,9 @@ export interface Prefs {
   motion: "system" | "reduced" | "full";
   transparency: "system" | "reduced";
   accessories: boolean;
+  /** Sons do Dot (E7): desligados por padrão. */
+  sound: boolean;
+  soundVolume: number;
 }
 
 interface AppState {
@@ -40,6 +45,8 @@ interface AppState {
   /** Há mais itens antigos no feed (cursor do servidor). */
   feedHasMore: boolean;
   loadMoreFeed: () => Promise<void>;
+  /** Some com o erro do agente até a próxima execução dele. */
+  dismissError: (a: AgentId) => void;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -51,8 +58,9 @@ export function useApp(): AppState {
 }
 
 const PREFS_KEY = "open-dot:prefs";
+const DISMISS_KEY = "open-dot:dismissed-errors";
 function readPrefs(): Prefs {
-  const base: Prefs = { theme: "dark", motion: "system", transparency: "system", accessories: true };
+  const base: Prefs = { theme: "dark", motion: "system", transparency: "system", accessories: true, sound: false, soundVolume: DEFAULT_VOLUME };
   try {
     return { ...base, ...(JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}") as Partial<Prefs>) };
   } catch {
@@ -86,10 +94,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [announcement, setAnnouncement] = useState("");
   const [activity, setActivity] = useState<AgentVisual | null>(null);
   const [feedNext, setFeedNext] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState<Partial<Record<AgentId, number>>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(DISMISS_KEY) ?? "{}") as Partial<Record<AgentId, number>>;
+    } catch {
+      return {};
+    }
+  });
 
   const sysDark = useMedia("(prefers-color-scheme: dark)");
   const sysReduced = useMedia("(prefers-reduced-motion: reduce)");
   const reducedMotion = prefs.motion === "reduced" || (prefs.motion === "system" && sysReduced);
+
+  useEffect(() => {
+    sound.setEnabled(prefs.sound);
+    sound.setVolume(prefs.soundVolume);
+  }, [prefs.sound, prefs.soundVolume]);
+
+  // Sons por mudança de dados (E7): oi uma vez por sessão; atenção quando aprovações ou
+  // itens que pedem você aumentam; aviso quando chega item novo no polling.
+  const lastCounts = useRef<{ need: number; ids: Set<string> } | null>(null);
+  useEffect(() => {
+    if (mode !== "live" || !snap) return;
+    try {
+      if (sessionStorage.getItem("od-hello-sound") !== "1") {
+        sessionStorage.setItem("od-hello-sound", "1");
+        sound.play("dot-hello");
+      }
+    } catch {
+      /* sem sessionStorage: sem oi */
+    }
+    const need = snap.approvals.filter((a) => a.status === "pending").length + snap.feed.filter((f) => (f.kind === "ci_failure" || f.kind === "site_incident") && f.state !== "done" && f.state !== "snoozed").length;
+    const ids = new Set(snap.feed.map((f) => f.id));
+    const prev = lastCounts.current;
+    lastCounts.current = { need, ids };
+    if (!prev) return;
+    if (need > prev.need) sound.play("dot-attention");
+    else if ([...ids].some((id) => !prev.ids.has(id))) sound.play("dot-notify");
+  }, [mode, snap]);
 
   useEffect(() => {
     const dark = prefs.theme === "dark" || (prefs.theme === "system" && sysDark);
@@ -249,7 +291,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const visualFor = useCallback(
     (a: AgentId): AgentVisual => {
       const s = snap?.status.find((x) => x.agentId === a);
-      return s ?? toVisual(a, "idle");
+      return s ? applyDismiss(s, dismissed[a]) : toVisual(a, "idle");
+    },
+    [snap, dismissed],
+  );
+  const dismissError = useCallback(
+    (a: AgentId) => {
+      const rev = snap?.status.find((x) => x.agentId === a)?.revision;
+      if (rev === undefined) return;
+      setDismissed((old) => {
+        const next = { ...old, [a]: rev };
+        try {
+          localStorage.setItem(DISMISS_KEY, JSON.stringify(next));
+        } catch {
+          /* sem armazenamento: vale até recarregar */
+        }
+        return next;
+      });
     },
     [snap],
   );
@@ -273,8 +331,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AppState>(
-    () => ({ mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, setActivity, path, navigate, goBack, announce, announcement, feedHasMore: Boolean(feedNext) && mode === "live", loadMoreFeed }),
-    [mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, path, navigate, goBack, announce, announcement, feedNext, loadMoreFeed],
+    () => ({ mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, setActivity, path, navigate, goBack, announce, announcement, feedHasMore: Boolean(feedNext) && mode === "live", loadMoreFeed, dismissError }),
+    [mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, path, navigate, goBack, announce, announcement, feedNext, loadMoreFeed, dismissError],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

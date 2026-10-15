@@ -1,6 +1,6 @@
 import { markSplashSeen, readSplashSeen, splashPlan } from "./splash-policy.ts";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AGENTS, SEMANTIC_PRIORITY, toVisual, versionChanged, type AgentId } from "@open-dot/core";
+import { AGENTS, agentsInPlace, toVisual, versionChanged, type AgentId } from "@open-dot/core";
 import { useApp } from "./store.tsx";
 import { Icon, type IconName } from "./components/Icons.tsx";
 import { AgentDot } from "./dot/AgentDot.tsx";
@@ -9,14 +9,15 @@ import { api } from "./api.ts";
 import { Home } from "./views/Home.tsx";
 
 import { MyDay } from "./views/MyDay.tsx";
-import { ContextPanel } from "./components/ContextPanel.tsx";
 import { NotificationBell } from "./components/NotificationCenter.tsx";
 import { useDialog } from "./components/useDialog.ts";
+import { sound } from "./sound.ts";
 
 // Telas menos visitadas carregam sob demanda (C5): a primeira tela baixa menos.
 const Entregas = lazy(() => import("./views/Entregas.tsx").then((m) => ({ default: m.Entregas })));
 const Routines = lazy(() => import("./views/Routines.tsx").then((m) => ({ default: m.Routines })));
 const Connections = lazy(() => import("./views/Connections.tsx").then((m) => ({ default: m.Connections })));
+const ContextPanel = lazy(() => import("./components/ContextPanel.tsx").then((m) => ({ default: m.ContextPanel })));
 const CommandPalette = lazy(() => import("./components/CommandPalette.tsx").then((m) => ({ default: m.CommandPalette })));
 const Approval = lazy(() => import("./views/Approval.tsx").then((m) => ({ default: m.Approval })));
 const About = lazy(() => import("./views/About.tsx").then((m) => ({ default: m.About })));
@@ -24,7 +25,7 @@ const Privacy = lazy(() => import("./views/Privacy.tsx").then((m) => ({ default:
 const Mascot = lazy(() => import("./views/Mascot.tsx").then((m) => ({ default: m.Mascot })));
 import { DotTrouble, type TroubleInfo } from "./components/DotTrouble.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
-import { agentConnected, agentPresence, islandLine, islandReason, sortAgents } from "./presence.ts";
+import { agentConnected, agentPresence, dominantVisual, islandLine, islandReason, runProgress, sortAgents } from "./presence.ts";
 
 function isMyDayPath(path: string): boolean {
   return path === "/" || path === "/meu-dia";
@@ -65,8 +66,8 @@ function useSplash(loading: boolean, reduced: boolean): { show: boolean; fading:
   return { show, fading };
 }
 
-const SIDEBAR_AGENTS: AgentId[] = ["dot", "correio", "codigo", "sentinela", "noticias", "mercado", "marketing", "entregas"];
-const LIST_AGENTS: AgentId[] = ["correio", "codigo", "sentinela", "foco", "noticias", "mercado", "marketing", "entregas"];
+const SIDEBAR_AGENTS: AgentId[] = agentsInPlace("presence");
+const LIST_AGENTS: AgentId[] = agentsInPlace("list");
 
 interface NavDef {
   path: string;
@@ -105,7 +106,10 @@ export function App() {
     };
     const onTrouble = (ev: Event) => {
       const detail = (ev as CustomEvent<TroubleInfo>).detail;
-      if (detail?.code) setTrouble({ code: detail.code, route: location.pathname });
+      if (detail?.code) {
+        setTrouble({ code: detail.code, route: location.pathname });
+        sound.play("dot-error");
+      }
     };
     document.addEventListener("visibilitychange", onVis);
     window.addEventListener("od-trouble", onTrouble);
@@ -245,7 +249,7 @@ export function App() {
                 <Icon name="alert" /> Você está offline. Mostrando os últimos dados carregados{app.lastLoadedAt ? ` (${fmtTime(new Date(app.lastLoadedAt).toISOString())})` : ""}.
               </div>
             )}
-            {trouble && <DotTrouble info={trouble} reducedMotion={app.reducedMotion} onRetry={() => { setTrouble(null); void app.refresh(); }} />}
+            {trouble && <DotTrouble info={trouble} reducedMotion={app.reducedMotion} onRetry={() => { setTrouble(null); void app.refresh(); }} onDismiss={() => setTrouble(null)} />}
             {update && (
               <div className="banner" role="status">
                 Nova versão disponível
@@ -296,7 +300,11 @@ export function App() {
                 <Suspense fallback={<p className="meta" role="status">Carregando…</p>}>{view}</Suspense>
               </div>
             </main>
-            {showContext && <ContextPanel open={ctxOpen} onClose={() => setCtxOpen(false)} agentId={agentId ?? "dot"} />}
+            {showContext && (
+              <Suspense fallback={null}>
+                <ContextPanel open={ctxOpen} onClose={() => setCtxOpen(false)} agentId={agentId ?? "dot"} />
+              </Suspense>
+            )}
           </div>
         </div>
       </div>
@@ -524,19 +532,14 @@ function ThemeButton() {
 
 function Island({ go }: { go: (p: string) => void }) {
   const app = useApp();
-  const dom = useMemo(() => {
-    let best = app.visualFor("dot");
-    let working = null as typeof best | null;
-    for (const a of SIDEBAR_AGENTS) {
-      const v = app.visualFor(a);
-      if (v.semantic === "working" || v.semantic === "thinking") working = v;
-      if (SEMANTIC_PRIORITY[v.semantic] > SEMANTIC_PRIORITY[best.semantic]) best = v;
-    }
-    return working ?? best;
-  }, [app]);
+  const { visualFor } = app;
+  const dom = useMemo(() => dominantVisual(SIDEBAR_AGENTS.map((a) => visualFor(a))), [visualFor]);
   const shown = app.activity ?? dom;
   const digest = app.snap?.feed.find((f) => f.kind === "email_digest");
   const line1 = islandLine(shown);
+  // Execução ativa mais recente, pelo estado real (E5).
+  const activeRun = app.snap?.runs.find((r) => r.state === "running" || r.state === "queued" || r.state === "retry_scheduled") ?? null;
+  const progress = runProgress(activeRun);
   const line2 = islandReason(shown.reason) ?? (digest ? `${digest.body.counts?.important ?? 0} mensagens desde as 17h` : "Nada pendente agora");
   // A ilha não é região viva: só erro e "precisa de você" são anunciados, uma vez por mudança (D4).
   const spoken = useRef<string>("");
@@ -555,11 +558,12 @@ function Island({ go }: { go: (p: string) => void }) {
         size={40}
         reducedMotion={app.reducedMotion}
         interactive
-        onAffection={(r) => r === "suppressed" && app.announce("Carinho pausado: há algo que precisa da sua atenção.")}
+        onAffection={(r) => (r === "ok" ? sound.play("dot-love") : r === "suppressed" && app.announce("Carinho pausado: há algo que precisa da sua atenção."))}
       />
       <button type="button" className="txt" aria-live="off" onClick={() => go("/agente/dot")} aria-label={`${line1}. ${line2}. Abrir conversa com o Dot`}>
         <span>{line1}</span>
-        <span>{line2}</span>
+        <span>{progress ? `${AGENTS[activeRun!.agentId]?.name ?? "Agente"} · etapa ${progress.step} de ${progress.steps} · ${progress.label}` : line2}</span>
+        {progress && <progress className="island-progress" max={progress.steps} value={progress.step} aria-hidden="true" />}
       </button>
     </aside>
   );

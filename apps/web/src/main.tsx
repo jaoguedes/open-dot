@@ -5,6 +5,16 @@ import { App } from "./App.tsx";
 import { ScreenBoundary } from "./components/ScreenBoundary.tsx";
 import { chunkPlan, clearAppCache } from "./components/DotTrouble.tsx";
 import "./styles.css";
+import { sound } from "./sound.ts";
+
+// iOS só toca áudio depois de um gesto: pré-carrega os sons no primeiro toque ou tecla.
+const unlockSound = () => {
+  sound.unlock();
+  window.removeEventListener("pointerdown", unlockSound);
+  window.removeEventListener("keydown", unlockSound);
+};
+window.addEventListener("pointerdown", unlockSound, { passive: true });
+window.addEventListener("keydown", unlockSound);
 
 const CHUNK_KEY = "od-chunk-reload";
 

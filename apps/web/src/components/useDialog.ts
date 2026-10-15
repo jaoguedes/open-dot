@@ -1,4 +1,5 @@
 import { useEffect, useRef, type RefObject } from "react";
+import { sound } from "../sound.ts";
 
 /**
  * Comportamento de diálogo modal (D4): tudo fora do diálogo fica `inert` (o foco não
@@ -25,6 +26,7 @@ export function useDialog(open: boolean, ref: RefObject<HTMLElement | null>, onC
     const target = initial?.current ?? el.querySelector<HTMLElement>("input, textarea, select, button, [href], [tabindex]:not([tabindex='-1'])") ?? el;
     if (target === el && !el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
     target.focus();
+    sound.play("dot-pop");
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -51,6 +53,7 @@ export function useDialog(open: boolean, ref: RefObject<HTMLElement | null>, onC
     return () => {
       document.removeEventListener("keydown", onKey, true);
       for (const t of touched) t.inert = false;
+      sound.play("dot-close");
       if (opener && document.contains(opener)) opener.focus();
     };
   }, [open, ref, initial]);

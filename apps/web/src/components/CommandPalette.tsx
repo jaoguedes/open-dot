@@ -6,6 +6,7 @@ import { useApp } from "../store.tsx";
 import { AnswerView } from "./AnswerView.tsx";
 import { Icon } from "./Icons.tsx";
 import { useDialog } from "./useDialog.ts";
+import { sound } from "../sound.ts";
 
 export interface PaletteEntry {
   id: string;
@@ -46,8 +47,10 @@ export function CommandPalette({ onClose, go, destinations, agents }: { onClose:
     setBusy(true);
     setError(null);
     try {
+      sound.play("dot-send");
       const r = await askDot(question, app.mode === "demo" ? app.snap : null);
       const saved = { ...r, question };
+      sound.play("dot-receive");
       setAnswer(saved);
       saveLastAnswer(saved);
       app.announce(r.answer);
