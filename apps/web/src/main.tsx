@@ -2,12 +2,34 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { AppProvider } from "./store.tsx";
 import { App } from "./App.tsx";
+import { ScreenBoundary } from "./components/ScreenBoundary.tsx";
+import { chunkPlan, clearAppCache } from "./components/DotTrouble.tsx";
 import "./styles.css";
+
+const CHUNK_KEY = "od-chunk-reload";
+
+function chunkFailure(reason: unknown): boolean {
+  const text = reason instanceof Error ? reason.message : String(reason ?? "");
+  return /dynamically imported module|importing a module script failed|chunk/i.test(text);
+}
+
+window.addEventListener("unhandledrejection", (ev) => {
+  if (!chunkFailure(ev.reason)) return;
+  const plan = chunkPlan(sessionStorage.getItem(CHUNK_KEY) === "1");
+  if (plan === "reload") {
+    sessionStorage.setItem(CHUNK_KEY, "1");
+    void clearAppCache().then(() => location.reload());
+    return;
+  }
+  window.dispatchEvent(new CustomEvent("od-trouble", { detail: { code: "chunk_missing" } }));
+});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AppProvider>
-      <App />
+      <ScreenBoundary>
+        <App />
+      </ScreenBoundary>
     </AppProvider>
   </StrictMode>,
 );

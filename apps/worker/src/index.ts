@@ -11,6 +11,28 @@ import type { Ctx } from "./context.ts";
 
 interface Bindings extends Record<string, unknown> {
   ASSETS?: { fetch(req: Request): Promise<Response> };
+  CF_VERSION_METADATA?: { id?: string };
+}
+
+export async function assetOrReal404(res: Response): Promise<Response> {
+  const type = res.headers.get("content-type") ?? "";
+  if (res.status === 404 || type.includes("text/html")) {
+    return new Response("não encontrado", { status: 404, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" } });
+  }
+  return res;
+}
+
+async function versionResponse(url: URL, bindings: Bindings): Promise<Response> {
+  let app = "desconhecida";
+  if (bindings.ASSETS) {
+    const v = await bindings.ASSETS.fetch(new Request(new URL("/version.json", url.origin)));
+    if (v.ok) {
+      const body = (await v.json().catch(() => null)) as { app?: unknown } | null;
+      if (body && typeof body.app === "string" && /^[a-f0-9]{8,64}$/.test(body.app)) app = body.app;
+    }
+  }
+  const worker = bindings.CF_VERSION_METADATA?.id && /^[0-9a-f-]{8,64}$/i.test(bindings.CF_VERSION_METADATA.id) ? bindings.CF_VERSION_METADATA.id : "local";
+  return new Response(JSON.stringify({ app, worker }), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 }
 
 let keyCache: { spec: string; ring: Keyring } | null = null;
@@ -27,6 +49,7 @@ async function buildCtx(bindings: Bindings): Promise<Ctx | { error: string[] }> 
 export default {
   async fetch(req: Request, bindings: Bindings): Promise<Response> {
     const url = new URL(req.url);
+    if (url.pathname === "/api/version" && req.method === "GET") return versionResponse(url, bindings);
     if (url.pathname.startsWith("/api/")) {
       const ctx = await buildCtx(bindings);
       if ("error" in ctx) {
@@ -34,6 +57,9 @@ export default {
         return new Response(JSON.stringify({ error: { code: "not_configured", message: "Configuração incompleta do servidor.", missing: ctx.error } }), { status: 503, headers: { "content-type": "application/json" } });
       }
       return handleApi(ctx, req);
+    }
+    if ((url.pathname.startsWith("/assets/") || url.pathname.startsWith("/chunks/")) && bindings.ASSETS) {
+      return assetOrReal404(await bindings.ASSETS.fetch(req));
     }
     if (bindings.ASSETS) return bindings.ASSETS.fetch(req);
     return new Response("Interface não publicada.", { status: 404 });

@@ -4,6 +4,7 @@ import { build } from "esbuild";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync, statSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { copyDotAssets } from "./lib/dot-assets.mjs";
+import { stampBuild } from "./lib/stamp-build.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
 const web = join(root, "apps/web");
@@ -31,6 +32,8 @@ await build({
   logLevel: "warning",
   legalComments: "external",
 });
+
+stampBuild(dist);
 
 const dot = copyDotAssets(root, dist);
 

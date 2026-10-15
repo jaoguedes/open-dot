@@ -18,6 +18,8 @@ import { handleApi } from "../apps/worker/src/app.ts";
 import { tick } from "../apps/worker/src/jobs.ts";
 import { loadMigrations } from "./lib/migrations.ts";
 import { copyDotAssets } from "./lib/dot-assets.mjs";
+// @ts-expect-error módulo JS sem declaração
+import { stampBuild } from "./lib/stamp-build.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
 const demoOnly = process.argv.includes("--demo");
@@ -61,6 +63,7 @@ async function buildWeb() {
   });
   await ctx.watch();
   await ctx.rebuild();
+  stampBuild(dist);
 }
 
 const MIME: Record<string, string> = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".woff": "font/woff", ".woff2": "font/woff2", ".txt": "text/plain; charset=utf-8", ".map": "application/json", ".json": "application/json", ".glb": "model/gltf-binary", ".png": "image/png", ".mjs": "text/javascript", ".webmanifest": "application/manifest+json" };
@@ -69,7 +72,7 @@ function serveStatic(pathname: string): { body: Buffer; type: string; status: nu
   const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, "");
   let file = join(dist, safe);
   const missing = !file.startsWith(dist) || !existsSync(file) || statSync(file).isDirectory();
-  if (missing && /^\/(assets|dot|fonts)\//.test(pathname)) return { body: Buffer.from("não encontrado"), type: "text/plain; charset=utf-8", status: 404 };
+  if (missing && /^\/(assets|chunks|dot|fonts)\//.test(pathname)) return { body: Buffer.from("não encontrado"), type: "text/plain; charset=utf-8", status: 404 };
   if (missing) file = join(dist, "index.html"); // SPA
   return { body: readFileSync(file), type: MIME[extname(file)] ?? "application/octet-stream", status: 200 };
 }
@@ -98,6 +101,20 @@ async function main() {
       if (url.pathname === "/api/dev/tick" && req.method === "POST" && runTick) {
         const rep = await runTick();
         res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(rep));
+        return;
+      }
+      if (url.pathname === "/api/version" && req.method === "GET") {
+        let app = "desconhecida";
+        const versionFile = join(dist, "version.json");
+        if (existsSync(versionFile)) {
+          try {
+            const parsed = JSON.parse(readFileSync(versionFile, "utf8")) as { app?: unknown };
+            if (typeof parsed.app === "string" && /^[a-f0-9]{8,64}$/.test(parsed.app)) app = parsed.app;
+          } catch {
+            app = "desconhecida";
+          }
+        }
+        res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" }).end(JSON.stringify({ app, worker: "local" }));
         return;
       }
       if (url.pathname.startsWith("/api/")) {
