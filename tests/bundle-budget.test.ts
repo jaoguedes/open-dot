@@ -32,3 +32,12 @@ test("o último build de produção cabe no limite", () => {
   if (!existsSync(f) || readFileSync(f, "utf8").includes("forcar")) return; // sem build ou build de desenvolvimento
   assert.equal(checkAppJs(initialBytes(f.pathname).bytes).ok, true);
 });
+
+test("o build de produção não leva o zod nem os contratos (validação só em desenvolvimento)", async () => {
+  const { readdirSync } = await import("node:fs");
+  const dir = new URL("../apps/web/dist/assets/", import.meta.url);
+  if (!existsSync(dir) || readFileSync(new URL("app.js", dir), "utf8").includes("forcar")) return;
+  const chunks = readdirSync(new URL("chunks/", dir)).filter((f) => f.endsWith(".js"));
+  assert.equal(chunks.some((f) => /contracts/i.test(f)), false);
+  for (const f of ["app.js", ...chunks.map((c) => `chunks/${c}`)]) assert.equal(readFileSync(new URL(f, dir), "utf8").includes("invalid_type_error"), false, f);
+});

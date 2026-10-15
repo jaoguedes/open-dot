@@ -1,7 +1,19 @@
 import { SNAPSHOT_PART_LABEL } from "./refresh-policy.ts";
 import type { AgentId, AgentVisual, ProviderCard } from "@open-dot/core";
 
-/** Tipos que a interface consome (espelham as rotas do worker). */
+/** Tipos que a interface consome. Os contratos de resposta ficam em packages/core/src/contracts.ts (F3). */
+import type { AskAnswer, Configured, Connection, Monitor, Routine, RunInfo, SessionView, Usage } from "@open-dot/core/contracts.ts";
+export type { AskAnswer, Configured, Connection, Monitor, Routine, RunInfo, SessionView, Usage };
+
+/** Só no build de desenvolvimento: confere a resposta contra o contrato e avisa no console. */
+function devCheck(path: string, data: unknown): void {
+  if (import.meta.env.DEV) {
+    void import("@open-dot/core/contracts.ts").then(({ checkContract }) => {
+      const problems = checkContract(path, data);
+      if (problems.length) console.warn(`[contrato] ${path}`, problems);
+    });
+  }
+}
 
 export interface DigestMail {
   messageId: string;
@@ -61,16 +73,6 @@ export interface FeedEntry {
   createdAt: string;
 }
 
-export interface Connection {
-  id: string;
-  provider: "gmail" | "github" | "vercel" | "gsc";
-  status: "connected" | "reauth_required" | "error" | "disabled";
-  accountLabel: string | null;
-  scopes: string[];
-  lastSyncAt: string | null;
-  lastError: string | null;
-}
-
 export interface AgentSource {
   id: string;
   label: string;
@@ -88,69 +90,6 @@ export interface AgentCard {
   missing: string[];
   note: string;
   quotes?: Array<{ symbol: string; price: number; changePct: number | null; source: string; quotedAt: string; fetchedAt: string; stale: boolean; disclaimer: string }>;
-}
-
-export interface Configured {
-  database: boolean;
-  google: boolean;
-  owner: boolean;
-  github: boolean;
-  githubApp: boolean;
-  vercel: boolean;
-  ai: boolean;
-  aiPrivate: boolean;
-  finnhub: boolean;
-  tracking: boolean;
-  trackingState?: "ligado" | "sem_chave" | "termos" | "desligado";
-}
-
-export interface Routine {
-  id: string;
-  agentId: AgentId;
-  kind: string;
-  times: string[];
-  timeZone: string;
-  weekdays: number[];
-  enabled: boolean;
-  nextRunAt: string | null;
-}
-
-export interface RunInfo {
-  id: string;
-  agentId: AgentId;
-  kind: string;
-  state: string;
-  scheduledAt: string | null;
-  late: boolean;
-  attempt: number;
-  errorCode: string | null;
-  errorMessage: string | null;
-  updatedAt: string;
-}
-
-export interface Usage {
-  day: string;
-  calls: number;
-  tokens: number;
-  limits: { calls: number; tokens: number };
-  aiConfigured: boolean;
-  privateAllowed: boolean;
-}
-
-export interface Monitor {
-  id: string;
-  url: string;
-  label: string;
-  enabled: boolean;
-  incident: { open?: boolean; consecutiveFailures?: number; kind?: "slow" | "down" };
-  lastCheckAt: string | null;
-}
-
-export interface AskAnswer {
-  answer: string;
-  sources: Array<{ id: string; title: string; detail: string; href: string | null; at: string }>;
-  aiUsed: boolean;
-  note: string | null;
 }
 
 export interface Snapshot {
@@ -251,20 +190,13 @@ async function req<T>(path: string, init: RequestInit = {}, quiet = false): Prom
   } catch {
     throw new ApiError(res.status, "not_api", "O servidor não respondeu como a API do Open Dot.");
   }
+  if (res.ok) devCheck(path, data);
   if (!res.ok) {
     const reason = typeof data?.error?.reason === "string" ? data.error.reason : undefined;
     if (!quiet && !quietTrouble && (reason || res.status >= 500)) noteTrouble(reason || "internal");
     throw new ApiError(res.status, data?.error?.code ?? "error", data?.error?.message ?? `Erro ${res.status}`, data?.error?.missing, reason);
   }
   return data as T;
-}
-
-export interface SessionView {
-  id: string;
-  device: string;
-  createdAt: string;
-  expiresAt: string;
-  current: boolean;
 }
 
 export const api = {
@@ -399,6 +331,7 @@ export async function fetchSnapshot(etag: string | null): Promise<SnapshotFetch>
   }
   if (res.status === 404 && data?.error?.code === "not_found") return { kind: "legacy" };
   if (!res.ok) throw new ApiError(res.status, data?.error?.code ?? "error", data?.error?.message ?? `Erro ${res.status}`, data?.error?.missing, data?.error?.reason);
+  devCheck("/api/snapshot", data);
   const failures = Array.isArray(data.failures) ? data.failures.map((f: { part?: string }) => SNAPSHOT_PART_LABEL[f.part ?? ""] ?? "servidor") : [];
   const conns = data.connections ?? { configured: emptyConfigured, connections: [], agents: [], providers: [] };
   const approvals = data.approvals ?? { approvals: [], canSend: false };
