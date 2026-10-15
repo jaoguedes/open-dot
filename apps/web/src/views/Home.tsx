@@ -1,13 +1,16 @@
 import { AGENTS, TOOL_KIND, toVisual, type AgentId } from "@open-dot/core";
-import { useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
+
+const AbsorbPanel = lazy(() => import("../components/AbsorbPanel.tsx").then((m) => ({ default: m.AbsorbPanel })));
+import { askDot, composerEnter, composerRows, isTouchPrimary, readLastAnswer, saveLastAnswer, type SavedAnswer } from "../ask.ts";
+import { AnswerView } from "../components/AnswerView.tsx";
 import { useApp } from "../store.tsx";
 import { ApiError, api, type AskAnswer } from "../api.ts";
 import { DigestBlock, FeedRow } from "../components/FeedViews.tsx";
 import { Icon } from "../components/Icons.tsx";
 import { AgentDot } from "../dot/AgentDot.tsx";
-import { AbsorbPanel } from "../components/AbsorbPanel.tsx";
 import { DotTrouble } from "../components/DotTrouble.tsx";
-import { fmtTime, greeting } from "../format.ts";
+import { fmtTime, fmtWhen, greeting, ownerTimeZone } from "../format.ts";
 
 /** Conversa do agente: resumo curto, ações pendentes e perguntas com fontes. */
 export function Home({ agentId }: { agentId: AgentId }) {
@@ -17,7 +20,7 @@ export function Home({ agentId }: { agentId: AgentId }) {
   const digest = feed.find((f) => f.kind === "email_digest");
   const others = feed.filter((f) => f !== digest).slice(0, 6);
   const name = snap?.owner?.name?.split(" ")[0];
-  const today = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", timeZone: "America/Sao_Paulo" }).format(new Date());
+  const today = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", timeZone: ownerTimeZone() }).format(new Date());
 
   return (
     <>
@@ -30,10 +33,14 @@ export function Home({ agentId }: { agentId: AgentId }) {
       <div className="msg-head">
         <AgentDot visual={app.visualFor(agentId)} accessory={app.accessoryFor(agentId)} size={22} animate={false} reducedMotion={app.reducedMotion} />
         <b>{AGENTS[agentId].name}</b>
-        {digest && <span>{fmtTime(digest.createdAt)}</span>}
+        {digest && <span>{fmtWhen(digest.createdAt)}</span>}
       </div>
-      {agentId === "dot" && <h1 style={{ marginBottom: 8 }}>{greeting()}{name ? `, ${name}` : ""}.</h1>}
-      {agentId === "dot" && snap && <AbsorbPanel />}
+      {agentId === "dot" && <h1 className="mb-8">{greeting()}{name ? `, ${name}` : ""}.</h1>}
+      {agentId === "dot" && snap && (
+        <Suspense fallback={null}>
+          <AbsorbPanel />
+        </Suspense>
+      )}
 
       {!snap ? (
         <Loading />
@@ -43,7 +50,7 @@ export function Home({ agentId }: { agentId: AgentId }) {
         <>
           {digest && <DigestBlock item={digest} showIntro={agentId === "dot"} />}
           {others.length > 0 && (
-            <ul className="list" style={{ marginTop: 24 }} aria-label="Outros resultados">
+            <ul className="list mt-24" aria-label="Outros resultados">
               {others.map((f) => (
                 <FeedRow key={f.id} item={f} />
               ))}
@@ -68,7 +75,7 @@ function AgentActions({ agentId }: { agentId: AgentId }) {
     const gmail = app.snap?.connections.some((c) => c.provider === "gmail" && c.status === "connected");
     if (!gmail) return null;
     return (
-      <div className="row-actions" style={{ marginBottom: 16 }}>
+      <div className="row-actions mb-16">
         <button
           className="btn primary"
           type="button"
@@ -102,7 +109,7 @@ function AgentActions({ agentId }: { agentId: AgentId }) {
   }
   if (agentId === "sentinela") {
     return (
-      <div className="row-actions" style={{ marginBottom: 16 }}>
+      <div className="row-actions mb-16">
         <button
           className="btn"
           type="button"
@@ -138,7 +145,7 @@ function AgentAbout({ agentId }: { agentId: AgentId }) {
   const p = AGENTS[agentId];
   const note = ABOUT[agentId];
   return (
-    <div className="tiny" style={{ margin: "0 0 12px" }}>
+    <div className="tiny m-0 mb-12">
       <a href={`#sobre-${agentId}`} onClick={(e) => {
         e.preventDefault();
         const el = document.getElementById(`sobre-${agentId}`);
@@ -171,7 +178,7 @@ function EmptyState({ agentId }: { agentId: AgentId }) {
   const app = useApp();
   const copy = EMPTY[agentId] ?? ["Nada por aqui ainda.", "O resultado aparece quando a rotina terminar."];
   return (
-    <div className="state" style={{ marginTop: 16 }}>
+    <div className="state mt-16">
       <p>{copy[0]}</p>
       <p>{copy[1]}</p>
       <button className="btn primary" onClick={() => app.navigate("/conexoes")}>
@@ -194,10 +201,10 @@ const EMPTY: Partial<Record<AgentId, [string, string]>> = {
 
 function Loading() {
   return (
-    <div role="status" aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
-      <div className="skeleton" style={{ width: "80%" }} />
-      <div className="skeleton" style={{ width: "60%" }} />
-      <div className="skeleton" style={{ height: 96 }} />
+    <div className="col-10 mt-16" role="status" aria-live="polite">
+      <div className="skeleton w-80" />
+      <div className="skeleton w-60" />
+      <div className="skeleton h-96" />
       <span className="sr-only">Carregando resultados…</span>
     </div>
   );
@@ -207,8 +214,9 @@ function Composer() {
   const app = useApp();
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
-  const [answer, setAnswer] = useState<(AskAnswer & { question: string }) | null>(null);
+  const [answer, setAnswer] = useState<SavedAnswer | null>(readLastAnswer);
   const [error, setError] = useState<string | null>(null);
+  const touch = useRef(isTouchPrimary()).current;
 
   const submit = async () => {
     const question = q.trim();
@@ -216,8 +224,10 @@ function Composer() {
     setBusy(true);
     setError(null);
     try {
-      const r = app.mode === "demo" && app.snap ? (await import("../demo.ts")).demoAsk(question, app.snap) : await api.ask(question);
-      setAnswer({ ...r, question });
+      const r = await askDot(question, app.mode === "demo" ? app.snap : null);
+      const saved = { ...r, question };
+      setAnswer(saved);
+      saveLastAnswer(saved);
       setQ("");
       app.announce(r.answer);
     } catch (e) {
@@ -226,34 +236,16 @@ function Composer() {
       setBusy(false);
     }
   };
+  const clear = () => {
+    setAnswer(null);
+    saveLastAnswer(null);
+  };
 
   return (
     <>
-      {answer && (
-        <section className="answer" aria-live="polite">
-          <div className="tiny">Você perguntou: {answer.question}</div>
-          <p style={{ margin: "6px 0" }}>{answer.answer}</p>
-          {answer.sources.length > 0 && (
-            <ul className="list meta">
-              {answer.sources.map((s) => (
-                <li key={s.id}>
-                  {s.href ? (
-                    <a href={s.href} target="_blank" rel="noreferrer noopener">
-                      {s.title}
-                    </a>
-                  ) : (
-                    s.title
-                  )}{" "}
-                  — {s.detail}
-                </li>
-              ))}
-            </ul>
-          )}
-          {answer.note && <div className="tiny">{answer.note}</div>}
-        </section>
-      )}
+      {answer && <AnswerView answer={answer} onClear={clear} />}
       {error && (
-        <p role="alert" className="chip err" style={{ marginTop: 12 }}>
+        <p role="alert" className="chip err section-gap">
           {error}
         </p>
       )}
@@ -269,23 +261,25 @@ function Composer() {
         </label>
         <textarea
           id="ask"
-          rows={1}
+          rows={composerRows(q)}
           placeholder="Pergunte sobre suas revisões…"
           value={q}
           maxLength={500}
+          enterKeyHint={touch ? "enter" : "send"}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            const action = composerEnter({ key: e.key, shiftKey: e.shiftKey, isComposing: e.nativeEvent.isComposing, keyCode: e.keyCode }, touch);
+            if (action === "send") {
               e.preventDefault();
               void submit();
             }
           }}
         />
-        <button className="icon-btn" type="submit" aria-label="Enviar pergunta" disabled={busy || q.trim().length < 2} style={{ background: "var(--text)", color: "var(--bg)" }}>
+        <button className="icon-btn send-btn" type="submit" aria-label="Enviar pergunta" disabled={busy || q.trim().length < 2}>
           <Icon name="send" />
         </button>
-        <span className="tiny" style={{ gridColumn: "1 / -1", paddingLeft: 8 }}>
-          {busy ? "Procurando nas suas revisões…" : "Respostas usam só o que está no seu feed e citam a fonte."}
+        <span className="tiny composer-hint">
+          {busy ? "Procurando nas suas revisões…" : touch ? "Toque na seta para enviar. Respostas citam a fonte." : "Enter envia, Shift+Enter quebra a linha. Respostas citam a fonte."}
         </span>
       </form>
     </>
