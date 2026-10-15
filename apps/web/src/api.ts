@@ -23,6 +23,11 @@ export interface FeedEntry {
     headline?: string;
     summary?: string;
     counts?: { important: number; review: number; low: number };
+    abertura?: string;
+    itens?: Array<{ categoria: string; titulo: string; quando: string; o_que_aconteceu: string; o_que_fazer: string; origem: string; sensivel: boolean; de?: string; href?: string; rfc822?: string | null }>;
+    sem_acao?: string[];
+    ruido?: { contagem: number };
+    anexos?: string;
     total?: number;
     late?: boolean;
     top?: DigestMail[];
@@ -83,6 +88,7 @@ export interface Configured {
   aiPrivate: boolean;
   finnhub: boolean;
   tracking: boolean;
+  trackingState?: "ligado" | "sem_chave" | "termos" | "desligado";
 }
 
 export interface Routine {
@@ -175,6 +181,7 @@ export class ApiError extends Error {
     readonly code: string,
     message: string,
     readonly missing?: string[],
+    readonly reason?: string,
   ) {
     super(message);
   }
@@ -197,12 +204,17 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
   } catch {
     throw new ApiError(res.status, "not_api", "O servidor não respondeu como a API do Open Dot.");
   }
-  if (!res.ok) throw new ApiError(res.status, data?.error?.code ?? "error", data?.error?.message ?? `Erro ${res.status}`, data?.error?.missing);
+  if (!res.ok) {
+    const reason = typeof data?.error?.reason === "string" ? data.error.reason : undefined;
+    if (reason || res.status >= 500) window.dispatchEvent(new CustomEvent("od-trouble", { detail: { code: reason || "internal" } }));
+    throw new ApiError(res.status, data?.error?.code ?? "error", data?.error?.message ?? `Erro ${res.status}`, data?.error?.missing, reason);
+  }
   return data as T;
 }
 
 export const api = {
   session: () => req<{ authenticated: boolean; owner?: Snapshot["owner"]; devLoginAvailable?: boolean; googleLoginAvailable?: boolean }>("/api/session"),
+  version: () => req<{ app: string; worker: string }>("/api/version"),
   legal: () => req<{ contact: string | null }>("/api/legal"),
   devLogin: () => req<{ ok: true }>("/api/session/dev", { method: "POST" }),
   logout: () => req<{ ok: true }>("/api/logout", { method: "POST" }),
@@ -375,4 +387,4 @@ export const emptyShipments: ShipmentSnapshot = {
   carriers: [],
 };
 
-export const emptyConfigured: Configured = { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false, tracking: false };
+export const emptyConfigured: Configured = { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false, tracking: false, trackingState: "desligado" };

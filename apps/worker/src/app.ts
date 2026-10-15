@@ -5,7 +5,8 @@ import { getProfile } from "@open-dot/connectors/gmail.ts";
 import { normalizeEvent, verifySignature, isNewer } from "@open-dot/connectors/github.ts";
 import { checkTarget } from "@open-dot/core";
 import { ConnectorError } from "@open-dot/connectors/errors.ts";
-import { SubrequestBudget, type Ctx } from "./context.ts";
+import { BudgetExhausted, SubrequestBudget, type Ctx } from "./context.ts";
+import { safeReason } from "./reasons.ts";
 import { configured } from "./env.ts";
 import { REQUIRED_SCHEMA, currentSchema } from "./db/migrate.ts";
 import { pkceChallenge, randomToken } from "./crypto.ts";
@@ -57,9 +58,9 @@ export async function handleApi(ctx: Ctx, req: Request): Promise<Response> {
       return withHeaders(await r.handler(ctx, req, params, ownerId));
     } catch (e) {
       if (e instanceof z.ZodError) return withHeaders(problem(400, "invalid_input", "Dados inválidos."));
-      const msg = e instanceof Error ? e.message : "erro";
-      console.error(JSON.stringify({ at: new Date(ctx.now()).toISOString(), route: url.pathname, error: msg.slice(0, 200) }));
-      return withHeaders(problem(500, "internal", "Algo deu errado. Nada foi enviado ou alterado fora do Open Dot."));
+      const reason = safeReason(e);
+      console.error(JSON.stringify({ at: new Date(ctx.now()).toISOString(), route: url.pathname, reason }));
+      return withHeaders(problem(500, "internal", "Algo deu errado. Nada foi enviado ou alterado fora do Open Dot.", reason));
     }
   }
   return withHeaders(problem(404, "not_found", "Rota inexistente."));
@@ -318,25 +319,33 @@ route("POST", "/api/agents/:id/test", { auth: true }, async (ctx, _r, p, ownerId
   const id = p.id as AgentId;
   if (!EXTRA_AGENTS.includes(id as (typeof EXTRA_AGENTS)[number])) return problem(404, "not_found", "Agente desconhecido.");
   const settings = await repo.agentSettings(ctx.db, ownerId!, id);
-  if (settings && settings.enabled === 0) return problem(409, "disabled", `${AGENTS[id].name} está desativado.`);
-  if (id === "noticias") {
-    const r = await ingestNews(ctx, ownerId!, ctx.fetch, { maxFeeds: 4 });
-    const items = await listRecentNews(ctx.db, ownerId!, 8);
-    return json({ ok: true, agentId: id, fetched: r.fetched, stored: r.stored, failures: r.failures, sample: items.slice(0, 3).map((i) => ({ title: i.title, link: i.link, outlet: i.outlet })), published: false });
+  if (settings && settings.enabled === 0) return problem(409, "disabled", `${AGENTS[id].name} está desativado.`, "disabled");
+  const budget = new SubrequestBudget(44);
+  const scoped: Ctx = { ...ctx, db: budget.watch(ctx.db), fetch: budget.wrap(ctx.fetch) };
+  try {
+    if (id === "noticias") {
+      const r = await ingestNews(scoped, ownerId!, scoped.fetch, { maxFeeds: 4 });
+      const items = await listRecentNews(scoped.db, ownerId!, 8);
+      return json({ ok: true, agentId: id, fetched: r.fetched, stored: r.stored, failures: r.failures, subrequests: budget.used, sample: items.slice(0, 3).map((i) => ({ title: i.title, link: i.link, outlet: i.outlet })), published: false });
+    }
+    if (id === "mercado") {
+      const r = await ingestQuotes(scoped, ownerId!, scoped.fetch);
+      return json({
+        ok: true,
+        agentId: id,
+        quotes: r.quotes.map((q) => ({ ...q, stale: isQuoteStale(q, ctx.now()), disclaimer: QUOTE_DISCLAIMER })),
+        failures: r.failures,
+        subrequests: budget.used,
+        disclaimer: QUOTE_DISCLAIMER,
+        traded: false,
+      });
+    }
+    const r = await testMarketing(scoped, ownerId!, scoped.fetch);
+    return json({ ok: true, agentId: id, subrequests: budget.used, ...r });
+  } catch (e) {
+    if (e instanceof BudgetExhausted) return problem(503, "internal", "Algo deu errado. Nada foi enviado ou alterado fora do Open Dot.", "subrequest_limit");
+    throw e;
   }
-  if (id === "mercado") {
-    const r = await ingestQuotes(ctx, ownerId!, ctx.fetch);
-    return json({
-      ok: true,
-      agentId: id,
-      quotes: r.quotes.map((q) => ({ ...q, stale: isQuoteStale(q, ctx.now()), disclaimer: QUOTE_DISCLAIMER })),
-      failures: r.failures,
-      disclaimer: QUOTE_DISCLAIMER,
-      traded: false,
-    });
-  }
-  const r = await testMarketing(ctx, ownerId!, ctx.fetch);
-  return json({ ok: true, agentId: id, ...r });
 });
 
 route("POST", "/api/agents/:id/disable", { auth: true }, async (ctx, _r, p, ownerId) => {
@@ -475,9 +484,11 @@ route("POST", "/api/ask", { auth: true }, async (ctx, req, _p, ownerId) => {
   const sources: Array<Src & { score: number }> = [];
   for (const it of items) {
     const rows: Array<{ title: string; detail: string; href: string | null }> = [];
-    const b = it.body as { top?: any[]; rest?: any[]; summary?: string; href?: string };
+    const b = it.body as { top?: any[]; rest?: any[]; summary?: string; href?: string; abertura?: string; itens?: Array<{ titulo?: string; de?: string; o_que_aconteceu?: string; o_que_fazer?: string; href?: string | null }> };
     for (const m of [...(b.top ?? []), ...(b.rest ?? [])]) rows.push({ title: `${m.subject} — ${m.from}`, detail: m.reason, href: m.href ?? null });
+    for (const m of b.itens ?? []) rows.push({ title: `${m.titulo ?? ""} — ${m.de ?? ""}`, detail: `${m.o_que_aconteceu ?? ""} ${m.o_que_fazer ?? ""}`, href: m.href ?? null });
     if (b.summary) rows.push({ title: it.title, detail: b.summary, href: b.href ?? null });
+    if (b.abertura) rows.push({ title: it.title, detail: b.abertura, href: null });
     rows.forEach((r, i) => {
       const hay = terms(`${r.title} ${r.detail}`);
       const score = q.filter((t) => hay.some((h) => h.includes(t))).length;
@@ -527,9 +538,12 @@ route("GET", "/api/status", { auth: true }, async (ctx, _r, _p, ownerId) => {
     let reason: string | null = null;
     const latest = runs.find((r) => r.agent_id === a);
     if (latest) {
-      if (latest.state === "running" || latest.state === "queued" || latest.state === "retry_scheduled") semantic = "working";
+      const age = ctx.now() - Date.parse(latest.updated_at);
+      const active = latest.state === "running" || latest.state === "queued" || latest.state === "retry_scheduled";
+      if (active && age <= 10 * 60_000) semantic = "working";
+      else if (active) ((semantic = "error"), (reason = "stale_run"));
       else if (latest.state === "waiting_approval") semantic = "waiting";
-      else if (latest.state === "failed" || latest.state === "uncertain") ((semantic = "error"), (reason = latest.error_message));
+      else if (latest.state === "failed" || latest.state === "uncertain") ((semantic = "error"), (reason = latest.error_code || "unknown"));
     }
     if (a === "correio") {
       const g = conns.find((c) => c.provider === "gmail" && c.status !== "disabled");
