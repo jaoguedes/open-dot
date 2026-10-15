@@ -410,7 +410,7 @@ export function DotView(props: DotViewProps) {
       role={props.interactive ? "button" : undefined}
       tabIndex={props.interactive ? 0 : undefined}
     >
-      <svg ref={svgRef} viewBox="0 0 260 220" width={props.size} height={(props.size * 220) / 260} role="img" aria-label={label} style={{ overflow: "visible", display: "block" }}>
+      <svg ref={svgRef} className="dot-svg" data-small={props.small ? "1" : "0"} viewBox="0 0 260 220" width={props.size} height={(props.size * 220) / 260} role="img" aria-label={label} style={{ overflow: "visible", display: "block" }}>
         <defs>
           <g dangerouslySetInnerHTML={{ __html: artDefs(uid) }} />
           <clipPath id={`${uid}-clip`}><path data-r="clip" d={bodyPath(0)} /></clipPath>

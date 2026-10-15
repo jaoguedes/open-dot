@@ -3,7 +3,7 @@
  * Nada aqui depende de rede, banco ou navegador.
  */
 
-export const AGENT_IDS = ["dot", "correio", "codigo", "sentinela", "social", "foco", "noticias", "mercado", "marketing"] as const;
+export const AGENT_IDS = ["dot", "correio", "codigo", "sentinela", "social", "foco", "noticias", "mercado", "marketing", "entregas"] as const;
 export type AgentId = (typeof AGENT_IDS)[number];
 
 /** Estados persistidos de uma execução (capítulo 13 do PDF). */
@@ -70,7 +70,7 @@ export interface FeedItem {
   ownerId: string;
   agentId: AgentId;
   runId: string | null;
-  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice" | "file_organized" | "news_digest" | "quote_alert" | "marketing_ideas";
+  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice" | "file_organized" | "news_digest" | "quote_alert" | "marketing_ideas" | "shipment";
   title: string;
   /** Por que importa, em uma frase. */
   summary: string;

@@ -11,7 +11,7 @@ export const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 export const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
 export const GOOGLE_REVOKE = "https://oauth2.googleapis.com/revoke";
 
-export const LOGIN_SCOPES = ["openid", "email", "profile"];
+export const LOGIN_SCOPES = ["openid", "email"];
 export const GMAIL_READ_SCOPES = ["openid", "email", "https://www.googleapis.com/auth/gmail.readonly"];
 /** Search Console só leitura. Conferido em developers.google.com/webmaster-tools/v1/how-tos/authorizing (14/10/2026). */
 export const GSC_READ_SCOPES = ["openid", "email", "https://www.googleapis.com/auth/webmasters.readonly"];

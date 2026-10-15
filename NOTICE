@@ -1,0 +1,7 @@
+Open Dot — atribuições
+
+Detecção de códigos de rastreio em packages/core/src/tracking.ts
+Os formatos e os dígitos verificadores seguem trycom/tracking_number_data
+(fork de jkeen/tracking_number_data), licença MIT.
+Este repositório não inclui o corpus JSON original; só a regra usada no código.
+https://github.com/trycom/tracking_number_data

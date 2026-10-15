@@ -79,6 +79,7 @@ if (!ONLY) {
   const splashOn = await p.locator(".splash").waitFor({ timeout: 3000 }).then(() => true).catch(() => false);
   await ready(p);
   await p.getByRole("button", { name: /modo desenvolvimento/i }).waitFor({ timeout: 20_000 });
+  await p.locator(".splash").waitFor({ state: "detached", timeout: 5_000 }).catch(() => {});
   check("boot chega no login local", true);
   check("splash some depois da sessão", (await p.locator(".splash").count()) === 0);
   if (splashOn) check("splash aparece no boot", true);

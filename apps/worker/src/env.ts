@@ -34,6 +34,10 @@ export const EnvSchema = z.object({
   /** Finnhub free (ações). Sem chave, cripto e câmbio continuam. */
   FINNHUB_API_KEY: z.string().optional(),
 
+  /** Rastreio PacoteVício. Sem a chave ou sem a flag, o provedor fica desligado. */
+  PACOTEVICIO_API_KEY: z.string().optional(),
+  PACOTEVICIO_TERMS_CONFIRMED: z.enum(["true", "false"]).optional(),
+
   AI_CALLS_PER_DAY: z.coerce.number().int().min(0).max(1000).default(50),
   AI_TOKENS_PER_DAY: z.coerce.number().int().min(0).max(1_000_000).default(100_000),
 });
@@ -60,5 +64,6 @@ export function configured(env: Env) {
     ai: Boolean(env.GROQ_API_KEY),
     aiPrivate: env.GROQ_ZDR_CONFIRMED === "true",
     finnhub: Boolean(env.FINNHUB_API_KEY),
+    tracking: Boolean(env.PACOTEVICIO_API_KEY) && env.PACOTEVICIO_TERMS_CONFIRMED === "true",
   };
 }

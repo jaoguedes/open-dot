@@ -300,6 +300,12 @@ details > summary::-webkit-details-marker { display: none; }
 .agent-dot-status.busy { background: var(--info); box-shadow: 0 0 10px var(--info); }
 .agent-dot-status.err { background: var(--err); }
 .agent-dot-status.need { background: var(--warn); }
+.agent-dot-status.off { background: var(--text-3); opacity: 0.45; }
+.agent-item.is-off { opacity: 0.55; }
+.agent-item.is-off .lines span:last-child { color: var(--text-3); }
+.dot-svg[data-small="1"] [data-r="ringB"],
+.dot-svg[data-small="1"] [data-r="ringF"] { stroke-width: 16px; }
+.dot-svg[data-small="1"] [data-r="ringShine"] { stroke-width: 7px; }
 .brand .od-wordmark { font-size: 19px; }
 .brand .od-wordmark b { font-weight: 700; }
 .brand .od-wordmark span:first-child { font-weight: 500; }

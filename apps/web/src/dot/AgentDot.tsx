@@ -1,5 +1,6 @@
 import type { Accessory, AgentVisual } from "@open-dot/core";
 import { DotView, type DotViewProps } from "./DotView.tsx";
+import { showSentinelaRing } from "./ring.ts";
 
 export interface AgentDotProps {
   visual: AgentVisual;
@@ -23,7 +24,11 @@ export interface AgentDotProps {
 /** Ligação do app ao motor: semantic, acessório, anel da Sentinela, carinho e absorção. */
 export function AgentDot({ animate, small, ring, ...rest }: AgentDotProps) {
   const isSmall = small ?? animate === false;
-  const sentinelaRing =
-    ring ?? (rest.visual.agentId === "sentinela" && (rest.visual.semantic === "working" || rest.visual.semantic === "thinking"));
+  const sentinelaRing = showSentinelaRing({
+    agentId: rest.visual.agentId,
+    size: rest.size,
+    semantic: rest.visual.semantic,
+    ...(ring === undefined ? {} : { ring }),
+  });
   return <DotView {...rest} small={isSmall} ring={sentinelaRing} />;
 }

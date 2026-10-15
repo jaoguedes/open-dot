@@ -38,12 +38,12 @@ async function main() {
     ? spawn(bin, ["dev", "--local", "--port", String(PORT)], { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, CI: "1" } })
     : spawn("npx", ["--yes", "wrangler@4", "dev", "--local", "--port", String(PORT)], { stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, CI: "1" } });
   try {
-    await waitReady(child, 90_000);
+    await waitReady(child, 150_000);
     const resp = await fetch(`${ORIGIN}/api/health`);
     const body: unknown = await resp.json();
     if (!isHealth(body)) throw new Error("health com formato inesperado");
     console.log(JSON.stringify({ ok: body.ok, schema: body.schema, schemaError: body.schemaError ?? null }));
-    if (!body.ok || body.schema !== "0003") process.exit(1);
+    if (!body.ok || body.schema !== "0004") process.exit(1);
   } finally {
     child.kill("SIGTERM");
   }

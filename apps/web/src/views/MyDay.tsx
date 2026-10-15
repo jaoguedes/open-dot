@@ -3,7 +3,7 @@ import { AGENTS, type AgentId } from "@open-dot/core";
 import { useApp } from "../store.tsx";
 import { AgentDot } from "../dot/AgentDot.tsx";
 import { fmtTime, greeting, needYouLine } from "../format.ts";
-import { agentPresence } from "../presence.ts";
+import { agentConnected, agentPresence, type ConnectionFacts } from "../presence.ts";
 import type { FeedEntry } from "../api.ts";
 
 type Filter = "all" | "need" | "sources";
@@ -65,8 +65,22 @@ export function MyDay() {
       </section>
 
       <section className="agent-pills" aria-label="Agentes">
-        {(["correio", "codigo", "sentinela", "noticias", "mercado", "marketing"] as AgentId[]).map((a) => {
-          const pr = agentPresence(a, app.visualFor(a), snap?.feed ?? [], monitors);
+        {(["correio", "codigo", "sentinela", "noticias", "mercado", "marketing", "entregas"] as AgentId[]).map((a) => {
+          const facts: ConnectionFacts = {
+            demo: app.mode === "demo",
+            gmail: Boolean(gmail && gmail.status === "connected"),
+            github: Boolean(snap?.configured.github || snap?.configured.githubApp),
+            vercel: Boolean(snap?.configured.vercel),
+            gsc: Boolean(snap?.connections.some((c) => c.provider === "gsc" && c.status === "connected")),
+            monitors: monitors.length,
+            shipments: snap?.shipments.shipments.length ?? 0,
+            tracking: Boolean(snap?.configured.tracking || snap?.shipments.tracking.enabled),
+            disabled: {},
+          };
+          const pr = agentPresence(a, app.visualFor(a), snap?.feed ?? [], monitors, {
+            connected: agentConnected(a, facts),
+            pendingShipments: snap?.shipments.shipments.filter((s) => s.needsCarrier).length ?? 0,
+          });
           return (
             <button key={a} type="button" className={`agent-pill ${pr.tone === "working" || pr.tone === "need" ? "on" : ""}`} onClick={() => app.navigate(`/agente/${a}`)}>
               <span className={`agent-dot-status ${pr.dotClass}`} aria-hidden="true" />

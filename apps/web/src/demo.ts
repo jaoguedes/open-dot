@@ -1,5 +1,5 @@
 import { providerCards, toVisual, type AgentId } from "@open-dot/core";
-import type { AskAnswer, Snapshot } from "./api.ts";
+import { emptyShipments, type AskAnswer, type Snapshot } from "./api.ts";
 import { semanticFromItems } from "./presence.ts";
 
 /**
@@ -134,7 +134,7 @@ export function demoSnapshot(): Snapshot {
   ];
   return {
     owner: { email: "exemplo@demo.local", name: "João", timeZone: "America/Sao_Paulo" },
-    configured: { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false },
+    configured: { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false, tracking: false },
     connections: [],
     monitors,
     usage: { day: today.toISOString().slice(0, 10), calls: 12, tokens: 24_000, limits: { calls: 50, tokens: 100_000 }, aiConfigured: false, privateAllowed: false },
@@ -182,6 +182,7 @@ export function demoSnapshot(): Snapshot {
     ],
     providers: providerCards({ groqConfigured: false, groqPrivate: false, calls: 12, callLimit: 50 }),
     canSend: false,
+    shipments: emptyShipments,
     approvals: [
       {
         id: "demo-ap1",

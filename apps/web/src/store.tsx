@@ -28,6 +28,8 @@ interface AppState {
   reducedMotion: boolean;
   visualFor: (a: AgentId) => AgentVisual;
   accessoryFor: (a: AgentId) => Accessory;
+  activity: AgentVisual | null;
+  setActivity: (v: AgentVisual | null) => void;
   path: string;
   navigate: (p: string) => void;
   announce: (msg: string) => void;
@@ -75,6 +77,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefsState] = useState<Prefs>(readPrefs);
   const [path, setPath] = useState(() => location.pathname);
   const [announcement, setAnnouncement] = useState("");
+  const [activity, setActivity] = useState<AgentVisual | null>(null);
 
   const sysDark = useMedia("(prefers-color-scheme: dark)");
   const sysReduced = useMedia("(prefers-reduced-motion: reduce)");
@@ -182,8 +185,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AppState>(
-    () => ({ mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, path, navigate, announce, announcement }),
-    [mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, path, navigate, announce, announcement],
+    () => ({ mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, setActivity, path, navigate, announce, announcement }),
+    [mode, demoReason, snap, failures, online, lastLoadedAt, setupMissing, login, refresh, enterDemo, prefs, setPrefs, reducedMotion, visualFor, accessoryFor, activity, path, navigate, announce, announcement],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

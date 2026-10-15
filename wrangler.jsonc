@@ -21,6 +21,7 @@
     "SESSION_DAYS": "30",
     "AI_CALLS_PER_DAY": "50",
     "AI_TOKENS_PER_DAY": "100000",
-    "GROQ_ZDR_CONFIRMED": "false"
+    "GROQ_ZDR_CONFIRMED": "false",
+    "PACOTEVICIO_TERMS_CONFIRMED": "false"
   }
 }

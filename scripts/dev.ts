@@ -79,7 +79,7 @@ async function main() {
   let api: ((req: Request) => Promise<Response>) | null = null;
   let runTick: (() => Promise<unknown>) | null = null;
   if (!demoOnly) {
-    const vars = { ...readDevVars(), ...Object.fromEntries(Object.entries(process.env).filter(([k]) => /^(GOOGLE_|GROQ_|OWNER_|VERCEL_|GITHUB_|AI_)/.test(k)) as [string, string][]) };
+    const vars = { ...readDevVars(), ...Object.fromEntries(Object.entries(process.env).filter(([k]) => /^(GOOGLE_|GROQ_|OWNER_|VERCEL_|GITHUB_|AI_|PACOTEVICIO_)/.test(k)) as [string, string][]) };
     const parsed = parseEnv(vars);
     if (!parsed.ok) throw new Error(`.dev.vars incompleto: ${parsed.missing.join(", ")}`);
     mkdirSync(join(root, ".data"), { recursive: true });

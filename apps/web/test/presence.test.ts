@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toVisual } from "@open-dot/core";
 import type { FeedEntry, Monitor } from "../src/api.ts";
-import { agentPresence, islandLine, semanticFromItems } from "../src/presence.ts";
+import { agentPresence, islandLine, semanticFromItems, sortAgents } from "../src/presence.ts";
 import { demoSnapshot } from "../src/demo.ts";
 
 function entry(partial: Partial<FeedEntry> & Pick<FeedEntry, "agentId" | "kind">): FeedEntry {
@@ -53,6 +53,15 @@ test("presença: uma fonte da verdade, incidente nunca é 'Em repouso'", () => {
   assert.equal(rest.tone, "idle");
   assert.equal(rest.label, "Em repouso");
   assert.equal(rest.dotClass, "");
+
+  const off = agentPresence("correio", toVisual("correio", "idle"), [], [], { connected: false });
+  assert.equal(off.label, "Não conectado");
+  assert.equal(off.tone, "off");
+  const ordered = ["foco", "correio"] as const;
+  const sorted = sortAgents(ordered, (id) =>
+    agentPresence(id, toVisual(id, "idle"), id === "correio" ? [digest] : [], [], { connected: true }),
+  );
+  assert.deepEqual(sorted, ["correio", "foco"]);
 });
 
 test("demo: status vem do tipo do item; ilha não diz concluído enquanto lê", () => {

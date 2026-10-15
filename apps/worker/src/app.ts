@@ -1,17 +1,19 @@
 import { z } from "zod";
-import { AGENTS, GMAIL_CAN_SEND, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, hashProposal, isValidTimeZone, nextSlot, parseHHMM, providerCards, renderUntrusted, runFictitiousProviderTest, sanitizeUntrusted, sha256Hex, toVisual, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
+import { AGENTS, GMAIL_CAN_SEND, OPEN_DOT_HEALTH_URL, UNTRUSTED_SYSTEM_RULES, checkEvidenceRefs, displayNameFor, hashProposal, isValidTimeZone, nextSlot, parseHHMM, providerCards, renderUntrusted, runFictitiousProviderTest, sanitizeUntrusted, sha256Hex, toVisual, type ActionProposal, type AgentId, type SemanticState } from "@open-dot/core";
 import { GMAIL_READ_SCOPES, GSC_READ_SCOPES, LOGIN_SCOPES, authUrl, exchangeCode, readIdToken, revoke } from "@open-dot/connectors/google.ts";
 import { getProfile } from "@open-dot/connectors/gmail.ts";
 import { normalizeEvent, verifySignature, isNewer } from "@open-dot/connectors/github.ts";
 import { checkTarget } from "@open-dot/core";
 import { ConnectorError } from "@open-dot/connectors/errors.ts";
-import type { Ctx } from "./context.ts";
+import { SubrequestBudget, type Ctx } from "./context.ts";
 import { configured } from "./env.ts";
 import { REQUIRED_SCHEMA, currentSchema } from "./db/migrate.ts";
 import { pkceChallenge, randomToken } from "./crypto.ts";
 import { csrfOk, currentOwner, endSession, json, problem, redirect, SECURITY_HEADERS, startSession } from "./http.ts";
 import * as repo from "./repo.ts";
-import { makeRouter } from "./services/email-review.ts";
+import { makeRouter, runEmailReview } from "./services/email-review.ts";
+import { syncGmail } from "./services/gmail.ts";
+import * as shipments from "./services/shipments.ts";
 import * as uploads from "./services/uploads.ts";
 import { ingestNews, listRecentNews } from "./services/news.ts";
 import { ingestQuotes } from "./services/quotes.ts";
@@ -92,7 +94,7 @@ route("GET", "/api/session", { auth: false }, async (ctx, req, _p, ownerId) => {
   const local = isLocalRequest(ctx, req);
   if (!ownerId) return json({ authenticated: false, devLoginAvailable: ctx.env.APP_ENV === "development" && local, googleLoginAvailable: configured(ctx.env).google && configured(ctx.env).owner });
   const owner = await repo.getOwner(ctx.db, ownerId);
-  return json({ authenticated: true, owner: owner && { email: owner.email, name: owner.display_name, timeZone: owner.time_zone } });
+  return json({ authenticated: true, owner: owner && { email: owner.email, name: displayNameFor(owner.email, owner.display_name, owner.name_custom === 1), timeZone: owner.time_zone } });
 });
 
 function isLocalRequest(ctx: Ctx, req: Request): boolean {
@@ -112,6 +114,22 @@ route("POST", "/api/session/dev", { auth: false }, async (ctx, req) => {
 });
 
 route("POST", "/api/logout", { auth: false }, async (ctx, req) => json({ ok: true }, 200, { "set-cookie": await endSession(ctx, req) }));
+
+const DisplayNameInput = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(40)
+    .regex(/^[\p{L}][\p{L} '\u2019-]{0,39}$/u, "Use letras, espaço, apóstrofo ou hífen."),
+});
+
+route("PATCH", "/api/profile", { auth: true }, async (ctx, req, _p, ownerId) => {
+  const body = DisplayNameInput.parse(await req.json());
+  await repo.setDisplayName(ctx.db, ownerId!, body.name);
+  await repo.audit(ctx.db, { ownerId, actor: "user", action: "profile_name", outcome: "ok", now: ctx.now() });
+  return json({ name: body.name });
+});
 
 // ---------------------------------------------------------------- OAuth Google (login e Gmail)
 
@@ -169,7 +187,7 @@ route("GET", "/api/oauth/google/callback", { auth: false }, async (ctx, req, _p,
       await repo.audit(ctx.db, { ownerId: null, actor: "user", action: "login", outcome: "denied", now: ctx.now() });
       return redirect("/?erro=conta_nao_autorizada");
     }
-    const ownerId = await repo.upsertOwner(ctx.db, { sub: claims.sub, email: claims.email, name: claims.name, now: ctx.now() });
+    const ownerId = await repo.upsertOwner(ctx.db, { sub: claims.sub, email: claims.email, name: "João", now: ctx.now() });
     await repo.ensureEmailRoutine(ctx.db, ownerId, ctx.now());
     await repo.ensureNewsRoutine(ctx.db, ownerId, ctx.now());
     const cookie = await startSession(ctx, req, ownerId);
@@ -393,6 +411,35 @@ route("POST", "/api/routines/:id/run-now", { auth: true }, async (ctx, _r, p, ow
   return json({ ok: true, created, note: "A revisão roda no próximo ciclo do agendador (até 5 minutos)." });
 });
 
+route("POST", "/api/correio/review-now", { auth: true }, async (ctx, _r, _p, ownerId) => {
+  const gmail = (await repo.listConnections(ctx.db, ownerId!)).find((c) => c.provider === "gmail" && c.status === "connected");
+  if (!gmail) return problem(409, "not_connected", "Conecte o Gmail antes de revisar.");
+  const budget = new SubrequestBudget(40);
+  const f = budget.wrap(ctx.fetch);
+  const sync = await syncGmail(ctx, gmail, f);
+  const found = await shipments.extractShipments(ctx, ownerId!);
+  const routine = (await repo.listRoutines(ctx.db, ownerId!)).find((r) => r.kind === "email_review");
+  if (!routine) return json({ ok: true, synced: sync.fetched, shipments: found, reviewed: false, note: "Gmail sincronizado. Não há rotina de revisão." });
+  const slotKey = `${ownerId}:${routine.id}:manual:${Math.floor(ctx.now() / 60_000)}`;
+  await repo.createRunForSlot(ctx.db, { ownerId: ownerId!, routineId: routine.id, agentId: routine.agent_id, kind: routine.kind, slotKey, scheduledAt: ctx.now(), late: false, now: ctx.now() });
+  const queued = await repo.runBySlot(ctx.db, ownerId!, slotKey);
+  if (!queued) return json({ ok: true, synced: sync.fetched, shipments: found, reviewed: false, note: "Não foi possível abrir a revisão." });
+  if (queued.state === "succeeded") return json({ ok: true, synced: sync.fetched, shipments: found, reviewed: true, note: "Revisão deste minuto já estava concluída." });
+  const claimed = queued.state === "running" ? null : await repo.claimRun(ctx.db, queued, ctx.now());
+  if (!claimed) return json({ ok: true, synced: sync.fetched, shipments: found, reviewed: false, note: "A revisão já está em andamento." });
+  const result = await runEmailReview(ctx, claimed, f);
+  await repo.finishRun(ctx.db, claimed, { state: result.state, ...(result.errorCode ? { errorCode: result.errorCode } : {}), ...(result.message ? { errorMessage: result.message } : {}), now: ctx.now() });
+  const done = result.state === "succeeded";
+  return json({
+    ok: done,
+    synced: sync.fetched,
+    shipments: found,
+    reviewed: true,
+    state: result.state,
+    note: done ? "Revisão concluída. Nada foi enviado." : (result.message ?? "A revisão não concluiu."),
+  });
+});
+
 route("GET", "/api/runs", { auth: true }, async (ctx, _r, _p, ownerId) => {
   const rows = await repo.listRuns(ctx.db, ownerId!, 30);
   return json({ runs: rows.map((r) => ({ id: r.id, agentId: r.agent_id, kind: r.kind, state: r.state, scheduledAt: r.scheduled_at, late: r.late === 1, attempt: r.attempt, errorCode: r.error_code, errorMessage: r.error_message, updatedAt: r.updated_at })) });
@@ -472,7 +519,9 @@ route("POST", "/api/ask", { auth: true }, async (ctx, req, _p, ownerId) => {
 route("GET", "/api/status", { auth: true }, async (ctx, _r, _p, ownerId) => {
   const runs = await repo.listRuns(ctx.db, ownerId!, 30);
   const conns = await repo.listConnections(ctx.db, ownerId!);
-  const agents: AgentId[] = ["dot", "correio", "codigo", "sentinela", "noticias", "mercado", "marketing"];
+  const shipmentCount = await repo.countShipments(ctx.db, ownerId!);
+  const trackingOn = configured(ctx.env).tracking;
+  const agents: AgentId[] = ["dot", "correio", "codigo", "sentinela", "noticias", "mercado", "marketing", "entregas"];
   const out = agents.map((a) => {
     let semantic: SemanticState = "idle";
     let reason: string | null = null;
@@ -485,6 +534,10 @@ route("GET", "/api/status", { auth: true }, async (ctx, _r, _p, ownerId) => {
     if (a === "correio") {
       const g = conns.find((c) => c.provider === "gmail" && c.status !== "disabled");
       if (g?.status === "reauth_required" && semantic !== "error") ((semantic = "disconnected"), (reason = "Reconecte o Gmail"));
+    }
+    if (a === "entregas" && shipmentCount === 0 && !trackingOn) {
+      semantic = "disconnected";
+      reason = "Não conectado";
     }
     return { ...toVisual(a, semantic, latest?.id ?? null, reason), revision: latest ? Date.parse(latest.updated_at) : 0 };
   });
@@ -568,6 +621,42 @@ route("DELETE", "/api/uploads/:id", { auth: true }, async (ctx, _r, p, ownerId) 
   return ok ? json({ ok: true }) : problem(404, "not_found", "Arquivo não encontrado.");
 });
 
+// ---------------------------------------------------------------- Entregas
+
+const ShipmentInput = z.object({
+  code: z.string().trim().min(8).max(40),
+  carrier: z.string().trim().min(2).max(40).optional(),
+});
+
+route("GET", "/api/shipments", { auth: true }, async (ctx, _r, _p, ownerId) => json(await shipments.shipmentSnapshot(ctx, ownerId!)));
+
+route("POST", "/api/shipments", { auth: true }, async (ctx, req, _p, ownerId) => {
+  const body = ShipmentInput.parse(await req.json());
+  const r = await shipments.addShipment(ctx, ownerId!, body.code, body.carrier ?? null);
+  if (!r.ok) return problem(r.status, r.code, r.message);
+  if (r.created && r.shipment && !r.shipment.needsCarrier) {
+    const budget = new SubrequestBudget(4);
+    await shipments.pollShipments(ctx, ownerId!, budget.wrap(ctx.fetch), 1);
+  }
+  const snap = await shipments.shipmentSnapshot(ctx, ownerId!);
+  await repo.audit(ctx.db, { ownerId, actor: "user", action: "shipment_add", outcome: r.created ? "created" : "exists", now: ctx.now() });
+  return json({ ...r, ...snap }, r.created ? 201 : 200);
+});
+
+route("POST", "/api/shipments/:id/carrier", { auth: true }, async (ctx, req, p, ownerId) => {
+  const body = z.object({ carrier: z.string().trim().min(2).max(40) }).parse(await req.json());
+  const ok = await shipments.confirmCarrier(ctx, ownerId!, p.id!, body.carrier);
+  if (!ok) return problem(404, "not_found", "Encomenda não encontrada.");
+  return json(await shipments.shipmentSnapshot(ctx, ownerId!));
+});
+
+route("DELETE", "/api/shipments/:id", { auth: true }, async (ctx, _r, p, ownerId) => {
+  const ok = await repo.deleteShipment(ctx.db, ownerId!, p.id!);
+  if (!ok) return problem(404, "not_found", "Encomenda não encontrada.");
+  await repo.audit(ctx.db, { ownerId, actor: "user", action: "shipment_delete", target: p.id!, outcome: "ok", now: ctx.now() });
+  return json({ ok: true });
+});
+
 // ---------------------------------------------------------------- Monitores
 
 const MonitorInput = z.object({ url: z.string().url().max(300), label: z.string().min(1).max(60) });
@@ -575,6 +664,22 @@ const MonitorInput = z.object({ url: z.string().url().max(300), label: z.string(
 route("GET", "/api/monitors", { auth: true }, async (ctx, _r, _p, ownerId) => {
   const rows = await repo.listMonitors(ctx.db, ownerId!);
   return json({ monitors: rows.map((m) => ({ id: m.id, url: m.url, label: m.label, enabled: m.enabled === 1, incident: JSON.parse(m.incident || "{}"), lastCheckAt: m.last_check_at })) });
+});
+
+route("POST", "/api/monitors/self", { auth: true }, async (ctx, _r, _p, ownerId) => {
+  const url = OPEN_DOT_HEALTH_URL;
+  const rows = await repo.listMonitors(ctx.db, ownerId!);
+  const existing = rows.find((m) => m.url === url);
+  if (existing) return json({ id: existing.id, created: false });
+  if (rows.length >= 3) return problem(409, "limit", "Limite de 3 sites no plano gratuito do Open Dot.");
+  const host = new URL(url).hostname;
+  const guard = checkTarget(url, [host]);
+  if (!guard.ok) return problem(400, "blocked_target", `Endereço não permitido: ${guard.reason}.`);
+  await repo.addMonitor(ctx.db, { ownerId: ownerId!, url, host, label: "Open Dot", now: ctx.now() });
+  const saved = (await repo.listMonitors(ctx.db, ownerId!)).find((m) => m.url === url);
+  if (!saved) return problem(500, "internal", "Não foi possível registrar o monitor.");
+  await repo.audit(ctx.db, { ownerId, actor: "user", action: "monitor_self", target: saved.id, outcome: "ok", now: ctx.now() });
+  return json({ id: saved.id, created: true }, 201);
 });
 
 route("POST", "/api/monitors", { auth: true }, async (ctx, req, _p, ownerId) => {

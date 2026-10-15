@@ -1,7 +1,7 @@
+import { AGENTS, TOOL_KIND, toVisual, type AgentId } from "@open-dot/core";
 import { useState } from "react";
-import { AGENTS, TOOL_KIND, type AgentId } from "@open-dot/core";
 import { useApp } from "../store.tsx";
-import { api, ApiError, type AskAnswer } from "../api.ts";
+import { ApiError, api, type AskAnswer } from "../api.ts";
 import { demoAsk } from "../demo.ts";
 import { DigestBlock, FeedRow } from "../components/FeedViews.tsx";
 import { Icon } from "../components/Icons.tsx";
@@ -23,6 +23,7 @@ export function Home({ agentId }: { agentId: AgentId }) {
     <>
       <div className="day-sep">Hoje, {today}</div>
       {agentId !== "dot" && <AgentAbout agentId={agentId} />}
+      <AgentActions agentId={agentId} />
       <div className="msg-head">
         <AgentDot visual={app.visualFor(agentId)} accessory={app.accessoryFor(agentId)} size={22} animate={false} reducedMotion={app.reducedMotion} />
         <b>{AGENTS[agentId].name}</b>
@@ -53,6 +54,81 @@ export function Home({ agentId }: { agentId: AgentId }) {
       <Composer />
     </>
   );
+}
+
+function AgentActions({ agentId }: { agentId: AgentId }) {
+  const app = useApp();
+  const [note, setNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (app.mode === "demo") return null;
+  if (agentId === "correio") {
+    const gmail = app.snap?.connections.some((c) => c.provider === "gmail" && c.status === "connected");
+    if (!gmail) return null;
+    return (
+      <div className="row-actions" style={{ marginBottom: 16 }}>
+        <button
+          className="btn primary"
+          type="button"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true);
+            setNote(null);
+            app.setActivity(toVisual("correio", "working", null, "Lendo e-mails. Nada é enviado."));
+            void api.reviewNow().then(
+              async (r) => {
+                app.setActivity(toVisual("correio", "success"));
+                setNote(r.note);
+                app.announce(r.note);
+                await app.refresh();
+                window.setTimeout(() => app.setActivity(null), 2500);
+              },
+              (e: unknown) => {
+                app.setActivity(null);
+                const msg = e instanceof ApiError ? e.message : "Não consegui revisar agora.";
+                setNote(msg);
+                app.announce(msg);
+              },
+            ).finally(() => setBusy(false));
+          }}
+        >
+          Revisar agora
+        </button>
+        {note && <p className="meta" role="status">{note}</p>}
+      </div>
+    );
+  }
+  if (agentId === "sentinela") {
+    return (
+      <div className="row-actions" style={{ marginBottom: 16 }}>
+        <button
+          className="btn"
+          type="button"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true);
+            setNote(null);
+            void api.watchSelf().then(
+              async (r) => {
+                const msg = r.created ? "O Open Dot entrou na vigilância." : "O Open Dot já estava na vigilância.";
+                setNote(msg);
+                app.announce(msg);
+                await app.refresh();
+              },
+              (e: unknown) => {
+                const msg = e instanceof ApiError && e.status === 409 ? "Limite de 3 sites. Remova um para vigiar o Open Dot." : "Não consegui cadastrar o monitor.";
+                setNote(msg);
+                app.announce(msg);
+              },
+            ).finally(() => setBusy(false));
+          }}
+        >
+          Vigiar o próprio Open Dot
+        </button>
+        {note && <p className="meta" role="status">{note}</p>}
+      </div>
+    );
+  }
+  return null;
 }
 
 function AgentAbout({ agentId }: { agentId: AgentId }) {

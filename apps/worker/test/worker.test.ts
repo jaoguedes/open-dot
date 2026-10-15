@@ -28,8 +28,8 @@ async function connectGmail(google: FakeGoogle, ctx: Awaited<ReturnType<typeof m
 test("migrações: idempotentes, detectam alteração e recusam destrutivas", async () => {
   const db = new SqliteDb();
   const ms = loadMigrations();
-  assert.deepEqual((await applyMigrations(db, ms)).applied, ["0001", "0002", "0003"]);
-  assert.deepEqual((await applyMigrations(db, ms)).skipped, ["0001", "0002", "0003"]);
+  assert.deepEqual((await applyMigrations(db, ms)).applied, ["0001", "0002", "0003", "0004"]);
+  assert.deepEqual((await applyMigrations(db, ms)).skipped, ["0001", "0002", "0003", "0004"]);
   await assert.rejects(applyMigrations(db, [{ ...ms[0]!, sql: ms[0]!.sql + "\n-- mudou" }]), /alterada/);
   await assert.rejects(applyMigrations(db, [{ version: "0099", name: "x", sql: "DROP TABLE od_owners;" }]), /destrutiva/);
 });
@@ -324,7 +324,7 @@ test("health não expõe segredos", async () => {
   const r = await client(ctx).call("GET", "/api/health");
   assert.equal(r.status, 200);
   assert.equal(r.json.ok, true);
-  assert.equal(r.json.schema, "0003");
+  assert.equal(r.json.schema, "0004");
   assert.equal(r.json.schemaError, null);
   assert.ok(!JSON.stringify(r.json).includes("gsk_super_secreta"));
   assert.equal(r.json.configured.ai, true);
@@ -340,7 +340,7 @@ test("currentSchema devolve código curto sem mensagem, token ou URL", async () 
 
   const db = new SqliteDb(":memory:");
   await applyMigrations(db, loadMigrations());
-  assert.deepEqual(await currentSchema(db), { version: "0003" });
+  assert.deepEqual(await currentSchema(db), { version: "0004" });
 
   assert.equal(classifySchemaError(new HranaError("Turso respondeu 401", 401)), "http_401");
   assert.equal(classifySchemaError(new HranaError("Turso respondeu 403", 403)), "http_401");

@@ -14,6 +14,7 @@ const ICON: Record<FeedEntry["kind"], IconName> = {
   news_digest: "globe",
   quote_alert: "layers",
   marketing_ideas: "sparkle",
+  shipment: "layers",
 };
 
 export function FreshnessChip({ f }: { f: FeedEntry["freshness"] }) {

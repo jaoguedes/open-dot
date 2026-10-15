@@ -42,6 +42,7 @@ export const AGENT_COLORS: Record<AgentId, string> = {
   noticias: "#FF7A1F",
   mercado: "#16B26A",
   marketing: "#F0457F",
+  entregas: "#C9862A",
 };
 
 export const STATE_COLORS = {
@@ -66,6 +67,7 @@ export const DEFAULT_ACCESSORY: Record<AgentId, Accessory> = {
   noticias: "antenna",
   mercado: "visor",
   marketing: "beret",
+  entregas: "none",
 };
 
 export interface VisualEvent {

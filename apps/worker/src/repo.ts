@@ -20,7 +20,7 @@ export async function upsertOwner(db: Db, p: { sub: string; email: string; name:
 }
 
 export async function getOwner(db: Db, ownerId: string) {
-  const r = await db.query<{ id: string; email: string; display_name: string | null; time_zone: string }>("SELECT id, email, display_name, time_zone FROM od_owners WHERE id = ?", [ownerId]);
+  const r = await db.query<{ id: string; email: string; display_name: string | null; name_custom: number; time_zone: string }>("SELECT id, email, display_name, name_custom, time_zone FROM od_owners WHERE id = ?", [ownerId]);
   return r[0] ?? null;
 }
 
@@ -687,5 +687,136 @@ export async function applyRetention(db: Db, now: number) {
     { sql: "DELETE FROM od_oauth_states WHERE expires_at <= ?", args: [iso(now)] },
     { sql: "DELETE FROM od_sessions WHERE expires_at <= ?", args: [iso(now)] },
     { sql: "DELETE FROM od_inbox_events WHERE received_at <= ?", args: [iso(now - 30 * 86_400_000)] },
+    { sql: "DELETE FROM od_shipments WHERE active = 0 AND updated_at <= ?", args: [iso(now - 90 * 86_400_000)] },
   ]);
+}
+
+export interface ShipmentRow {
+  id: string;
+  code: string;
+  carrier: string | null;
+  confidence: string | null;
+  store_label: string | null;
+  status: string | null;
+  status_label: string | null;
+  last_event_at: string | null;
+  last_event: string | null;
+  events_json: string;
+  provider: string | null;
+  provider_checked_at: string | null;
+  delivered_at: string | null;
+  active: number;
+  needs_carrier: number;
+  last_error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function setDisplayName(db: Db, ownerId: string, name: string) {
+  await db.run("UPDATE od_owners SET display_name = ?, name_custom = 1 WHERE id = ?", [name, ownerId]);
+}
+
+export async function countShipments(db: Db, ownerId: string): Promise<number> {
+  const row = (await db.query<{ n: number }>("SELECT count(*) AS n FROM od_shipments WHERE owner_id = ?", [ownerId]))[0];
+  return row?.n ?? 0;
+}
+
+export async function listShipments(db: Db, ownerId: string): Promise<ShipmentRow[]> {
+  return db.query<ShipmentRow>(
+    "SELECT id, code, carrier, confidence, store_label, status, status_label, last_event_at, last_event, events_json, provider, provider_checked_at, delivered_at, active, needs_carrier, last_error, created_at, updated_at FROM od_shipments WHERE owner_id = ? ORDER BY active DESC, updated_at DESC",
+    [ownerId],
+  );
+}
+
+export async function insertShipment(db: Db, p: {
+  id: string; ownerId: string; code: string; carrier: string | null; confidence: string | null;
+  storeLabel: string | null; needsCarrier: boolean; now: number;
+}): Promise<boolean> {
+  const r = await db.run(
+    `INSERT OR IGNORE INTO od_shipments
+      (id, owner_id, code, carrier, confidence, store_label, events_json, active, needs_carrier, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, '[]', 1, ?, ?, ?)`,
+    [p.id, p.ownerId, p.code, p.carrier, p.confidence, p.storeLabel, p.needsCarrier ? 1 : 0, iso(p.now), iso(p.now)],
+  );
+  return r.changes === 1;
+}
+
+export async function deleteShipment(db: Db, ownerId: string, id: string): Promise<boolean> {
+  const r = await db.run("DELETE FROM od_shipments WHERE owner_id = ? AND id = ?", [ownerId, id]);
+  return r.changes === 1;
+}
+
+export async function dueShipments(db: Db, ownerId: string, dueBeforeIso: string, limit: number): Promise<ShipmentRow[]> {
+  return db.query<ShipmentRow>(
+    `SELECT id, code, carrier, confidence, store_label, status, status_label, last_event_at, last_event, events_json, provider, provider_checked_at, delivered_at, active, needs_carrier, last_error, created_at, updated_at
+     FROM od_shipments
+     WHERE owner_id = ? AND active = 1 AND needs_carrier = 0 AND delivered_at IS NULL
+       AND (provider_checked_at IS NULL OR provider_checked_at <= ?)
+     ORDER BY provider_checked_at IS NOT NULL, provider_checked_at ASC
+     LIMIT ?`,
+    [ownerId, dueBeforeIso, limit],
+  );
+}
+
+export async function saveShipmentTrack(db: Db, p: {
+  id: string; ownerId: string; carrier: string | null; status: string; statusLabel: string;
+  lastEventAt: string | null; lastEvent: string | null; eventsJson: string; provider: string | null;
+  delivered: boolean; error: string | null; now: number;
+}) {
+  await db.run(
+    `UPDATE od_shipments SET
+       carrier = COALESCE(?, carrier), status = ?, status_label = ?, last_event_at = ?, last_event = ?,
+       events_json = ?, provider = ?, provider_checked_at = ?, delivered_at = ?, active = ?,
+       last_error = ?, updated_at = ?
+     WHERE id = ? AND owner_id = ?`,
+    [
+      p.carrier, p.status, p.statusLabel, p.lastEventAt, p.lastEvent, p.eventsJson, p.provider,
+      iso(p.now), p.delivered ? iso(p.now) : null, p.delivered ? 0 : 1, p.error, iso(p.now), p.id, p.ownerId,
+    ],
+  );
+}
+
+export async function touchShipment(db: Db, id: string, ownerId: string, error: string | null, now: number) {
+  await db.run("UPDATE od_shipments SET provider_checked_at = ?, last_error = ?, updated_at = ? WHERE id = ? AND owner_id = ?", [iso(now), error, iso(now), id, ownerId]);
+}
+
+export async function confirmShipmentCarrier(db: Db, ownerId: string, id: string, carrier: string, now: number): Promise<boolean> {
+  const r = await db.run(
+    "UPDATE od_shipments SET carrier = ?, needs_carrier = 0, provider_checked_at = NULL, updated_at = ? WHERE owner_id = ? AND id = ?",
+    [carrier, iso(now), ownerId, id],
+  );
+  return r.changes === 1;
+}
+
+export async function takeTrackingCall(db: Db, ownerId: string, month: string, stop: number): Promise<boolean> {
+  await db.run("INSERT OR IGNORE INTO od_tracking_budget (owner_id, month, calls) VALUES (?, ?, 0)", [ownerId, month]);
+  const r = await db.run("UPDATE od_tracking_budget SET calls = calls + 1 WHERE owner_id = ? AND month = ? AND calls < ?", [ownerId, month, stop]);
+  return r.changes === 1;
+}
+
+export async function trackingCalls(db: Db, ownerId: string, month: string): Promise<number> {
+  const row = (await db.query<{ calls: number }>("SELECT calls FROM od_tracking_budget WHERE owner_id = ? AND month = ?", [ownerId, month]))[0];
+  return row?.calls ?? 0;
+}
+
+export async function recentMailTexts(db: Db, keys: Keyring, ownerId: string, limit = 40) {
+  const rows = await db.query<{ message_id: string; from_enc: string; subject_enc: string; snippet_enc: string | null }>(
+    "SELECT message_id, from_enc, subject_enc, snippet_enc FROM od_email_messages WHERE owner_id = ? ORDER BY received_at DESC LIMIT ?",
+    [ownerId, limit],
+  );
+  const out: { id: string; from: string; subject: string; snippet: string }[] = [];
+  for (const r of rows) {
+    const aad = `msg:${ownerId}:${r.message_id}`;
+    out.push({
+      id: r.message_id,
+      from: await open(keys, r.from_enc, aad),
+      subject: await open(keys, r.subject_enc, aad),
+      snippet: r.snippet_enc ? await open(keys, r.snippet_enc, aad) : "",
+    });
+  }
+  return out;
+}
+
+export async function runBySlot(db: Db, ownerId: string, slotKey: string): Promise<RunRow | null> {
+  return (await db.query<RunRow>("SELECT * FROM od_runs WHERE owner_id = ? AND slot_key = ?", [ownerId, slotKey]))[0] ?? null;
 }

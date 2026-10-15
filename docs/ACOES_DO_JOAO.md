@@ -90,7 +90,7 @@ Os seus bancos atuais, como o do SafeWear, **não serão tocados**.
    - Não cole no chat. O `npm run setup:cloud` pede a URL e o token e aplica as migrações.
    - Se o banco tiver tabelas de outro projeto, o script recusa e não altera nada.
 
-- **Como verifico:** o setup mostra “Migrações aplicadas: 0001, 0002, 0003” (ou “já atualizado”) e o `/api/health` mostra `"schema": "0003"`.
+- **Como verifico:** o setup mostra “Migrações aplicadas: 0001, 0002, 0003, 0004” (ou “já atualizado”) e o `/api/health` mostra `"schema": "0004"`.
 
 ---
 
@@ -138,6 +138,25 @@ Não cole chaves no chat.
    - Grave `FINNHUB_API_KEY` no `.dev.vars` ou pelo `npm run setup:cloud`. Sem a chave, o cartão do Mercado diz o que falta — sem cotação inventada.
 
 - **Como verifico:** Conexões mostra Search Console “conectado · leitura” e, no Mercado, PETR4 deixa de pedir a chave.
+
+---
+
+## I. Opcional: rastreio de encomendas (PacoteVício)
+
+Sem isto o Entregas continua útil: guarda o código e abre o site da transportadora. A consulta automática fica desligada, sem erro.
+
+1. **Ler os termos** em https://painel.pacotevicio.dev/docs/ (plano Básico: 1.000 consultas por mês e atribuição obrigatória).
+2. **Guardar a chave** `PACOTEVICIO_API_KEY` só no `.dev.vars`. Não cole no chat.
+3. **Confirmar os termos** com `PACOTEVICIO_TERMS_CONFIRMED=true` no `.dev.vars` e `"PACOTEVICIO_TERMS_CONFIRMED": "true"` no `wrangler.jsonc`. Sem essa flag, a chave sozinha não liga o provedor.
+4. **Enviar para a nuvem** (grava a chave; não imprime o valor):
+
+```bash
+npm run setup:cloud -- --from-dev-vars
+```
+
+O comando pergunta antes de publicar. A flag de termos não é segredo: ela fica no `wrangler.jsonc`.
+
+- **Como verifico:** em Entregas, o aviso de “desligado” some e, abaixo de uma encomenda consultada, aparece o link “Rastreamento por PacoteVício” para https://pacotevicio.dev. Ao chegar em 900 consultas no mês, as consultas param e a tela avisa.
 
 ---
 

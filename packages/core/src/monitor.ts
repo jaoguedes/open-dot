@@ -76,6 +76,9 @@ export interface IncidentPolicy {
 
 export const DEFAULT_INCIDENT_POLICY: IncidentPolicy = { openAfterFailures: 3, closeAfterSuccesses: 2, slowMs: 1500 };
 
+/** Atalho do Sentinela: o próprio Open Dot, só leitura do health. */
+export const OPEN_DOT_HEALTH_URL = "https://open-dot.jpguedesbarbieri.workers.dev/api/health";
+
 export type IncidentTransition = "opened" | "closed" | null;
 
 export function applySample(s: IncidentState, sample: Sample, policy = DEFAULT_INCIDENT_POLICY): { state: IncidentState; transition: IncidentTransition } {

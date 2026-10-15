@@ -65,7 +65,7 @@ export function Mascot() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginTop: 16 }}>
         <fieldset className="card">
           <legend className="tiny">Agente (cor e acessório)</legend>
-          {(["dot", "correio", "codigo", "sentinela", "foco", "noticias", "mercado", "marketing"] as AgentId[]).map((a) => (
+          {(["dot", "correio", "codigo", "sentinela", "foco", "noticias", "mercado", "marketing", "entregas"] as AgentId[]).map((a) => (
             <label key={a} style={{ display: "flex", gap: 8, alignItems: "center", minHeight: 36 }}>
               <input type="radio" name="agent" checked={agent === a} onChange={() => setAgent(a)} /> {AGENTS[a].name}
             </label>

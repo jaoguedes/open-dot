@@ -17,7 +17,7 @@ export interface FeedEntry {
   id: string;
   agentId: AgentId;
   runId: string | null;
-  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice" | "file_organized" | "news_digest" | "quote_alert" | "marketing_ideas";
+  kind: "email_digest" | "site_incident" | "ci_failure" | "deploy" | "notice" | "file_organized" | "news_digest" | "quote_alert" | "marketing_ideas" | "shipment";
   title: string;
   body: {
     headline?: string;
@@ -82,6 +82,7 @@ export interface Configured {
   ai: boolean;
   aiPrivate: boolean;
   finnhub: boolean;
+  tracking: boolean;
 }
 
 export interface Routine {
@@ -147,6 +148,7 @@ export interface Snapshot {
   providers: ProviderCard[];
   approvals: ApprovalView[];
   canSend: boolean;
+  shipments: ShipmentSnapshot;
 }
 
 export interface ApprovalView {
@@ -232,6 +234,13 @@ export const api = {
   upload: (id: string) => req<UploadView>(`/api/uploads/${encodeURIComponent(id)}`),
   processUpload: (id: string) => req<UploadView>(`/api/uploads/${encodeURIComponent(id)}/process`, { method: "POST" }),
   deleteUpload: (id: string) => req<{ ok: true }>(`/api/uploads/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  updateName: (name: string) => req<{ name: string }>("/api/profile", { method: "PATCH", body: JSON.stringify({ name }) }),
+  reviewNow: () => req<{ ok: boolean; synced: number; shipments: number; reviewed: boolean; note: string }>("/api/correio/review-now", { method: "POST" }),
+  watchSelf: () => req<{ id: string; created: boolean }>("/api/monitors/self", { method: "POST" }),
+  shipments: () => req<ShipmentSnapshot>("/api/shipments"),
+  addShipment: (code: string, carrier?: string) => req<ShipmentSnapshot & { created: boolean; shipment: ShipmentView | null }>("/api/shipments", { method: "POST", body: JSON.stringify({ code, ...(carrier ? { carrier } : {}) }) }),
+  confirmShipmentCarrier: (id: string, carrier: string) => req<ShipmentSnapshot>(`/api/shipments/${encodeURIComponent(id)}/carrier`, { method: "POST", body: JSON.stringify({ carrier }) }),
+  deleteShipment: (id: string) => req<{ ok: true }>(`/api/shipments/${encodeURIComponent(id)}`, { method: "DELETE" }),
 };
 
 export interface UploadView {
@@ -301,7 +310,7 @@ export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Sn
       return fallback;
     }
   };
-  const [feed, conns, routines, runs, usage, monitors, status, approvals] = await Promise.all([
+  const [feed, conns, routines, runs, usage, monitors, status, approvals, shipments] = await Promise.all([
     settle("feed", api.feed(), { items: [], next: null }),
     settle("conexões", api.connections(), { configured: emptyConfigured, connections: [], agents: [], providers: [] }),
     settle("rotinas", api.routines(), { routines: [] }),
@@ -310,6 +319,7 @@ export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Sn
     settle("monitores", api.monitors(), { monitors: [] }),
     settle("estado", api.status(), { agents: [] }),
     settle("aprovações", api.approvals(), { approvals: [], canSend: false }),
+    settle("encomendas", api.shipments(), emptyShipments),
   ]);
   return {
     snap: {
@@ -326,9 +336,43 @@ export async function loadSnapshot(owner: Snapshot["owner"]): Promise<{ snap: Sn
       providers: conns.providers ?? [],
       approvals: approvals.approvals,
       canSend: approvals.canSend,
+      shipments,
     },
     failures,
   };
 }
 
-export const emptyConfigured: Configured = { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false };
+export interface ShipmentView {
+  id: string;
+  code: string;
+  carrier: string | null;
+  carrierLabel: string | null;
+  storeLabel: string | null;
+  status: string | null;
+  statusLabel: string | null;
+  lastEventAt: string | null;
+  lastEvent: string | null;
+  events: Array<{ at: string; label: string; attribution: boolean }>;
+  page: string | null;
+  active: boolean;
+  needsCarrier: boolean;
+  lastError: string | null;
+  provider: string | null;
+  attribution: { label: string; href: string } | null;
+}
+
+export interface ShipmentSnapshot {
+  shipments: ShipmentView[];
+  tracking: { enabled: boolean; providerId: string | null; reason: string; calls: number; stop: number; limit: number; paused: boolean };
+  disabledProviders: Array<{ id: string; name: string; reason: string }>;
+  carriers: Array<{ id: string; label: string }>;
+}
+
+export const emptyShipments: ShipmentSnapshot = {
+  shipments: [],
+  tracking: { enabled: false, providerId: null, reason: "Rastreio automático desligado.", calls: 0, stop: 900, limit: 1000, paused: false },
+  disabledProviders: [],
+  carriers: [],
+};
+
+export const emptyConfigured: Configured = { database: false, google: false, owner: false, github: false, githubApp: false, vercel: false, ai: false, aiPrivate: false, finnhub: false, tracking: false };

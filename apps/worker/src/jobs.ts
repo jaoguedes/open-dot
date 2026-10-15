@@ -10,6 +10,7 @@ import { runEmailReview } from "./services/email-review.ts";
 import { organizeUpload } from "./services/uploads.ts";
 import { ingestNews, publishWorldToday } from "./services/news.ts";
 import { ingestQuotes } from "./services/quotes.ts";
+import { pollShipments, extractShipments } from "./services/shipments.ts";
 
 /**
  * Tique do cron (a cada 5 minutos, UTC). Tudo é idempotente: o cron pode repetir
@@ -22,11 +23,12 @@ export interface TickReport {
   runs: Array<{ id: string; state: string }>;
   monitors: number;
   deployments: number;
+  shipments: number;
   subrequests: number;
 }
 
 export async function tick(ctx: Ctx): Promise<TickReport> {
-  const report: TickReport = { planned: 0, synced: [], runs: [], monitors: 0, deployments: 0, subrequests: 0 };
+  const report: TickReport = { planned: 0, synced: [], runs: [], monitors: 0, deployments: 0, shipments: 0, subrequests: 0 };
   const { version } = await currentSchema(ctx.db);
   if (version !== REQUIRED_SCHEMA) return { ...report, skipped: `schema ${version ?? "ausente"}; esperado ${REQUIRED_SCHEMA}` };
   const budget = new SubrequestBudget(40);
@@ -161,6 +163,11 @@ export async function tick(ctx: Ctx): Promise<TickReport> {
   for (const o of owners) {
     if (budget.remaining() >= 5) await ingestNews(ctx, o.id, f, { maxFeeds: Math.min(4, budget.remaining() - 1) });
     if (budget.remaining() >= 3) await ingestQuotes(ctx, o.id, f);
+    await extractShipments(ctx, o.id);
+    if (budget.remaining() >= 1) {
+      const poll = await pollShipments(ctx, o.id, f, Math.min(2, budget.remaining()));
+      report.shipments += poll.checked;
+    }
   }
 
   // 6) Retenção uma vez por hora.

@@ -19,6 +19,7 @@
   --accent: #3361FF; --accent-soft: rgba(51, 97, 255, 0.16); --on-accent: #FFFFFF;
   --ok: #2BD47F; --warn: #FFB627; --err: #FF4D6A; --info: #5B8CFF; --muted: #6B7181;
   --agent-correio: #5B8CFF; --agent-codigo: #8C6BFF; --agent-sentinela: #45E2BE; --agent-foco: #A98BFF;
+  --agent-noticias: #FF7A1F; --agent-mercado: #16B26A; --agent-marketing: #F0457F; --agent-entregas: #C9862A;
   --glass: #000000; --glass-border: #22252E;
   --shadow: 0 12px 40px rgba(0,0,0,.6);
   --focus: #8EA6FF;

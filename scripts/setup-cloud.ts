@@ -24,7 +24,7 @@ const WRANGLER = ["--yes", "wrangler@4"];
 const PROD_ORIGIN = "https://open-dot.jpguedesbarbieri.workers.dev";
 const FROM_DEV = process.argv.includes("--from-dev-vars");
 const REQUIRED = ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "OWNER_EMAIL"] as const;
-const OPTIONAL = ["GROQ_API_KEY", "FINNHUB_API_KEY"] as const;
+const OPTIONAL = ["GROQ_API_KEY", "FINNHUB_API_KEY", "PACOTEVICIO_API_KEY"] as const;
 
 function ask(question: string, hidden = false): Promise<string> {
   return new Promise((resolve) => {
@@ -67,6 +67,7 @@ async function main() {
   let ownerEmail: string;
   let groq: string;
   let finnhub: string;
+  let pacote: string;
 
   if (FROM_DEV) {
     const vars = parseDevVars(readFileSync(".dev.vars", "utf8"));
@@ -81,6 +82,7 @@ async function main() {
     ownerEmail = vars.OWNER_EMAIL!;
     groq = vars.GROQ_API_KEY ?? "";
     finnhub = vars.FINNHUB_API_KEY ?? "";
+    pacote = vars.PACOTEVICIO_API_KEY ?? "";
     for (const n of [...REQUIRED, ...OPTIONAL.filter((k) => vars[k])]) console.log(`✓ ${n}`);
     console.log("✓ APP_ORIGIN (produção)");
   } else {
@@ -93,6 +95,7 @@ async function main() {
     ownerEmail = await ask("Seu e-mail Google (dono único): ");
     groq = await ask("GROQ_API_KEY (opcional, Enter para pular; oculto): ", true);
     finnhub = await ask("FINNHUB_API_KEY (opcional, plano gratuito, Enter para pular; oculto): ", true);
+    pacote = await ask("PACOTEVICIO_API_KEY (opcional, Enter para pular; oculto): ", true);
   }
 
   // URL pública é variável não secreta: vai para o wrangler.jsonc.
@@ -117,6 +120,7 @@ async function main() {
     OWNER_EMAIL: ownerEmail,
     ...(groq ? { GROQ_API_KEY: groq } : {}),
     ...(finnhub ? { FINNHUB_API_KEY: finnhub } : {}),
+    ...(pacote ? { PACOTEVICIO_API_KEY: pacote } : {}),
   };
   for (const [name, value] of Object.entries(secrets)) {
     const res = npx(["secret", "put", name], value);

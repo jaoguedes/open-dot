@@ -20,7 +20,8 @@ export type ToolName =
   | "feed.publish"
   | "rss.read"
   | "quotes.read"
-  | "gsc.read";
+  | "gsc.read"
+  | "tracking.read";
 
 export type ToolKind = "read" | "write";
 
@@ -39,6 +40,7 @@ export const TOOL_KIND: Record<ToolName, ToolKind> = {
   "rss.read": "read",
   "quotes.read": "read",
   "gsc.read": "read",
+  "tracking.read": "read",
 };
 
 /** Escritas que exigem aprovação vinculada ao payload, sempre. */
@@ -145,6 +147,15 @@ export const AGENTS: Record<AgentId, AgentProfile> = {
     dataClass: "personal",
     maxModelStepsPerJob: 2,
     maxToolCallsPerStep: 4,
+  },
+  entregas: {
+    id: "entregas",
+    name: "Entregas",
+    description: "Acompanha encomendas em modo somente leitura. Não compra, não altera entrega e não envia dado pessoal à transportadora — só o código de rastreio, quando um provedor está ligado.",
+    tools: ["tracking.read"],
+    dataClass: "personal",
+    maxModelStepsPerJob: 0,
+    maxToolCallsPerStep: 2,
   },
 };
 

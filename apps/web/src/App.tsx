@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AGENTS, SEMANTIC_PRIORITY, type AgentId } from "@open-dot/core";
+import { AGENTS, SEMANTIC_PRIORITY, toVisual, type AgentId } from "@open-dot/core";
 import { useApp } from "./store.tsx";
 import { Icon, type IconName } from "./components/Icons.tsx";
 import { AgentDot } from "./dot/AgentDot.tsx";
 import { SplashScreen } from "./dot/SplashScreen.tsx";
 import { api } from "./api.ts";
 import { Home } from "./views/Home.tsx";
+import { Entregas } from "./views/Entregas.tsx";
 import { MyDay } from "./views/MyDay.tsx";
 import { Routines } from "./views/Routines.tsx";
 import { Connections } from "./views/Connections.tsx";
@@ -15,7 +16,7 @@ import { About } from "./views/About.tsx";
 import { Privacy } from "./views/Privacy.tsx";
 import { ContextPanel } from "./components/ContextPanel.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
-import { agentPresence, islandLine } from "./presence.ts";
+import { agentConnected, agentPresence, islandLine, sortAgents } from "./presence.ts";
 
 function isMyDayPath(path: string): boolean {
   return path === "/" || path === "/meu-dia";
@@ -45,8 +46,8 @@ function useSplash(loading: boolean, reduced: boolean): { show: boolean; fading:
   return { show, fading };
 }
 
-const SIDEBAR_AGENTS: AgentId[] = ["dot", "correio", "codigo", "sentinela", "noticias", "mercado", "marketing"];
-const LIST_AGENTS: AgentId[] = ["correio", "codigo", "sentinela", "foco", "noticias", "mercado", "marketing"];
+const SIDEBAR_AGENTS: AgentId[] = ["dot", "correio", "codigo", "sentinela", "noticias", "mercado", "marketing", "entregas"];
+const LIST_AGENTS: AgentId[] = ["correio", "codigo", "sentinela", "foco", "noticias", "mercado", "marketing", "entregas"];
 
 interface NavDef {
   path: string;
@@ -137,7 +138,7 @@ export function App() {
       view = <Approval id={decodeURIComponent(apprMatch![1]!)} />;
       break;
     case "agent":
-      view = <Home agentId={agentId!} />;
+      view = agentId === "entregas" ? <Entregas /> : <Home agentId={agentId!} />;
       break;
     default:
       view = <Home agentId="dot" />;
@@ -221,8 +222,11 @@ function Sidebar({ open, go, current }: { open: boolean; go: (p: string) => void
   const pending = app.snap?.feed.filter((f) => f.kind !== "notice" && f.kind !== "file_organized").length ?? 0;
   const usage = app.snap?.usage;
   const pct = usage ? Math.min(100, Math.round((usage.calls / Math.max(1, usage.limits.calls)) * 100)) : 0;
+  const facts = factsFrom(app.snap, app.mode === "demo");
+  const waiting = app.snap?.shipments.shipments.filter((s) => s.needsCarrier).length ?? 0;
   const presenceOf = (a: AgentId) =>
-    agentPresence(a, app.visualFor(a), app.snap?.feed ?? [], app.snap?.monitors ?? []);
+    agentPresence(a, app.visualFor(a), app.snap?.feed ?? [], app.snap?.monitors ?? [], { connected: agentConnected(a, facts), pendingShipments: waiting });
+  const ordered = sortAgents(LIST_AGENTS, presenceOf);
   return (
     <nav className={`sidebar ${open ? "open" : ""}`} aria-label="Navegação principal">
       <a className="brand" href="/meu-dia" onClick={(e) => (e.preventDefault(), go("/meu-dia"))}>
@@ -239,18 +243,19 @@ function Sidebar({ open, go, current }: { open: boolean; go: (p: string) => void
       </div>
       <div className="nav">
         <div className="nav-label">Seus agentes</div>
-        {LIST_AGENTS.map((a) => {
+        {ordered.map((a) => {
           const path = `/agente/${a}`;
-          const v = app.visualFor(a);
+          const connected = agentConnected(a, facts);
+          const v = connected ? app.visualFor(a) : toVisual(a, "disconnected");
           const p = presenceOf(a);
           return (
-            <a key={a} href={path} className="nav-item agent-item" aria-current={current === path ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(path))}>
+            <a key={a} href={path} className={`nav-item agent-item ${connected ? "" : "is-off"}`} aria-current={current === path ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(path))}>
               <AgentDot visual={v} accessory={app.accessoryFor(a)} size={44} animate={false} reducedMotion={app.reducedMotion} antennaPulse={a === "noticias" && (app.snap?.feed.some((f) => f.agentId === "noticias" && f.kind === "news_digest" && f.freshness === "fresh") ?? false)} />
               <span className="lines">
                 <span>{AGENTS[a].name}</span>
                 <span>{p.label}</span>
               </span>
-              <span className={`agent-dot-status ${p.dotClass}`} aria-hidden="true" />
+              {connected ? <span className={`agent-dot-status ${p.dotClass}`} aria-hidden="true" /> : <span className="tiny">Conectar</span>}
             </a>
           );
         })}
@@ -268,19 +273,82 @@ function Sidebar({ open, go, current }: { open: boolean; go: (p: string) => void
             Custo R$ 0. {usage && !usage.aiConfigured ? "Resumos por regras." : "Sem cobrança extra."}
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div className="tiny" style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: "var(--text)", fontWeight: 500 }}>{app.snap?.owner?.name ?? app.snap?.owner?.email ?? "—"}</div>
-            {app.mode === "demo" ? "Demonstração" : "Espaço pessoal"}
-          </div>
-          {app.mode === "live" && (
-            <button className="btn ghost" onClick={() => void api.logout().then(() => location.assign("/"))}>
-              Sair
-            </button>
-          )}
-        </div>
+        <NameLine />
       </div>
     </nav>
+  );
+}
+
+function factsFrom(snap: ReturnType<typeof useApp>["snap"], demo: boolean) {
+  const conns = snap?.connections ?? [];
+  const disabled: Partial<Record<AgentId, boolean>> = {};
+  for (const a of snap?.agents ?? []) if (!a.enabled) disabled[a.id] = true;
+  return {
+    demo,
+    gmail: conns.some((c) => c.provider === "gmail" && c.status === "connected"),
+    github: Boolean(snap?.configured.github || snap?.configured.githubApp) || conns.some((c) => c.provider === "github" && c.status === "connected"),
+    vercel: Boolean(snap?.configured.vercel),
+    gsc: conns.some((c) => c.provider === "gsc" && c.status === "connected"),
+    monitors: snap?.monitors.length ?? 0,
+    shipments: snap?.shipments.shipments.length ?? 0,
+    tracking: Boolean(snap?.configured.tracking || snap?.shipments.tracking.enabled),
+    disabled,
+  };
+}
+
+function NameLine() {
+  const app = useApp();
+  const shown = app.snap?.owner?.name || "João";
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(shown);
+  const [error, setError] = useState<string | null>(null);
+  if (app.mode !== "live") {
+    return (
+      <div className="tiny">
+        <div style={{ color: "var(--text)", fontWeight: 500 }}>{shown}</div>
+        Demonstração
+      </div>
+    );
+  }
+  if (!editing) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="tiny" style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ color: "var(--text)", fontWeight: 500 }}>{shown}</div>
+          Espaço pessoal
+        </div>
+        <button className="btn ghost" type="button" onClick={() => (setValue(shown), setError(null), setEditing(true))}>
+          Nome
+        </button>
+        <button className="btn ghost" onClick={() => void api.logout().then(() => location.assign("/"))}>
+          Sair
+        </button>
+      </div>
+    );
+  }
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        setError(null);
+        void api.updateName(value.trim()).then(
+          async (r) => {
+            setEditing(false);
+            app.announce(`Nome salvo: ${r.name}`);
+            await app.refresh();
+          },
+          (err: unknown) => setError(err instanceof Error ? "Use letras, espaço ou hífen." : "Não consegui salvar o nome."),
+        );
+      }}
+    >
+      <label className="tiny" htmlFor="display-name">Nome de exibição</label>
+      <input id="display-name" value={value} maxLength={40} onChange={(e) => setValue(e.target.value)} autoFocus />
+      {error && <p className="tiny" role="alert">{error}</p>}
+      <div className="row-actions">
+        <button className="btn primary" type="submit">Salvar</button>
+        <button className="btn ghost" type="button" onClick={() => setEditing(false)}>Cancelar</button>
+      </div>
+    </form>
   );
 }
 
@@ -330,14 +398,15 @@ function Island({ go }: { go: (p: string) => void }) {
     }
     return working ?? best;
   }, [app]);
+  const shown = app.activity ?? dom;
   const digest = app.snap?.feed.find((f) => f.kind === "email_digest");
-  const line1 = islandLine(dom);
-  const line2 = dom.reason ?? (digest ? `${digest.body.counts?.important ?? 0} mensagens desde as 17h` : "Nada pendente agora");
+      const line1 = islandLine(shown);
+      const line2 = shown.reason ?? (digest ? `${digest.body.counts?.important ?? 0} mensagens desde as 17h` : "Nada pendente agora");
   return (
     <aside className="island" aria-label="Ilha do Dot">
       <AgentDot
-        visual={dom}
-        accessory={app.accessoryFor(dom.agentId)}
+        visual={shown}
+        accessory={app.accessoryFor(shown.agentId)}
         size={40}
         reducedMotion={app.reducedMotion}
         interactive

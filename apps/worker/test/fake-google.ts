@@ -28,6 +28,8 @@ export class FakeGoogle {
   rateLimited = false;
   /** mensagens adicionadas após cada historyId. */
   history: Array<{ historyId: number; ids: string[] }> = [];
+  idEmail = "joao@example.com";
+  idSub = "sub-joao";
   calls: string[] = [];
   accessExpiresIn = 3600;
 
@@ -40,7 +42,7 @@ export class FakeGoogle {
         if (this.refreshRevoked) return jsonResponse({ error: "invalid_grant" }, 400);
         return jsonResponse({ access_token: `at-${this.calls.length}`, expires_in: this.accessExpiresIn, scope: "openid email https://www.googleapis.com/auth/gmail.readonly" });
       }
-      const idPayload = { iss: "https://accounts.google.com", aud: "cid.apps.googleusercontent.com", sub: "sub-joao", email: "joao@example.com", email_verified: true, exp: 4_000_000_000, nonce: this.nextNonce };
+      const idPayload = { iss: "https://accounts.google.com", aud: "cid.apps.googleusercontent.com", sub: this.idSub, email: this.idEmail, email_verified: true, exp: 4_000_000_000, nonce: this.nextNonce };
       const idToken = `x.${Buffer.from(JSON.stringify(idPayload)).toString("base64url")}.sig`;
       return jsonResponse({ access_token: "at-0", refresh_token: "rt-secret-123", expires_in: 3600, scope: this.grantedScope, id_token: idToken });
     }
