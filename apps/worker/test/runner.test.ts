@@ -184,3 +184,19 @@ test("recuperação lista só tarefas ativas do dispositivo, sem prompt, e liber
   assert.ok((await s.native.call("POST","/api/runner/device/claim",{},s.headers)).json.task);
   other.ctx.db.raw.close();s.ctx.db.raw.close();
 });
+
+
+test("orçamento de eventos preserva uma conclusão mesmo após excesso de progresso",async()=>{
+ const s=await setup();try{
+  await s.native.call("POST","/api/runner/device/heartbeat",s.beat,s.headers);
+  const t=await s.web.call("POST","/api/runner/tasks",{deviceId:s.deviceId,projectId:s.projectId,mechanism:"codex",prompt:"budget fixture",requestKey:crypto.randomUUID()});
+  await s.native.call("POST","/api/runner/device/claim",{},s.headers);
+  const path=`/api/runner/device/tasks/${t.json.id}/event`;
+  assert.equal((await s.native.call("POST",path,{seq:490,kind:"status",text:"bounded progress"},s.headers)).status,200);
+  for(const [kind,seq]of [["status",491],["message",491],["proposal",497],["files",499],["tests",500]]as const){
+   const r=await s.native.call("POST",path,{seq,kind,text:"over budget"},s.headers);assert.equal(r.status,409);assert.equal(r.json.error.code,"event_budget");
+  }
+  assert.equal((await s.native.call("POST",path,{seq:491,kind:"failed",text:"Progress bounded; no new effects."},s.headers)).status,200);
+  assert.deepEqual((await s.native.call("GET","/api/runner/device/active",undefined,s.headers)).json.active,[]);
+ }finally{s.ctx.db.raw.close();}
+});

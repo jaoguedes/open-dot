@@ -9,6 +9,16 @@ use std::{
     path::{Path, PathBuf},
     time::{Duration, Instant},
 };
+// Deixar espaço para proposta, arquivos, testes e recibo terminal.
+fn event_limit(kind: &str) -> u64 {
+    match kind {
+        "status" | "message" => 490,
+        "proposal" => 496,
+        "files" => 498,
+        "tests" => 499,
+        _ => 500,
+    }
+}
 fn emit(
     c: &SharedChannel,
     j: &mut Journal,
@@ -16,7 +26,7 @@ fn emit(
     kind: &str,
     text: &str,
 ) -> Result<(), String> {
-    if j.seq >= 500 {
+    if j.seq >= event_limit(kind) {
         return Err("Limite de eventos da tarefa atingido.".into());
     }
     j.seq += 1;
@@ -573,5 +583,23 @@ mod live_tests {
         channel::disconnect(&c, &dir).unwrap();
         println!("REAL_CODEX_FLOW_PASS: official ChatGPT auth, native vault pairing, authorized Git project, CAS claim, readonly profile, no shell/MCP, real model proposal, exact-content approval, isolated file applied, real events/result, original project clean. Project commands/tests were NOT run.");
         println!("Evidence directory: {}", root.display());
+    }
+}
+
+#[cfg(test)]
+mod event_budget_tests {
+    use super::*;
+    #[test]
+    fn progress_cannot_starve_final_receipt() {
+        let mut seq = 0;
+        while seq < event_limit("status") {
+            seq += 1;
+        }
+        for kind in ["proposal", "files", "tests", "completed"] {
+            assert!(seq < event_limit(kind));
+            seq += 1;
+        }
+        assert!(seq <= 500);
+        assert_eq!(event_limit("failed"), 500);
     }
 }

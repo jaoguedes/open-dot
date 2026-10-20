@@ -243,6 +243,8 @@ export function registerRunnerRoutes(route: Registrar) {
     const prior = (await ctx.db.query<{ kind: string }>("SELECT kind FROM od_runner_events WHERE task_id=? AND seq=?", [t.id, data.seq]))[0];
     if (prior) return json({ accepted: true, duplicate: true });
     if (t.state !== "running" && !(t.state === "awaiting_approval" && ["failed","cancelled"].includes(data.kind))) return problem(409, "task_closed", "Tarefa encerrada.");
+    const budget = data.kind === "status" || data.kind === "message" ? 490 : data.kind === "proposal" ? 496 : data.kind === "files" ? 498 : data.kind === "tests" ? 499 : 500;
+    if (data.seq > budget) return problem(409, "event_budget", "Limite de progresso atingido; orçamento reservado para conclusão ou falha.");
     let proposalDigest: string | null = null;
     let proposalEnc: string | null = null;
     if (data.kind === "proposal") {
