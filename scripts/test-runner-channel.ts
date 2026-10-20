@@ -31,7 +31,7 @@ const server = createServer(async (req, res) => {
 await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
 const address = server.address();
 if (!address || typeof address === "string") throw new Error("Porta indisponível");
-const child = spawn("cargo", ["test", "--manifest-path", "apps/runner/src-tauri/Cargo.toml", "--locked", process.argv.includes("--codex") ? "executor::live_tests::real_codex_flow" : "channel::live_tests::real_channel_and_vault", "--", "--ignored", "--nocapture"], {
+const child = spawn("cargo", ["test", "--manifest-path", "apps/runner/src-tauri/Cargo.toml", "--locked", process.argv.includes("--recovery") ? "recovery_tests::crash_restart" : process.argv.includes("--codex") ? "executor::live_tests::real_codex_flow" : "channel::live_tests::real_channel_and_vault", "--", "--ignored", "--nocapture"], {
   stdio: "inherit",
   env: { ...process.env, OPEN_DOT_CHANNEL_TEST_ORIGIN: `http://127.0.0.1:${address.port}` },
 });

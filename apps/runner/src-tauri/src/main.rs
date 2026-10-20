@@ -6,6 +6,8 @@ mod executor;
 mod journal;
 mod policy;
 mod process;
+#[cfg(test)]
+mod recovery_tests;
 mod worktree;
 use policy::Settings;
 use serde::Serialize;

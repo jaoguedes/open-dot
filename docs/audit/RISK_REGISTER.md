@@ -15,4 +15,8 @@
 | R11 | Média: Claude sem login, Cursor sem CLI/driver | Handoff automático indisponível | Passport manual sem fingir conexão; não copiar sessão ou contratar API |
 | R12 | Alta: GUI/iPhone/ARM64/Windows runtime sem E2E | Build não prova segurança operacional | Teste nativo por ambiente; Windows executor continua bloqueado |
 
+| R13 | Média: orçamento de 500 eventos pode esgotar recibo terminal | Tarefa antiga pode precisar reconciliação manual | Reservar orçamento de término e testar saturação antes de uso prolongado; não afirmar recuperação universal |
+
+R01/R02 mitigados no fluxo normal por OD2-R1/R2 e teste de processo real; R13 continua aberto. Teste usa proposta sintética, não reproduz crash durante geração do fornecedor.
+
 Nenhuma severidade é uma porcentagem de conclusão. Achados só ficam resolvidos quando teste/commit correspondente estiver registrado no handoff.
