@@ -23,3 +23,5 @@ OD2-M1: ledger cifrado SQLite/Turso e Passport `scope: memory-only` implementado
 Regressão real Codex reexecutada após OD2-R1/R2: PASS em 20/10; modelo oficial/ChatGPT, Keychain, API/SQLite, aprovação exata, worktree e original preservado. Não houve shell, testes de projeto ou GUI E2E. Logs locais `open-dot-2-real-codex.log` e `open-dot-2-crash.log`; não versionar logs/conteúdos da conta.
 
 OD2-E1: dez Expert Contracts versionados, critérios/risco/revisão e elegibilidade por interseção de política local e descoberta. Contratos não conectam nem autorizam mecanismos; risco alto exige revisão independente. Teste determinístico de catálogo/escalada PASS. Modelos/esforços não hardcoded. Sem mudança de UI.
+
+OD2-C1 (parcial): schema ODCP versionado, checklist compara SHA/snapshot observado pelo host, paths relativos e estados seguros; cálculo de checkpoint por 25 minutos ativos/milestone. `scripts/check-continuity.ts --base <SHA completo>` inspeciona commits locais sem Git de escrita. Testes PASS. Ainda não há timer conectado ao Runner, snapshots Git automáticos, commit automático, lease multiagente ou transporte entre mecanismos. Não declarar enforcement completo.
