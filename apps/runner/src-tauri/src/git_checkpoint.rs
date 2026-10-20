@@ -50,6 +50,11 @@ pub fn validate(dir:&Path,cp:&journal::Checkpoint,proposal:&worktree::Proposal)-
     worktree::verify_applied(&root,proposal)?;
     Ok(root)
 }
+pub fn recorded_receipt(dir:&Path,cp:&journal::Checkpoint)->Option<Receipt> {
+    let r:Receipt=read_json(&dir.join("git-checkpoints").join(format!("{}.json",cp.journal.task))).ok()?;
+    if r.version!=1 || r.task!=cp.journal.task || r.base_sha!=cp.base_sha.as_deref()? || r.proposal_hash!=cp.journal.proposal_hash.as_deref()? || r.branch!=format!("agent/{}",cp.journal.task) || r.stage!="committed" || !valid_sha(&r.commit_sha){return None;}
+    Some(r)
+}
 pub fn context(dir:&Path,task:&str,channel:&crate::channel::SharedChannel,folders:&[PathBuf])->Result<(journal::Checkpoint,worktree::Proposal),String> {
     let cp=load_checkpoint(dir,task)?;
     if crate::channel::identity(channel).as_deref()!=Some(cp.journal.device.as_str()) || !folders.iter().any(|p|worktree::project_id(p)==cp.journal.project) {return Err("Dispositivo ou pasta sem autorização atual.".into());}

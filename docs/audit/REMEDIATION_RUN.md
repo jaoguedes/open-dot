@@ -131,3 +131,9 @@ Revisão encontrou prévia Git sem rótulo/ID explícito de projeto e consentime
 ## OD2-MEMORY-021 — fatos de execução no ledger real
 
 Opt-in adicional, consentimento revisionado, fatos mínimos externos (nunca aprovação humana), sem prompts/arquivos/títulos copiados. Nó determinístico e recibo de integração toleram confirmação perdida; corrida com forget não recria ledger. Falhas limitadas a três, sem bloquear execução independente. Releitura de memória preserva rascunho e erros de conexão são separados. 317 Node/sete Python/eval/typecheck/build PASS; browser com backend real passou ciclo completo de memória/recibos (executor fixture), reload/forget e draft preservado. Native Git/21 Rust permanecem evidência separada, sem nova IA nesta unidade. Migração0016 somente local descartável; próximo: Passport operacional com identidade/proveniência e autoridade explicitamente ausente.
+
+## OD2-PASSPORT-023A — contexto nativo somente leitura
+
+Base 4e8d07e. Exportador local a partir de pasta autorizada: observa Git/ownership, checkpoints e recibos de commit; extrai somente tecnologias declaradas em manifests limitados, sem executar código. Exclui caminhos absolutos, prompts, conteúdo e credenciais; marca árvore como não inspecionada. Branch estranha não é chamada de detached. Arquivo novo, privado no Unix, sync e confirmação de destino pelo diálogo nativo; sem substituir arquivos existentes.
+
+PASS 22 Rust (seis ignored), incluindo Git real/manifest privado/symlink/branch divergente; compilação UI Runner. Log local `od2-context-final-rust.log`. Diálogo gráfico de salvar não foi operado: capacidade implementada, sem validação nativa completa. Contexto não é autorização nem atesta testes/revisão. Integração do Passport com Worker/Workspace permanece em alteração local separada; não considerar produto completo neste checkpoint. Nenhum push/serviço externo.

@@ -5,6 +5,7 @@ mod drivers;
 mod executor;
 mod journal;
 mod git_checkpoint;
+mod project_context;
 mod policy;
 mod process;
 #[cfg(test)]
@@ -207,6 +208,23 @@ async fn checkpoint_commit(app:tauri::AppHandle,task:String,proposal_hash:String
         audit(&s,"task_checkpoint_committed")?;Ok(result)
     }).await.map_err(|_|"Commit local não confirmado; preserve e confira o recibo.".to_string())?
 }
+#[tauri::command]
+async fn export_project_context(app:tauri::AppHandle,index:usize)->Result<bool,String> {
+    tauri::async_runtime::spawn_blocking(move||{
+        let s=app.state::<LocalState>();let settings=s.settings.lock().map_err(|_|"Permissões indisponíveis.")?;
+        let project=settings.folders.get(index).ok_or("Escolha uma pasta ainda autorizada.")?.clone();drop(settings);
+        let value=project_context::build(&project,&s.dir)?;let bytes=serde_json::to_vec_pretty(&value).map_err(|_|"Contexto inválido.")?;
+        if bytes.len()>65536{return Err("Contexto excede 64 KB; revise os registros antes de exportar.".into());}
+        let Some(selected)=app.dialog().file().add_filter("Open Dot context",&["json"]).set_file_name("opendot-project-context.json").blocking_save_file() else{return Ok(false)};
+        let path=selected.into_path().map_err(|_|"Destino local inválido.")?;
+        if path.extension().and_then(|s|s.to_str())!=Some("json"){return Err("Escolha um arquivo JSON novo.".into());}
+        use std::io::Write;let mut options=fs::OpenOptions::new();options.create_new(true).write(true);
+        #[cfg(unix)] {use std::os::unix::fs::OpenOptionsExt;options.mode(0o600);}
+        let mut file=options.open(&path).map_err(|_|"Destino existente ou indisponível. Nenhum arquivo foi substituído.")?;
+        file.write_all(&bytes).and_then(|_|file.sync_all()).map_err(|_|"Exportação local incompleta; preserve e revise o arquivo.")?;
+        journal::sync_directory(path.parent().ok_or("Destino inválido.")?)?;Ok(true)
+    }).await.map_err(|_|"Exportação não confirmada.".to_string())?
+}
 fn main() {
     if std::env::args().any(|arg| arg == "--diagnostics-only") {
         println!(
@@ -223,7 +241,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             diagnostics,
             choose_folder,
-            revoke_folder, pair_begin, pair_confirm, pair_disconnect, checkpoint_preview, checkpoint_commit
+            revoke_folder, pair_begin, pair_confirm, pair_disconnect, checkpoint_preview, checkpoint_commit, export_project_context
         ])
         .setup(|app| {
             let dir = app.path().app_data_dir()?;

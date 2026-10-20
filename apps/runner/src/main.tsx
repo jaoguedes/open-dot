@@ -195,6 +195,9 @@ function RunnerApp() {
                   {diagnostics.folders.map((folder, index) => (
                     <li key={folder}>
                       <span>{folder}</span>
+                      <button disabled={busy} onClick={()=>{
+                        setBusy(true);setError("");void invoke<boolean>("export_project_context",{index}).then(saved=>{if(saved)setCommitResult("Contexto de projeto salvo localmente. Revise antes de compartilhar; não contém permissões de execução.");}).catch(e=>setError(typeof e==="string"?e:"Contexto não confirmado.")).finally(()=>setBusy(false));
+                      }}>Exportar contexto local</button>
                       <button disabled={busy} onClick={() => void act("revoke_folder", { index })}>
                         Revogar
                       </button>
@@ -237,6 +240,7 @@ function RunnerApp() {
               <button onClick={() => setStep(2)}>Revisar ambiente</button>
             </>
           )}
+          {step!==5 && commitResult && <p role="status">{commitResult}</p>}
           {error && (
             <p role="alert" className="runner-error">
               {error}
