@@ -1,5 +1,7 @@
 # Comportamento do Dot
 
+**Atualização de identidade (19/10/2026, D-024):** a camada de exibição preserva o gradiente original branco/lilás em todos os estados. Tingimentos e filtro cinza abaixo são históricos; olhos, postura e prioridades continuam. Cor do mecanismo só na interface, nunca no corpo.
+
 Descreve o que o código faz **hoje** (15/10/2026). Fontes: `packages/core/src/visual.ts` (estado semântico e prioridade), `packages/core/src/dot/states.ts` e `reactions.ts` (motor), `apps/web/src/dot/DotView.tsx` (ligação), `apps/web/src/dot/ticker.ts` (quadros), `apps/web/src/presence.ts` (quem aparece).
 
 ## Estados

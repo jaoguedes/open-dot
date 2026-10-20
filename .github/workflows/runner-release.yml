@@ -1,0 +1,40 @@
+name: Runner installers and optional draft
+on:
+  push:
+    tags: ["runner-v*"]
+  workflow_dispatch:
+    inputs:
+      create_draft:
+        description: "Criar somente um draft (nunca publicar). Execute no ref de uma tag runner-v* existente."
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  build:
+    uses: ./.github/workflows/runner-ci.yml
+  draft:
+    if: github.event_name == 'workflow_dispatch' && inputs.create_draft && startsWith(github.ref, 'refs/tags/runner-v') && vars.RUNNER_BUILDS_ENABLED == 'true'
+    needs: build
+    environment: runner-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: OpenDot-Runner-*
+          path: installers
+          merge-multiple: true
+      - name: Validar conjunto completo
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node scripts/verify-runner-artifacts.mjs installers
+      - name: Criar draft com os três instaladores
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" installers/* --verify-tag --draft --prerelease --title "Open Dot Runner $RELEASE_TAG" --notes-file docs/open-dot-runner-release-notes.md

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, type PointerEvent, type KeyboardEvent } from "react";
 import { DotEngine, bodyPath, type Accessory, type AccessoryKind, type AgentVisual, type DotFrame, type DotStateKey, type ParticleFrame, type SemanticState } from "@open-dot/core";
-import { EYE, INK_COLOR, artDefs, badgeInner, heartPath, rgbCss, star4 } from "./art.ts";
+import { EYE, INK_COLOR, artDefs, badgeInner, heartPath, star4 } from "./art.ts";
 import { CROWN_UNLOCKED, accLayout } from "./accessories.ts";
 import { subscribe, type TickerHandle } from "./ticker.ts";
 
@@ -148,8 +148,9 @@ function set(el: Element | null, attr: string, v: string | number): void {
 }
 
 function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean): void {
-  svg.style.setProperty("--g", rgbCss(f.glow));
-  svg.style.setProperty("--t", rgbCss(f.tint));
+  // Paleta aprovada: iluminação original de repouso, sem repintar a pele por estado.
+  svg.style.setProperty("--g", "rgb(63,123,255)");
+  svg.style.setProperty("--t", "#EDE8FC");
   svg.setAttribute("aria-label", f.ariaLabel);
   const d = bodyPath(f.m);
   set(q(svg, "body"), "d", d);
@@ -163,17 +164,12 @@ function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean): vo
   set(q(svg, "tint"), "cy", f.tintCy);
   set(q(svg, "tint"), "ry", f.tintRy);
   set(q(svg, "tint"), "rx", f.tintRx);
-  set(q(svg, "tint"), "opacity", f.tintA);
+  set(q(svg, "tint"), "opacity", 0);
   set(q(svg, "slot"), "opacity", f.slotOpacity);
   set(q(svg, "spec"), "cx", f.specCx);
   set(q(svg, "spec2"), "cx", f.spec2Cx);
-  if (f.grey) {
-    q(svg, "fig").setAttribute("filter", `url(#${uid}-odGrey)`);
-    q(svg, "fig").setAttribute("opacity", "0.75");
-  } else {
-    q(svg, "fig").removeAttribute("filter");
-    q(svg, "fig").setAttribute("opacity", "1");
-  }
+  q(svg, "fig").removeAttribute("filter");
+  q(svg, "fig").setAttribute("opacity", "1");
 
   f.eyes.forEach((eye, i) => {
     const ga = q(svg, `eyeA${i}`),

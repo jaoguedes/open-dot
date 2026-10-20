@@ -14,6 +14,8 @@ import { useDialog } from "./components/useDialog.ts";
 import { sound } from "./sound.ts";
 
 // Telas menos visitadas carregam sob demanda (C5): a primeira tela baixa menos.
+const AgentWorkspace = lazy(() => import("./views/AgentWorkspace.tsx").then((m) => ({ default: m.AgentWorkspace })));
+const Runner = lazy(() => import("./views/Runner.tsx").then((m) => ({ default: m.Runner })));
 const Entregas = lazy(() => import("./views/Entregas.tsx").then((m) => ({ default: m.Entregas })));
 const Routines = lazy(() => import("./views/Routines.tsx").then((m) => ({ default: m.Routines })));
 const Connections = lazy(() => import("./views/Connections.tsx").then((m) => ({ default: m.Connections })));
@@ -77,12 +79,16 @@ interface NavDef {
 const PALETTE_DESTINATIONS = [
   { label: "Conversa com o Dot", path: "/agente/dot" },
   { label: "Meu dia", path: "/meu-dia" },
+  { label: "Agent Workspace", path: "/workspace" },
+  { label: "Runner desktop", path: "/runner" },
   { label: "Rotinas", path: "/rotinas" },
   { label: "Conexões", path: "/conexoes" },
   { label: "Mascote e aparência", path: "/mascote" },
 ];
 const NAV: NavDef[] = [
   { path: "/meu-dia", label: "Meu dia", icon: "home" },
+  { path: "/workspace", label: "Workspace", icon: "layers" },
+  { path: "/runner", label: "Runner", icon: "code" },
   { path: "/rotinas", label: "Rotinas", icon: "clock" },
   { path: "/conexoes", label: "Conexões", icon: "plug" },
   { path: "/mascote", label: "Mascote", icon: "sparkle" },
@@ -203,6 +209,12 @@ export function App() {
   switch (route) {
     case "/meu-dia":
       view = <MyDay />;
+      break;
+    case "/workspace":
+      view = <AgentWorkspace />;
+      break;
+    case "/runner":
+      view = <Runner />;
       break;
     case "/rotinas":
       view = <Routines />;

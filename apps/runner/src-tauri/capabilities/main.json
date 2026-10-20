@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "Somente janela local. Sem shell, acesso genérico a arquivos, rede ou conteúdo remoto.",
+  "local": true,
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

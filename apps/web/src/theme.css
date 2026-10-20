@@ -74,14 +74,18 @@
   --err: #ff4d6a;
   --info: #ffd24a;
   --muted: #6b7181;
-  --agent-correio: #5b8cff;
-  --agent-codigo: #8c6bff;
-  --agent-sentinela: #45e2be;
-  --agent-foco: #a98bff;
-  --agent-noticias: #ff7a1f;
-  --agent-mercado: #16b26a;
-  --agent-marketing: #f0457f;
-  --agent-entregas: #c9862a;
+  /* Identidade só de mecanismos. Funções legadas usam tom neutro. */
+  --mechanism-codex: #8878EE;
+  --mechanism-claude-code: #E99A69;
+  --mechanism-cursor: #69A9DE;
+  --agent-correio: var(--text-2);
+  --agent-codigo: var(--text-2);
+  --agent-sentinela: var(--text-2);
+  --agent-foco: var(--text-2);
+  --agent-noticias: var(--text-2);
+  --agent-mercado: var(--text-2);
+  --agent-marketing: var(--text-2);
+  --agent-entregas: var(--text-2);
   --glass: #000000;
   --glass-border: #22252e;
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.6);

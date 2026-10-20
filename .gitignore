@@ -40,3 +40,8 @@ __pycache__/
 
 # Pacotes de sincronização
 .sync/
+
+# Runner desktop
+apps/runner/src-tauri/target/
+apps/runner/src-tauri/gen/
+apps/runner/installers/

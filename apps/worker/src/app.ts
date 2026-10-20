@@ -1,3 +1,4 @@
+import { registerRunnerRoutes } from "./runner/routes.ts";
 import { z } from "zod";
 import {
   AGENTS,
@@ -48,7 +49,7 @@ import { ingestQuotes } from "./services/quotes.ts";
 import { testMarketing } from "./services/marketing.ts";
 import { DEFAULT_ASSETS, NEWS_FEEDS, QUOTE_DISCLAIMER, isQuoteStale } from "@open-dot/core";
 
-type Handler = (ctx: Ctx, req: Request, params: Record<string, string>, ownerId: string | null) => Promise<Response>;
+export type Handler = (ctx: Ctx, req: Request, params: Record<string, string>, ownerId: string | null) => Promise<Response>;
 
 interface Route {
   method: string;
@@ -65,6 +66,8 @@ function route(method: string, path: string, opts: { auth: boolean; csrf?: boole
   const pattern = new RegExp("^" + path.replace(/:(\w+)/g, (_, k: string) => (keys.push(k), "([^/]+)")) + "$");
   routes.push({ method, pattern, keys, auth: opts.auth, csrf: opts.csrf ?? method !== "GET", handler });
 }
+
+registerRunnerRoutes(route);
 
 export async function handleApi(ctx: Ctx, req: Request): Promise<Response> {
   const url = new URL(req.url);

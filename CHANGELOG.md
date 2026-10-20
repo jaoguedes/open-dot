@@ -2,6 +2,27 @@
 
 Feito a partir dos commits (`git log`). Datas em 2026. O efeito para quem usa vem primeiro.
 
+## Não publicado — execução operacional (20/10/2026)
+
+- Codex macOS validado com tarefa real: pareamento/cofre, projeto Git autorizado, proposta estruturada somente leitura, aprovação exata e escrita em worktree; pasta original preservada.
+- Reconexão, heartbeat/revogação, fila/eventos cifrados, CAS, journal e recuperação de proposta sem repetir o modelo. Shell/testes de projeto, Claude/Cursor e executor Windows ainda indisponíveis.
+- Workspace mostra conteúdo antes da aprovação; Dot e paleta aprovados preservados. Sem release/deploy por orientação atual.
+
+## Não publicado — Paleta definitiva (19/10/2026)
+
+- Identidades de mecanismos: Codex roxo #8878EE, Claude Code coral #E99A69, Cursor azul-claro #69A9DE, somente na UI. Verde reservado ao futuro WhatsApp.
+- Dot/orquestrador preserva gradiente e arte originais em todos os estados, sem tingimento adicional. Nenhuma nova skin ou peça. Cartões compartilhados no Workspace e Runner, com drivers indisponíveis explicitamente rotulados.
+- Teste visual cobre os nove estados e as três cores computadas; identidade registrada em D-024 e PALETA_APROVADA.md.
+
+## Não publicado — Runner 0.1.0 (19/10/2026)
+
+- Auditoria do repositório e leitura integral do brief, prompt mestre e kit anexados antes da implementação.
+- Workspace aditivo com Dot original em destaque, contatos de agentes, consultas ao Dot com fontes, histórico do servidor, aprovações e notas/tarefas locais.
+- Resumos do Correio com fato, motivo por categoria e próxima ação; evidências, feedback e abertura do Gmail preservados.
+- Base Tauri 2/Rust com onboarding, diagnóstico nativo, escolha/revogação de pastas, auditoria e tray; frontend independente sem API ou service worker embutidos.
+- CI e instaladores DMG Intel/Apple Silicon e NSIS Windows x64, checksums e draft somente por ação explícita. Builds nativos dependem de opt-in do repositório. Nenhuma publicação nesta sessão.
+- Pareamento, drivers, execução local de agentes, cofre de tokens e autostart permanecem planejados e identificados como indisponíveis.
+
 ## Rodada 3 — 15/10
 
 ### Correções (fase A)

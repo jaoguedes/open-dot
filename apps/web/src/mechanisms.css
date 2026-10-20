@@ -1,0 +1,63 @@
+/* Paleta aprovada em 19/10/2026: apenas UI, nunca o SVG/material do Dot. */
+
+[data-mechanism="codex"] {
+  --mechanism-accent: var(--mechanism-codex);
+}
+[data-mechanism="claude-code"] {
+  --mechanism-accent: var(--mechanism-claude-code);
+}
+[data-mechanism="cursor"] {
+  --mechanism-accent: var(--mechanism-cursor);
+}
+.mechanisms {
+  margin: 24px 0;
+}
+.mechanisms h2 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+.mechanisms-note {
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0 0 16px;
+}
+.mechanism-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 12px;
+}
+.mechanism-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--mechanism-accent);
+  border-radius: 16px;
+  background: var(--surface);
+}
+.mechanism-card p {
+  margin: 10px 0 0;
+  color: var(--text-2);
+  font-size: 12px;
+}
+.mechanism-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.mechanism-indicator {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border-radius: 50%;
+  background: var(--mechanism-accent);
+  box-shadow: 0 0 0 1px var(--text-2);
+}
+/* Identidade persiste durante execução; o estado é informado também por texto. */
+.mechanism-label[data-activity="running"] .mechanism-indicator {
+  outline: 2px solid var(--mechanism-accent);
+  outline-offset: 3px;
+}

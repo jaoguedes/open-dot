@@ -38,3 +38,6 @@ Leia antes de mudar arquitetura, arte ou integrações: `docs/STATUS.md`, `docs/
 4. Atualize `docs/STATUS.md` (o que existe, o que foi validado e como, pendências, próxima ação).
 5. Diferencie: implementado e testado / implementado sem teste real / simulado / planejado / bloqueado.
 6. Nunca escreva "está tudo pronto" se só houver interface ou mocks.
+
+## Identidade visual aprovada em 19/10/2026
+Dot base e orquestrador preservam corpo/cores/olhos/expressões originais branco/lilás. Erro vermelho só em UI com texto. Codex #8878EE, Claude Code #E99A69 e Cursor #69A9DE identificam mecanismos exclusivamente na interface; funções não impõem cor. Sem skins/badges/ícones novos na cabeça. Verde reservado ao futuro WhatsApp, sem integração ativa.

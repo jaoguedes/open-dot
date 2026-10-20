@@ -23,7 +23,7 @@ import {
 } from "three";
 import { GLTFLoader, type GLTF } from "three/addons/loaders/GLTFLoader.js";
 import { HeartEmitter, type Accessory, type AgentVisual } from "@open-dot/core";
-import { FrameGovernor, blendMs, clipsFor, gazeFromPointer, nextBlinkMs, tintCoverage, type ClipPlan, type DotManifest } from "./policy.ts";
+import { FrameGovernor, blendMs, clipsFor, gazeFromPointer, nextBlinkMs, type ClipPlan, type DotManifest } from "./policy.ts";
 
 /**
  * Runtime 3D do Dot (three.js). Um único canvas, render sob demanda e camadas separadas:
@@ -359,12 +359,11 @@ export class DotScene {
     this.tintUniforms = uniforms;
   }
 
-  private applyTint(v: AgentVisual): void {
+  private applyTint(_v: AgentVisual): void {
     if (!this.tintUniforms) return;
-    const { height, amount } = tintCoverage(v);
-    this.tintUniforms.uOdTint.value.setStyle(v.tint);
-    this.tintUniforms.uOdCov.value = height;
-    this.tintUniforms.uOdAmt.value = amount;
+    this.tintUniforms.uOdCov.value = 0;
+    // Preservar material original do GLB; cor semântica pertence à interface.
+    this.tintUniforms.uOdAmt.value = 0;
     this.governor.invalidate();
   }
 

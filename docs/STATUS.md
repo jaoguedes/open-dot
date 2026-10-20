@@ -1,4 +1,56 @@
+# Continuação operacional — 20/10/2026
+
+**Fluxo real do Codex PASS no Mac Intel.** CLI oficial autenticado com ChatGPT → API/SQLite local isolada → pareamento no Keychain → projeto Git autorizado → proposta real do modelo → aprovação do conteúdo exato → gravação em worktree → eventos e conclusão. Revalidado em 20/10; pasta original intacta. É teste programático do núcleo nativo, não E2E completo da interface gráfica ou OAuth Google.
+
+Codex oferece um modo inicial limitado: até oito arquivos/8 KB por proposta, somente leitura pelo modelo, sem shell, MCP ou testes de projeto. O host aplica os conteúdos aprovados. Não há merge/commit/push automático. Perfis oficiais experimentais exigem prova local de isolamento antes de habilitar o driver; versão incompatível falha fechada. Claude detectado sem login e Cursor ausente: ambos sem execução implementada. Windows não anuncia executor habilitado.
+
+Pareamento, cofre, heartbeat, revogação, fila/eventos cifrados, CAS, aprovação por hash e uso único, worktree sem hooks/filtros e journal de recuperação implementados. Proposta confirmada pode ser recuperada sem nova chamada ao modelo; geração interrompida não é repetida automaticamente. Retomada após falha parcial de escrita possui teste unitário; recuperação completa após encerramento abrupto ainda exige ensaio integrado dedicado.
+
+Dot original e paleta aprovados preservados. Workspace inclui seleção de computador/projeto, prompt, eventos, conteúdo proposto e aprovação/rejeição. Notas locais e conversa existentes mantidas.
+
+Verificações atuais: check completo PASS (279 testes Node/TypeScript, avaliação sintética Correio, sete testes Python, typecheck/build). Lint sem erros e um aviso preexistente de hook em DotView. Seis cenários anteriores de UI passaram; novo W5 de aprovação também passou separadamente com API simulada. DMG Intel debug atualizado, hdiutil VALID, 12,11 MiB; hash no guia de instaladores. Rust: dez unitários passaram, incluindo retomada parcial de escrita; dois testes nativos são ignorados por padrão. O fluxo real Codex passou separadamente. Varredura de 448 arquivos rastreados e novos: zero ocorrências de segredo. Consulte [relatório operacional](agent-workspace/RESULTADO_OPERACIONAL.md) para a evidência final.
+
+**Sem publicação por orientação atual do João.** GitHub autenticado; diagnóstico anterior de token inválido foi causado pela restrição de rede do sandbox. João confirmou orçamento US$ 0 e bloqueio de uso pago. Builds Actions podem ser executados nesse limite; nenhuma cobrança autorizada. Sem deploy, release, tag ou migração remota. Migração expansiva `0008` existe, ainda não aplicada em produção.
+
+## Histórico das execuções anteriores
+
+Os estados e bloqueios abaixo descrevem suas datas originais; o resumo acima prevalece para a implementação atual.
+
+---
+
 # STATUS — Open Dot
+
+## Paleta definitiva — 19/10/2026 (D-024, trabalho local)
+
+Nova decisão do João aplicada sobre a base anterior, sem reconstruir o app: [identidade aprovada](PALETA_APROVADA.md). Os quatro arquivos do novo ZIP foram lidos. Codex **#8878EE**, Claude Code **#E99A69**, Cursor **#69A9DE** apenas em cartões, indicadores e rótulos da UI. Função de agente não define mecanismo nem cor; registro separado. Verde reservado ao futuro WhatsApp como identidade, sem integração ativa; estados semânticos continuam separados.
+
+Dot/orquestrador com gradiente branco/lilás original em todos os estados. Camadas extras de tingimento e filtro cinza desativadas na exibição SVG; tingimento desligado também no fallback 2D e GLB. Olhos, expressões, proporções, física, artDefs, geometria e assets/modelos originais preservados. Nenhuma skin, badge ou peça nova. Hosts de Meu dia e Workspace sem acessório/anel herdado da função selecionada. Preferências e acessórios legados não foram removidos. Acentos e regras documentados em CLAUDE.md, regras Cursor e DECISOES D-024.
+
+Validação: check com **270 testes** Node/TypeScript, avaliação sintética Correio e **7 testes Python**; typecheck/build/lint sem erros (aviso preexistente de hook em DotView). **6 cenários ui:runner** passaram: W1–W4 e R1–R2; W4 confere cores computadas e ausência de tingimento/filtro nos nove estados, com gradiente original intacto. Axe claro/escuro e layouts desktop/320/390 px verificados nas telas cobertas. Capturas atualizadas em test-results/runner/. Varredura incluindo novos arquivos: **434 arquivos, zero ocorrências** de segredo. Nenhum arquivo de artDefs, assets, geometria ou modelo foi alterado.
+
+DMG Intel debug atualizado com a revisão visual, gerado sem Xcode completo, checksum verificado com hdiutil e conteúdo montado somente leitura (versão/arquitetura/atalho conferidos), desmontado após inspeção. Hash atual no guia de instaladores. Não houve instalação/execução nativa, push, deploy, tag ou publicação. Pareamento, drivers e autostart continuam indisponíveis; as cores não indicam uma conexão real. Builds ARM/Windows e uso real de contas permanecem pendentes, conforme seção anterior. O prompt amplo do ZIP não foi tratado como nova autorização direta para publicação externa.
+
+## Runner e Agent Workspace — 19/10/2026 (trabalho local, não publicado)
+
+Leia [auditoria](open-dot-runner-auditoria.md), [plano](open-dot-runner-plano.md), [UX](open-dot-runner-ux.md), [segurança](open-dot-runner-security.md) e [instaladores](open-dot-runner-release.md). Todo o brief/prompt e conteúdo do ZIP foram lidos antes de alterar código. Nenhum deploy, push, tag, release, credencial ou banco remoto foi alterado. O histórico abaixo descreve sessões anteriores; não representa a validação desta sessão.
+
+| Entrega | Estado real | Validação nesta sessão |
+|---|---|---|
+| Auditoria e plano | ✅ | Mapa da stack, rotas, estado, segurança, integrações, build e conflitos dos anexos |
+| Workspace `/workspace` | ✅ local | Contatos com Dot original, conversa via API existente com fontes, runs/aprovações do snapshot. Contexto/checklist só no navegador, explicitamente rotulados |
+| Presença do Dot | ✅ Chromium | Mesmo AgentDot, sem mudar geometria/expressões; hero do Workspace e onboarding Runner, avatares dos agentes e evidência do Correio |
+| Resumo Correio | ✅ regressão simulada | Fato/motivo por categoria/próximo passo; pílula da fonte, Gmail e feedback/silenciamento preservados. Nenhum rascunho criado |
+| Runner UI | ✅ Chromium | Onboarding 6 etapas, prévia web com IPC desabilitado; diagnóstico/pastas/revogação com IPC simulado em teste |
+| Runner Rust/Tauri | ✅ compilação Mac Intel · 🟡 runtime | 3 testes Rust passam com lockfile, sem Xcode completo; toolchain temporário em /tmp e CLT existentes. Tray e diálogo reais ainda não exercitados manualmente |
+| Instalador local Mac Intel | ✅ gerado/verificado · 🟡 instalação/runtime | `apps/runner/installers/OpenDot-Runner-macos-x64-debug.dmg`, 8,83 MiB, debug sem assinatura/notarização. hdiutil checksum VALID; montado só leitura: versão 0.1.0, bundle com.opendot.runner, binário x86_64 e atalho Applications conferidos; desmontado após inspeção |
+| GitHub Actions DMG Intel/ARM + NSIS EXE | ✅ configuração · 🟡 execução GitHub | YAML válido, opt-in RUNNER_BUILDS_ENABLED, artefatos/checksums, draft opcional por dispatch e tag existente. Nenhum workflow disparado |
+| Pareamento/drivers/autostart/cofre | 📋 indisponível | Não há canal autenticado ou execução de agente local. Sem token a armazenar, nenhum motor detectado por suposição |
+
+Verificações: `npm run check` PASS (269 testes TypeScript/Node, 7 testes Python, avaliação sintética do Correio e build). `npm run lint`: zero erros, aviso preexistente em DotView sobre dependência de hook. Arquivos gerados Rust foram excluídos de lint/typecheck, mantendo todas as fontes cobertas. Cinco cenários `ui:runner` PASS (Workspace/tarefas, mobile claro, resumo com evidência, onboarding e IPC simulado), com axe sem violações sérias/críticas nas novas telas verificadas. Regressões: fase A 12/12, fase D 11/11 (inclui axe claro/escuro), fase E 5/5, fase G 4/4, rodada 4 2/2. Regressões detectadas durante a refatoração foram corrigidas antes da validação final. Screenshots em `test-results/runner/`, não versionadas. Primeira tela ~355 KB (teto 400 KB; meta informativa 350 KB ainda excedida). Varredura incluindo arquivos novos sem ocorrências de segredo.
+
+Não testado nesta sessão: OAuth/contas reais, Cloudflare/workerd, GPU/Blender real, leitor de tela, execução de driver, instalação/desinstalação, tray/diálogo em hardware, notarização, Mac ARM e Windows nativos. Os testes de interface usam API/IPC simulados e não provam integração remota.
+
+Próxima ação: revisar o diff e os instaladores locais disponíveis; configurar proteção do environment runner-release e franquia gratuita antes de habilitar os jobs nativos. Aprovação separada para push/tag/draft/publicação. Não habilitar cobrança/overage. Pairing/driver futuro deve seguir o contrato de segurança documentado.
 
 _Atualizado em 15/10/2026, rodada 3 concluída (sem as auditorias) e rodada 4 (amarelo, vidro, ícones). Produção `ok:true`, schema `0007`, Worker `bbb21323-cacb-4b48-abc2-739e843ea29a`, app `046d7bc64f45` (build de `f69bc9f`, reproduzido em worktree limpo com `npm ci`). Rollback: `06234ec1-e640-4084-b501-51c8b478e0f7`. `GROQ_ZDR_CONFIRMED` e `PACOTEVICIO_TERMS_CONFIRMED` seguem `false`. Auditorias 1–3 ficam para outra sessão._
 

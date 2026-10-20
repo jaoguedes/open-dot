@@ -2337,3 +2337,8 @@ p a:not(.btn), li a:not(.btn):not(.nav-item):not(.source-pill) { text-decoration
     bottom: calc(var(--dock) + 8px + var(--kb, 0px));
   }
 }
+
+/* Resumo compartilhado: evidência e próximo passo com hierarquia legível. */
+.mail-summary dl { display:grid; gap:4px; margin:16px 0; }
+.mail-summary dt { font-size:12px; font-weight:600; color:var(--text-2); margin-top:8px; }
+.mail-summary dd { margin:0; font-size:14px; line-height:1.6; }

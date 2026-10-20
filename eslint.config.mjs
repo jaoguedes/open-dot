@@ -6,7 +6,7 @@ import jsxA11y from "eslint-plugin-jsx-a11y";
 import globals from "globals";
 
 export default tseslint.config(
-  { ignores: ["**/dist/**", "node_modules/**", ".wrangler/**", "blender/**", "apps/web/public/**", "docs/**", "**/*.d.mts"] },
+  { ignores: ["**/dist/**", "apps/runner/src-tauri/target/**", "apps/runner/src-tauri/gen/**", "node_modules/**", ".wrangler/**", "blender/**", "apps/web/public/**", "docs/**", "**/*.d.mts"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

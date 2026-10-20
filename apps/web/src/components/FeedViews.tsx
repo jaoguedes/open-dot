@@ -1,13 +1,11 @@
+import { MailSummary } from "./MailSummary.tsx";
 import { aberturaFor, openDigestItems } from "../digest-open.ts";
-import { TriageButtons } from "./TriageButtons.tsx";
 import { SourcePill } from "./SourcePill.tsx";
-import { gmailWebHref } from "@open-dot/connectors/gmail.ts";
 import { AGENTS } from "@open-dot/core";
 import type { FeedEntry } from "../api.ts";
 import { Icon, type IconName } from "./Icons.tsx";
 import { fmtDateTime, fmtTime, fmtWhen, senderName } from "../format.ts";
 import { useApp } from "../store.tsx";
-import { GmailOpen } from "./GmailOpen.tsx";
 
 const ICON: Record<FeedEntry["kind"], IconName> = {
   email_digest: "mail",
@@ -48,23 +46,7 @@ export function DigestBlock({ item, showIntro }: { item: FeedEntry; showIntro: b
       <section aria-labelledby={`h-${item.id}`}>
         <h2 id={`h-${item.id}`}>{item.title}</h2>
         <p className="lead">{aberturaFor(open.length)}</p>
-        {open.map((it) => (
-          <article key={it.origem} className="card mt-12">
-            <div className="card-top">
-              {it.categoria} · {fmtWhen(it.quando)}
-            </div>
-            <h3>{it.de ?? "Remetente"}</h3>
-            <SourcePill agentId="correio" origin={it.de ?? "Remetente"} href={it.href ?? gmailWebHref(it.origem, it.rfc822)} />
-            <p>{it.titulo}</p>
-            <p className="meta">{it.o_que_aconteceu}</p>
-            <p>{it.o_que_fazer}</p>
-            {it.sensivel && <p className="tiny">Confira o original.</p>}
-            <div className="row-actions">
-              <GmailOpen gmailId={it.origem} rfc822={it.rfc822} demo={app.mode === "demo"} />
-            </div>
-            <TriageButtons messageId={it.origem} categoria={it.categoria} />
-          </article>
-        ))}
+        {open.map((it) => <MailSummary key={it.origem} item={it} />)}
         {hidden > 0 && <p className="tiny mt-8">{hidden === 1 ? "1 item fora da lista" : `${hidden} itens fora da lista`} (feito, adiado, silenciado ou “Não importa”).</p>}
         {b.sem_acao?.length || b.ruido?.contagem ? (
           <details className="mt-12">

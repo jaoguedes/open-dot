@@ -168,7 +168,6 @@ export function Dot2D({ visual, accessory, size, animate, reducedMotion, showBad
             ? ""
             : "breathe";
   const tintStart = visual.tintCoverage === "half" ? 0.5 : 0.66;
-  const neutralTint = visual.agentId === "dot" && visual.semantic === "idle";
 
   return (
     <div
@@ -189,9 +188,9 @@ export function Dot2D({ visual, accessory, size, animate, reducedMotion, showBad
       >
         <defs>
           <linearGradient id={`t${gid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset={0} stopColor={visual.tint} stopOpacity={0} />
-            <stop offset={tintStart} stopColor={visual.tint} stopOpacity={0} />
-            <stop offset={1} stopColor={visual.tint} stopOpacity={neutralTint ? 0 : visual.semantic === "error" ? 0.62 : 0.5} />
+            <stop offset={0} stopColor="#FFFFFF" stopOpacity={0} />
+            <stop offset={tintStart} stopColor="#FFFFFF" stopOpacity={0} />
+            <stop offset={1} stopColor="#FFFFFF" stopOpacity={0} />
           </linearGradient>
           <radialGradient id={`h${gid}`} cx="0.32" cy="0.18" r="0.75">
             <stop offset={0} stopColor="#FFFFFF" stopOpacity={0.55} />

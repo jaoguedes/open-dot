@@ -31,7 +31,7 @@ export const SEMANTIC_PRIORITY: Record<SemanticState, number> = {
   sleep: 5,
 };
 
-/** Tokens de arte em sRGB (não são cores de texto). */
+/** Metadados legados do contrato visual. D-024: não tingem o Dot nem identificam mecanismos. */
 export const AGENT_COLORS: Record<AgentId, string> = {
   dot: "#F2EBDD",
   correio: "#64B5F6",

@@ -1,4 +1,4 @@
-import { TriageButtons } from "../components/TriageButtons.tsx";
+import { MailSummary } from "../components/MailSummary.tsx";
 import { useRef, useState } from "react";
 import { AGENTS, agentsInPlace, approvalQueue } from "@open-dot/core";
 import { useApp } from "../store.tsx";
@@ -7,7 +7,6 @@ import { fmtTime, fmtWhen, greeting, needYouLine } from "../format.ts";
 import { agentConnected, agentPresence, dominantVisual, type ConnectionFacts } from "../presence.ts";
 import type { ApprovalView, FeedEntry } from "../api.ts";
 import { ApiError, api } from "../api.ts";
-import { GmailOpen } from "../components/GmailOpen.tsx";
 import { aberturaFor, openDigestItems } from "../digest-open.ts";
 
 type Filter = "all" | "need" | "sources";
@@ -69,7 +68,8 @@ export function MyDay() {
         <div className="hero-dot">
           <AgentDot
             visual={visual}
-            accessory={app.accessoryFor(visual.agentId)}
+            accessory="none"
+            ring={false}
             size={280}
             reducedMotion={app.reducedMotion}
             interactive
@@ -78,6 +78,7 @@ export function MyDay() {
         </div>
       </section>
 
+      <div className="row-actions mb-12"><button className="btn" onClick={() => app.navigate("/workspace")}>Organizar com o Dot · Workspace</button></div>
       <section className="agent-pills" aria-label="Agentes">
         {agentsInPlace("pills").map((a) => {
           const facts: ConnectionFacts = {
@@ -203,22 +204,7 @@ function FeedCardBody({ item }: { item: FeedEntry }) {
     const hidden = item.body.itens.length - open.length;
     return (
       <>
-        {open.map((it) => (
-          <article className="stack-4 mt-8" key={it.origem}>
-            <div className="tiny">
-              {it.categoria} · {fmtWhen(it.quando)}
-            </div>
-            <div className="feed-title">
-              {it.de ?? "Remetente"} — {it.titulo}
-            </div>
-            <p className="meta m-0">{it.o_que_aconteceu}</p>
-            <p className="m-0">{it.o_que_fazer}</p>
-            <div className="row-actions">
-              <GmailOpen gmailId={it.origem} rfc822={it.rfc822} demo={app.mode === "demo"} />
-            </div>
-            <TriageButtons messageId={it.origem} categoria={it.categoria} />
-          </article>
-        ))}
+        {open.map((it) => <MailSummary key={it.origem} item={it} />)}
         {hidden > 0 && <p className="tiny mt-8">{hidden === 1 ? "1 item fora da lista" : `${hidden} itens fora da lista`} (feito, adiado, silenciado ou “Não importa”).</p>}
       </>
     );
