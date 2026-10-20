@@ -301,3 +301,23 @@ test("P1-5: aprovação expõe bytes originais e rejeita substituição sem cont
   assert.equal(receipt.raw,raw);assert.equal(receipt.hash,await sha256Hex(raw));assert.equal(JSON.parse(receipt.raw).files[0].beforeContent,before);
  }finally{s.ctx.db.raw.close();}
 });
+test("P0/P2: lease tem teto, legacy saturado não prende fila e expiração bloqueia aprovação",async()=>{
+ const s=await setup();try{
+  await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);
+  const create=async()=> (await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',worktreeConsent:true,requestKey:crypto.randomUUID()})).json.id;
+  const id=await create();await s.native.call('POST','/api/runner/device/claim',{},s.headers);
+  // Fixture representa banco legado já saturado, sem inventar recibo terminal.
+  await s.ctx.db.run('INSERT INTO od_runner_events(task_id,seq,kind,payload_enc,created_at) VALUES(?,500,?,?,?)',[id,'status','legacy cipher not read in this test',s.ctx.now()]);
+  await s.ctx.db.run('UPDATE od_runner_tasks SET lease_until=NULL WHERE id=?',[id]);
+  await s.native.call('GET','/api/runner/device/active',undefined,s.headers);
+  assert.equal((await s.web.call('GET','/api/runner/tasks')).json.tasks[0].state,'uncertain');
+  assert.equal((await s.ctx.db.query<{n:number}>('SELECT COUNT(*) AS n FROM od_runner_events WHERE task_id=?',[id]))[0]!.n,1);
+  const next=await create();await s.native.call('POST','/api/runner/device/claim',{},s.headers);
+  const proposal=await s.native.call('POST',`/api/runner/device/tasks/${next}/event`,{seq:1,kind:'proposal',text:JSON.stringify({summary:'fixture',files:[{path:'new.txt',content:'x',beforeHash:null}]})},s.headers);
+  // Heartbeat não estende indefinidamente o prazo absoluto da tentativa.
+  await s.ctx.db.run('UPDATE od_runner_tasks SET attempt_deadline=? WHERE id=?',[s.ctx.now()+1000,next]);
+  await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);s.ctx.clock.t+=1001;
+  assert.equal((await s.web.call('POST',`/api/runner/tasks/${next}/decision`,{hash:proposal.json.proposalHash,decision:'approve'})).status,409);
+  assert.equal((await s.web.call('GET','/api/runner/tasks')).json.tasks.find((t:{id:string})=>t.id===next).state,'uncertain');
+ }finally{s.ctx.db.raw.close();}
+});

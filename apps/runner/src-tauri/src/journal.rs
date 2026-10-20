@@ -57,6 +57,14 @@ pub fn load(dir: &Path) -> Result<Option<Journal>, String> {
     }
     Ok(Some(j))
 }
+/// Garante a entrada de diretório no Unix. Não é prova de perda de energia do hardware.
+pub fn sync_directory(dir:&Path)->Result<(),String> {
+    #[cfg(unix)]
+    fs::File::open(dir).and_then(|f|f.sync_all()).map_err(|_|"Não consegui confirmar a durabilidade do diretório.")?;
+    #[cfg(not(unix))]
+    let _=dir; // Executor Windows permanece bloqueado até validação nativa dessa fronteira.
+    Ok(())
+}
 pub fn save(dir: &Path, j: &Journal) -> Result<(), String> {
     let bytes = serde_json::to_vec(j).map_err(|_| "Metadados de recuperação inválidos.")?;
     fs::create_dir_all(dir).map_err(|_| "Pasta de recuperação indisponível.")?;
@@ -77,11 +85,12 @@ pub fn save(dir: &Path, j: &Journal) -> Result<(), String> {
         .and_then(|_| file.sync_all())
         .map_err(|_| "Não consegui salvar a recuperação.")?;
     fs::rename(&temp, dir.join("active-task.json"))
-        .map_err(|_| "Não consegui confirmar a recuperação.".into())
+        .map_err(|_| "Não consegui confirmar a recuperação.")?;
+    sync_directory(dir)
 }
 pub fn clear(dir: &Path) -> Result<(), String> {
     match fs::remove_file(dir.join("active-task.json")) {
-        Ok(()) => Ok(()),
+        Ok(()) => sync_directory(dir),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
         Err(_) => Err("Não consegui concluir a recuperação local.".into()),
     }

@@ -99,6 +99,22 @@ await scenario("W5", "Aprovação com API simulada exige conteúdo visível e en
   expect(decision?.hash===hash&&decision?.decision==="approve","aprovação sem hash exato");
   await page.screenshot({path:"test-results/runner/workspace-approval-simulated.png",fullPage:true});
 });
+await scenario("W6", "Payload divergente ou truncado bloqueia aprovação (API simulada)",async({page,open})=>{
+  const raw=JSON.stringify({summary:"Original Unicode · ação 東京",files:[{path:"result.md",content:"whole file\n",beforeHash:null}]});
+  const hash=createHash("sha256").update(raw).digest("hex");let decisions=0;
+  await page.route("**/api/runner/**",async route=>{
+    const path=new URL(route.request().url()).pathname;let data={};
+    if(path.endsWith("/devices"))data={devices:[{id:"device-test",name:"Runner fixture",online:true,revoked:false,compatible:true,projects:[],drivers:[]}]};
+    else if(path.endsWith("/tasks"))data={tasks:[{id:"task-test",deviceId:"device-test",mechanism:"codex",state:"awaiting_approval",cancelRequested:0,updatedAt:Date.now()}]};
+    else if(path.endsWith("/events"))data={events:[],approval:{raw:raw.slice(0,-3),hash,decision:"pending",expiresAt:Date.now()+60000}};
+    else if(path.endsWith("/decision")){decisions++;data={};}
+    await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(data)});
+  });
+  await open("/workspace");await page.getByRole("button",{name:/Codex.*Esperando sua aprovação/}).click();
+  await page.getByText("Conteúdo completo ainda não verificado. Aprovação bloqueada.").waitFor(T);
+  expect(await page.getByRole("button",{name:"Aprovar estes arquivos no worktree"}).isDisabled(),"payload truncado liberou decisão");
+  expect(decisions===0,"decisão invisível enviada");
+});
 process.exitCode = await finish();
 if (!process.exitCode) {
   process.argv.push("--dist", "apps/runner/dist");

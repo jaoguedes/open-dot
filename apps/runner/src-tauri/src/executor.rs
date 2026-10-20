@@ -508,7 +508,8 @@ mod live_tests {
             {
                 panic!("Real executor failed safely: {}", event["text"])
             }
-            if events["approval"]["decision"] == "pending" && !approved {
+            if std::env::var_os("OPEN_DOT_BROWSER_APPROVAL").is_some() && events["approval"]["decision"]=="approve" {approved=true;}
+            if events["approval"]["decision"] == "pending" && !approved && std::env::var_os("OPEN_DOT_BROWSER_APPROVAL").is_none() {
                 let proposal_event = events["events"]
                     .as_array()
                     .unwrap()

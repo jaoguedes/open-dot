@@ -185,8 +185,11 @@ pub fn disconnect(c: &SharedChannel, dir: &Path) -> Result<(), String> {
     let mut g = c.lock().map_err(|_| "Canal ocupado.")?;
     // Marcar antes da rede: nunca anunciar revogação sem confirmação nem retomar ao reiniciar.
     if let (Some(link),Some(token))=(g.link.clone(),g.token.clone()) {
-        fs::write(dir.join("revocation-pending"),b"pending")
+        use std::io::Write;
+        let mut marker=fs::OpenOptions::new().write(true).create(true).truncate(true).open(dir.join("revocation-pending"))
             .map_err(|_|"Não consegui preservar o pedido de revogação. Tente novamente.")?;
+        marker.write_all(b"pending").and_then(|_|marker.sync_all()).map_err(|_|"Pedido de revogação não persistido.")?;
+        crate::journal::sync_directory(dir)?;
         g.revoking=true;g.revocation_dir=Some(dir.to_path_buf());g.status.online=false;
         g.status.message="Desconectado localmente; revogação remota pendente.".into();
         let res=http()?.post(format!("{}/api/runner/device/revoke",link.origin)).bearer_auth(token).json(&json!({})).send()

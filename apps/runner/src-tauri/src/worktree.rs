@@ -73,7 +73,9 @@ pub fn create(project: &Path, store: &Path, task: &str, consent: bool) -> Result
     let bytes=serde_json::to_vec(&serde_json::json!({"version":1,"task":task,"project":project_id(&project),"base":base,"consent":true,"state":"preparing-or-preserved"})).map_err(|_|"Ownership inválido.")?;
     use std::io::Write;
     let mut owner=fs::OpenOptions::new().write(true).create_new(true).open(record).map_err(|_|"Ownership anterior encontrado. Não repetir ou remover o worktree.")?;
+    #[cfg(unix)] {use std::os::unix::fs::PermissionsExt;owner.set_permissions(fs::Permissions::from_mode(0o600)).map_err(|_|"Ownership sem proteção.")?;}
     owner.write_all(&bytes).and_then(|_|owner.sync_all()).map_err(|_|"Falha ao preservar ownership.")?;
+    crate::journal::sync_directory(&ownership)?;crate::journal::sync_directory(store)?;
     // Sem limpeza automática: falhas intermediárias preservam ownership e arquivos para revisão.
     git(&project,&["worktree","add","--no-checkout","--detach",text,base],16384)?;
     git(&destination,&["read-tree",base],16384)?;
@@ -269,6 +271,12 @@ pub fn apply(root: &Path, proposal: &Proposal) -> Result<(), String> {
             .and_then(|_| file.sync_all())
             .map_err(|_| "Falha ao gravar o conteúdo aprovado.")?;
         fs::rename(&temporary, &path).map_err(|_| "Não consegui aplicar o arquivo aprovado.")?;
+        let mut directory=parent;
+        loop {
+            crate::journal::sync_directory(directory)?;
+            if directory==root {break;}
+            directory=directory.parent().filter(|p|p.starts_with(&root)).ok_or("Diretório fora do escopo.")?;
+        }
     }
     Ok(())
 }
