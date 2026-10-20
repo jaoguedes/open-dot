@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "recordKind": "manual-engineering-handoff-not-product-odcp",
   "objective": "Remediate Runner security/recovery findings and integrate consented project memory without granting execution privileges",
-  "phase": "F: receipt memory integration, local work in progress",
-  "currentTask": "OD2-MEMORY-021: bind optional factual execution receipts to consent revision",
+  "phase": "F: context Passport export validated locally; native save dialog untested",
+  "currentTask": "OD2-PASSPORT-023: completed bounded context export; next capability and native recovery validation",
   "branch": "codex/od2-runner-remediation",
   "worktreeName": "open-dot-od2-remediation",
   "worktreeResolution": "git worktree list --porcelain",
   "initialSha": "2b7d5c5fb7f6255c2bdefbabe67f38d34a2faea5",
-  "lastCodeHead": "64a8b6053275fd02539d9c1d9ba21bc4e9b0b1bb",
+  "lastCodeHead": "5cd102f",
   "currentHeadResolution": "git log -1 --format=%H",
   "documentationCheckpointResolution": "git log -1 --format=%H -- docs/audit/ENGINEERING_STATE.json",
   "commitsProducedBeforeDocumentation": [
@@ -196,11 +196,11 @@
     "notes": "Temporary paths may disappear. Use an approved local toolchain/CLT if unavailable; no full Xcode required. Restore dependencies without modifying the original checkout."
   },
   "coordination": {
-    "revision": 14,
+    "revision": 16,
     "agent": "codex",
-    "task": "OD2-MEMORY-021",
+    "task": "OD2-PASSPORT-023",
     "branch": "codex/od2-runner-remediation",
-    "observedHead": "64a8b6053275fd02539d9c1d9ba21bc4e9b0b1bb",
+    "observedHead": "5cd102fe5f93db389554871091f71ab8f34428a6",
     "status": "checkpointed"
   },
   "continuationBase": "1d9125f7af720df20e427e5d21eb35bb8ae26471",
@@ -237,5 +237,19 @@
     "no new model call, installers, CI or native ARM64/Windows execution",
     "schema 0014 only disposable local test databases"
   ],
-  "sessionBase": "940b06c60138af8ebdf8a0291732f36cd21ea6de"
+  "sessionBase": "940b06c60138af8ebdf8a0291732f36cd21ea6de",
+  "currentEvidence": {
+    "node": 319,
+    "python": 7,
+    "rust": 22,
+    "rustIgnored": 6,
+    "browser": "real browser/backend/SQLite; device/executor/native-file fixtures",
+    "modelCallsThisResume": 0,
+    "nativeSaveDialog": "not tested",
+    "logs": [
+      "od2-context-final-node.log",
+      "od2-context-final-rust.log",
+      "od2-context-browser.log"
+    ]
+  }
 }

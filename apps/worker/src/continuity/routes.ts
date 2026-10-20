@@ -1,3 +1,4 @@
+import { exportProjectContext } from "./project-context.ts";
 import { z } from "zod";
 import { ProjectPassportSchema } from "@open-dot/core/project-memory.ts";
 import type { Handler } from "../app.ts";
@@ -27,6 +28,11 @@ export async function expireProjectMemory(ctx:Ctx):Promise<void>{
  ]);
 }
 export function registerProjectMemoryRoutes(route:Registrar){
+ route('POST','/api/projects/:id/passport',{auth:true},async(ctx,req,p,owner)=>{
+  const project=z.string().uuid().parse(p.id);
+  try{return json({passport:JSON.parse(await exportProjectContext(ctx,owner!,project,await body(req))),executionAuthority:false});}
+  catch{return problem(409,'context_unconfirmed','Contexto não exportado. Confira projeto, consentimento vigente, tamanho e conteúdo; nenhum privilégio foi transferido.');}
+ });
  const path='/api/projects/:id/memory';
  route('GET',`${path}/policy`,{auth:true},async(ctx,_req,p,owner)=>{
   const project=z.string().uuid().parse(p.id);const stored=await policy(ctx,owner!,project);

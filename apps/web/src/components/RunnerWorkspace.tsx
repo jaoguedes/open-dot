@@ -1,3 +1,4 @@
+import { ProjectContext } from "./ProjectContext.tsx";
 import { EngineeringPlans } from "./EngineeringPlans.tsx";
 import { ProjectMemory } from "./ProjectMemory.tsx";
 import { useEffect, useRef, useState } from "react";
@@ -258,6 +259,7 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
       </form>
       <EngineeringPlans deviceId={deviceId} projectId={projectId} ready={Boolean(ready) && mechanism==="codex"} demo={demo} selectTask={id=>{setEvents([]);setApproval(null);setSelected(id);}} />
       <ProjectMemory key={projectId} projectId={projectId} demo={demo}/>
+      <ProjectContext key={`context-${projectId}`} projectId={projectId} demo={demo}/>
       {demo && <p className="tiny">Demonstração: pareamento e envio desabilitados.</p>}
       {connectionError && <p role="status">{connectionError}</p>}
       {error && <p role="alert">{error}</p>}
