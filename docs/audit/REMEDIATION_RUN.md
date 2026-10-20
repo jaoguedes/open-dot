@@ -99,3 +99,7 @@ Matriz final, limites e plano Claude em REMEDIATION_REPORT/INDEPENDENT_REVIEW; e
 ## Continuação — OD2-ODCP-015
 
 Base desta continuação 1d9125f. Índices compartilhados em docs/agents; checkpoint documental 5d8dead. Serviço interno de checkpoints cifrados/CAS e migração aditiva 0014 implementados; sem rota/scheduler/commit automático. Gate local: 306 Node, sete Python, avaliação sintética, typecheck/build PASS; lint zero erros e aviso preexistente DotView. Três testes específicos cobrem persistência, concorrência, retomada incerta e campos de verificação. Nenhuma migração remota ou alteração de identidade visual.
+
+## Continuação — OD2-SHARED-002
+
+Helper local operacional atualiza apenas coordination do ENGINEERING_STATE.json com revisão CAS, lock exclusivo, rename/fsync e bloqueio de troca de ownership ativo. CLI observa branch/HEAD com execFile sem shell. Testes reais de filesystem: escritor concorrente único, evidências preservadas, handoff explícito, stale revision, lock abandonado e symlink recusados. CLI executado neste worktree em revisões 1 e 2. Não é scheduler nem proteção contra editores que ignoram o protocolo. Gate 306 inclui dois testes do helper.

@@ -194,5 +194,13 @@
       "CARGO_BUILD_JOBS": "2"
     },
     "notes": "Temporary paths may disappear. Use an approved local toolchain/CLT if unavailable; no full Xcode required. Restore dependencies without modifying the original checkout."
+  },
+  "coordination": {
+    "revision": 2,
+    "agent": "codex",
+    "task": "OD2-SHARED-002",
+    "branch": "codex/od2-runner-remediation",
+    "observedHead": "8a878a0bc75b3be189bf7f556a5e210aafde58a9",
+    "status": "checkpointed"
   }
 }
