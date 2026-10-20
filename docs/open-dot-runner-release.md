@@ -62,3 +62,17 @@ DMG Intel debug atualizado (12,11 MiB), sem assinatura/notarização, gerado sem
 [Runner CI 39425600153](https://github.com/jaoguedes/open-dot/actions/runs/39425600153): verify PASS, ARM64 PASS, Intel/Windows ainda em empacotamento na última consulta. [CI geral](https://github.com/jaoguedes/open-dot/actions/runs/39425600235) PASS. ARM64 baixado, hdiutil VALID, versão 0.1.0 / com.opendot.runner / arm64 conferidos somente leitura. SHA-256 `89384bd4715995a91c52512b26419ceeb921ffd8798fa1884054f8524500c549` (7.402.065 bytes). Não executado nativamente.
 
 O DMG Intel debug local teve inicialização básica PASS: binário da imagem ativo por dez segundos com HOME/CODEX_HOME isolados, sem conta ou pareamento. Processo próprio encerrado e imagem desmontada. Não comprova cliques/tray/instalação completa. Nenhuma release/tag criada.
+
+## Conjunto final confirmado — Actions 20/10/2026
+
+[Runner CI 39425600153](https://github.com/jaoguedes/open-dot/actions/runs/39425600153) **SUCCESS** (verify + três plataformas), fonte `504c00d`. CI geral SUCCESS. Dez unitários Rust por plataforma; sete cenários UI no verify. Não foi criado release, tag ou deploy. Repositório privado; checkpoints documentais posteriores são locais.
+
+| Artefato | Bytes | SHA-256 |
+|---|---:|---|
+| OpenDot-Runner-macos-x64.dmg | 7.536.363 | `6d0669a7eaf942b099f7b8b314db3e85d3f22b0e320f41081aa7038f5e9ff93a` |
+| OpenDot-Runner-macos-arm64.dmg | 7.402.065 | `89384bd4715995a91c52512b26419ceeb921ffd8798fa1884054f8524500c549` |
+| OpenDot-Runner-windows-x64-setup.exe | 3.453.680 | `15597eb80905856b24be79d0841f59d85b08a98e20a49512a71f0d7fd0e2aadd` |
+
+Cópias locais: `apps/runner/installers/actions-39425600153/` (ignoradas pelo Git). `node scripts/verify-runner-artifacts.mjs apps/runner/installers/actions-39425600153` PASS: exatamente três instaladores e três checksums. No GitHub, retenção de um dia; não tratar o link de Actions como distribuição permanente.
+
+Ambos DMGs: hdiutil VALID, montagem somente leitura, versão 0.1.0 / com.opendot.runner / arquiteturas x86_64 e arm64 conferidas; desmontados. Intel do Actions iniciou por dez segundos com HOME/CODEX_HOME isolados, sem conta ou pareamento; somente seu processo foi encerrado. Windows: MZ/PE válidos; alvo x64 comprovado no build, sem execução nativa. ARM64 também sem execução nativa. Sem assinatura/notarização; instalação, desinstalação, tray e E2E gráfico completo permanecem pendentes. As seções anteriores registram checkpoints históricos; esta seção prevalece para o resultado dos builds.

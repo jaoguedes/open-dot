@@ -14,7 +14,7 @@ Verificações atuais: check completo PASS (279 testes Node/TypeScript, avaliaç
 
 ## Continuidade e versionamento — 20/10/2026
 
-Leia [CONTINUIDADE.md](CONTINUIDADE.md) antes de retomar. Política de checkpoints pequenos com Conventional Commits registrada em CLAUDE.md e regras Cursor. [Agent Continuity Protocol](AGENT_CONTINUITY_PROTOCOL.md) é uma proposta, sem enforcement no Runner. Branch de desenvolvimento `codex/runner-safe-edit-beta`; implementação `504c00d`, draft privado #1. Runner CI 39425600153: verify PASS, ARM64 build PASS (checksum/hdiutil/arquitetura verificados, sem execução nativa); Intel/Windows em empacotamento na última consulta. CI geral PASS. DMG Intel debug iniciou por dez segundos em teste isolado, sem comprovar o fluxo gráfico completo. Sem release/deploy.
+Leia [CONTINUIDADE.md](CONTINUIDADE.md) antes de retomar. Política de checkpoints pequenos com Conventional Commits registrada em CLAUDE.md e regras Cursor. [Agent Continuity Protocol](AGENT_CONTINUITY_PROTOCOL.md) é uma proposta, sem enforcement no Runner. Branch de desenvolvimento `codex/runner-safe-edit-beta`; implementação `504c00d`, draft privado #1. Runner CI 39425600153: **SUCCESS**, verify e três builds Intel/ARM64/Windows. Dez unitários Rust por plataforma; sete cenários UI no verify. Conjunto de instaladores e SHA-256 validado; DMGs íntegros e arquiteturas conferidas. Inicialização do DMG Intel do Actions PASS por dez segundos com diretórios isolados; GUI completa, ARM64 e Windows nativos não comprovados. CI geral SUCCESS. Código dos builds: `504c00d`; checkpoints documentais posteriores permanecem locais. Sem release/deploy. Resultados/hashes no [guia de instaladores](open-dot-runner-release.md).
 
 ## Histórico das execuções anteriores
 

@@ -9,7 +9,7 @@ Concluir a distribuição de teste do Runner e validar o Workspace operacional, 
 ## Git e autoria
 
 - Branch de desenvolvimento: `codex/runner-safe-edit-beta`, acompanha a branch homônima em `origin`.
-- Último checkpoint documental conhecido: `91ced37` (`docs(continuity): propose Runner checkpoint and handoff protocol`), local; ainda não sincronizado.
+- Último checkpoint documental conhecido: `b9ed7b7` (`docs(continuity): checkpoint ARM64 build and Intel startup validation`), local; ainda não sincronizado.
 - SHA de implementação conhecido: `504c00dfc9b6a391cb221ede4edde6671093e8e2`.
 - Main permanece em `5db4564`; branch de backup existente permanece em `0b66a76`. Não alterar essas referências para organizar o histórico.
 - Inspeção de 20/10: um único worktree registrado, checkout principal deste projeto; árvore limpa antes desta etapa documental. Conferir novamente, não assumir que permaneceu assim.
@@ -44,9 +44,10 @@ Concluir a distribuição de teste do Runner e validar o Workspace operacional, 
 | `npm run lint` | Zero erros; aviso preexistente de hook em DotView |
 | `cargo test --locked --manifest-path apps/runner/src-tauri/Cargo.toml` | Dez unitários PASS; dois testes reais ignorados por padrão |
 | `node --import tsx scripts/test-runner-channel.ts --codex` | PASS real no macOS Intel; uma chamada ao modelo; não executa testes do projeto |
-| `npm run ui:runner` | Seis cenários anteriores PASS; W5 de aprovação passou separadamente. API/IPC simulados declarados |
+| `npm run ui:runner` | Sete cenários PASS no verify do GitHub (W1–W5, R1–R2). API/IPC simulados declarados |
 | Scanner incluindo arquivos novos | 448 arquivos, zero ocorrências antes do checkpoint da implementação |
-| Actions ARM64 | Build PASS, SHA-256 e hdiutil VALID, conteúdo/arquitetura arm64 conferidos; não executado nativamente |
+| Actions Intel/ARM64/Windows | Três builds PASS; dez testes Rust por plataforma; conjunto de instaladores e checksums PASS |
+| Inicialização Actions Intel | Binário do DMG x86_64 ativo por dez segundos em HOME/CODEX_HOME isolados; não prova GUI completa |
 | DMG Intel debug | SHA-256 `51f5d98619fb367b104c42874c0404b3a05a6e46838b89729e1b2fa68d274016` |
 
 Instalador local ignorado pelo Git: `apps/runner/installers/OpenDot-Runner-macos-x64-debug.dmg`. Logs descartáveis desta sessão: `/private/tmp/open-dot-check-oct20.log`, `open-dot-rust-oct20.log`, `open-dot-real-codex-oct20.log`, `open-dot-ui-w5-fixed.log`. Podem desaparecer; não são a única fonte do estado. Capturas em `test-results/runner/` também não versionadas.
@@ -55,8 +56,8 @@ Rust temporário: acrescentar `/private/tmp/open-dot-cargo/bin` ao PATH, `CARGO_
 
 ## Em andamento e pendências
 
-1. Acompanhar [Runner CI 39425600153](https://github.com/jaoguedes/open-dot/actions/runs/39425600153) e [CI 39425600235](https://github.com/jaoguedes/open-dot/actions/runs/39425600235). O verify passou integralmente, incluindo navegador; ARM64 terminou com sucesso e seu artefato foi validado. Intel/Windows ainda empacotam na última consulta; testes Rust desses jobs passaram. CI geral concluída com sucesso. `RUNNER_BUILDS_ENABLED=true` já configurado. Consultar estado real antes de disparar novamente.
-2. ARM64 baixado em `apps/runner/installers/actions-39425600153`, SHA-256 `89384bd4715995a91c52512b26419ceeb921ffd8798fa1884054f8524500c549`, 7.402.065 bytes. Quando disponíveis, baixar Intel/Windows, verificar o conjunto completo de checksums e registrar resultados. ARM64 e Windows não foram testados nativamente. Não confundir compilação com instalação/funcionamento.
+1. [Runner CI 39425600153](https://github.com/jaoguedes/open-dot/actions/runs/39425600153) **SUCCESS**: verify e três jobs nativos concluídos. [CI 39425600235](https://github.com/jaoguedes/open-dot/actions/runs/39425600235) **SUCCESS**. Código fonte desses builds: `504c00d`. `RUNNER_BUILDS_ENABLED=true` permanece configurado; não redisparar sem mudança relevante.
+2. Três instaladores e checksums baixados em `apps/runner/installers/actions-39425600153`, conjunto exato validado pelo script oficial. Hashes/tamanhos no guia de instaladores. DMGs Intel/ARM64: hdiutil VALID, arquitetura/versão conferidas. Intel do Actions: inicialização isolada PASS por dez segundos; Windows: estrutura PE conferida. ARM64 e Windows sem execução nativa. Artefatos GitHub retidos por um dia; cópias locais ignoradas pelo Git permanecem disponíveis nesta máquina.
 3. Validar GUI nativa completa (abrir, seletor, parear pelo Workspace, aprovar, tray, reabrir). O teste real usa autorização e aprovação programáticas no mesmo núcleo.
 4. Ensaio integrado de recuperação após encerramento abrupto e falha de rede durante aplicação. Unidade de escrita parcial/idempotência passou, mas não prova todo o restart. Há uma janela entre reserva remota e journal local; planejar reconciliação de tarefa órfã sem repetir o modelo.
 5. Comandos/testes do projeto, diffs completos, limpeza/retenção/quotas totais, autostart, Claude/Cursor e execução Windows continuam pendentes. Credenciais/login necessários devem ser feitos nos CLIs oficiais, sem copiar caches.
@@ -65,4 +66,4 @@ Rust temporário: acrescentar `/private/tmp/open-dot-cargo/bin` ao PATH, `CARGO_
 
 ## Próximo passo recomendado
 
-Inspecionar `git status --short`, `git branch -vv`, `git worktree list --porcelain` e `git log -8 --oneline --decorate`. Ler esta continuidade e verificar a execução Actions existente. Corrigir falhas com commits pequenos (`fix`, `ci` ou `test`), revisar o diff e segredos antes de cada checkpoint. Atualizar os resultados aqui e em STATUS. Não repetir chamadas reais ao modelo sem necessidade de validar uma mudança. Não publicar release.
+Inspecionar `git status --short`, `git branch -vv`, `git worktree list --porcelain` e `git log -8 --oneline --decorate`. Ler esta continuidade; builds existentes já passaram, não precisam ser repetidos por alterações só documentais. Priorizar reconciliação da janela reserva/journal e ensaio de reinício com efeitos únicos; depois E2E gráfico completo quando o ambiente permitir. A proposta ACP começa por registros/validação sem ações Git de escrita. Usar checkpoints pequenos, revisar diff/segredos/dados pessoais e atualizar STATUS. Não repetir modelo sem necessidade. **Novos commits documentais são locais: não houve push após o pedido mais recente de não publicar.** Nenhum release, deploy, tag, force push ou migração remota.
