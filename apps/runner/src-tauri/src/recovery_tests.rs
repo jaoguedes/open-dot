@@ -250,6 +250,14 @@ fn crash_restart() {
         1
     );
     assert!(!executor::poll(&restored, &[project.clone()], &dir, &|p| p == project).unwrap());
+    // Explicit local commit consent is separate from the fixture file approval above.
+    let (cp,reviewed)=crate::git_checkpoint::context(&dir,&task,&restored,&[project.clone()]).unwrap();
+    let receipt=crate::git_checkpoint::create(&dir,&cp,&reviewed,"commit-exact-reviewed-files-locally").unwrap();
+    assert_eq!(receipt.stage,"committed");
+    let repeat=crate::git_checkpoint::create(&dir,&cp,&reviewed,"commit-exact-reviewed-files-locally").unwrap();
+    assert_eq!(repeat.commit_sha,receipt.commit_sha);
+    assert_eq!(String::from_utf8(worktree::git(&root,&["rev-list","--count",&format!("{}..HEAD",receipt.base_sha)],4096).unwrap()).unwrap().trim(),"1");
+    println!("REAL_NATIVE_GIT_CHECKPOINT_PASS: authenticated receipt, exact fixture files, separate local consent, one semantic commit on owned branch; retry returned same SHA. No model or native-window click claim.");
     // Outra tarefa fica reservada sem journal: não reiniciar geração nem tocar em arquivos existentes.
     let orphan = create();
     channel::device_request(&restored, "/api/runner/device/claim", Some(&json!({}))).unwrap();

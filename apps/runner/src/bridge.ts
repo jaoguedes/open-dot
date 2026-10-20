@@ -15,7 +15,7 @@ interface TauriBridge {
 export function nativeAvailable(): boolean {
   return Boolean((window as Window & { __TAURI__?: TauriBridge }).__TAURI__?.core);
 }
-export function invoke<T>(cmd: "diagnostics" | "choose_folder" | "revoke_folder" | "pair_begin" | "pair_confirm" | "pair_disconnect", args?: Record<string, unknown>): Promise<T> {
+export function invoke<T>(cmd: "diagnostics" | "choose_folder" | "revoke_folder" | "pair_begin" | "pair_confirm" | "pair_disconnect" | "checkpoint_preview" | "checkpoint_commit", args?: Record<string, unknown>): Promise<T> {
   const bridge = (window as Window & { __TAURI__?: TauriBridge }).__TAURI__;
   if (!bridge) return Promise.reject(new Error("Abra o aplicativo desktop para usar os recursos locais."));
   return bridge.core.invoke<T>(cmd, args);

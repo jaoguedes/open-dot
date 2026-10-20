@@ -4,6 +4,7 @@ mod codex;
 mod drivers;
 mod executor;
 mod journal;
+mod git_checkpoint;
 mod policy;
 mod process;
 #[cfg(test)]
@@ -29,6 +30,7 @@ struct LocalState {
     dir: PathBuf,
     channel: channel::SharedChannel,
     drivers: Mutex<Vec<drivers::Driver>>,
+    checkpoint_guard: Mutex<()>,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -178,6 +180,31 @@ async fn pair_disconnect(app: tauri::AppHandle) -> Result<(), String> {
     .await
     .map_err(|_| "Falha ao desconectar.".to_string())?
 }
+#[tauri::command]
+async fn checkpoint_preview(app:tauri::AppHandle,task:String)->Result<serde_json::Value,String> {
+    tauri::async_runtime::spawn_blocking(move||{
+        let s=app.state::<LocalState>();let settings=s.settings.lock().map_err(|_|"Permissões indisponíveis.")?;
+        let (cp,proposal)=git_checkpoint::context(&s.dir,&task,&s.channel,&settings.folders)?;
+        Ok(serde_json::json!({"task":task,"proposalHash":cp.journal.proposal_hash,"baseSha":cp.base_sha,"branch":format!("agent/{task}"),"subject":git_checkpoint::SUBJECT,"body":git_checkpoint::trailer(&task),"proposal":proposal}))
+    }).await.map_err(|_|"Prévia de commit indisponível.".to_string())?
+}
+#[tauri::command]
+async fn checkpoint_commit(app:tauri::AppHandle,task:String,proposal_hash:String,consent:String)->Result<git_checkpoint::Receipt,String> {
+    tauri::async_runtime::spawn_blocking(move||{
+        let s=app.state::<LocalState>();let _serial=s.checkpoint_guard.lock().map_err(|_|"Checkpoint ocupado.")?;
+        let settings=s.settings.lock().map_err(|_|"Permissões indisponíveis.")?;
+        let (cp,proposal)=git_checkpoint::context(&s.dir,&task,&s.channel,&settings.folders)?;
+        if cp.journal.proposal_hash.as_deref()!=Some(proposal_hash.as_str()) || consent!="commit-exact-reviewed-files-locally" {return Err("Prévia ou consentimento mudou. Revise novamente.".into());}
+        let files=proposal.files.iter().map(|f|f.path.escape_default().to_string()).collect::<Vec<_>>().join("\n");
+        let message=format!("Commit local dos bytes revisados.\nTarefa: {task}\nBranch: agent/{task}\nSHA-256 da proposta: {proposal_hash}\n{}\n{}\nArquivos:\n{files}\nNão inclui push ou merge.",git_checkpoint::SUBJECT,git_checkpoint::trailer(&task));
+        if !app.dialog().message(message).title("Autorizar checkpoint Git local").kind(tauri_plugin_dialog::MessageDialogKind::Warning).buttons(tauri_plugin_dialog::MessageDialogButtons::OkCancel).blocking_show(){return Err("Commit local não autorizado.".into());}
+        // Recheck remote revocation, current files and scope after the native confirmation.
+        let (cp,proposal)=git_checkpoint::context(&s.dir,&task,&s.channel,&settings.folders)?;
+        if cp.journal.proposal_hash.as_deref()!=Some(proposal_hash.as_str()){return Err("Conteúdo mudou durante a confirmação.".into());}
+        let result=git_checkpoint::create(&s.dir,&cp,&proposal,&consent)?;
+        audit(&s,"task_checkpoint_committed")?;Ok(result)
+    }).await.map_err(|_|"Commit local não confirmado; preserve e confira o recibo.".to_string())?
+}
 fn main() {
     if std::env::args().any(|arg| arg == "--diagnostics-only") {
         println!(
@@ -194,7 +221,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             diagnostics,
             choose_folder,
-            revoke_folder, pair_begin, pair_confirm, pair_disconnect
+            revoke_folder, pair_begin, pair_confirm, pair_disconnect, checkpoint_preview, checkpoint_commit
         ])
         .setup(|app| {
             let dir = app.path().app_data_dir()?;
@@ -214,6 +241,7 @@ fn main() {
                 dir,
                 channel,
                 drivers: Mutex::new(vec![]),
+                checkpoint_guard: Mutex::new(()),
             };
             audit(&state, "runner_started")?;
             app.manage(state);

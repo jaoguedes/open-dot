@@ -16,6 +16,20 @@ function RunnerApp() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [commitPreview,setCommitPreview]=useState<{task:string;proposalHash:string;baseSha:string;branch:string;subject:string;body:string;proposal:{files:Array<{path:string;content:string;beforeContent?:string}>}}|null>(null);
+  const [commitConsent,setCommitConsent]=useState(false),[commitResult,setCommitResult]=useState("");
+  async function previewCommit(task:string) {
+    setBusy(true);setError("");setCommitPreview(null);setCommitConsent(false);setCommitResult("");
+    try {const result=await invoke<NonNullable<typeof commitPreview>>("checkpoint_preview",{task});
+      if(!result || result.task!==task || !/^[a-f0-9]{64}$/.test(result.proposalHash) || typeof result.body!=="string" || !Array.isArray(result.proposal?.files) || !result.proposal.files.length)throw "Prévia incompatível; nenhum commit autorizado.";
+      setCommitPreview(result);} catch(e){setError(typeof e==="string"?e:"Prévia não confirmada.");} finally {setBusy(false);}
+  }
+  async function confirmCommit() {
+    if(!commitPreview || !commitConsent)return;
+    setBusy(true);setError("");
+    try {const result=await invoke<{commitSha:string;branch:string}>("checkpoint_commit",{task:commitPreview.task,proposalHash:commitPreview.proposalHash,consent:"commit-exact-reviewed-files-locally"});setCommitResult(`Commit local confirmado: ${result.commitSha} · ${result.branch}`);setCommitPreview(null);setCommitConsent(false);}
+    catch(e){setError(typeof e==="string"?e:"Commit não confirmado. Releia o recibo antes de tentar novamente.");}finally{setBusy(false);}
+  }
   const native = nativeAvailable();
   useEffect(() => {
     if (!native) return;
@@ -204,11 +218,22 @@ function RunnerApp() {
                 <button disabled={!native || busy} onClick={() => void act("diagnostics")}>Atualizar checkpoints</button>
                 {diagnostics?.checkpoints ? <>
                   {!diagnostics.checkpoints.items.length && <p>Nenhum checkpoint legível encontrado nesta consulta.</p>}
-                  <ul>{diagnostics.checkpoints.items.map(c=><li key={c.task}><code>{c.task}</code> · fase {c.phase} · {c.terminalReceipt ? `Recibo confirmado: ${c.terminalReceipt}` : "Sem recibo terminal confirmado"}{c.headSha && <span> · HEAD observado <code>{c.headSha}</code></span>}</li>)}</ul>
+                  <ul>{diagnostics.checkpoints.items.map(c=><li key={c.task}><code>{c.task}</code> · fase {c.phase} · {c.terminalReceipt ? `Recibo confirmado: ${c.terminalReceipt}` : "Sem recibo terminal confirmado"}{c.headSha && <span> · HEAD observado <code>{c.headSha}</code></span>}{c.terminalReceipt==="completed" && <button disabled={!native || busy} onClick={()=>void previewCommit(c.task)}>Revisar commit local</button>}</li>)}</ul>
                   {!!diagnostics.checkpoints.unreadable && <p role="status">Há registros ilegíveis. Preserve os arquivos e revise a recuperação.</p>}
                   {diagnostics.checkpoints.truncated && <p>Consulta limitada a 50 registros; há outros arquivos preservados.</p>}
                 </> : <p>Atualize o diagnóstico no desktop para consultar os registros locais.</p>}
               </section>
+              {commitPreview && <section aria-label="Revisão de commit local">
+                <h2>Revisar commit local</h2><p>Tarefa: <code>{commitPreview.task}</code>. Branch: <code>{commitPreview.branch}</code>. Base: <code>{commitPreview.baseSha}</code>.</p>
+                <p>Mensagem completa do commit:</p><pre>{commitPreview.subject+"\n\n"+commitPreview.body}</pre><p>Autor técnico Open Dot Runner. A confirmação abre um diálogo nativo vinculado a esta tarefa e hash. Sem hooks, filtros, shell, push ou merge.</p>
+                <p>Hash da proposta revisada: <code>{commitPreview.proposalHash}</code>. Somente os arquivos abaixo serão incluídos; alterações fora deles ficam preservadas.</p>
+                {commitPreview.proposal.files.map(f=><article key={f.path}><h3>{f.path}</h3><p>Antes</p><pre>{f.beforeContent??"Arquivo novo"}</pre><p>Conteúdo completo aprovado para o commit</p><pre>{f.content}</pre></article>)}
+                <details open><summary>Conteúdo revisado em JSON escapado</summary><pre>{JSON.stringify(commitPreview.proposal).replace(/[\u007f-\uffff]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,"0")}`)}</pre></details>
+                <label><input type="checkbox" checked={commitConsent} onChange={e=>setCommitConsent(e.target.checked)} /> Autorizo somente este commit local, destes bytes, na branch da tarefa. Não autorizo sincronização ou integração.</label>
+                <button disabled={busy || !commitConsent} onClick={()=>void confirmCommit()}>Confirmar commit local</button>
+                <button disabled={busy} onClick={()=>setCommitPreview(null)}>Fechar revisão</button>
+              </section>}
+              {commitResult && <p role="status">{commitResult}</p>}
               <button onClick={() => setStep(2)}>Revisar ambiente</button>
             </>
           )}

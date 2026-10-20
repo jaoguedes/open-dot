@@ -195,3 +195,8 @@ li button {
 .runner-copy code {
   overflow-wrap: anywhere;
 }
+
+[aria-label="Revisão de commit local"] pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+[aria-label="Revisão de commit local"] code, [aria-label="Checkpoints preservados"] code { overflow-wrap: anywhere; }
+
+.runner-shell p[role="status"] { overflow-wrap: anywhere; }

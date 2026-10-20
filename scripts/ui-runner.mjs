@@ -170,5 +170,26 @@ if (!process.exitCode) {
     await page.getByText("Há registros ilegíveis. Preserve os arquivos e revise a recuperação.").waitFor(T);
     expect(await page.getByText("a".repeat(40),{exact:true}).isVisible(),"HEAD observado ausente");
   });
+  await nativeUI.scenario("R4", "Commit exige prévia visível e consentimento separado (IPC fixture)", async ({ page, open }) => {
+    await page.addInitScript(() => {
+      window.CHECKPOINT_CALLS=[];
+      const task="f11c1820-5a7c-47e9-90d4-22c78ed0ca21";
+      window.__TAURI__={core:{invoke:async(cmd,args)=>{
+        if(cmd==="checkpoint_preview")return {task,proposalHash:"b".repeat(64),baseSha:"a".repeat(40),branch:`agent/${task}`,subject:"feat(runner): checkpoint approved files",body:"Task: OD2-F11C18205A7C\nRunner-Task: "+task,proposal:{files:[{path:"result.txt",content:"Approved Unicode · 東京\n<script>window.COMMIT_UNSAFE=true</script>\n"}]}};
+        if(cmd==="checkpoint_commit"){window.CHECKPOINT_CALLS.push(args);return{commitSha:"c".repeat(40),branch:`agent/${task}`};}
+        return{os:"fixture",arch:"fixture",version:"0.1.0",folders:[],paired:true,drivers:[],checkpoints:{items:[{task,phase:"applied",headSha:"a".repeat(40),terminalReceipt:"completed"}],unreadable:0,truncated:false}};
+      }}};
+    });
+    await open("/");await page.getByRole("button",{name:"Etapa 6: Conclusão"}).click();await page.getByRole("button",{name:"Atualizar checkpoints"}).click();
+    await page.getByRole("button",{name:"Revisar commit local",exact:true}).click();
+    const panel=page.getByRole("region",{name:"Revisão de commit local"});
+    await panel.getByText("Approved Unicode · 東京\n<script>window.COMMIT_UNSAFE=true</script>",{exact:true}).waitFor(T);
+    expect(await panel.getByRole("button",{name:"Confirmar commit local"}).isDisabled(),"commit sem consentimento");
+    expect((await page.evaluate(()=>window.CHECKPOINT_CALLS.length))===0,"commit emitido na prévia");expect(!(await page.evaluate(()=>window.COMMIT_UNSAFE)),"conteúdo executado");
+    await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),"overflow revisão commit");
+    await panel.getByLabel(/Autorizo somente este commit local/).check();await panel.getByRole("button",{name:"Confirmar commit local"}).click();
+    await page.getByText(/Commit local confirmado:/).waitFor(T);
+    const calls=await page.evaluate(()=>window.CHECKPOINT_CALLS);expect(calls.length===1&&calls[0].proposalHash==="b".repeat(64)&&calls[0].consent==="commit-exact-reviewed-files-locally","escopo de commit divergente");
+  });
   process.exitCode = await nativeUI.finish();
 }

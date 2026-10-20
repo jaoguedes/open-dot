@@ -39,7 +39,7 @@ origin=`http://127.0.0.1:${address.port}`;ctx.env.APP_ORIGIN=origin;
 const browser=await chromium.launch({headless:true});
 const context=await browser.newContext({viewport:{width:1100,height:900}});const page=await context.newPage();page.setDefaultTimeout((process.argv.includes('--memory-only')||process.argv.includes('--plans-only'))?30_000:300_000);
 const memoryOnly=process.argv.includes("--memory-only"), plansOnly=process.argv.includes("--plans-only");
-const child=(memoryOnly||plansOnly)?null:spawn('cargo',['test','--locked','--manifest-path','apps/runner/src-tauri/Cargo.toml','executor::live_tests::real_codex_flow','--','--ignored','--nocapture'],{stdio:'inherit',env:{...process.env,OPEN_DOT_CHANNEL_TEST_ORIGIN:origin,OPEN_DOT_BROWSER_APPROVAL:'1',...(process.argv.includes('--plan-codex')?{OPEN_DOT_ENGINEERING_PLAN:'1'}:{})}});
+const child=(memoryOnly||plansOnly)?null:spawn('cargo',['test','--locked','--manifest-path','apps/runner/src-tauri/Cargo.toml','executor::live_tests::real_codex_flow','--','--ignored','--nocapture'],{stdio:'inherit',env:{...process.env,OPEN_DOT_CHANNEL_TEST_ORIGIN:origin,OPEN_DOT_BROWSER_APPROVAL:'1',...(process.argv.includes('--plan-codex')?{OPEN_DOT_ENGINEERING_PLAN:'1'}:{}),...(process.argv.includes('--commit-checkpoint')?{OPEN_DOT_GIT_CHECKPOINT:'1'}:{})}});
 const done=child?new Promise<number>(r=>{child.on('exit',c=>r(c??1));child.on('error',()=>r(1));}):Promise.resolve(0);
 const timer=setTimeout(()=>child?.kill(),600000);
 try{

@@ -211,6 +211,19 @@ fn bounded_file(path:&Path)->Result<Option<Vec<u8>>,String> {
     if bytes.len()>8000{return Err("Arquivo excedeu limite de revisão de 8 KB.".into());}
     Ok(Some(bytes))
 }
+/// Read-only postcondition used for explicit Git checkpoint consent.
+pub fn verify_applied(root:&Path,proposal:&Proposal)->Result<(),String> {
+    if proposal.files.is_empty() || proposal.files.len()>8 || proposal.files.iter().map(|f|f.content.len()).sum::<usize>()>8000 {return Err("Proposta fora do limite.".into());}
+    let mut paths=std::collections::HashSet::new();
+    for file in &proposal.files {
+        if !paths.insert(file.path.to_lowercase()) {return Err("Caminho duplicado.".into());}
+        let compact:String=file.content.to_lowercase().chars().filter(|c|!c.is_whitespace() && *c!='\"' && *c!='\'').collect();
+        if ["PRIVATE KEY","sk-proj-","github_pat_","ghp_","GOCSPX-","Bearer "].iter().any(|p|file.content.contains(p)) || ["password=","password:","api_key=","api_key:","token=","secret="].iter().any(|p|compact.contains(p)) {return Err("Padrão sensível no conteúdo. Commit bloqueado.".into());}
+        let current=bounded_file(&target(root,&file.path)?)?.ok_or("Arquivo aprovado ausente.")?;
+        if current!=file.content.as_bytes() {return Err("Arquivo mudou após revisão. Commit bloqueado.".into());}
+    }
+    Ok(())
+}
 pub fn prepare(root: &Path, mut proposal: Proposal) -> Result<Proposal, String> {
     if proposal.files.is_empty() || proposal.files.len() > 8 || proposal.summary.len() > 1200 {
         return Err("A proposta excedeu os limites de edição.".into());

@@ -1,0 +1,21 @@
+# ADR-0007 — Commit local de bytes revisados, separado da aplicação
+
+OD2-GIT-020. Capacidade local opt-in; não habilita commits automáticos do scheduler, shell, push, merge ou release. A aprovação de arquivos anterior continua sem conceder Git. O desktop oferece prévia integral, JSON escapado, mensagem/trailers fixos, branch/base/hash e autorização própria. O host confirma por diálogo nativo e reconsulta revogação/escopo após a confirmação. Interação real com esse diálogo ainda depende de validação gráfica nativa; UI automatizada usa IPC fixture explicitamente.
+
+O host exige checkpoint terminal completed, mesma identidade do dispositivo, pasta ainda autorizada, recibo remoto completed/approve, hash canônico correspondente e arquivos atuais iguais aos revisados. Só aceita worktree com ownership e raiz Git exatos. Não escolhe comandos/argv pelo modelo. Usar índice privado e hash-object sem filtros sobre temporários protegidos de conteúdo já aprovado; preservar modos regulares. Árvore só pode mudar caminhos revisados. Mensagem Conventional Commits, Task e Runner-Task, autor técnico fictício; branch exclusiva agent/UUID, criada com CAS sem substituir ref existente. Índice e checkout originais preservados; trabalho staged externo no worktree da tarefa bloqueia a operação. Arquivos não selecionados não são incluídos nem apagados.
+
+Comandos Git fixos com hooks, fsmonitor, assinatura e manutenção automática desabilitados; Git do sistema no Unix. Não há comando de rede. Filtros de projeto não participam da serialização dos blobs. Detecção de padrões sensíveis é heurística, não DLP ou auditoria do histórico. Windows permanece desabilitado até prova nativa.
+
+## Interrupção e coordenação
+
+Lock exclusivo do kernel por operação, além da serialização IPC; o arquivo de lock é preservado e nunca roubado/apagado como prova de inatividade. Encerramento do processo libera a exclusão no kernel. Intenção com árvore/commit/base/hash/branch é sincronizada antes da ref. Ao retomar, o host verifica objetos, pai, mensagem, caminhos/bytes, ref/HEAD e índice antes de completar o mesmo SHA. Divergência, índice externo ou objeto ausente exigem revisão, sem repetir geração nem substituir branch. Não existe merge automático. Um recibo committed confirmado retorna o SHA já salvo.
+
+Teste real de processo auxiliar: interrompido por SIGKILL após ref e antes do recibo final; tentativa simultânea recusada; novo processo adquiriu exclusão e completou exatamente o mesmo commit, com original intacto. Não é teste de perda de energia nem prova de todos os filesystems. Persistência usa rename/fsync Unix; estados anteriores ao primeiro recibo sem prova suficiente permanecem bloqueados para inspeção.
+
+## Evidências e limites
+
+21 testes Rust PASS, seis auxiliares opcionais ignorados; um deles é o filho de crash iniciado somente pelo pai. Canários de hook/filtro não executados, staged externo e branch existente preservados, padrão de segredo e bytes alterados recusados. Ensaio HTTP/SQLite/cofre/SIGKILL com proposta fixture validou contexto autenticado e um único commit. Separadamente, segunda chamada real oficial Codex desta continuação produziu proposta aprovada no Workspace, checkpoint nativo e commit local com consentimento programático exato. O aperfeiçoamento posterior do lock/reconciliação foi revalidado por testes de processo/Git, sem repetir IA. Dez cenários UI existentes/novos passaram com API/IPC fixture. Nenhuma evidência de clique nativo, runtime ARM64/Windows ou instalador atual.
+
+Fontes primárias consultadas: [hash-object](https://git-scm.com/docs/git-hash-object), [commit-tree](https://git-scm.com/docs/git-commit-tree), [update-index](https://git-scm.com/docs/git-update-index), [update-ref](https://git-scm.com/docs/git-update-ref). Propriedades de segurança acima também possuem testes locais; documentação de ferramenta não substitui testes/auditoria independente.
+
+Comandos de projetos continuam desabilitados: Docker/Podman/Colima ausentes neste ambiente; sandbox-exec existe, mas limites completos de memória/processos descendentes e execução arbitrária de scripts não foram demonstrados. Não instalar infraestrutura ou abrir shell para preencher esse requisito.

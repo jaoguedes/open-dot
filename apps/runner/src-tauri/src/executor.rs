@@ -601,6 +601,14 @@ mod live_tests {
             assert_ne!(plan["tasks"][0]["attemptId"], plan["tasks"][0]["id"]);
             println!("REAL_SCHEDULED_CODEX_PASS: persisted plan, automatic claim, native journal, one official model call, exact approval, isolated write and receipt-gated completion. No project shell or automatic code integration.");
         }
+        if std::env::var_os("OPEN_DOT_GIT_CHECKPOINT").is_some() {
+            let (cp,reviewed)=crate::git_checkpoint::context(&dir,&task_id,&c,&[project.clone()]).unwrap();
+            assert_eq!(reviewed.files.len(),1);assert_eq!(reviewed.files[0].path,"RUNNER_RESULT.md");assert_eq!(reviewed.files[0].content,expected);
+            let receipt=crate::git_checkpoint::create(&dir,&cp,&reviewed,"commit-exact-reviewed-files-locally").unwrap();
+            assert_eq!(receipt.stage,"committed");assert_eq!(String::from_utf8(worktree::git(&dir.join("worktrees").join(&task_id),&["rev-parse","HEAD"],4096).unwrap()).unwrap().trim(),receipt.commit_sha);
+            assert!(worktree::git(&project,&["status","--porcelain"],16384).unwrap().is_empty());
+            println!("REAL_SCHEDULED_GIT_CODEX_PASS: real official model, Workspace exact approval, native phase checkpoint and explicit programmatic Git consent produced a semantic owned-branch commit; original clean. Native commit-window click not tested.");
+        }
         let revoked = client
             .post(format!("{url}/api/runner/devices/{device}/revoke"))
             .header("cookie", &cookie)
