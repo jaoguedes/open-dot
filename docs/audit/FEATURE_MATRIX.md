@@ -1,3 +1,14 @@
+# Estado vigente — remediação c7b2426
+
+- Runner limitado Codex: modelo/arquivo/aprovação no navegador reais; GUI completa continua parcial. Cancelamento/lease/recibos/negociação/revogação/ownership implementados, testes no relatório.
+- Memória: serviço + API autenticada + controles no Workspace operacionais localmente; browser HTTP/SQLite reais, projeto fixture no teste. Graph/Passport memory-only; decisão humana/import completo de projeto não implementados.
+- ODCP automático, comandos/testes de projeto, multiagente/merge queue e módulos avançados continuam indisponíveis/planejados. Não confundir lease da task Runner com lease de recursos multiagente.
+- Instaladores históricos/produção não atualizados. Relatório independente atual pendente; ver REMEDIATION_REPORT e ENGINEERING_STATE.
+
+---
+
+## Matriz histórica
+
 # Matriz de funcionalidades — evidência inicial
 
 | Recurso | Código | Evidência | Estado |

@@ -35,7 +35,7 @@ Cada correção vem com um teste que falha antes e passa depois. Para provar o �
 
 1. Em `packages/core/src/types.ts`, acrescente o id em `AGENT_IDS`.
 2. Em `packages/core/src/agents.ts`, crie o perfil em `AGENTS` (nome, descrição, ferramentas, classe de dado, limites) e diga em quais lugares ele aparece em `PLACES` (`list`, `pills`, `mood`, `presence`, `status`, `mascot`).
-3. Em `packages/core/src/visual.ts`, dê a cor em `AGENT_COLORS` e o acessório em `DEFAULT_ACCESSORY`.
+3. Separe perfil de agente de mecanismo: identidades em `packages/core/src/mechanisms.ts`. Preserve Dot original, sem tingimento/skins/badges; paleta de mecanismos só na interface. Não adicione acessórios por inferência do perfil.
 
 Barra lateral, faixa de agentes, busca, pílulas do Meu dia, ilha, `/api/status` e a tela Mascote leem o registro (`agentsInPlace`). Não escreva listas de agentes à mão: `packages/core/test/registry.test.ts` falha se uma tela fizer isso.
 
@@ -47,4 +47,4 @@ Migrações só novas e aditivas (`apps/worker/migrations/0007_…sql`): `ADD CO
 
 ## Commits
 
-Pequenos, um por tema, mensagem em português dizendo o efeito para quem usa. Ao terminar, atualize `docs/STATUS.md` separando testado, sem teste real, simulado, planejado e bloqueado.
+Pequenos, um por tema, Conventional Commits (`feat`, `fix`, `test`, `docs`, `refactor`, `perf`, `chore`, `ci`) com trailer `Task: ID`. Checkpoint ao concluir uma unidade ou após cerca de 30 minutos significativos. Branch/worktree próprios e revisão de diff/segredos/PII antes de stage explícito. Commit local não autoriza push; nenhuma reescrita de histórico compartilhado. Ao terminar, atualize `docs/STATUS.md` separando testado, sem teste real, simulado, planejado e bloqueado.

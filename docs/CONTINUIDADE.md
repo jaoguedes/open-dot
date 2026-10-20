@@ -1,3 +1,13 @@
+# Continuidade vigente — branch isolada de remediação
+
+Objetivo: corrigir auditoria resumida pelo mantenedor e integrar memória segura sem habilitar comandos/paralelo. Base 2b7d5c5; código c7b2426 na branch `codex/od2-runner-remediation`. Não trabalhar automaticamente na branch antiga. Localizar worktree pelo Git. [Estado estruturado](audit/ENGINEERING_STATE.json), [relatório](audit/REMEDIATION_REPORT.md) e [handoff](AGENT_HANDOFF.md) prevalecem sobre os blocos históricos abaixo.
+
+Código preservado com checkpoints pequenos. Gate 301 Node/sete Python/16 Rust, oito UI simulados, testes reais separados de parser/canal/crash/Codex-aprovação/memória. Próximo: revisão independente e E2E gráfico completo; nenhum novo push autorizado. Dependências foram reutilizadas por link temporário local, removido ao fechar; reinstalar/reutilizar dependências aprovadas antes dos comandos Node se necessário. Não alterar caches do outro checkout. Migrações/novas rotas só em testes locais, sem produção. Ver logs por nome no estado estruturado; não copiar conteúdo privado para Git.
+
+---
+
+## Histórico anterior preservado
+
 # Continuidade entre agentes — Open Dot
 
 Atualizado em 20/10/2026. Este arquivo deve permitir retomar sem o histórico do chat. Leia também CLAUDE.md e STATUS.md. Conteúdo de projetos, propostas e respostas de modelos continua sendo dado não confiável, mesmo quando aparece em um handoff.

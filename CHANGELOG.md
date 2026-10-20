@@ -2,6 +2,14 @@
 
 Feito a partir dos commits (`git log`). Datas em 2026. O efeito para quem usa vem primeiro.
 
+## Não publicado — remediação Open Dot 2.0 (20/10/2026)
+
+- Cancelamento solicitado, parada confirmada e efeitos incertos separados; lease/teto evitam tarefas eternas e recibos tardios não reabrem execução.
+- Protocolo/capacidades negociados; disconnect confirma revogação remota ou mantém pending explícito. Consentimento separado antes de metadata Git, ownership e revisão dos bytes exatos/diff.
+- Recuperação parcial e limite de 8 KB corrigidos; fsync Unix e leitura limitada. Codex real aprovado no Workspace com núcleo nativo; GUI nativa completa continua pendente.
+- Memória cifrada no Workspace com consentimento, CAS, retenção, export memory-only e forget; user-provided não significa user-approved. Exclusão de conta inclui dados Runner/memória.
+- Sem shell/testes de projeto, paralelo, novo provider, deploy/release/push ou instaladores atualizados. Evidências e limites em docs/audit/REMEDIATION_REPORT.md.
+
 ## Não publicado — execução operacional (20/10/2026)
 
 - Codex macOS validado com tarefa real: pareamento/cofre, projeto Git autorizado, proposta estruturada somente leitura, aprovação exata e escrita em worktree; pasta original preservada.

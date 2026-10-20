@@ -1,3 +1,11 @@
+# Próximas dependências após remediação c7b2426
+
+A/B/C/D/F produziram incrementos reais descritos em audit/REMEDIATION_REPORT.md (caminho relativo a docs). A etapa seguinte é revisão independente dos estados, recibos/ownership e memória autenticada, seguida por GUI nativa completa/crash durante geração. ODCP operacional com ações Git, comandos de projeto e paralelo não são elegíveis até provar isolamento/coordenação. Providers adicionais dependem de drivers/autenticação oficiais. Passport completo, Idea to Project, Design Intelligence e Council continuam trabalho futuro, sem declarar suporte por schema.
+
+---
+
+## Roadmap histórico
+
 # Roadmap técnico — Open Dot 2.0
 
 | Ordem / tarefa | Entrega | Gate verificável | Dependências / auditor sugerido |

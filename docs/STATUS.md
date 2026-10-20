@@ -1,3 +1,15 @@
+# Remediação local — código c7b2426
+
+Branch própria `codex/od2-runner-remediation`; checkout anterior preservado. [Relatório vigente](audit/REMEDIATION_REPORT.md), [estado estruturado](audit/ENGINEERING_STATE.json), [handoff](AGENT_HANDOFF.md). Sem novo push/Actions/release/deploy ou migração remota.
+
+Implementados/testados: cancel_requested/uncertain e lease; recibos transacionais inclusive corrida de proposta; negociação; revogação remota/pending; consentimento e ownership Git; revisão exata/diff; recovery parcial com leitura limitada/fsync Unix. Memória cifrada no Workspace com sessão/CSRF, consentimento CAS, retenção/exclusão/export memory-only. Exclusão de conta com Runner corrigida.
+
+Gate 301 Node/sete Python/eval/typecheck/build, 16 Rust, oito UI com mocks explícitos; ensaios reais de parser/canal/cofre/SIGKILL-fixture/Codex-aprovação e memória-browser separados. Dot/paleta intactos. Parcial: GUI nativa completa, crash do CLI durante geração, cleanup/coordenação de worktrees, ODCP automático/Passport completo. Bloqueados: comandos arbitrários/paralelo/Claude-Cursor execução e runtime Windows. ARM64/Windows sem prova nativa desta rodada; instaladores antigos de feae70d não contêm correções. Revisão independente atual pendente; não pronto para beta pública.
+
+---
+
+## Histórico da rodada anterior
+
 # Fechamento de auditoria e builds — 20/10/2026
 
 Fonte `feae70d` sincronizada por autorização exata. CI geral e Runner CI **SUCCESS**, três instaladores/checksums verificados. DMG Intel com inicialização básica PASS; ARM64/Windows sem execução nativa. [Resultados/hashes](open-dot-runner-release.md), [relatório independente a revisar](audit/IMPLEMENTATION_REPORT.md). Recibo anterior `4df475e` e este checkpoint documental ficam locais, sem novo push.

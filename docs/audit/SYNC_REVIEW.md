@@ -1,3 +1,11 @@
+# Rodada atual: sincronização não autorizada
+
+Branch local isolada codex/od2-runner-remediation, código c7b2426, base2b7d5c5. Nenhum push nesta rodada. Aprovação anterior de feae70d só cobriu aquele conteúdo/branch. Última ref origin local conhecida continua feae70d; não houve nova consulta remota. Revisar destinos/privacidade/Git e pedir autorização exata antes de qualquer push futuro. Checkpoints documentais e código desta branch não estão nos instaladores/produção.
+
+---
+
+## Recibos históricos de aprovação anterior
+
 # Sincronização privada — revisão, autorização e recibo
 
 Task: OD2-SYNC. **Push específico autorizado e concluído:** `feae70d4336ada21f37dd1515e869628b5b59a8c`, 14 commits locais para a branch privada revisada. Revalidados HEAD limpo, visibilidade e ref remota antes do envio. Documento não concede autorização para novos commits. Destino pretendido: `origin`, branch `codex/runner-safe-edit-beta`. Última consulta confirmou GitHub privado, HTTPS sem credencial na URL e ref remota `504c00dfc9b6a391cb221ede4edde6671093e8e2`.

@@ -24,3 +24,7 @@ Nenhuma severidade é uma porcentagem de conclusão. Achados só ficam resolvido
 ## Gate adicional de rollout — R14
 
 Alta, inferência de inspeção: heartbeat confirma transporte e diagnóstico local, mas não há negociação versionada de compatibilidade Web/Runner. O Runner novo consulta `/api/runner/device/active`; servidor antigo sem essa rota pode manter heartbeat enquanto o consumidor falha fechado e não avança a fila. Não foi ensaiado como falha de produção. Antes de deploy: matriz de versões, diagnóstico explícito de incompatibilidade e teste de rollout; não tratar online como prova de execução disponível. Migração 0009 e backend novo não foram publicados.
+
+## Remediação atual — c7b2426
+
+R01/R02/R13: reconciliação remota com lease/uncertain, SIGKILL/restart fixture e caso misto no limite corrigidos; crash durante geração continua sem prova. R14: negociação protocolo/caps/schema implementada e testada; rollout não realizado. P1: ownership/consentimento Git sem cleanup automático; coordenação com outros aplicativos e E2E nativo ainda pendentes. Recibos exigem persistência da aprovação exata (D3). R07 ganha TTL/quota de memória, mas logs/eventos/artefatos ainda não têm política global integral. R06/privacidade histórica e revisão independente continuam gates anteriores à exposição pública. Memória não transfere permissões e exclusão é lógica, sem garantia de remoção de backups. Não rebaixar severidade de achado externo ausente por declaração do executor.

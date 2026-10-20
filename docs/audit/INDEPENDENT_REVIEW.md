@@ -1,3 +1,17 @@
+# Revisão independente da remediação — próxima ação
+
+Mantenedor informou auditoria Cursor; os dois originais não foram encontrados e não foram modificados. IDs/severidades do resumo foram revalidados pelo executor, sem atribuir-lhe auditoria independente. Fonte atual c7b2426, branch codex/od2-runner-remediation. Ler REMEDIATION_REPORT, REMEDIATION_RUN, ENGINEERING_STATE e ADR-0003 antes dos arquivos históricos abaixo.
+
+Claude Code: revisar diffs por commit desde 2b7d5c5; priorizar lease/cancelamento/uncertain, CAS de eventos e aprovação, shadow/stale reads (D3), ownership/cleanup e proposta beforeContent (D2). Tentar reproduzir casos antes/depois. Auditar memória HTTP: owner do auth, guard SQL de consentRevision, corrida com forget, retenção/renovação sem ressuscitar snapshot e exclusão de conta. Confirmar que nenhuma memória/perfil concede execução. Não considerar testes ou esta revisão interna como autorização para rollout.
+
+Reproduzir check, Rust, UI, recovery e memória-browser. Teste Codex real só quando outra alteração justificar chamada; ensaio anterior já passou. GUI nativa completa, crash durante geração, iPhone/ARM64/Windows, isolamento de comandos, coordenação Git e auditoria histórica de privacidade/licenças permanecem pendentes. Não publicar, enviar mensagens, migrar produção ou habilitar APIs pagas.
+
+Após revisão: Cursor pode refinar fluxos preservando Dot, paleta e estados honestos; resolver primeiro achados de segurança. Nenhum merge/main/push recebe autorização por este documento.
+
+---
+
+## Plano histórico preservado
+
 # Pacote para Claude Code e Cursor — auditoria independente
 
 Task: OD2-AUDIT. Revisão ainda não realizada. Não afirmar aprovação porque o executor escreveu este arquivo. Preservar branch/worktree/arquivos; não assumir acesso a provedores, autorização de push ou execução de comandos de projeto.

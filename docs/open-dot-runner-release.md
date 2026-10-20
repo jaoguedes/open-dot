@@ -1,3 +1,5 @@
+> Remediação local c7b2426: nenhum novo instalador, build Actions, tag ou release desta branch. Artefatos abaixo são históricos de feae70d/504c00d. Não contêm protocolo 2/consentimento/recibos novos; validar migração e compatibilidade antes de distribuir qualquer versão. Runtime atual só do núcleo Mac Intel, sem prova nativa ARM64/Windows.
+
 > Atualização 20/10/2026: fluxo real Codex validado no núcleo nativo. João pediu continuar **sem publicação**. Não criar release/tag ou deploy. GitHub autenticado; orçamento US$ 0 com bloqueio de uso pago confirmado pelo usuário. Resultados abaixo datados de 19/10 são históricos; consulte STATUS para a rodada atual.
 
 # Instaladores e drafts — Open Dot Runner

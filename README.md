@@ -4,6 +4,12 @@ Assistente pessoal com agentes, rotinas remotas e o mascote Dot. Revisa seu Gmai
 
 > Nome provisório: já existe `composio-community/open-dot`.
 
+## Open Dot 2.0 — remediação local, não publicada
+
+Runner limitado do Codex e aprovação de conteúdo possuem testes reais no Mac Intel. A rodada atual adiciona reconciliação/cancelamento honesto, negociação de protocolo e memória cifrada com consentimento no Workspace. Não é a conclusão de todo o produto 2.0; shell/testes de projeto, Claude/Cursor e automação multiagente continuam indisponíveis. Instaladores anteriores não contêm as correções locais.
+
+Leia [relatório técnico](docs/audit/REMEDIATION_REPORT.md), [continuidade](docs/AGENT_HANDOFF.md) e [segurança](SECURITY.md) antes de executar/migrar. Nenhum deploy, release, licença open source definitiva ou exposição pública foi autorizado.
+
 ## Rodar em 3 comandos
 
 ```bash

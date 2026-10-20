@@ -1,3 +1,17 @@
+# Handoff vigente — remediação isolada
+
+Branch `codex/od2-runner-remediation`, base `2b7d5c5`, código `c7b2426`. Resolver checkout com `git worktree list --porcelain`; não editar o checkout anterior ou de outro agente. Este documento/estado estruturado permitem continuar sem chat: [relatório](audit/REMEDIATION_REPORT.md), [registro por fase](audit/REMEDIATION_RUN.md), [estado](audit/ENGINEERING_STATE.json). SHA documental por log do arquivo.
+
+Gate: 301 Node/sete Python/eval/typecheck/build, 16 Rust, parser/canal/cofre reais, SIGKILL/restart fixture, uma chamada Codex real com aprovação no navegador, memória no navegador/API/SQLite reais. Seletor de projeto do teste de memória é fixture; oito cenários UI usam mocks explícitos. Não repetir IA sem mudança que justifique. Novas migrações 0010–0013 apenas descartáveis, novo protocolo 2 sem rollout.
+
+Prioridade: obter originais Cursor se disponíveis e executar revisão independente focada em estados/recibos/ownership/consentimento. Originais não encontrados; resumo do usuário revalidado, sem inventar conteúdo da auditoria. Depois E2E gráfico completo e crash durante geração. Sem scheduler Git/paralelismo/comandos de projeto até prova de isolamento/coordenação. Passport continua memory-only; decisões humanas não são promovidas automaticamente.
+
+Tudo desta branch permanece local. Última ref origin conhecida feae70d, sem consulta remota nova; autorização antiga não cobre estes commits. Sem push, merge/main, deploy, release, alteração de visibilidade/cobrança. Instaladores históricos não contêm as correções. Preparar ambiente com dependências locais aprovadas/npm ci a partir do lock e Rust/CLT existentes; nenhum Xcode completo. Cache/target/logs não são código versionado. Ver ENGINEERING_STATE para comandos e pendências.
+
+---
+
+## Histórico preservado da rodada anterior
+
 # Handoff — Open Dot 2.0
 
 Tarefa atual: checkpoint da primeira fatia Open Dot 2.0; próxima: revisão independente e integração ODCP segura. Branch `codex/runner-safe-edit-beta`; baseline `9e33c3bb44844e8d821a3664db8f4aae9f448878`. SHA deste checkpoint: `git log -1 --format=%H -- docs/AGENT_HANDOFF.md` (evita autorreferência). Push privado feae70d autorizado e concluído; commits posteriores não cobertos.
