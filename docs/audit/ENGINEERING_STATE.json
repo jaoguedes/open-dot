@@ -196,11 +196,11 @@
     "notes": "Temporary paths may disappear. Use an approved local toolchain/CLT if unavailable; no full Xcode required. Restore dependencies without modifying the original checkout."
   },
   "coordination": {
-    "revision": 20,
+    "revision": 22,
     "agent": "codex",
-    "task": "OD2-EXPERT-025",
+    "task": "OD2-MEMORY-027",
     "branch": "codex/od2-runner-remediation",
-    "observedHead": "9fcd9eeae92da07d40329ca78d1d4f448e51bb3c",
+    "observedHead": "350ce9faf7cd0614d6984ac287a69a6cb5905b3c",
     "status": "checkpointed"
   },
   "continuationBase": "1d9125f7af720df20e427e5d21eb35bb8ae26471",

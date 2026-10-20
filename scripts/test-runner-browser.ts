@@ -131,6 +131,18 @@ try{
   const download=page.waitForEvent('download');await passportPanel.getByRole('button',{name:'Baixar JSON revisado'}).click();
   assert.equal((await download).suggestedFilename(),'opendot-project-passport.json');
   console.log('REAL_CONTEXT_BROWSER_PASS: API/SQLite task graph, consented memory, native-context file fixture, JSON download; no task execution or privilege transfer.');
+  await memory.getByLabel('Informação fornecida por você (não é aprovação de execução)').fill('Draft preserved while editing another entry');
+  await memory.getByRole('button',{name:'Editar informação',exact:true}).click();
+  await memory.getByLabel('Editar resumo da memória').fill('User-corrected receipt description');
+  await memory.getByRole('button',{name:'Salvar alteração da informação'}).click();
+  await memory.getByText(/user-provided: User-corrected receipt description/).waitFor();
+  assert.equal(await memory.getByLabel('Informação fornecida por você (não é aprovação de execução)').inputValue(),'Draft preserved while editing another entry');
+  const edited=await (await context.request.get(`${origin}/api/projects/${project}/memory`)).json();
+  assert.equal(edited.passport.memories[0].provenance,'user-provided');assert.equal(edited.passport.memories[0].commit,null);
+  await memory.getByRole('button',{name:'Excluir informação',exact:true}).click();
+  await memory.getByText('Nenhuma memória salva.',{exact:true}).waitFor();
+  assert.equal((await (await context.request.get(`${origin}/api/projects/${project}/memory`)).json()).passport.memories.length,0);
+  console.log('REAL_MEMORY_EDIT_BROWSER_PASS: CAS-backed edit/delete, user provenance and unrelated draft preservation; real backend, fixture original receipt.');
   await memory.getByText('Esquecer memória deste projeto',{exact:true}).click();
   await memory.getByRole('button',{name:'Confirmar exclusão da memória'}).click();
   await context.request.get(`${origin}/api/runner/plans`);assert.equal((await ctx.db.query('SELECT * FROM od_project_ledgers')).length,0);
