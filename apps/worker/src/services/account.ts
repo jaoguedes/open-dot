@@ -57,6 +57,11 @@ export async function exportData(ctx: Ctx, ownerId: string) {
 
 /** Tabelas com dados do dono, filhas antes das mães. A ordem importa quando há chave estrangeira. */
 const OWNER_TABLES = [
+  "od_project_ledgers",
+  "od_project_memory_policies",
+  "od_runner_tasks",
+  "od_runner_pairings",
+  "od_runner_devices",
   "od_feed_evidence",
   "od_evidence",
   "od_feed_items",
@@ -102,9 +107,11 @@ export async function deleteAccount(ctx: Ctx, ownerId: string): Promise<{ revoke
     }
   }
   await ctx.db.batch([
+    {sql:"DELETE FROM od_runner_events WHERE task_id IN (SELECT id FROM od_runner_tasks WHERE owner_id=?)",args:[ownerId]},
+    {sql:"DELETE FROM od_runner_approvals WHERE task_id IN (SELECT id FROM od_runner_tasks WHERE owner_id=?)",args:[ownerId]},
     ...OWNER_TABLES.map((t) => ({ sql: `DELETE FROM ${t} WHERE owner_id = ?`, args: [ownerId] })),
     { sql: "DELETE FROM od_quota_counters WHERE scope_key = ?", args: [`owner:${ownerId}`] },
     { sql: "DELETE FROM od_owners WHERE id = ?", args: [ownerId] },
   ]);
-  return { revoked, tables: OWNER_TABLES.length + 2 };
+  return { revoked, tables: OWNER_TABLES.length + 4 };
 }

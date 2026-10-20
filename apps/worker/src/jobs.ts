@@ -1,3 +1,4 @@
+import { expireProjectMemory } from "./continuity/routes.ts";
 import { reconcileRunnerTasks } from "./runner/routes.ts";
 import { applySample, correlateDeploy, explainError, initialIncident, planDue, type IncidentState } from "@open-dot/core";
 import { checkSite } from "@open-dot/connectors/http-check.ts";
@@ -40,6 +41,7 @@ export async function tick(outer: Ctx): Promise<TickReport> {
   try {
     await repo.expireStaleRuns(ctx.db, now);
     await reconcileRunnerTasks(ctx);
+    await expireProjectMemory(ctx);
 
     const failStep = async (step: string, e: unknown) => {
       if (e instanceof BudgetExhausted) throw e;
