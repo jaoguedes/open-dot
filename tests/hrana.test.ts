@@ -132,8 +132,8 @@ test("migrações e reserva atômica de orçamento funcionam pelo caminho HTTP d
   const t = fakeTurso("tok");
   const h = new HranaDb("https://db.turso.io", "tok", t.fetchImpl);
   const r = await applyMigrations(h, loadMigrations());
-  assert.deepEqual(r.applied, ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008"]);
-  assert.deepEqual(await currentSchema(h), { version: "0008" });
+  assert.deepEqual(r.applied, ["0001", "0002", "0003", "0004", "0005", "0006", "0007", "0008", "0009"]);
+  assert.deepEqual(await currentSchema(h), { version: "0009" });
   const ledger = new DbLedger(h, { ownerCalls: 2, ownerTokens: 1000, modelRequests: () => 10, modelTokens: () => 10_000 }, () => Date.now());
   const res = [];
   for (let i = 0; i < 4; i++) res.push(await ledger.reserve({ ownerId: "o", providerId: "groq", modelId: "m", day: "2026-10-13", tokens: 50 }));
