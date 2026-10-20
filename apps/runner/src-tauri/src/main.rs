@@ -41,6 +41,7 @@ struct Diagnostics {
     channel: channel::Status,
     drivers: Vec<drivers::Driver>,
     active_task: Option<journal::Summary>,
+    checkpoints: journal::CheckpointInventory,
 }
 
 // Somente eventos fixos, sem caminhos, texto de tarefas, tokens ou conteúdo privado.
@@ -95,6 +96,7 @@ fn read_diagnostics(state: &LocalState) -> Result<Diagnostics, String> {
         paired: channel.paired,
         channel,
         active_task: journal::summary(&state.dir),
+        checkpoints: journal::inventory(&state.dir),
         drivers: state
             .drivers
             .lock()

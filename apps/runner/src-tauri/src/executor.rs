@@ -36,6 +36,9 @@ fn emit(
         &format!("/api/runner/device/tasks/{}/event", j.task),
         Some(&json!({"seq":j.seq,"kind":kind,"text":text})),
     )?;
+    if matches!(kind, "completed" | "failed" | "cancelled" | "uncertain") {
+        journal::checkpoint(dir, j, Some(kind))?;
+    }
     Ok(())
 }
 fn status(c: &SharedChannel, j: &Journal) -> Result<Value, String> {
@@ -81,6 +84,7 @@ fn finish_proposal(
             decision["state"].as_str(),
             Some("completed" | "cancelled" | "failed" | "uncertain")
         ) {
+            journal::checkpoint(dir, j, decision["state"].as_str())?;
             journal::clear(dir)?;
             return Ok(());
         }

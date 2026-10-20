@@ -4,6 +4,7 @@ export interface LocalDiagnostics {
   version: string;
   folders: string[];
   paired: boolean;
+  checkpoints?: {items: Array<{task:string;phase:string;headSha:string|null;terminalReceipt:string|null}>;unreadable:number;truncated:boolean};
   activeTask?: {id:string;phase:string;resumable:boolean}|null;
   channel?: { paired: boolean; online: boolean; message: string; deviceId?: string };
   drivers: Array<{ id: "codex" | "claude-code" | "cursor"; installed: boolean; authenticated: boolean; executable: boolean; reason: string }>;

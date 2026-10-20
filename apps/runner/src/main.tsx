@@ -158,9 +158,9 @@ function RunnerApp() {
                 Atualizar conexão
               </button>
               <button disabled={!native || busy} onClick={() => void act("pair_disconnect")}>
-                Remover vínculo local
+                Revogar acesso e desconectar
               </button>
-              <p className="runner-note">O token fica no cofre do sistema. Para invalidar o dispositivo no servidor, use “Revogar” no Workspace. A prévia web não pareia.</p>
+              <p className="runner-note">O token fica no cofre do sistema. Desconectar solicita revogação ao servidor. Sem rede, a revogação fica pendente e a execução local é bloqueada; confira a confirmação acima. A prévia web não pareia.</p>
             </>
           )}
           {step === 4 && (
@@ -197,8 +197,18 @@ function RunnerApp() {
               <h1>Base preparada. Você no controle.</h1>
               <p>Confira o ambiente e as pastas a qualquer momento. O pareamento pode ser conferido na etapa Conexão. O modo inicial do Codex gera propostas sem shell. Aprove os conteúdos exatos no Workspace para aplicá-los ao worktree. Início com o sistema ainda não está disponível.</p>
               <p className="runner-note">
-                Últimas execuções: nenhuma. Eventos de início e mudanças de permissão são gravados em audit.jsonl na pasta de dados do aplicativo, sem caminhos ou conteúdo.
+                Checkpoints registram fases observadas e recibos confirmados; não autorizam repetição de efeitos nem comprovam testes ou commits. Eventos mínimos também ficam no log local, sem conteúdo de tarefas.
               </p>
+              <section aria-label="Checkpoints preservados">
+                <h2>Checkpoints preservados</h2>
+                <button disabled={!native || busy} onClick={() => void act("diagnostics")}>Atualizar checkpoints</button>
+                {diagnostics?.checkpoints ? <>
+                  {!diagnostics.checkpoints.items.length && <p>Nenhum checkpoint legível encontrado nesta consulta.</p>}
+                  <ul>{diagnostics.checkpoints.items.map(c=><li key={c.task}><code>{c.task}</code> · fase {c.phase} · {c.terminalReceipt ? `Recibo confirmado: ${c.terminalReceipt}` : "Sem recibo terminal confirmado"}{c.headSha && <span> · HEAD observado <code>{c.headSha}</code></span>}</li>)}</ul>
+                  {!!diagnostics.checkpoints.unreadable && <p role="status">Há registros ilegíveis. Preserve os arquivos e revise a recuperação.</p>}
+                  {diagnostics.checkpoints.truncated && <p>Consulta limitada a 50 registros; há outros arquivos preservados.</p>}
+                </> : <p>Atualize o diagnóstico no desktop para consultar os registros locais.</p>}
+              </section>
               <button onClick={() => setStep(2)}>Revisar ambiente</button>
             </>
           )}

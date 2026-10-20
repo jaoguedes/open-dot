@@ -160,5 +160,15 @@ if (!process.exitCode) {
     await page.getByRole("button", { name: "Revogar", exact: true }).click();
     await page.getByText("/test/project", { exact: true }).waitFor({ state: "detached" });
   });
+  await nativeUI.scenario("R3", "Runner mostra checkpoints preservados sem inventar conclusão (IPC fixture)", async ({ page, open }) => {
+    await page.addInitScript(() => {
+      window.__TAURI__ = { core: { invoke: async () => ({ os:"fixture",arch:"fixture",version:"0.1.0",folders:[],paired:false,drivers:[],checkpoints:{items:[{task:"f11c1820-5a7c-47e9-90d4-22c78ed0ca21",phase:"applied",headSha:"a".repeat(40),terminalReceipt:"completed"}],unreadable:1,truncated:false} }) } };
+    });
+    await open("/"); await page.getByRole("button",{name:"Etapa 6: Conclusão"}).click();
+    await page.getByRole("button",{name:"Atualizar checkpoints"}).click();
+    await page.getByText(/Recibo confirmado: completed/).waitFor(T);
+    await page.getByText("Há registros ilegíveis. Preserve os arquivos e revise a recuperação.").waitFor(T);
+    expect(await page.getByText("a".repeat(40),{exact:true}).isVisible(),"HEAD observado ausente");
+  });
   process.exitCode = await nativeUI.finish();
 }
