@@ -2,7 +2,7 @@
 
 Equivalente a `.cursor/rules/*.mdc`. Se divergirem, corrija os dois.
 
-Comece por: `docs/STATUS.md` (estado e próxima ação), `docs/REVISAO_DO_PDF.md` (decisões sobre o PDF), `docs/DECISOES.md`.
+Comece por: `docs/CONTINUIDADE.md` (handoff e Git atual), `docs/STATUS.md` (estado e próxima ação), `docs/REVISAO_DO_PDF.md` (decisões sobre o PDF), `docs/DECISOES.md`.
 
 ## Comandos
 - `npm install` — dependências (Node ≥ 22.13).
@@ -22,3 +22,13 @@ Comece por: `docs/STATUS.md` (estado e próxima ação), `docs/REVISAO_DO_PDF.md
 7. TypeScript, SQL, Python (Blender), Rust só no Tauri.
 8. Ao terminar: atualize `docs/STATUS.md`; diferencie testado / sem teste real / simulado / planejado / bloqueado.
 9. Nunca apague arquivos do João nem altere bancos/serviços de outros projetos (SafeWear, Mascot Desk etc.).
+
+## Versionamento e continuidade (decisão do João, 20/10/2026)
+
+- Antes de trabalhar: inspecione status, branches, worktrees e histórico; preserve alterações existentes e identifique sua origem antes de incluí-las em commit.
+- Commits pequenos por etapa lógica, com Conventional Commits: `feat`, `fix`, `refactor`, `test`, `docs`, `perf`, `chore` ou `ci`; escopo opcional. Evite agregar milhares de linhas separáveis. Não reescreva commits já compartilhados para corrigir sua organização.
+- Checkpoint após cada etapa concluída ou aproximadamente 30 minutos de trabalho significativo. Trabalho incompleto somente em branch de desenvolvimento, com estado e limitações explícitos na documentação e no corpo do commit.
+- Antes de cada commit: revise diff e seleção exata, segredos (incluindo arquivos novos), dados pessoais e arquivos indevidos. Não use staging genérico quando houver trabalho misturado. Não commite caches, instaladores, logs privados ou credenciais.
+- Sem comandos destrutivos, force push ou sobrescrita de trabalho de outro agente. Commit local não autoriza sincronização: push, transferência externa, merge, deploy e release precisam de autorização aplicável ao destino/conteúdo. O usuário suspendeu releases e publicação do repositório.
+- Atualize `docs/CONTINUIDADE.md` com objetivo, decisões, concluído/pendente, testes, branch, SHA de referência e próximo passo. Um arquivo não pode conter o hash do próprio commit: registre o último SHA conhecido e confira `git log -1 -- docs/CONTINUIDADE.md` para o checkpoint documental.
+- Proposta do produto (ainda não implementada): `docs/AGENT_CONTINUITY_PROTOCOL.md`. Não confundir política operacional dos agentes com enforcement já disponível no Runner.
