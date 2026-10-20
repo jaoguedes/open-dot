@@ -1,3 +1,4 @@
+import { reconcileEngineering } from "./continuity/scheduler.ts";
 import { expireProjectMemory } from "./continuity/routes.ts";
 import { reconcileRunnerTasks } from "./runner/routes.ts";
 import { applySample, correlateDeploy, explainError, initialIncident, planDue, type IncidentState } from "@open-dot/core";
@@ -41,6 +42,7 @@ export async function tick(outer: Ctx): Promise<TickReport> {
   try {
     await repo.expireStaleRuns(ctx.db, now);
     await reconcileRunnerTasks(ctx);
+    await reconcileEngineering(ctx);
     await expireProjectMemory(ctx);
 
     const failStep = async (step: string, e: unknown) => {

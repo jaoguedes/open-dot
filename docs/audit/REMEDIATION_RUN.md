@@ -107,3 +107,7 @@ Helper local operacional atualiza apenas coordination do ENGINEERING_STATE.json 
 ## Gate de continuação — OD2-AUDIT-016
 
 Memória com browser/API/SQLite reais PASS (seleção de projeto fixture; sem IA). Canal nativo HTTP/SQLite/Keychain pareamento/restauração/heartbeat/revogação PASS, sem tarefa de driver. Rust 16 PASS/5 ignorados após permitir socket local; tentativa anterior falhou no bind por PermissionDenied do sandbox, não por regressão do código. Relatório atual e brief Claude preservam os resultados históricos separadamente. Templates locais de issues/PR preparados; renderização remota não testada. Sem push/Actions/installers/IA/ARM64/Windows nesta continuação.
+
+## OD2-LOOP-017 — scheduler persistente
+
+Sobre 940b06c, fila real do Runner recebe tarefas elegíveis de planos opt-in; fases/dependências, tentativa distinta, transação CAS, pausa e recuperação por recibos. Sem retry incerto, shell ou integração implícita de worktrees. Migração 0015 somente SQLite descartável. Testes de router/SQLite usam recibos de executor fixture. Uma falha inicial de teste multiowner veio da fixture /session/dev (dono fixo), corrigida criando sessão real para segundo dono; não houve vazamento confirmado na aplicação. Gate completo e testes específicos antes do commit. Próximo: UI operacional para criar/acompanhar planos e ensaio nativo separado.

@@ -1,3 +1,4 @@
+import { registerEngineeringRoutes } from "./continuity/engineering-routes.ts";
 import { registerProjectMemoryRoutes } from "./continuity/routes.ts";
 import { registerRunnerRoutes } from "./runner/routes.ts";
 import { z } from "zod";
@@ -70,6 +71,7 @@ function route(method: string, path: string, opts: { auth: boolean; csrf?: boole
 
 registerRunnerRoutes(route);
 registerProjectMemoryRoutes(route);
+registerEngineeringRoutes(route);
 
 export async function handleApi(ctx: Ctx, req: Request): Promise<Response> {
   const url = new URL(req.url);

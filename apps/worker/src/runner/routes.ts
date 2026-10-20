@@ -1,3 +1,4 @@
+import { advanceEngineering } from "../continuity/scheduler.ts";
 import { RUNNER_PROTOCOL, APPROVAL_CONTRACT, REQUIRED_CAPABILITIES, runnerHello, runnerCompatible } from "./protocol.ts";
 import { currentSchema, REQUIRED_SCHEMA, schemaCompatible } from "../db/migrate.ts";
 import { z } from "zod";
@@ -47,7 +48,7 @@ async function device(ctx: Ctx, req: Request): Promise<Device | null> {
   const rows = await ctx.db.query<Device>("SELECT * FROM od_runner_devices WHERE token_hash=? AND revoked_at IS NULL AND expires_at>?", [await sha256Hex(auth.slice(7)), ctx.now()]);
   return rows[0] ?? null;
 }
-async function read(req: Request): Promise<unknown> {
+export async function read(req: Request): Promise<unknown> {
   // Limite também aplicado após leitura; Content-Length não é autoridade.
   if (Number(req.headers.get("content-length")) > 32_000) throw new SyntaxError();
   if (!req.body) throw new SyntaxError();
@@ -254,6 +255,7 @@ export function registerRunnerRoutes(route: Registrar) {
     if (!d) return problem(401, "device_revoked", "Dispositivo indisponível.");
     await reconcileRunnerTasks(ctx);
     if(d.protocol_version!==RUNNER_PROTOCOL) return problem(409,"runner_incompatible","Negocie protocolo antes de executar.");
+    await advanceEngineering(ctx, d.id);
     // CAS em uma instrução: um processo por dispositivo; nunca reentregar running após reconexão.
     const tasks = await ctx.db.query<Task>(
       "UPDATE od_runner_tasks SET state='running',updated_at=?,lease_until=?,attempt_deadline=? WHERE id=(SELECT id FROM od_runner_tasks WHERE device_id=? AND state='queued' ORDER BY created_at,id LIMIT 1) AND state='queued' AND worktree_consent=1 AND NOT EXISTS(SELECT 1 FROM od_runner_tasks WHERE device_id=? AND state IN ('running','awaiting_approval','cancel_requested')) AND EXISTS(SELECT 1 FROM od_runner_devices WHERE id=? AND revoked_at IS NULL AND protocol_version=2) RETURNING *",

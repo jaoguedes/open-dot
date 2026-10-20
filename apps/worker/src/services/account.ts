@@ -108,6 +108,10 @@ export async function deleteAccount(ctx: Ctx, ownerId: string): Promise<{ revoke
     }
   }
   await ctx.db.batch([
+    {sql:"DELETE FROM od_engineering_dependencies WHERE task_id IN (SELECT t.id FROM od_engineering_tasks t JOIN od_engineering_plans p ON p.id=t.plan_id WHERE p.owner_id=?)",args:[ownerId]},
+    {sql:"DELETE FROM od_engineering_attempts WHERE task_id IN (SELECT t.id FROM od_engineering_tasks t JOIN od_engineering_plans p ON p.id=t.plan_id WHERE p.owner_id=?)",args:[ownerId]},
+    {sql:"DELETE FROM od_engineering_tasks WHERE plan_id IN (SELECT id FROM od_engineering_plans WHERE owner_id=?)",args:[ownerId]},
+    {sql:"DELETE FROM od_engineering_plans WHERE owner_id=?",args:[ownerId]},
     {sql:"DELETE FROM od_runner_events WHERE task_id IN (SELECT id FROM od_runner_tasks WHERE owner_id=?)",args:[ownerId]},
     {sql:"DELETE FROM od_runner_approvals WHERE task_id IN (SELECT id FROM od_runner_tasks WHERE owner_id=?)",args:[ownerId]},
     ...OWNER_TABLES.map((t) => ({ sql: `DELETE FROM ${t} WHERE owner_id = ?`, args: [ownerId] })),

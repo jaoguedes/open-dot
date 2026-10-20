@@ -1,3 +1,9 @@
+# Scheduler persistente local — OD2-LOOP-017
+
+Planos autenticados com fases/DAG entregam tarefas à fila real por claim do Runner, com CAS, tentativa única, pausa e reconciliação. Sete testes específicos SQLite/router passaram; gate completo anterior desta unidade passou 312 Node, sete Python/eval/typecheck/build antes do teste adicional de starvation. Recibos do executor nos testes são fixtures, não chamadas de modelo. Migração 0015 apenas em bancos descartáveis. UI e ensaio nativo de planos serão a próxima unidade; worktrees de tarefas não são integrados automaticamente.
+
+---
+
 # Remediação local — código c7b2426
 
 Branch própria `codex/od2-runner-remediation`; checkout anterior preservado. [Relatório vigente](audit/REMEDIATION_REPORT.md), [estado estruturado](audit/ENGINEERING_STATE.json), [handoff](AGENT_HANDOFF.md). Sem novo push/Actions/release/deploy ou migração remota.
