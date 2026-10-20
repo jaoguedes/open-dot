@@ -12,6 +12,10 @@ Verificações atuais: check completo PASS (279 testes Node/TypeScript, avaliaç
 
 **Sem publicação por orientação atual do João.** GitHub autenticado; diagnóstico anterior de token inválido foi causado pela restrição de rede do sandbox. João confirmou orçamento US$ 0 e bloqueio de uso pago. Builds Actions podem ser executados nesse limite; nenhuma cobrança autorizada. Sem deploy, release, tag ou migração remota. Migração expansiva `0008` existe, ainda não aplicada em produção.
 
+## Continuidade e versionamento — 20/10/2026
+
+Leia [CONTINUIDADE.md](CONTINUIDADE.md) antes de retomar. Política de checkpoints pequenos com Conventional Commits registrada em CLAUDE.md e regras Cursor. [Agent Continuity Protocol](AGENT_CONTINUITY_PROTOCOL.md) é uma proposta, sem enforcement no Runner. Branch de desenvolvimento `codex/runner-safe-edit-beta`; implementação `504c00d`, draft privado #1. Runner CI 39425600153: verify PASS, três builds nativos em execução na última consulta. Sem release/deploy.
+
 ## Histórico das execuções anteriores
 
 Os estados e bloqueios abaixo descrevem suas datas originais; o resumo acima prevalece para a implementação atual.

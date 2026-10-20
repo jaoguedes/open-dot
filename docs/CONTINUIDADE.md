@@ -9,6 +9,7 @@ Concluir a distribuição de teste do Runner e validar o Workspace operacional, 
 ## Git e autoria
 
 - Branch de desenvolvimento: `codex/runner-safe-edit-beta`, acompanha a branch homônima em `origin`.
+- Último checkpoint documental conhecido: `733ab95` (`docs(continuity): define checkpoints and persist agent handoff`), local; ainda não sincronizado.
 - SHA de implementação conhecido: `504c00dfc9b6a391cb221ede4edde6671093e8e2`.
 - Main permanece em `5db4564`; branch de backup existente permanece em `0b66a76`. Não alterar essas referências para organizar o histórico.
 - Inspeção de 20/10: um único worktree registrado, checkout principal deste projeto; árvore limpa antes desta etapa documental. Conferir novamente, não assumir que permaneceu assim.
