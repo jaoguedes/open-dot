@@ -321,3 +321,20 @@ test("P0/P2: lease tem teto, legacy saturado não prende fila e expiração bloq
   assert.equal((await s.web.call('GET','/api/runner/tasks')).json.tasks.find((t:{id:string})=>t.id===next).state,'uncertain');
  }finally{s.ctx.db.raw.close();}
 });
+test('P1-6: proposta concorrente não recebe accepted sem persistir a aprovação correspondente',async()=>{
+ const s=await setup();try{
+  await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);
+  const id=(await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',worktreeConsent:true,requestKey:crypto.randomUUID()})).json.id;
+  await s.native.call('POST','/api/runner/device/claim',{},s.headers);
+  const path=`/api/runner/device/tasks/${id}/event`;const text=JSON.stringify({summary:'fixture',files:[{path:'one.txt',content:'original proposal',beforeHash:null}]});
+  const first=await s.native.call('POST',path,{seq:1,kind:'proposal',text},s.headers);
+  await s.web.call('POST',`/api/runner/tasks/${id}/decision`,{hash:first.json.proposalHash,decision:'approve'});
+  const original=s.ctx.db.query.bind(s.ctx.db);
+  // Leitura stale equivalente a outra transação concluir aprovação antes do batch.
+  s.ctx.db.query=async<T>(sql:string,args:import('../src/db/types.ts').SqlValue[]=[]):Promise<T[]>=>sql.startsWith('SELECT task_id FROM od_runner_approvals')?[]:original<T>(sql,args);
+  const raced=await s.native.call('POST',path,{seq:2,kind:'proposal',text:text.replace('original proposal','raced proposal')},s.headers);
+  assert.equal(raced.status,409);
+  assert.equal((await s.web.call('GET',`/api/runner/tasks/${id}/events`)).json.events.length,1);
+  assert.equal((await s.web.call('GET','/api/runner/tasks')).json.tasks[0].state,'running');
+ }finally{s.ctx.db.raw.close();}
+});

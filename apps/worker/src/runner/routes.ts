@@ -303,8 +303,8 @@ export function registerRunnerRoutes(route: Registrar) {
     const result=await ctx.db.batch([
       ...(proposalDigest && proposalEnc ? [{ sql: "INSERT INTO od_runner_approvals(task_id,digest,proposal_enc,expires_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM od_runner_tasks WHERE id=? AND state='running' AND cancel_requested=0 AND (SELECT COALESCE(MAX(seq),0) FROM od_runner_events WHERE task_id=?)<?) ON CONFLICT(task_id) DO NOTHING", args: [t.id, proposalDigest, proposalEnc, ctx.now()+600_000, t.id, t.id, data.seq] }] : []),
       {
-        sql: "INSERT INTO od_runner_events(task_id,seq,kind,payload_enc,created_at,digest) SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM od_runner_tasks WHERE id=? AND state=?) AND (SELECT COALESCE(MAX(seq),0) FROM od_runner_events WHERE task_id=?)<? ON CONFLICT(task_id,seq) DO NOTHING",
-        args: [t.id, data.seq, storedKind, payload, ctx.now(), eventDigest, t.id, t.state, t.id, data.seq],
+        sql: "INSERT INTO od_runner_events(task_id,seq,kind,payload_enc,created_at,digest) SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM od_runner_tasks WHERE id=? AND state=?) AND (SELECT COALESCE(MAX(seq),0) FROM od_runner_events WHERE task_id=?)<? AND (? IS NULL OR EXISTS(SELECT 1 FROM od_runner_approvals WHERE task_id=? AND proposal_enc=? AND digest=?)) ON CONFLICT(task_id,seq) DO NOTHING",
+        args: [t.id, data.seq, storedKind, payload, ctx.now(), eventDigest, t.id, t.state, t.id, data.seq, proposalEnc, t.id, proposalEnc, proposalDigest],
       },
       {
         sql: "UPDATE od_runner_tasks SET state=?,updated_at=? WHERE id=? AND state=? AND EXISTS(SELECT 1 FROM od_runner_events WHERE task_id=? AND seq=? AND payload_enc=?)",

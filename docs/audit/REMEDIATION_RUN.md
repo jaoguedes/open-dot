@@ -83,3 +83,9 @@ Revisão interna encontrou que aplicar novamente prepare() durante recovery soma
 Rust: 16 PASS/cinco ignored; novo caso falhou antes e passou depois. Gate completo e SIGKILL/restart final em execução; não repetir modelo, pois a alteração é na validação/aplicação determinística coberta pela fixture. Revisão interna não substitui auditoria independente. Próximo: registrar resultado e checkpoint D2, depois handoff M com todos os gates e limitações.
 
 Gate D2 concluído: 300 Node/sete Python/eval/typecheck/build PASS; 16 Rust PASS/cinco ignored; SIGKILL/restart real PASS após correção, sem nova chamada de modelo. Caso misto de 8 KB falhou antes/passou depois. Fonte do checkpoint por git log deste arquivo; próxima ação é auditoria e handoff, sem liberação automática de comandos ou paralelo.
+
+## Revisão D3 — recibo de proposta concorrente
+
+P1-6 adicional reproduzido: uma leitura stale sem aprovação, seguida por outra transação aprovar a primeira proposta, permitia inserir novo evento proposal quando a linha única de aprovação já existia. O handler respondia 200 para digest que não havia sido persistido como aprovação. Novo teste injetou a leitura stale e falhou antes (200 em vez de 409). Evento de proposta agora exige, na mesma transação, proposal_enc e digest correspondentes à aprovação criada por aquele batch; corrida retorna 409 sem evento/transição novos.
+
+Gate completo PASS: 301 Node, sete Python, avaliação sintética/typecheck/build. Vinte cenários API Runner PASS. Nenhum teste removido; proposta concorrente falhou antes e passou depois. Recuperação nativa final após SQL em execução; sem repetir modelo. Relatório consolidado em preparação, ainda sem publicação ou liberação de automação.
