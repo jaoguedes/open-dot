@@ -14,7 +14,7 @@ Verificações atuais: check completo PASS (279 testes Node/TypeScript, avaliaç
 
 ## Continuidade e versionamento — 20/10/2026
 
-Leia [CONTINUIDADE.md](CONTINUIDADE.md) antes de retomar. Política de checkpoints pequenos com Conventional Commits registrada em CLAUDE.md e regras Cursor. [Agent Continuity Protocol](AGENT_CONTINUITY_PROTOCOL.md) é uma proposta, sem enforcement no Runner. Branch de desenvolvimento `codex/runner-safe-edit-beta`; implementação `504c00d`, draft privado #1. Runner CI 39425600153: verify PASS, três builds nativos em execução na última consulta. Sem release/deploy.
+Leia [CONTINUIDADE.md](CONTINUIDADE.md) antes de retomar. Política de checkpoints pequenos com Conventional Commits registrada em CLAUDE.md e regras Cursor. [Agent Continuity Protocol](AGENT_CONTINUITY_PROTOCOL.md) é uma proposta, sem enforcement no Runner. Branch de desenvolvimento `codex/runner-safe-edit-beta`; implementação `504c00d`, draft privado #1. Runner CI 39425600153: verify PASS, ARM64 build PASS (checksum/hdiutil/arquitetura verificados, sem execução nativa); Intel/Windows em empacotamento na última consulta. CI geral PASS. DMG Intel debug iniciou por dez segundos em teste isolado, sem comprovar o fluxo gráfico completo. Sem release/deploy.
 
 ## Histórico das execuções anteriores
 

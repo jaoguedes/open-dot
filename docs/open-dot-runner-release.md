@@ -56,3 +56,9 @@ SHA-256 atual: `5ced7eb520e7972401b5140863fe6b18f085b339fe729000601a8318cf6a0db1
 ## Executor real — build local 20/10/2026
 
 DMG Intel debug atualizado (12,11 MiB), sem assinatura/notarização, gerado sem Xcode completo. `hdiutil verify` PASS. SHA-256: `51f5d98619fb367b104c42874c0404b3a05a6e46838b89729e1b2fa68d274016`. Artefato local: `apps/runner/installers/OpenDot-Runner-macos-x64-debug.dmg`. Não substitui os builds release do Actions; inicialização gráfica/instalação completa ainda não validadas. Os hashes anteriores são históricos.
+
+## Actions e inicialização — checkpoint 20/10/2026
+
+[Runner CI 39425600153](https://github.com/jaoguedes/open-dot/actions/runs/39425600153): verify PASS, ARM64 PASS, Intel/Windows ainda em empacotamento na última consulta. [CI geral](https://github.com/jaoguedes/open-dot/actions/runs/39425600235) PASS. ARM64 baixado, hdiutil VALID, versão 0.1.0 / com.opendot.runner / arm64 conferidos somente leitura. SHA-256 `89384bd4715995a91c52512b26419ceeb921ffd8798fa1884054f8524500c549` (7.402.065 bytes). Não executado nativamente.
+
+O DMG Intel debug local teve inicialização básica PASS: binário da imagem ativo por dez segundos com HOME/CODEX_HOME isolados, sem conta ou pareamento. Processo próprio encerrado e imagem desmontada. Não comprova cliques/tray/instalação completa. Nenhuma release/tag criada.

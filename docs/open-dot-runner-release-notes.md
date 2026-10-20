@@ -1,7 +1,11 @@
-> Estado operacional em 20/10/2026: Codex macOS executou tarefa real no núcleo nativo, com proposta somente leitura e aprovação exata para edição no worktree. Shell/testes de projeto, Claude/Cursor e executor Windows continuam indisponíveis. Sem publicação por pedido atual. Consulte [relatório vigente](agent-workspace/RESULTADO_OPERACIONAL.md); estados anteriores abaixo são históricos.
+# Open Dot Runner 0.1.0 — versão de desenvolvimento
 
-Base de desenvolvimento do Open Dot Runner 0.1.0.
+Notas preparadas em 20/10/2026. **Nenhuma release publicada; publicação suspensa pelo usuário.** Estes instaladores são experimentais e não representam uma versão estável.
 
-Inclui diagnóstico local, permissões de pastas com revogação, auditoria sem conteúdo e tray com Abrir/Sair. Reutiliza o Dot original.
+O Workspace envia tarefas para o Runner pareado. No macOS, Codex oficial autenticado com ChatGPT produz uma proposta somente leitura; após revisão e aprovação do conteúdo exato, o host aplica até oito arquivos/8 KB em worktree isolado. Pasta original preservada. Um fluxo real com cofre, HTTP/SQLite, modelo, aprovação e escrita passou no núcleo nativo; não substitui E2E gráfico completo.
 
-Pareamento remoto, drivers Codex/Claude/Cursor, execução de tarefas e autostart não estão disponíveis. Não há updater automático. Instaladores de teste não assinados/não notarizados; validação em hardware real ainda necessária. Não há promessa de agente conectado.
+Inclui diagnóstico, autorização/revogação de pastas, cofre nativo, heartbeat, revogação do dispositivo, fila/eventos cifrados, aprovação por hash/uso único e journal de recuperação. Dot original e paleta aprovados preservados.
+
+Shell e testes do projeto estão desabilitados; não há merge/commit/push automáticos. Claude Code e Cursor não têm executor implementado. Executor Windows fica bloqueado até validação nativa de isolamento. Autostart, updater e Agent Continuity Protocol no produto ainda não implementados.
+
+Instaladores sem assinatura/notarização. Compilação e checksum não comprovam instalação ou operação em hardware: registrar cada plataforma no [relatório vigente](agent-workspace/RESULTADO_OPERACIONAL.md). O novo backend exige migração `0008` e deploy aprovados separadamente; não foram aplicados à produção.
