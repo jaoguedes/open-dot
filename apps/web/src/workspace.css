@@ -256,3 +256,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Memória revisável: strings/JSON completos também em viewport móvel. */
+.ws-project-memory { min-width: 0; overflow-wrap: anywhere; }
+.ws-project-memory pre { white-space: pre-wrap; overflow-wrap: anywhere; }

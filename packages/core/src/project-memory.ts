@@ -10,7 +10,7 @@ const source = z.string().max(240).refine((s) => {
 export const MemoryEntrySchema = z.object({
   id,
   kind: z.enum(["requirement", "decision", "preference", "risk", "fact"]),
-  provenance: z.enum(["user-approved", "agent-proposed", "inferred", "external-evidence", "superseded"]),
+  provenance: z.enum(["user-provided", "user-approved", "agent-proposed", "inferred", "external-evidence", "superseded"]),
   summary: text,
   sourceRefs: z.array(source).max(20),
   observedAt: z.string().datetime(),

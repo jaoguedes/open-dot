@@ -1,3 +1,4 @@
+import { ProjectMemory } from "./ProjectMemory.tsx";
 import { useEffect, useRef, useState } from "react";
 import { MECHANISMS, type MechanismId } from "@open-dot/core/mechanisms.ts";
 import { MechanismLabel } from "./Mechanisms.tsx";
@@ -253,6 +254,7 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
           Enviar ao Runner
         </button>
       </form>
+      <ProjectMemory key={projectId} projectId={projectId} demo={demo}/>
       {demo && <p className="tiny">Demonstração: pareamento e envio desabilitados.</p>}
       {connectionError && <p role="status">{connectionError}</p>}
       {error && <p role="alert">{error}</p>}

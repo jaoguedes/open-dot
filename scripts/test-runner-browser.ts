@@ -1,10 +1,11 @@
+import AxeBuilder from "@axe-core/playwright";
 /** Integração real: navegador Workspace -> decisão HTTP/SQLite -> executor nativo/Codex.
  * Pareamento, seleção de pasta e criação do prompt ainda feitos pelo helper nativo.
  * Não é E2E da janela/tray Tauri. Uma chamada real ChatGPT, nunca fallback de API paga.
  */
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
-import { readFileSync, existsSync, statSync } from "node:fs";
+import { readFileSync, existsSync, statSync, mkdirSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
@@ -34,12 +35,44 @@ const server=createServer(async(req,res)=>{
 await new Promise<void>(r=>server.listen(0,'127.0.0.1',r));const address=server.address();assert.ok(address&&typeof address!=='string');
 origin=`http://127.0.0.1:${address.port}`;ctx.env.APP_ORIGIN=origin;
 const browser=await chromium.launch({headless:true});
-const context=await browser.newContext({viewport:{width:1100,height:900}});const page=await context.newPage();page.setDefaultTimeout(300_000);
-const child=spawn('cargo',['test','--locked','--manifest-path','apps/runner/src-tauri/Cargo.toml','executor::live_tests::real_codex_flow','--','--ignored','--nocapture'],{stdio:'inherit',env:{...process.env,OPEN_DOT_CHANNEL_TEST_ORIGIN:origin,OPEN_DOT_BROWSER_APPROVAL:'1'}});
-const done=new Promise<number>(r=>{child.on('exit',c=>r(c??1));child.on('error',()=>r(1));});
-const timer=setTimeout(()=>child.kill(),600000);
+const context=await browser.newContext({viewport:{width:1100,height:900}});const page=await context.newPage();page.setDefaultTimeout(process.argv.includes('--memory-only')?30_000:300_000);
+const memoryOnly=process.argv.includes("--memory-only");
+const child=memoryOnly?null:spawn('cargo',['test','--locked','--manifest-path','apps/runner/src-tauri/Cargo.toml','executor::live_tests::real_codex_flow','--','--ignored','--nocapture'],{stdio:'inherit',env:{...process.env,OPEN_DOT_CHANNEL_TEST_ORIGIN:origin,OPEN_DOT_BROWSER_APPROVAL:'1'}});
+const done=child?new Promise<number>(r=>{child.on('exit',c=>r(c??1));child.on('error',()=>r(1));}):Promise.resolve(0);
+const timer=setTimeout(()=>child?.kill(),600000);
 try{
  const session=await context.request.post(`${origin}/api/session/dev`,{headers:{'x-open-dot':'1'}});assert.equal(session.status(),200);
+ if(memoryOnly){
+  const owner=(await ctx.db.query<{id:string}>('SELECT id FROM od_owners'))[0]!.id;
+  const project=crypto.randomUUID();
+  // Fixture explícita de seleção de projeto; não afirma pareamento ou executor disponível.
+  await ctx.db.run('INSERT INTO od_runner_devices(id,owner_id,name,token_hash,expires_at,seen_at,projects,capabilities,created_at,protocol_version) VALUES(?,?,?,?,?,?,?,?,?,2)',[crypto.randomUUID(),owner,'Memory project fixture',crypto.randomUUID(),Date.now()+600000,Date.now(),JSON.stringify([{id:project,label:'Memory fixture project'}]),'[]',Date.now()]);
+  await page.goto(`${origin}/workspace`);
+  await page.getByRole('combobox',{name:/Computador/}).selectOption({label:'Memory project fixture'});
+  await page.getByRole('combobox',{name:/Projeto autorizado/}).selectOption({label:'Memory fixture project'});
+  console.log('MEMORY_BROWSER: project selected');
+  const panel=page.getByRole('region',{name:'Memória do projeto'});
+  await panel.getByRole('button',{name:'Consentir memória por 30 dias'}).click();
+  console.log('MEMORY_BROWSER: consent confirmed');
+  await panel.getByLabel('Informação fornecida por você (não é aprovação de execução)').fill('Use observation dates for grocery prices. '+ 'x'.repeat(180));
+  await panel.getByRole('button',{name:'Salvar nota neste projeto'}).click();
+  await panel.getByText('Use observation dates for grocery prices.',{exact:false}).waitFor();
+  await page.reload();
+  await page.getByRole('combobox',{name:/Computador/}).selectOption({label:'Memory project fixture'});
+  await page.getByRole('combobox',{name:/Projeto autorizado/}).selectOption({label:'Memory fixture project'});
+  await panel.getByText('Use observation dates for grocery prices.',{exact:false}).waitFor();
+  await panel.getByRole('button',{name:'Revisar Passport de memória'}).click();
+  await panel.getByText('Passport somente de memória · revisão local').waitFor();
+  await page.setViewportSize({width:390,height:844});
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Memory mobile overflow');
+  const violations=(await new AxeBuilder({page}).analyze()).violations.filter(v=>['serious','critical'].includes(v.impact??''));assert.deepEqual(violations.map(v=>v.id),[]);
+  mkdirSync('test-results/memory',{recursive:true});await page.screenshot({path:'test-results/memory/real-memory-mobile.png',fullPage:true});
+  await panel.getByText('Esquecer memória deste projeto' ,{exact:true}).click();
+  await panel.getByRole('button',{name:'Confirmar exclusão da memória'}).click();
+  await panel.getByRole('button',{name:'Consentir memória por 30 dias'}).waitFor();
+  assert.equal((await ctx.db.query('SELECT * FROM od_project_ledgers')).length,0);
+  console.log('REAL_MEMORY_BROWSER_PASS: authenticated UI, opt-in, encrypted SQLite, reload, memory-only export and forget. Project selector uses fixture; no provider called.');
+ }else{
  await page.goto(`${origin}/workspace`);
  await page.getByRole('button',{name:/Codex.*Esperando sua aprovação/}).click();
  await page.getByRole('heading',{name:'RUNNER_RESULT.md · arquivo novo'}).waitFor();
@@ -52,6 +85,7 @@ try{
  assert.equal(await done,0,'Executor nativo não confirmou conclusão');
  await page.getByRole('button',{name:/Codex.*Concluída no worktree/}).waitFor();
  console.log('REAL_BROWSER_NATIVE_APPROVAL_PASS: real Workspace, HTTP/SQLite, exact reviewed proposal, native Codex and isolated write. Native pairing/folder/prompt UI not tested.');
+ }
 }finally{
- clearTimeout(timer);if(child.exitCode===null)child.kill();await browser.close();await new Promise<void>(r=>server.close(()=>r()));ctx.db.raw.close();
+ clearTimeout(timer);if(child&&child.exitCode===null)child.kill();await browser.close();await new Promise<void>(r=>server.close(()=>r()));ctx.db.raw.close();
 }
