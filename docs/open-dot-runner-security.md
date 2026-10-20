@@ -1,23 +1,39 @@
-> Estado operacional em 20/10/2026: Codex macOS executou tarefa real no núcleo nativo, com proposta somente leitura e aprovação exata para edição no worktree. Shell/testes de projeto, Claude/Cursor e executor Windows continuam indisponíveis. Sem publicação por pedido atual. Consulte [relatório vigente](agent-workspace/RESULTADO_OPERACIONAL.md); estados anteriores abaixo são históricos.
+# Segurança do Runner — estado vigente em 20/10/2026
 
-# Segurança do Runner
+Este documento substitui os estados de protótipo anteriores, preservados no Git. Basear auditoria no código e recibos, não em telas. Tarefas: OD2-P0/R1/R2/R4/S1.
 
-## Fronteiras implementadas
+## Fronteiras atuais
 
-O desktop carrega exclusivamente frontend empacotado. CSP bloqueia rede arbitrária, frames e objetos; connect-src só IPC. Não há navegação remota configurada nem servidor localhost. Capacidade vinculada à janela local `main`, sem shell/fs/http/opener plugins ou permissões remotas. Três comandos customizados: diagnostics, choose_folder e revoke_folder. `choose_folder` recebe a escolha exclusivamente do diálogo nativo; JavaScript não envia um caminho para conceder permissão. Configuração é local e não é um cofre de segredos.
+Desktop Tauri carrega UI empacotada, CSP/IPC restritos; nenhum shell/fs/http/opener plugin genérico. IPC expõe diagnóstico, escolha/revogação de pasta e início/confirmação/desconexão do pareamento. O navegador não recebe bearer, caches de autenticação ou acesso a arquivos arbitrários. Não há porta inbound do Runner. Seis comandos não equivalem a seis permissões de execução genérica.
 
-Pastas são canonicalizadas (resolve symlinks), precisam existir e ser diretórios, raiz do disco recusada, dedupe e teto de 20. Registro não concede leitura de arquivo ou execução nesta versão. Permissões persistem na pasta de dados exclusiva com 0700 no Unix. Revogação persiste antes da confirmação na UI. Auditoria limitada a eventos fixos e timestamp, rotacionada em ~256 KB (mais um arquivo anterior), sem caminho/nome de projeto ou conteúdo. Lock em memória serializa mudanças dentro do processo. Não há proteção contra outro processo do mesmo usuário alterar os arquivos locais, nem garantia de auditoria imutável. Não executar duas instâncias simultâneas.
+Pareamento por desafio/código temporário, confirmação do dono autenticado com CSRF, token aleatório no cofre nativo e hash no servidor. Cofre não tem fallback em texto. Link local contém metadados, não segredo. Keychain testado realmente no Intel; Credential Manager compilado anteriormente, sem teste runtime nativo Windows desta fase. HTTP loopback só debug; demais origens exigem HTTPS, sem redirects.
 
-## Deliberadamente indisponível
+Heartbeat é iniciado no host. Servidor expira disponibilidade sem heartbeat recente; revogação invalida bearer. A UI distingue instalação, login e execução. Cancelamento/indisponibilidade impedem novos efeitos, mas não desfazem conteúdo já aprovado. Modelo não escolhe permissões.
 
-Pareamento, transporte remoto, tokens, cofre do SO, drivers, comandos de shell, escrita/leitura em projetos e autostart. Nenhum token é solicitado ou armazenado. Não usar settings.json/localStorage para futuros tokens. Implementar cofre nativo antes de adicionar qualquer credencial. Pastas salvas não podem ser tratadas como autorização irrestrita por um driver futuro.
+## Execução real e limites
 
-## Contrato para próxima fase
+Codex macOS exige login ChatGPT oficial, perfil nomeado e prova com canários; configuração/MCP/ferramentas são verificadas no app-server. Perfis experimentais incompatíveis falham fechados. Nenhum token de outro aplicativo é exportado. Sem fallback pago.
 
-Pareamento autenticado por sessão do dono, desafio aleatório com alta entropia/expiração curta/uso único, confirmação dos dois lados, token vinculado a dispositivo e guardado no cofre do SO; servidor guarda apenas hash, oferece revogação e limite de tentativas. Runner inicia o canal TLS; conteúdo externo nunca autoriza comando. Sem CORS amplo ou porta localhost aberta.
+Modelo gera proposta estruturada somente leitura. Host limita até oito arquivos/8 KB, protege caminhos/arquivos ocultos/symlinks, compara versão inicial e aplica somente conteúdo exato aprovado por hash/uso único/expiração. Cifra AES-GCM com AAD separa dono/tarefa/proposta/evento. Isso não é E2EE: o Worker pode decifrar.
 
-Antes de qualquer driver: identificador allowlist, argumentos estruturados sem shell, timeout/cancelamento, orçamento, isolamento de pasta, revalidação de caminho a cada acesso (inclusive symlinks/TOCTOU), limites de saída, redação de logs, revisão do conteúdo exato por hash/versão e consumo único da aprovação. Persistir fila/lease e histórico real antes de mostrar execução. Reutilizar os princípios de approvals.ts sem importar suposições de Gmail.
+Worktree deriva de HEAD, sem hooks/filtros de checkout. Não inclui alterações sujas da pasta original; é detached, sem branch/commit automático. Worktree não é sandbox. Processo tem argv fixo, ambiente reduzido, grupo/timeout/saída limitada, CPU/descritores no Unix. Um worker sequencial e single instance reduzem concorrência; não há garantia geral de limite NPROC nem scheduler/lease entre mecanismos. Não habilitar paralelo.
 
-## Verificação
+Journal guarda apenas metadados e digest, com leitura limitada e escrita atômica. Proposta confirmada pode ser retomada sem nova geração. Endpoint autenticado `/api/runner/device/active` devolve só IDs/sequência: reserva sem journal é encerrada como falha incerta, preservando worktree, sem nova escrita/modelo. Geração interrompida não é repetida automaticamente.
 
-Testes Rust exercitam existência/diretório/raiz/dedupe; UI simula IPC em teste separado e não prova segurança nativa. Capabilities/CSP e ausência de plugins perigosos são inspecionadas. Necessários testes reais de diálogo, tray, reabertura, persistência e permissões em Mac Intel/ARM e Windows. Nenhum acesso a segredos, serviço remoto ou banco de produção nesta implementação.
+Progresso é limitado a 490 eventos de sequência; proposta/arquivos/testes têm limites separados, reservando término até 500. Dados legados que já estavam saturados não são reparados silenciosamente; precisam de inspeção específica. A consulta de eventos e o journal não substituem um Flight Recorder integral.
+
+## Persistência de memória em preparação
+
+Migração aditiva `0009`: ledger cifrado por dono/projeto/revisão com CAS, serviço interno sem rota/IPC/UI. Passport local `memory-only`, limitado a 64 KB; grafos/refs validados. Importação não concede ferramentas ou aprovação humana. Workflow de memória `user-approved` fica bloqueado até implementação específica. Filtro de segredo não é DLP; texto/fonte pode conter dados pessoais e requer revisão antes de envio.
+
+ODCP e Expert Contracts são contratos testados, não enforcement integrado. Nenhum perfil autoriza comandos. Checklist de handoff exige SHA/snapshot observado pelo host; texto declarando sucesso não basta. Timer por tempo ativo é função pura, sem loop persistente no Runner.
+
+## Deliberadamente bloqueado
+
+Shell e testes arbitrários de projetos, commit/push/merge/deploy automáticos, Claude/Cursor executores, execução Windows sem prova nativa, autostart, Web Push/aprovação iPhone e transferência automática entre mecanismos. `npm test` é código arbitrário; não se torna seguro pelo nome. Futuro gate deve vincular runtime/argv/arquivos/política à aprovação e provar fs/rede/processos no SO.
+
+## Evidência e riscos residuais
+
+Codex real revalidado nesta rodada: conta oficial, HTTP/SQLite/Keychain e arquivo aprovado no worktree, original limpo. Ensaio de recuperação mata filho próprio após primeira escrita aprovada, restaura e conclui uma vez; proposta sintética identificada, sem modelo nesse teste. UI usa API/IPC simulados em cenários separados. GUI completa/iPhone/ARM64/Windows runtime e revisão independente ainda pendentes.
+
+Logs nativos fixos/rotacionados não incluem tokens/prompt. Caminho específico da máquina removido da saída do teste Codex. Scanner de padrões e revisão de delta não garantem ausência de todo PII ou credencial. Auditoria integral de histórico/licenças/SBOM necessária antes de qualquer publicação. Sem migração remota, push autorizado, deploy ou release nesta fase. Veja RISK_REGISTER e AGENT_HANDOFF.

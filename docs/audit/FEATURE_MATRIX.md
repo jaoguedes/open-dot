@@ -18,3 +18,13 @@
 | Publicação/open source | Não autorizado | UNLICENSED e remoto privado | Bloqueado por decisão humana |
 
 Atualizações desta fase devem apontar para teste e commit no AGENT_HANDOFF; presença de schema não prova integração na interface.
+
+## Atualização verificada desta rodada
+
+- R1/R2: reconciliação de reserva sem journal e kill/restart real de aplicação parcial aprovada PASS. Proposta fixture explícita, sem modelo nesse ensaio. Codex real revalidado separadamente. Não prova GUI ou crash durante geração.
+- R4: orçamento terminal reservado no host/servidor e tests PASS; legado já saturado pendente.
+- Memory Graph: serviço interno cifrado CAS, limite e referências/ciclos validados, persistência SQLite de disco testada; migração 0009 apenas em testes. Sem API/UI.
+- Passport: exportação local `memory-only`; não é projeto completo ou autorização de transferência.
+- Expert Contracts: dez perfis versionados e teste de não escalada; sem conectar agentes.
+- ODCP: schema/checklist, cálculo por tempo ativo e verificador de commits; sem timer persistente, snapshots/commits/leases automáticos no Runner.
+- Check final: 287 Node, sete Python, onze Rust unitários, dois ensaios nativos separados, sete UI (API/IPC simulados). Lint sem erros. Instalações anteriores não atualizadas. Revisão Claude e refinamento Cursor pendentes.

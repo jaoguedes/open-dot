@@ -1,6 +1,6 @@
-# Agent Continuity Protocol — proposta v0.1
+# Open Dot Continuity Protocol (ODCP) — proposta v0.1
 
-Estado em 20/10/2026: **proposta, sem enforcement no produto**. A política de trabalho em CLAUDE.md já orienta os agentes; o Runner atual não impõe commits, checkpoints periódicos, sincronização Git ou transferência entre mecanismos. Não habilitar comandos genéricos para implementar esta proposta.
+Estado em 20/10/2026: **proposta com contratos tipados iniciais, sem enforcement completo no produto**. `packages/core/src/odcp.ts` valida checkpoints/readiness e calcula prazo por tempo ativo; `scripts/check-continuity.ts` verifica commits locais sem escrita. Timer persistente/commits/leases no Runner ainda não conectados. Nome ODCP evita confusão com Agent Client Protocol. A política de trabalho em CLAUDE.md já orienta os agentes; o Runner atual não impõe commits, checkpoints periódicos, sincronização Git ou transferência entre mecanismos. Não habilitar comandos genéricos para implementar esta proposta.
 
 ## Objetivo e fronteiras
 

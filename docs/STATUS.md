@@ -1,3 +1,15 @@
+# Open Dot 2.0 — checkpoint local de 20/10/2026
+
+FASE ZERO e primeira fatia implementadas sobre `9e33c3b`, sem reiniciar ou redesenhar. Ler [handoff vigente](AGENT_HANDOFF.md) e [relatório detalhado para auditoria](audit/IMPLEMENTATION_REPORT.md). Estado histórico abaixo preservado.
+
+- Runner: reservas sem journal reconciliadas sem repetir modelo/escrita; kill/restart real de aplicação aprovada testado; orçamento de progresso reserva recibo terminal. Legado já saturado em 500 eventos ainda exige revisão específica.
+- Codex real revalidado separadamente; crash usa proposta sintética identificada. GUI completa e crash durante geração ainda não comprovados. Shell/testes de projeto continuam desabilitados.
+- Base nova: ledger cifrado CAS/Memory Graph e Passport `memory-only` com persistência SQLite reaberta; dez Expert Contracts e contratos/checklist/tempo ODCP. Sem API/UI de memória, timer persistente, commits/leases automáticos ou handoff automático.
+- Gate: **287 Node, sete Python, onze Rust, sete UI**, mais ensaios Codex e crash reais separados; lint sem erros/aviso preexistente. Scanner inclui arquivos novos; limites no relatório.
+- Migração 0009 aditiva só em bancos descartáveis. Nenhuma migração remota, push, deploy, release ou gasto. Builds antigos são de 504c00d, não deste código. Sincronização privada aguarda autorização explícita. Revisão Claude e Cursor ainda pendentes.
+
+---
+
 # Continuação operacional — 20/10/2026
 
 **Fluxo real do Codex PASS no Mac Intel.** CLI oficial autenticado com ChatGPT → API/SQLite local isolada → pareamento no Keychain → projeto Git autorizado → proposta real do modelo → aprovação do conteúdo exato → gravação em worktree → eventos e conclusão. Revalidado em 20/10; pasta original intacta. É teste programático do núcleo nativo, não E2E completo da interface gráfica ou OAuth Google.

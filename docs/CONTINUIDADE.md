@@ -4,12 +4,18 @@ Atualizado em 20/10/2026. Este arquivo deve permitir retomar sem o histórico do
 
 ## Objetivo atual
 
-Concluir a distribuição de teste do Runner e validar o Workspace operacional, preservando funcionalidades, Dot original e paleta aprovada. Consolidar checkpoints pequenos e preparar o Agent Continuity Protocol. **Sem release, deploy ou tornar o repositório público.** Não aplicar migração remota.
+Open Dot 2.0, FASE ZERO e primeira fatia de fundamentos, preservando o Runner existente. O Blueprint e todo o ZIP foram lidos. **Estado vigente:** [AGENT_HANDOFF.md](AGENT_HANDOFF.md), [auditoria/implementação](audit/IMPLEMENTATION_REPORT.md), [baseline](audit/BASELINE.md), [revisão independente](audit/INDEPENDENT_REVIEW.md). O restante deste documento preserva o contexto do checkpoint anterior; não refazer tarefas já concluídas na atualização abaixo.
+
+R1/R2 corrigiram a janela de reserva/journal e provaram recuperação de processo próprio morto; Codex real revalidado. R4 reservou orçamento para término; memória cifrada CAS/Graph/Passport parcial, dez Expert Contracts e contratos ODCP foram adicionados/testados. Timer/commits/leases automáticos e integração das novas bases na UI ainda pendentes. Dot e fontes de UI preservados. Sem push, release, deploy, mudança de visibilidade ou serviço pago.
+
+Gate atualizado: 287 Node, sete Python, onze Rust unitários, Codex real, crash/restart nativo e sete cenários UI (API/IPC simulados); lint zero erros/aviso preexistente. SQLite de arquivo fechado/reaberto validado. Migração aditiva 0009 só aplicada em DBs descartáveis. Instaladores/Actions anteriores não foram regenerados nesta rodada.
+
+Próximo agente: ler relatório e revisar as fronteiras críticas antes de ligar timer/snapshots e comandos de projeto. Sincronização preparada em [SYNC_REVIEW.md](audit/SYNC_REVIEW.md), aguardando autorização para HEAD/destino exatos. SHAs finais por `git log -1 --format=%H` e pelo log do handoff.
 
 ## Git e autoria
 
 - Branch de desenvolvimento: `codex/runner-safe-edit-beta`, acompanha a branch homônima em `origin`.
-- Último checkpoint documental conhecido: `b9ed7b7` (`docs(continuity): checkpoint ARM64 build and Intel startup validation`), local; ainda não sincronizado.
+- Referência histórica do checkpoint anterior: `b9ed7b7` (`docs(continuity): checkpoint ARM64 build and Intel startup validation`), local; ainda não sincronizado.
 - SHA de implementação conhecido: `504c00dfc9b6a391cb221ede4edde6671093e8e2`.
 - Main permanece em `5db4564`; branch de backup existente permanece em `0b66a76`. Não alterar essas referências para organizar o histórico.
 - Inspeção de 20/10: um único worktree registrado, checkout principal deste projeto; árvore limpa antes desta etapa documental. Conferir novamente, não assumir que permaneceu assim.

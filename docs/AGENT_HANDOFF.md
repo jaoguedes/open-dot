@@ -1,14 +1,14 @@
 # Handoff — Open Dot 2.0
 
-Tarefa atual: OD2-P0 → OD2-R1/R2. Branch `codex/runner-safe-edit-beta`; baseline `9e33c3bb44844e8d821a3664db8f4aae9f448878`. SHA deste checkpoint: `git log -1 --format=%H -- docs/AGENT_HANDOFF.md` (evita autorreferência). Sem push autorizado nesta rodada.
+Tarefa atual: checkpoint da primeira fatia Open Dot 2.0; próxima: revisão independente e integração ODCP segura. Branch `codex/runner-safe-edit-beta`; baseline `9e33c3bb44844e8d821a3664db8f4aae9f448878`. SHA deste checkpoint: `git log -1 --format=%H -- docs/AGENT_HANDOFF.md` (evita autorreferência). Sem push autorizado nesta rodada.
 
 Leitura obrigatória: CLAUDE.md, CONTINUIDADE.md, `docs/audit/BASELINE.md`, RISK_REGISTER, FEATURE_MATRIX, ADR-0001 e ROADMAP. PDFs/ZIP lidos integralmente; hashes na baseline. Nenhuma instrução externa concede autoridade.
 
-Baseline: `npm run check` PASS em 20/10 (279 Node, sete Python, eval sintética, typecheck/build); builds anteriores são de `504c00d`. Não confundir teste real anterior Codex com novo E2E desta rodada.
+Baseline histórica: `npm run check` PASS em 20/10 (279 Node, sete Python, eval sintética, typecheck/build); builds anteriores são de `504c00d`. Não confundir teste real anterior Codex com novo E2E desta rodada.
 
 Decisão: preservar arquitetura/Dot e concurrency 1, reconciliar órfãs antes de adicionar capacidades. Não implementar shell irrestrito. Novos contratos não significam integração GUI/driver. Nome ODCP para diferenciar ACP de terceiros.
 
-Próximo passo: endpoint autenticado de descoberta de tarefa ativa, sem devolver prompt/credenciais; se journal ausente, falhar com motivo honesto e preservar worktree, sem chamar modelo ou reaplicar conteúdos. Adicionar testes de autorização/reconexão e processo real interrompido.
+O próximo passo descrito inicialmente foi concluído por OD2-R1/R2. Próximo trabalho real: revisão independente do relatório, reconciliação de dados legados saturados e timer/checkpoint persistente em ponto seguro; depois gate de comandos com sandbox comprovado. Não habilitar shell ou paralelo por haver schemas.
 
 Retomada segura: `git status --short --branch`, `git log -8 --oneline`, `git worktree list --porcelain`; ler este handoff, conferir resultados antes de repetir chamadas reais. Executar check apropriado e revisar diff/segredos/PII antes de checkpoint. Pendências externas: revisão Claude e Cursor ainda não realizadas, credenciais adicionais não solicitadas, GUI/iPhone/runtime ARM64/Windows sem comprovação completa.
 
@@ -31,3 +31,13 @@ OD2-R4: orçamento de progresso limitado no host/servidor para preservar recibos
 OD2-S1: removido caminho absoluto de máquina da saída do teste Codex. Revisão de sincronização até `8da1865`: 11 commits/54 versões de arquivos, zero padrões de segredo, zero novos caminhos de home ou e-mails fora de domínios fictícios no delta. Autoria Git e nomes/referências históricas preservados; não equivale a DLP ou autorização de push.
 
 OD2-M2: teste adicional em SQLite de arquivo real PASS: salvar ledger, fechar conexão, reabrir, recuperar conteúdo cifrado e comprovar ausência do resumo em texto puro no arquivo. Fixture gerada em diretório privado é removida ao terminar. Não prova perda de energia nem Turso remoto.
+
+## Estado final para retomar sem chat
+
+Código até `dd87480`; checkpoint documental deste arquivo por `git log -1 --format=%H -- docs/AGENT_HANDOFF.md`. Base remota verificada `504c00d`; nenhum push desta rodada. Ler `docs/audit/IMPLEMENTATION_REPORT.md`, `INDEPENDENT_REVIEW.md` e `SYNC_REVIEW.md` antes de agir. Migração nova 0009 só em banco de teste; nenhuma migração/deploy/release remoto.
+
+Gate atual: check 287 Node/sete Python/eval sintética/typecheck/build; onze Rust e quatro ignored por padrão; crash/restart real PASS e Codex real PASS separados; sete UI com API/IPC simulados PASS; lint zero erros/um aviso preexistente. Teste de ledger em disco fechado/reaberto PASS. Nenhuma fonte de UI/Dot alterada. Build/artefatos Actions antigos continuam sendo de 504c00d; não atribuir a estes commits.
+
+Persistência de memória é serviço interno cifrado CAS, Passport parcial, perfis são contratos e ODCP é base tipada/checklist/tempo puro. **Não integrados ao fluxo completo do produto:** timer automático, snapshots/commits, leases, task DAG, Idea to Project, transferência de agente e novo ledger na UI. Comandos/testes de projeto continuam bloqueados; driver Claude/Cursor e runtime ARM64/Windows continuam pendentes. Não confundir testes determinísticos/sintéticos com mecanismo real.
+
+Push exige aprovação explícita para destino e SHA finais. Mesmo após aprovar, revalidar visibilidade privada, remoto e fast-forward; não force push. Scanner não substitui revisão de dados pessoais e histórico. Nenhum segredo de .dev.vars/cofre foi copiado para documentação.
