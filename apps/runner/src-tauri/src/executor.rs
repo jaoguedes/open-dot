@@ -582,7 +582,7 @@ mod live_tests {
         assert!(revoked.status().is_success());
         channel::disconnect(&c, &dir).unwrap();
         println!("REAL_CODEX_FLOW_PASS: official ChatGPT auth, native vault pairing, authorized Git project, CAS claim, readonly profile, no shell/MCP, real model proposal, exact-content approval, isolated file applied, real events/result, original project clean. Project commands/tests were NOT run.");
-        println!("Evidence directory: {}", root.display());
+        println!("Evidence retained in the isolated test directory; machine-specific path omitted.");
     }
 }
 
