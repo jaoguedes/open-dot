@@ -1,3 +1,11 @@
+# Fechamento de auditoria e builds — 20/10/2026
+
+Fonte `feae70d` sincronizada por autorização exata. CI geral e Runner CI **SUCCESS**, três instaladores/checksums verificados. DMG Intel com inicialização básica PASS; ARM64/Windows sem execução nativa. [Resultados/hashes](open-dot-runner-release.md), [relatório independente a revisar](audit/IMPLEMENTATION_REPORT.md). Recibo anterior `4df475e` e este checkpoint documental ficam locais, sem novo push.
+
+Gate: 287 Node, sete Python, onze Rust, sete UI simulados; Codex real e kill/restart com proposta sintética testados separadamente. npm audit: zero vulnerabilidades reportadas; inventário de licenças npm não é parecer jurídico/SBOM completo. P0/P1 parciais: GUI real completa, negociação de versões (R14), comandos/testes isolados, ODCP automático, Claude/Cursor e rollout continuam pendentes. Sem release/deploy/migração remota/visibilidade/cobrança. Dot/UI preservados. Próximo: revisão Claude Code antes da integração incremental pelo Cursor.
+
+---
+
 # Sincronização privada autorizada — 20/10/2026
 
 Push exato de `feae70d` (14 commits) autorizado pelo usuário e concluído, sem força. CI 39436042987 e Runner CI 39436042716 em andamento nesse SHA. Nenhum merge, release, deploy ou alteração de visibilidade/cobrança. Recibo documental posterior fica local e não recebe autorização implícita de push. [Detalhes](audit/SYNC_REVIEW.md). O estado “sem push” nos blocos anteriores descreve a preparação antes da autorização.

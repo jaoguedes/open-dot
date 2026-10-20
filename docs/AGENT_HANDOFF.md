@@ -45,3 +45,7 @@ Push exige aprovação explícita para destino e SHA finais. Mesmo após aprovar
 ## Sincronização autorizada concluída
 
 Em 20/10 o usuário autorizou expressamente feae70d (14 commits). Ref privada avançou 504c00d→feae70d, sem força. CI 39436042987 e Runner CI 39436042716 começaram nesse SHA. Este recibo e futuros commits documentais permanecem locais, fora da autorização anterior. O bloco “nenhum push desta rodada” acima é o estado histórico antes dessa autorização, não uma regra para ignorar Git real. Nenhum merge/release/deploy.
+
+## Fechamento verificável
+
+Fonte remota autorizada feae70d; recibo local 4df475e e checkpoint final local. CI 39436042987 e Runner CI 39436042716 SUCCESS; três instaladores e checksums verificados, Intel startup básico PASS. ARM64/Windows sem runtime nativo. Não repetir builds/chamada Codex sem nova necessidade. Relatório atualizado inclui inventário npm/licenças e R14 (compatibilidade Web/Runner por inspeção). Próximo: revisão independente indicada em INDEPENDENT_REVIEW; depois timer/checkpoint persistente seguro e GUI completa. Nenhum novo push autorizado. Blocos anteriores sem push/build novo são históricos.

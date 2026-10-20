@@ -76,3 +76,15 @@ O DMG Intel debug local teve inicialização básica PASS: binário da imagem at
 Cópias locais: `apps/runner/installers/actions-39425600153/` (ignoradas pelo Git). `node scripts/verify-runner-artifacts.mjs apps/runner/installers/actions-39425600153` PASS: exatamente três instaladores e três checksums. No GitHub, retenção de um dia; não tratar o link de Actions como distribuição permanente.
 
 Ambos DMGs: hdiutil VALID, montagem somente leitura, versão 0.1.0 / com.opendot.runner / arquiteturas x86_64 e arm64 conferidas; desmontados. Intel do Actions iniciou por dez segundos com HOME/CODEX_HOME isolados, sem conta ou pareamento; somente seu processo foi encerrado. Windows: MZ/PE válidos; alvo x64 comprovado no build, sem execução nativa. ARM64 também sem execução nativa. Sem assinatura/notarização; instalação, desinstalação, tray e E2E gráfico completo permanecem pendentes. As seções anteriores registram checkpoints históricos; esta seção prevalece para o resultado dos builds.
+
+## Validação final do HEAD sincronizado — feae70d
+
+[CI 39436042987](https://github.com/jaoguedes/open-dot/actions/runs/39436042987) **SUCCESS**. [Runner CI 39436042716](https://github.com/jaoguedes/open-dot/actions/runs/39436042716) **SUCCESS**: verify e três builds (Mac Intel, Mac ARM64, Windows x64). Onze testes Rust passaram em cada plataforma; testes nativos reais permanecem separados dos helpers ignorados. Sete cenários UI do verify usam API/IPC simulados.
+
+Três instaladores e três checksums conferidos localmente, em diretório ignorado `apps/runner/installers/actions-39436042716/`. Ambos DMGs íntegros, montagem somente leitura/arquiteturas verificadas e desmontagem concluída. Intel iniciou por dez segundos com HOME/CODEX_HOME isolados. Windows MZ/PE conferidos; ARM64/Windows não executados nativamente. Build não substitui GUI E2E. Sem assinatura/notarização, release, tag ou deploy. Versão interna continua 0.1.0; diferenciar builds pelo SHA/checksum. Retenção Actions de um dia, não distribuição permanente.
+
+| Artefato | Bytes | SHA-256 |
+|---|---:|---|
+| OpenDot-Runner-macos-x64.dmg | 7.537.542 | `1de1815751b8e8fcc8e730d90006a25e160b497ad1256bbadef19ada00580c05` |
+| OpenDot-Runner-macos-arm64.dmg | 7.401.595 | `abb716976ff39bf4e2d5014f8ce3e86f491de591e4a5e2536aacaeec26366597` |
+| OpenDot-Runner-windows-x64-setup.exe | 3.451.923 | `95f1f7c9979f130a37cfdc00155d2418d118e1fee371756d4d852fa200ab14d7` |

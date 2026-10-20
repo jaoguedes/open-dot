@@ -66,7 +66,7 @@ A atualização documental final acrescenta recibos e handoff; localizar pelo Gi
 
 JavaScript inicial 354,9 KB, abaixo do teto 400 KB e acima da meta 350 KB. Nenhuma medição de desempenho de hardware novo. Não há porcentagem inventada de cobertura/conclusão.
 
-Logs locais descartáveis: `open-dot-2-release-gate.log`, `open-dot-2-final-rust.log`, `open-dot-2-final-crash.log`, `open-dot-2-real-codex.log`, `open-dot-2-ui.log`. Contêm evidências locais, não versionar/envia-los automaticamente. Instaladores anteriores não foram regenerados e não contêm as correções desta rodada.
+Logs locais descartáveis: `open-dot-2-release-gate.log`, `open-dot-2-final-rust.log`, `open-dot-2-final-crash.log`, `open-dot-2-real-codex.log`, `open-dot-2-ui.log`. Contêm evidências locais, não versionar/envia-los automaticamente. Instaladores anteriores de 504c00d são históricos. Após autorização específica, novos builds de feae70d foram executados; recibos atualizados no guia de instaladores.
 
 ## 7. NÃO TESTADO / BLOQUEADO
 
@@ -93,4 +93,24 @@ Riscos remanescentes: contrato experimental Codex; contextos/quotas limitados se
 
 ## 10. HANDOFF / PUBLICAÇÃO
 
-Ler `docs/AGENT_HANDOFF.md` e `docs/CONTINUIDADE.md`; começar com status/branches/worktrees/log, não com novas instalações. SHA final por `git log -1 --format=%H`, recibo documental por log do arquivo. Remote continua privado na última consulta, branch remota `504c00d`. Nenhum push nesta fase; sincronização preparada e sujeita à autorização do mantenedor para SHA/destino exatos. Sem release, deploy, tags, mudança de licença ou gastos. Ver SYNC_REVIEW e INDEPENDENT_REVIEW para autorização e próximos agentes.
+Ler `docs/AGENT_HANDOFF.md` e `docs/CONTINUIDADE.md`; começar com status/branches/worktrees/log, não com novas instalações. SHA final por `git log -1 --format=%H`, recibo documental por log do arquivo. Remoto privado revalidado; push exato de `feae70d` (14 commits) autorizado pelo mantenedor e concluído sem força. Recibos documentais posteriores permanecem locais e exigem nova autorização antes de outro push. Sem release, deploy, tags, mudança de licença ou gastos. Ver SYNC_REVIEW e INDEPENDENT_REVIEW para autorização e próximos agentes.
+
+## 11. Verificações adicionais de dependências e rollout
+
+`npm audit --json` consultado sem alterar dependências: zero vulnerabilidades reportadas, 335 entradas totais. É uma consulta ao catálogo npm, não auditoria do código/Rust. Inventário dos metadados do package-lock: todas as 335 dependências têm campo license; raiz UNLICENSED. Predominam MIT (275), Apache-2.0 (21), Apache-2.0 OR MIT (12) e ISC (11); também há MPL-2.0, OFL-1.1, BlueOak-1.0.0, Python-2.0, CC-BY-4.0, BSD-2/3-Clause e CC0-1.0. Não é SBOM completo nem parecer de compatibilidade; Rust/assets ainda precisam inventário. Lock SHA-256: `893aa10d2b824997f3ffd0f66befba98c1323f8038b27cc65177ea8909c80d0c`.
+
+R14 registrado por inspeção: falta negociação de versão/capacidade Web–Runner. Heartbeat online não prova compatibilidade do consumidor com servidor antigo. Testar diagnóstico de incompatibilidade e rollout antes de deploy; nenhuma falha de produção foi induzida.
+
+## Validação final do HEAD sincronizado — feae70d
+
+[CI 39436042987](https://github.com/jaoguedes/open-dot/actions/runs/39436042987) **SUCCESS**. [Runner CI 39436042716](https://github.com/jaoguedes/open-dot/actions/runs/39436042716) **SUCCESS**: verify e três builds (Mac Intel, Mac ARM64, Windows x64). Onze testes Rust passaram em cada plataforma; testes nativos reais permanecem separados dos helpers ignorados. Sete cenários UI do verify usam API/IPC simulados.
+
+Três instaladores e três checksums conferidos localmente, em diretório ignorado `apps/runner/installers/actions-39436042716/`. Ambos DMGs íntegros, montagem somente leitura/arquiteturas verificadas e desmontagem concluída. Intel iniciou por dez segundos com HOME/CODEX_HOME isolados. Windows MZ/PE conferidos; ARM64/Windows não executados nativamente. Build não substitui GUI E2E. Sem assinatura/notarização, release, tag ou deploy. Versão interna continua 0.1.0; diferenciar builds pelo SHA/checksum. Retenção Actions de um dia, não distribuição permanente.
+
+| Artefato | Bytes | SHA-256 |
+|---|---:|---|
+| OpenDot-Runner-macos-x64.dmg | 7.537.542 | `1de1815751b8e8fcc8e730d90006a25e160b497ad1256bbadef19ada00580c05` |
+| OpenDot-Runner-macos-arm64.dmg | 7.401.595 | `abb716976ff39bf4e2d5014f8ce3e86f491de591e4a5e2536aacaeec26366597` |
+| OpenDot-Runner-windows-x64-setup.exe | 3.451.923 | `95f1f7c9979f130a37cfdc00155d2418d118e1fee371756d4d852fa200ab14d7` |
+
+Fonte sincronizada feae70d; recibo local anterior 4df475e. Este checkpoint final é somente documental e permanece local, sem novo push. Próximo agente deve consultar HEAD real e log do arquivo antes de continuar.

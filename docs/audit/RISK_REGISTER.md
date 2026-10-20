@@ -20,3 +20,7 @@
 R01/R02 mitigados no fluxo normal por OD2-R1/R2 e teste de processo real; R13 mitigado prospectivamente por OD2-R4; estado legado saturado continua pendente. Teste usa proposta sintética, não reproduz crash durante geração do fornecedor.
 
 Nenhuma severidade é uma porcentagem de conclusão. Achados só ficam resolvidos quando teste/commit correspondente estiver registrado no handoff.
+
+## Gate adicional de rollout — R14
+
+Alta, inferência de inspeção: heartbeat confirma transporte e diagnóstico local, mas não há negociação versionada de compatibilidade Web/Runner. O Runner novo consulta `/api/runner/device/active`; servidor antigo sem essa rota pode manter heartbeat enquanto o consumidor falha fechado e não avança a fila. Não foi ensaiado como falha de produção. Antes de deploy: matriz de versões, diagnóstico explícito de incompatibilidade e teste de rollout; não tratar online como prova de execução disponível. Migração 0009 e backend novo não foram publicados.

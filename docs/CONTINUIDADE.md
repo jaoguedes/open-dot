@@ -6,17 +6,17 @@ Atualizado em 20/10/2026. Este arquivo deve permitir retomar sem o histórico do
 
 Open Dot 2.0, FASE ZERO e primeira fatia de fundamentos, preservando o Runner existente. O Blueprint e todo o ZIP foram lidos. **Estado vigente:** [AGENT_HANDOFF.md](AGENT_HANDOFF.md), [auditoria/implementação](audit/IMPLEMENTATION_REPORT.md), [baseline](audit/BASELINE.md), [revisão independente](audit/INDEPENDENT_REVIEW.md). O restante deste documento preserva o contexto do checkpoint anterior; não refazer tarefas já concluídas na atualização abaixo.
 
-R1/R2 corrigiram a janela de reserva/journal e provaram recuperação de processo próprio morto; Codex real revalidado. R4 reservou orçamento para término; memória cifrada CAS/Graph/Passport parcial, dez Expert Contracts e contratos ODCP foram adicionados/testados. Timer/commits/leases automáticos e integração das novas bases na UI ainda pendentes. Dot e fontes de UI preservados. Sem push, release, deploy, mudança de visibilidade ou serviço pago.
+R1/R2 corrigiram a janela de reserva/journal e provaram recuperação de processo próprio morto; Codex real revalidado. R4 reservou orçamento para término; memória cifrada CAS/Graph/Passport parcial, dez Expert Contracts e contratos ODCP foram adicionados/testados. Timer/commits/leases automáticos e integração das novas bases na UI ainda pendentes. Dot e fontes de UI preservados. Push privado exato de `feae70d` autorizado e concluído; recibos posteriores locais. Sem release, deploy, mudança de visibilidade ou serviço pago.
 
-Gate atualizado: 287 Node, sete Python, onze Rust unitários, Codex real, crash/restart nativo e sete cenários UI (API/IPC simulados); lint zero erros/aviso preexistente. SQLite de arquivo fechado/reaberto validado. Migração aditiva 0009 só aplicada em DBs descartáveis. Instaladores/Actions anteriores não foram regenerados nesta rodada.
+Gate atualizado: 287 Node, sete Python, onze Rust unitários, Codex real, crash/restart nativo e sete cenários UI (API/IPC simulados); lint zero erros/aviso preexistente. SQLite de arquivo fechado/reaberto validado. Migração aditiva 0009 só aplicada em DBs descartáveis. Novos CI e Runner CI de feae70d passaram nas três plataformas; três instaladores/checksums conferidos, Intel startup básico PASS, ARM64/Windows sem runtime nativo. Hashes no guia de instaladores.
 
-Próximo agente: ler relatório e revisar as fronteiras críticas antes de ligar timer/snapshots e comandos de projeto. Sincronização preparada em [SYNC_REVIEW.md](audit/SYNC_REVIEW.md), aguardando autorização para HEAD/destino exatos. SHAs finais por `git log -1 --format=%H` e pelo log do handoff.
+Próximo agente: ler relatório e revisar as fronteiras críticas antes de ligar timer/snapshots e comandos de projeto. Sincronização de feae70d concluída em [SYNC_REVIEW.md](audit/SYNC_REVIEW.md); novos commits exigem nova autorização para HEAD/destino exatos. SHAs finais por `git log -1 --format=%H` e pelo log do handoff.
 
 ## Git e autoria
 
 - Branch de desenvolvimento: `codex/runner-safe-edit-beta`, acompanha a branch homônima em `origin`.
-- Referência histórica do checkpoint anterior: `b9ed7b7` (`docs(continuity): checkpoint ARM64 build and Intel startup validation`), local; ainda não sincronizado.
-- SHA de implementação conhecido: `504c00dfc9b6a391cb221ede4edde6671093e8e2`.
+- Referência histórica do checkpoint anterior: `b9ed7b7` (`docs(continuity): checkpoint ARM64 build and Intel startup validation`), agora incluído no push autorizado até feae70d.
+- Fonte atual sincronizada: `feae70d4336ada21f37dd1515e869628b5b59a8c`. Recibo documental anterior `4df475e` e este checkpoint são locais; nenhum novo push autorizado. Referência histórica anterior: `504c00dfc9b6a391cb221ede4edde6671093e8e2`.
 - Main permanece em `5db4564`; branch de backup existente permanece em `0b66a76`. Não alterar essas referências para organizar o histórico.
 - Inspeção de 20/10: um único worktree registrado, checkout principal deste projeto; árvore limpa antes desta etapa documental. Conferir novamente, não assumir que permaneceu assim.
 - O commit `504c00d` reúne trabalho de sessões anteriores e foi enviado antes da nova política. Não atende ao novo padrão de granularidade/título. Preservar o histórico compartilhado; próximos commits pequenos e semânticos, sem amend/rebase/force push para reorganizá-lo.

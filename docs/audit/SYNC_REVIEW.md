@@ -1,4 +1,4 @@
-# Sincronização privada — revisão e aprovação pendente
+# Sincronização privada — revisão, autorização e recibo
 
 Task: OD2-SYNC. **Push específico autorizado e concluído:** `feae70d4336ada21f37dd1515e869628b5b59a8c`, 14 commits locais para a branch privada revisada. Revalidados HEAD limpo, visibilidade e ref remota antes do envio. Documento não concede autorização para novos commits. Destino pretendido: `origin`, branch `codex/runner-safe-edit-beta`. Última consulta confirmou GitHub privado, HTTPS sem credencial na URL e ref remota `504c00dfc9b6a391cb221ede4edde6671093e8e2`.
 
@@ -25,3 +25,7 @@ Após aprovação explícita: push fast-forward normal para a branch revisada; n
 Em 20/10/2026 o mantenedor respondeu “Autorizar push privado deste HEAD” para feae70d. Push fast-forward normal concluído de 504c00d a feae70d. Sem merge, tag, release, deploy, mudança de visibilidade ou orçamento. Scanner final: 470 arquivos/zero padrões; histórico local de 14 commits/68 versões de arquivos/zero padrões. Não equivale a DLP ou auditoria independente.
 
 CI deste SHA: [CI 39436042987](https://github.com/jaoguedes/open-dot/actions/runs/39436042987) e [Runner CI 39436042716](https://github.com/jaoguedes/open-dot/actions/runs/39436042716), inicialmente em execução. Receber autorização para feae70d não autoriza enviar o presente recibo documental ou commits posteriores. Nenhum novo push automático. As instruções de preparação acima registram as condições anteriores ao envio.
+
+## Resultado final
+
+CI geral e Runner CI do SHA autorizado feae70d concluídos com SUCCESS, incluindo Intel/ARM64/Windows. Artefatos e limites nativos no [guia de instaladores](../open-dot-runner-release.md). Fonte remota permanece feae70d; recibo 4df475e e checkpoint documental final são locais, sem autorização de novo push. Nenhuma publicação/release/deploy.
