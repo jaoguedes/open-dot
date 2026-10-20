@@ -1,3 +1,4 @@
+import { syncOneEngineeringMemory } from "./engineering-memory.ts";
 import { z } from "zod";
 import type { Ctx } from "../context.ts";
 import { open, seal } from "../crypto.ts";
@@ -5,7 +6,7 @@ import { sha256Hex } from "@open-dot/core";
 import { safeRunnerText } from "../runner/routes.ts";
 import { RUNNER_PROTOCOL } from "../runner/protocol.ts";
 
-const id = z.string().uuid();
+const id = z.string().uuid().transform(v=>v.toLowerCase());
 export const EngineeringPlanSchema = z.object({
   requestKey: id, deviceId: id, projectId: id,
   mechanism: z.literal("codex"),
@@ -19,6 +20,7 @@ export const EngineeringPlanSchema = z.object({
     dependencies: z.array(id).max(11),
     acceptance: z.literal("approved-files-applied"),
   }).strict()).min(1).max(12),
+  rememberResults: z.boolean().default(false),
 }).strict().superRefine((p, ctx) => {
   const seen = new Set<string>(); let phase = 0;
   for (const task of p.tasks) {
@@ -29,10 +31,13 @@ export const EngineeringPlanSchema = z.object({
   if (p.tasks.reduce((n, t) => n + new TextEncoder().encode(t.prompt).length, 0) > 24000)
     ctx.addIssue({ code: "custom", message: "Plan prompt budget exceeded." });
 });
-interface Plan { id: string; owner_id: string; device_id: string; project_id: string; mechanism: string; state: string; revision: number }
+interface Plan { id: string; owner_id: string; device_id: string; project_id: string; mechanism: string; state: string; revision: number; memory_policy_revision:number|null }
 
 export async function createEngineeringPlan(ctx: Ctx, owner: string, input: unknown) {
-  const data = EngineeringPlanSchema.parse(input), text = JSON.stringify(data);
+  const data = EngineeringPlanSchema.parse(input);
+  const { rememberResults, ...definition } = data;
+  // Preserve the existing digest contract when the new opt-in is absent/false.
+  const text = JSON.stringify(rememberResults ? { ...definition, rememberResults: true } : definition);
   if (safeRunnerText(text) !== text) throw new Error("Sensitive plan refused.");
   const digest = await sha256Hex(text);
   const existing = (await ctx.db.query<{ id: string; definition_digest: string }>("SELECT id,definition_digest FROM od_engineering_plans WHERE owner_id=? AND request_key=?", [owner, data.requestKey]))[0];
@@ -40,14 +45,16 @@ export async function createEngineeringPlan(ctx: Ctx, owner: string, input: unkn
     if (existing.definition_digest !== digest) throw new Error("Request key content conflict.");
     return existing.id;
   }
+  const policy = rememberResults ? (await ctx.db.query<{revision:number}>("SELECT revision FROM od_project_memory_policies WHERE owner_id=? AND project_id=? AND enabled=1 AND expires_at>?",[owner,data.projectId,ctx.now()]))[0] : null;
+  if(rememberResults && !policy)throw new Error("Memory consent required.");
   const planId = crypto.randomUUID();
   const title = await seal(ctx.keys, data.title, `engineering:plan:${owner}:${planId}`);
   const payloads = await Promise.all(data.tasks.map(t => seal(ctx.keys, JSON.stringify({ title: t.title, prompt: t.prompt, acceptance: t.acceptance }), `engineering:task:${owner}:${t.id}`)));
   const result = await ctx.db.batch([
-    { sql: `INSERT INTO od_engineering_plans(id,owner_id,device_id,project_id,mechanism,request_key,definition_digest,title_enc,state,created_at,updated_at)
-      SELECT ?,?,?,?,?,?,?,?,'active',?,? WHERE EXISTS(SELECT 1 FROM od_runner_devices WHERE id=? AND owner_id=? AND revoked_at IS NULL AND expires_at>?)
+    { sql: `INSERT INTO od_engineering_plans(id,owner_id,device_id,project_id,mechanism,request_key,definition_digest,title_enc,state,created_at,updated_at,memory_policy_revision)
+      SELECT ?,?,?,?,?,?,?,?,'active',?,?,? WHERE EXISTS(SELECT 1 FROM od_runner_devices WHERE id=? AND owner_id=? AND revoked_at IS NULL AND expires_at>?)
       AND (SELECT COUNT(*) FROM od_engineering_plans WHERE owner_id=?)<20 ON CONFLICT(owner_id,request_key) DO NOTHING`,
-      args: [planId, owner, data.deviceId, data.projectId, data.mechanism, data.requestKey, digest, title, ctx.now(), ctx.now(), data.deviceId, owner, ctx.now(), owner] },
+      args: [planId, owner, data.deviceId, data.projectId, data.mechanism, data.requestKey, digest, title, ctx.now(), ctx.now(), policy?.revision??null, data.deviceId, owner, ctx.now(), owner] },
     ...data.tasks.map((t, position) => ({ sql: "INSERT INTO od_engineering_tasks(id,plan_id,position,phase,payload_enc) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM od_engineering_plans WHERE id=?)", args: [t.id, planId, position, t.phase, payloads[position]!, planId] })),
     ...data.tasks.flatMap(t => t.dependencies.map(dependency => ({ sql: "INSERT INTO od_engineering_dependencies(task_id,dependency_id) SELECT ?,? WHERE EXISTS(SELECT 1 FROM od_engineering_plans WHERE id=?)", args: [t.id, dependency, planId] }))),
   ]);
@@ -78,6 +85,7 @@ export async function reconcileEngineering(ctx: Ctx) {
       EXISTS(SELECT 1 FROM od_engineering_tasks t WHERE t.plan_id=od_engineering_plans.id AND t.state IN ('uncertain','failed','cancelled')) OR
       NOT EXISTS(SELECT 1 FROM od_engineering_tasks t WHERE t.plan_id=od_engineering_plans.id AND t.state<>'completed'))`, args: [ctx.now()] },
   ]);
+  await syncOneEngineeringMemory(ctx);
 }
 
 /** Called by authenticated Runner claim, not a model. One dispatch/device, native approvals unchanged. */
@@ -114,10 +122,10 @@ export async function advanceEngineering(ctx: Ctx, deviceId: string) {
 export async function listEngineeringPlans(ctx: Ctx, owner: string) {
   const plans = await ctx.db.query<Plan & { title_enc: string }>("SELECT * FROM od_engineering_plans WHERE owner_id=? ORDER BY created_at DESC,id LIMIT 20", [owner]);
   return Promise.all(plans.map(async p => ({ id: p.id, projectId: p.project_id, deviceId: p.device_id, state: p.state, revision: p.revision,
-    title: await open(ctx.keys, p.title_enc, `engineering:plan:${owner}:${p.id}`),
-    tasks: await Promise.all((await ctx.db.query<{ id: string; phase: number; state: string; payload_enc: string; attemptId: string | null; runnerTaskId: string | null }>(
+    memoryRequested:p.memory_policy_revision!==null, title: await open(ctx.keys, p.title_enc, `engineering:plan:${owner}:${p.id}`),
+    tasks: await Promise.all((await ctx.db.query<{ id: string; phase: number; state: string; payload_enc: string; attemptId: string | null; runnerTaskId: string | null; memory_sync_state:string; memory_recorded_revision:number|null }>(
       "SELECT t.*,a.id AS attemptId,a.runner_task_id AS runnerTaskId FROM od_engineering_tasks t LEFT JOIN od_engineering_attempts a ON a.task_id=t.id WHERE t.plan_id=? ORDER BY t.position", [p.id],
-    )).map(async t => ({ id: t.id, phase: t.phase, state: t.state, attemptId: t.attemptId, runnerTaskId: t.runnerTaskId,
+    )).map(async t => ({ id: t.id, phase: t.phase, state: t.state, attemptId: t.attemptId, runnerTaskId: t.runnerTaskId, memoryState:p.memory_policy_revision!==null?t.memory_sync_state:"not_requested", memoryRevision:t.memory_recorded_revision,
       title: JSON.parse(await open(ctx.keys, t.payload_enc, `engineering:task:${owner}:${t.id}`)).title }))),
   })));
 }

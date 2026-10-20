@@ -1,14 +1,13 @@
 # Estado operacional compartilhado
 
-Responsável: Codex. Revisão independente: pendente. Data: 2026-10-20.
-Branch: `codex/od2-runner-remediation`. Worktree: `open-dot-od2-remediation`.
-Base desta continuação: `1d9125f7af720df20e427e5d21eb35bb8ae26471`.
-HEAD efetivo: consultar `git rev-parse HEAD`; este documento não pode conter o próprio SHA.
+Escritor: Codex. Revisão independente pendente. Data 2026-10-20.
+Branch `codex/od2-runner-remediation`, worktree `open-dot-od2-remediation`.
+Base desta continuação `940b06c60138af8ebdf8a0291732f36cd21ea6de`; HEAD efetivo sempre por `git rev-parse HEAD`.
 
-Fonte estruturada única: [ENGINEERING_STATE.json](../audit/ENGINEERING_STATE.json).
-Resultados anteriores: [REMEDIATION_REPORT.md](../audit/REMEDIATION_REPORT.md).
-[Backlog](BACKLOG.md), [arquitetura](ARCHITECTURE_MAP.md), [estado Codex](codex/STATUS.md).
+Fonte estruturada: [ENGINEERING_STATE.json](../audit/ENGINEERING_STATE.json). Registro incremental vigente: [REMEDIATION_RUN.md](../audit/REMEDIATION_RUN.md). O FINAL_IMPLEMENTATION_REPORT anterior é um snapshot da execução anterior até ser consolidado no encerramento desta.
 
-Rodada atual: índices consolidados, checkpoints ODCP internos cifrados/CAS e CLI de coordenação cooperante implementados. Último código 5cd345f; relatório vigente: [FINAL_IMPLEMENTATION_REPORT](../audit/FINAL_IMPLEMENTATION_REPORT.md). Executor genérico, paralelismo e commits automáticos permanecem desabilitados. Sem autorização de push para esta rodada; remoto não reconsultado. Auditorias originais do Cursor não localizadas na rodada anterior; não presumir aprovação independente.
+Nesta continuação: scheduler persistente ligado ao claim real; planos no Workspace; duas chamadas Codex reais separadas; checkpoints automáticos nativos; commit local com revisão/consentimento próprios e recuperação do mesmo SHA após SIGKILL; projeto explícito e consentimentos limpos na troca de escopo. Unidade atual: fatos de execução no ledger consentido. Próxima: Passport operacional. Commits/gates exatos no Git e registro incremental; [backlog](BACKLOG.md), [arquitetura](ARCHITECTURE_MAP.md).
 
-Retomada: conferir status/log/worktrees, ler estado estruturado e handoff mais recente, executar testes da área modificada. Não repetir ações incertas.
+Comandos/testes arbitrários continuam bloqueados (nenhum OCI local instalado e isolamento de scripts não demonstrado). Commits automáticos de planos, integração entre worktrees, GUI nativa completa, recuperação de geração real, providers adicionais e execução ARM64/Windows continuam parciais/pendentes. Ações Git locais do produto exigem confirmação separada; memória não transfere privilégios. Nenhum push/merge/deploy/release ou migração remota nesta continuação.
+
+Retomar: ler estado, conferir Git/status/worktrees, preservar código pendente e reconciliar efeitos incertos antes de agir. Não presumir atividade/aprovação do Cursor ou Claude; originais da auditoria Cursor não localizados na rodada anterior. Só um escritor do estado por vez.

@@ -10,8 +10,9 @@ async function api<T>(project:string,suffix:string,body?:unknown,signal?:AbortSi
 export function ProjectMemory({projectId,demo}:{projectId:string;demo:boolean}){
  const [policy,setPolicy]=useState<Policy|null>(null),[passport,setPassport]=useState<Passport|null>(null);
  const [note,setNote]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[refresh,setRefresh]=useState(0),[exported,setExported]=useState('');
+ useEffect(()=>{setNote('');setExported('');},[projectId,demo]);
  useEffect(()=>{
-  setPolicy(null);setPassport(null);setError('');setNote('');setExported('');
+  setPolicy(null);setPassport(null);setError('');setExported('');
   if(!projectId||demo)return;
   const abort=new AbortController();
   void (async()=>{
@@ -25,13 +26,14 @@ export function ProjectMemory({projectId,demo}:{projectId:string;demo:boolean}){
  async function act(suffix:string,body:unknown){
   setBusy(true);setError('');try{
    const result=await api<{passport?:Passport}>(projectId,suffix,body);
-   if(suffix==='/export')setExported(JSON.stringify(result.passport,null,2));else setRefresh(v=>v+1);
+   if(suffix==='/export')setExported(JSON.stringify(result.passport,null,2));else {if(suffix===''||suffix==='/forget')setNote('');setRefresh(v=>v+1);}
   }catch(e){setError(e instanceof Error?e.message:'Operação não confirmada.');}finally{setBusy(false);}
  }
  if(!projectId)return null;
  return <section className="card ws-project-memory" aria-label="Memória do projeto">
   <h3>Memória do projeto</h3>
   <p className="tiny">Notas cifradas deste projeto, separadas das permissões do Runner. Não concedem ferramentas ou aprovação de alterações. Passport disponível neste estágio: somente memória.</p>
+  {!demo&&<button className="btn" disabled={busy} onClick={()=>setRefresh(v=>v+1)}>Atualizar memória</button>}
   {error&&<p role="alert">{error}</p>}
   {demo?<p>Demonstração: persistência desabilitada.</p>:!policy?<p role="status">{error?<button className="btn" onClick={()=>setRefresh(v=>v+1)}>Tentar reler memória</button>:'Consultando consentimento…'}</p>:!policy.enabled?<>
    <p>Guardar memória é opcional. Ao consentir, o snapshot fica disponível nesta conta por 30 dias; você pode esquecê-lo antes. Renovar após expiração começa sem restaurar dados antigos.</p>

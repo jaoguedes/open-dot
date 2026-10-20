@@ -1,3 +1,4 @@
+import { readProjectMemory } from "../src/continuity/project-memory.ts";
 import { startSession } from "../src/http.ts";
 import { mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
@@ -137,4 +138,62 @@ test("scheduler: an unavailable earlier project does not starve an eligible plan
     assert.equal((await s.web.call("POST", "/api/runner/plans", next)).status, 201);
     assert.equal((await claim(s)).json.task.projectId, project);
   } finally { s.ctx.db.raw.close(); }
+});
+
+async function consentMemory(s:Awaited<ReturnType<typeof setup>>) {
+  assert.equal((await s.web.call("POST",`/api/projects/${s.projectId}/memory/consent`,{consent:"store-project-memory",expectedRevision:0,retentionDays:1})).status,200);
+}
+const memoryPlan=(s:Awaited<ReturnType<typeof setup>>)=>({...s.plan,rememberResults:true,tasks:[s.plan.tasks[0]]});
+test("engineering memory: extra opt-in, existing consent, factual provenance and preserved requirements",async()=>{
+  const s=await setup();try{
+    assert.equal((await s.web.call("POST","/api/runner/plans",memoryPlan(s))).status,409);
+    assert.equal((await s.ctx.db.query("SELECT id FROM od_engineering_plans")).length,0);
+    await consentMemory(s);
+    const requirement={id:crypto.randomUUID(),kind:"requirement",provenance:"user-provided",summary:"Prices need observation dates",sourceRefs:[],observedAt:"2026-10-20T12:00:00Z",commit:null};
+    await s.web.call("POST",`/api/projects/${s.projectId}/memory`,{passport:{schemaVersion:1,scope:"memory-only",projectId:s.projectId,revision:1,memories:[requirement],links:[]},expectedRevision:0,consentRevision:1});
+    assert.equal((await s.web.call("POST","/api/runner/plans",memoryPlan(s))).status,201);
+    const first=(await claim(s)).json.task;await completeFixture(s,first.id);
+    const plans=(await s.web.call("GET","/api/runner/plans")).json.plans;assert.equal(plans[0].tasks[0].memoryState,"recorded");
+    const value=await readProjectMemory(s.ctx,s.owner,s.projectId);assert.equal(value!.revision,2);assert.equal(value!.memories.length,2);assert.deepEqual(value!.memories[0],requirement);
+    const fact=value!.memories[1]!;assert.equal(fact.provenance,"external-evidence");assert.equal(fact.commit,null);assert.ok(fact.summary.includes("não foram executados"));assert.equal(fact.sourceRefs[0],`task:${s.plan.tasks[0]!.id}`);
+    assert.ok(!JSON.stringify(value).includes(s.plan.tasks[0]!.prompt));
+    await s.web.call("GET","/api/runner/plans");assert.equal((await readProjectMemory(s.ctx,s.owner,s.projectId))!.revision,2);
+    await s.web.call("POST",`/api/projects/${s.projectId}/memory/forget`,{consent:"forget-project-memory",expectedConsentRevision:1});
+    await s.web.call("GET","/api/runner/plans");assert.equal((await s.ctx.db.query("SELECT * FROM od_project_ledgers")).length,0);
+  }finally{s.ctx.db.raw.close();}
+});
+test("engineering memory: lost receipt after durable ledger write does not duplicate facts",async()=>{
+  const s=await setup();try{
+    await consentMemory(s);await s.web.call("POST","/api/runner/plans",memoryPlan(s));const first=(await claim(s)).json.task;await completeFixture(s,first.id);
+    const original=s.ctx.db.run.bind(s.ctx.db);let dropped=false;
+    s.ctx.db.run=async(sql,args)=>{if(!dropped && sql.startsWith("UPDATE od_engineering_tasks SET memory_sync_state=") && args?.[0]==="recorded"){dropped=true;throw Error("Fixture lost receipt after ledger persisted");}return original(sql,args);};
+    const firstRead=(await s.web.call("GET","/api/runner/plans")).json.plans[0];assert.equal(firstRead.tasks[0].memoryState,"retry_wait");
+    assert.equal((await readProjectMemory(s.ctx,s.owner,s.projectId))!.revision,1);s.ctx.db.run=original;
+    assert.equal((await s.web.call("GET","/api/runner/plans")).json.plans[0].tasks[0].memoryState,"recorded");
+    const value=await readProjectMemory(s.ctx,s.owner,s.projectId);assert.equal(value!.revision,1);assert.equal(value!.memories.length,1);
+  }finally{s.ctx.db.raw.close();}
+});
+test("engineering memory: concurrent forget prevents resurrection; retry budget cannot loop forever",async()=>{
+  const s=await setup();try{
+    await consentMemory(s);await s.web.call("POST","/api/runner/plans",memoryPlan(s));const first=(await claim(s)).json.task;await completeFixture(s,first.id);
+    const original=s.ctx.db.run.bind(s.ctx.db);let revoked=false;
+    s.ctx.db.run=async(sql,args)=>{if(!revoked && sql.startsWith("INSERT INTO od_project_ledgers")){revoked=true;assert.equal((await s.web.call("POST",`/api/projects/${s.projectId}/memory/forget`,{consent:"forget-project-memory",expectedConsentRevision:1})).status,200);}return original(sql,args);};
+    await s.web.call("GET","/api/runner/plans");s.ctx.db.run=original;
+    assert.equal((await s.web.call("GET","/api/runner/plans")).json.plans[0].tasks[0].memoryState,"consent_changed");
+    assert.equal((await s.ctx.db.query("SELECT * FROM od_project_ledgers")).length,0);
+  }finally{s.ctx.db.raw.close();}
+  const t=await setup();try{
+    await consentMemory(t);await t.web.call("POST","/api/runner/plans",memoryPlan(t));const first=(await claim(t)).json.task;await completeFixture(t,first.id);
+    const original=t.ctx.db.run.bind(t.ctx.db);let writes=0;
+    t.ctx.db.run=async(sql,args)=>{if(sql.startsWith("INSERT INTO od_project_ledgers")){writes++;throw Error("Fixture unavailable ledger");}return original(sql,args);};
+    for(let n=0;n<5;n++)await t.web.call("GET","/api/runner/plans");
+    const plan=(await t.web.call("GET","/api/runner/plans")).json.plans[0];assert.equal(plan.state,"completed");assert.equal(plan.tasks[0].memoryState,"blocked");assert.equal(writes,3);
+  }finally{t.ctx.db.raw.close();}
+});
+test("engineering memory: disabled by default and task UUID aliases cannot create duplicates",async()=>{
+  const s=await setup();try{
+    await consentMemory(s);await s.web.call("POST","/api/runner/plans",{...s.plan,tasks:[s.plan.tasks[0]]});const first=(await claim(s)).json.task;await completeFixture(s,first.id);await s.web.call("GET","/api/runner/plans");
+    assert.equal(await readProjectMemory(s.ctx,s.owner,s.projectId),null);
+    assert.equal(EngineeringPlanSchema.safeParse({...s.plan,tasks:[s.plan.tasks[0],{...s.plan.tasks[0],id:s.plan.tasks[0]!.id.toUpperCase()}]}).success,false);
+  }finally{s.ctx.db.raw.close();}
 });

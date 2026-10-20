@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-interface Plan { id: string; title: string; projectId: string; state: string; revision: number; tasks: Array<{ id: string; title: string; phase: number; state: string; runnerTaskId: string | null }> }
+interface Plan { id: string; title: string; projectId: string; state: string; revision: number; tasks: Array<{ id: string; title: string; phase: number; state: string; runnerTaskId: string | null; memoryState?:string; memoryRevision?:number|null }> }
 const states: Record<string, string> = { active: "Ativo", paused: "Pausado", completed: "Concluído com recibos", blocked: "Bloqueado", uncertain: "Efeitos incertos · revisão necessária", pending: "Pendente", assigned: "Reservada no Runner", failed: "Falhou", cancelled: "Cancelada" };
 async function call(path: string, body?: unknown) {
   const response = await fetch(`/api/runner/plans${path}`, { method: body === undefined ? "GET" : "POST", credentials: "same-origin", cache: "no-store", headers: { "x-open-dot": "1", ...(body === undefined ? {} : { "content-type": "application/json" }) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
@@ -10,27 +10,29 @@ async function call(path: string, body?: unknown) {
 }
 export function EngineeringPlans({ deviceId, projectId, ready, demo, selectTask }: { deviceId: string; projectId: string; ready: boolean; demo: boolean; selectTask: (id: string) => void }) {
   const [plans, setPlans] = useState<Plan[]>([]), [error, setError] = useState(""), [busy, setBusy] = useState(false), [title, setTitle] = useState(""), [consent, setConsent] = useState(false);
+  const [connectionError,setConnectionError]=useState("");
+  const [rememberResults,setRememberResults]=useState(false);
   const [tasks, setTasks] = useState([{ id: crypto.randomUUID(), title: "", prompt: "" }]);
-  useEffect(()=>setConsent(false),[deviceId,projectId]);
+  useEffect(()=>{setConsent(false);setRememberResults(false);},[deviceId,projectId]);
   const pending = useRef<{ fingerprint: string; key: string } | null>(null);
   useEffect(() => {
     if (demo) return;
     let active = true; let timer: ReturnType<typeof setTimeout>;
     async function refresh() {
-      try { if (!document.hidden) { const result = await call(""); if (active) setPlans(result.plans); } }
-      catch { if (active) setError("Sem confirmação dos planos. Estado exibido pode estar desatualizado."); }
+      try { if (!document.hidden) { const result = await call(""); if (active) {setPlans(result.plans);setConnectionError("");} } }
+      catch { if (active) setConnectionError("Sem confirmação dos planos. Estado exibido pode estar desatualizado."); }
       finally { if (active) timer = setTimeout(() => void refresh(), 5000); }
     }
     void refresh(); return () => { active = false; clearTimeout(timer); };
   }, [demo]);
   async function submit() {
     setBusy(true); setError("");
-    const definition = { deviceId, projectId, mechanism: "codex", title, worktreeConsent: true, consent: "schedule-isolated-approved-tasks", tasks: tasks.map((t, index) => ({ ...t, phase: index, dependencies: index ? [tasks[index-1]!.id] : [], acceptance: "approved-files-applied" })) };
+    const definition = { rememberResults, deviceId, projectId, mechanism: "codex", title, worktreeConsent: true, consent: "schedule-isolated-approved-tasks", tasks: tasks.map((t, index) => ({ ...t, phase: index, dependencies: index ? [tasks[index-1]!.id] : [], acceptance: "approved-files-applied" })) };
     const fingerprint = JSON.stringify(definition);
     if (pending.current?.fingerprint !== fingerprint) pending.current = { fingerprint, key: crypto.randomUUID() };
     try {
       await call("", { ...definition, requestKey: pending.current.key });
-      pending.current = null; setPlans((await call("")).plans); setTitle(""); setTasks([{ id: crypto.randomUUID(), title: "", prompt: "" }]); setConsent(false);
+      pending.current = null; setPlans((await call("")).plans); setTitle(""); setTasks([{ id: crypto.randomUUID(), title: "", prompt: "" }]); setConsent(false); setRememberResults(false);
     } catch (e) { setError(e instanceof Error ? e.message : "Não confirmado. Consulte os planos antes de reenviar."); }
     finally { setBusy(false); }
   }
@@ -46,16 +48,18 @@ export function EngineeringPlans({ deviceId, projectId, ready, demo, selectTask 
         </fieldset>)}
         <button type="button" className="btn" disabled={busy || tasks.length >= 12} onClick={() => setTasks(old => [...old, { id: crypto.randomUUID(), title: "", prompt: "" }])}>Adicionar fase</button>
         <label><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} /> Autorizo a sequência descrita, uma tentativa Codex por tarefa e seus worktrees/metadados Git. Vou aprovar cada conteúdo. Não autorizo shell, integração, commit ou push.</label>
+        <label><input type="checkbox" checked={rememberResults} onChange={e=>setRememberResults(e.target.checked)} /> Registrar recibos factuais na memória já consentida deste projeto, sem prompts ou conteúdo dos arquivos. A memória não autoriza ferramentas.</label>
         <button className="btn primary" disabled={demo || busy || !ready || !projectId || !consent || !title.trim() || tasks.some(t => !t.title.trim() || !t.prompt.trim())}>Agendar plano no Runner</button>
       </form>
     </details>
+    {connectionError && <p role="status">{connectionError}</p>}
     {error && <p role="alert">{error}</p>}
     {plans.filter(p => !projectId || p.projectId === projectId).map(p => <article key={p.id}>
       <h4>{p.title} · {states[p.state] || p.state}</h4>
       {["active", "paused"].includes(p.state) && <button className="btn" disabled={busy} onClick={() => {
         setBusy(true); setError(""); void call(`/${p.id}/state`, { expectedRevision: p.revision, state: p.state === "active" ? "paused" : "active" }).then(async () => setPlans((await call("")).plans)).catch((e: Error) => setError(e.message)).finally(() => setBusy(false));
       }}>{p.state === "active" ? "Pausar novas tarefas" : "Retomar sequência"}</button>}
-      <ol>{p.tasks.map(t => <li key={t.id}>Fase {t.phase+1}: {t.title} · {states[t.state] || t.state} {t.runnerTaskId && <button className="btn" onClick={() => selectTask(t.runnerTaskId!)}>Acompanhar tarefa</button>}</li>)}</ol>
+      <ol>{p.tasks.map(t => <li key={t.id}>Fase {t.phase+1}: {t.title} · {states[t.state] || t.state}{t.memoryRevision ? ` · registrado na memória, revisão ${t.memoryRevision}` : ["blocked","consent_changed","conflict","quota"].includes(t.memoryState??"") ? " · memória não registrada; revise consentimento/limites" : ""} {t.runnerTaskId && <button className="btn" onClick={() => selectTask(t.runnerTaskId!)}>Acompanhar tarefa</button>}</li>)}</ol>
     </article>)}
   </section>;
 }

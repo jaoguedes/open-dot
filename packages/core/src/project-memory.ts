@@ -3,7 +3,7 @@ import { z } from "zod";
 const id = z.string().uuid();
 const text = z.string().trim().min(1).max(2000);
 const source = z.string().max(240).refine((s) => {
-  if (/^(ADR-\d{4}|task:[a-f0-9-]{36}|git:[a-f0-9]{40})$/.test(s)) return true;
+  if (/^(ADR-\d{4}|(?:task|attempt|runner-task):[a-f0-9-]{36}|git:[a-f0-9]{40})$/.test(s)) return true;
   try { const u = new URL(s); return u.protocol === "https:" && !u.username && !u.password && !u.search && !u.hash; } catch { return false; }
 }, "Referência deve ser identificador ou HTTPS sem credencial/query.");
 

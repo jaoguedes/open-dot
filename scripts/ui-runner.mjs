@@ -128,8 +128,9 @@ await scenario("W7", "Trocar projeto limpa consentimentos de metadados e plano (
   const metadata=page.getByLabel(/Autorizo criar um worktree isolado deste projeto/);await metadata.check();
   const plans=page.getByRole("region",{name:"Planos sequenciais"});await plans.getByText("Criar plano de tarefas isoladas",{exact:true}).click();
   const sequence=plans.getByLabel(/Autorizo a sequência descrita/);await sequence.check();
+  const remember=plans.getByLabel(/Registrar recibos factuais na memória/);await remember.check();
   await page.getByRole("combobox",{name:/Projeto autorizado/}).selectOption(b);
-  expect(!(await metadata.isChecked()),"consentimento de projeto anterior reutilizado");expect(!(await sequence.isChecked()),"consentimento de plano anterior reutilizado");
+  expect(!(await metadata.isChecked()),"consentimento de projeto anterior reutilizado");expect(!(await sequence.isChecked()),"consentimento de plano anterior reutilizado");expect(!(await remember.isChecked()),"memória autorizada para projeto anterior");
 });
 process.exitCode = await finish();
 if (!process.exitCode) {

@@ -10,6 +10,8 @@ export function registerEngineeringRoutes(route: Registrar) {
     const device = (await ctx.db.query<{ projects: string }>("SELECT projects FROM od_runner_devices WHERE id=? AND owner_id=? AND revoked_at IS NULL AND expires_at>?", [data.deviceId, owner!, ctx.now()]))[0];
     if (!device || !JSON.parse(device.projects).some((p: { id: string }) => p.id === data.projectId))
       return problem(403, "folder_denied", "Selecione um projeto autorizado no dispositivo pareado.");
+    if(data.rememberResults && !(await ctx.db.query("SELECT 1 FROM od_project_memory_policies WHERE owner_id=? AND project_id=? AND enabled=1 AND expires_at>?",[owner!,data.projectId,ctx.now()])).length)
+      return problem(409,"memory_consent_required","Ative a memória deste projeto antes de registrar recibos. Nenhum plano foi criado.");
     try { return json({ id: await createEngineeringPlan(ctx, owner!, data) }, 201); }
     catch { return problem(409, "plan_conflict", "Plano recusado: conflito de identidade, dados sensíveis ou limite. Releia o estado."); }
   });

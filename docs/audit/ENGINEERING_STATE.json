@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "recordKind": "manual-engineering-handoff-not-product-odcp",
   "objective": "Remediate Runner security/recovery findings and integrate consented project memory without granting execution privileges",
-  "phase": "E: checkpoint persistence partial; independent audit preparation",
-  "currentTask": "Integrate checkpoint attempts with Runner journal after independent security review",
+  "phase": "F: receipt memory integration, local work in progress",
+  "currentTask": "OD2-MEMORY-021: bind optional factual execution receipts to consent revision",
   "branch": "codex/od2-runner-remediation",
   "worktreeName": "open-dot-od2-remediation",
   "worktreeResolution": "git worktree list --porcelain",
   "initialSha": "2b7d5c5fb7f6255c2bdefbabe67f38d34a2faea5",
-  "lastCodeHead": "5cd345fa3bd6fc1e9d128d6448ff187240b8393d",
+  "lastCodeHead": "64a8b6053275fd02539d9c1d9ba21bc4e9b0b1bb",
   "currentHeadResolution": "git log -1 --format=%H",
   "documentationCheckpointResolution": "git log -1 --format=%H -- docs/audit/ENGINEERING_STATE.json",
   "commitsProducedBeforeDocumentation": [
@@ -196,11 +196,11 @@
     "notes": "Temporary paths may disappear. Use an approved local toolchain/CLT if unavailable; no full Xcode required. Restore dependencies without modifying the original checkout."
   },
   "coordination": {
-    "revision": 12,
+    "revision": 14,
     "agent": "codex",
-    "task": "OD2-SEC-022",
+    "task": "OD2-MEMORY-021",
     "branch": "codex/od2-runner-remediation",
-    "observedHead": "32788de65b979ad139b9cf284fac7939ab900ce1",
+    "observedHead": "64a8b6053275fd02539d9c1d9ba21bc4e9b0b1bb",
     "status": "checkpointed"
   },
   "continuationBase": "1d9125f7af720df20e427e5d21eb35bb8ae26471",
@@ -236,5 +236,6 @@
     "shared coordination cooperative local writers, not authentication or cross-branch lease",
     "no new model call, installers, CI or native ARM64/Windows execution",
     "schema 0014 only disposable local test databases"
-  ]
+  ],
+  "sessionBase": "940b06c60138af8ebdf8a0291732f36cd21ea6de"
 }
