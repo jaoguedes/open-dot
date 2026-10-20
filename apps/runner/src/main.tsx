@@ -16,12 +16,12 @@ function RunnerApp() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [commitPreview,setCommitPreview]=useState<{task:string;proposalHash:string;baseSha:string;branch:string;subject:string;body:string;proposal:{files:Array<{path:string;content:string;beforeContent?:string}>}}|null>(null);
+  const [commitPreview,setCommitPreview]=useState<{task:string;projectId:string;projectLabel:string;proposalHash:string;baseSha:string;branch:string;subject:string;body:string;proposal:{files:Array<{path:string;content:string;beforeContent?:string}>}}|null>(null);
   const [commitConsent,setCommitConsent]=useState(false),[commitResult,setCommitResult]=useState("");
   async function previewCommit(task:string) {
     setBusy(true);setError("");setCommitPreview(null);setCommitConsent(false);setCommitResult("");
     try {const result=await invoke<NonNullable<typeof commitPreview>>("checkpoint_preview",{task});
-      if(!result || result.task!==task || !/^[a-f0-9]{64}$/.test(result.proposalHash) || typeof result.body!=="string" || !Array.isArray(result.proposal?.files) || !result.proposal.files.length)throw "Prévia incompatível; nenhum commit autorizado.";
+      if(!result || result.task!==task || typeof result.projectLabel!=="string" || !/^[a-f0-9-]{36}$/.test(result.projectId) || !/^[a-f0-9]{64}$/.test(result.proposalHash) || typeof result.body!=="string" || !Array.isArray(result.proposal?.files) || !result.proposal.files.length)throw "Prévia incompatível; nenhum commit autorizado.";
       setCommitPreview(result);} catch(e){setError(typeof e==="string"?e:"Prévia não confirmada.");} finally {setBusy(false);}
   }
   async function confirmCommit() {
@@ -224,7 +224,7 @@ function RunnerApp() {
                 </> : <p>Atualize o diagnóstico no desktop para consultar os registros locais.</p>}
               </section>
               {commitPreview && <section aria-label="Revisão de commit local">
-                <h2>Revisar commit local</h2><p>Tarefa: <code>{commitPreview.task}</code>. Branch: <code>{commitPreview.branch}</code>. Base: <code>{commitPreview.baseSha}</code>.</p>
+                <h2>Revisar commit local</h2><p>Projeto: {commitPreview.projectLabel} · <code>{commitPreview.projectId}</code></p><p>Tarefa: <code>{commitPreview.task}</code>. Branch: <code>{commitPreview.branch}</code>. Base: <code>{commitPreview.baseSha}</code>.</p>
                 <p>Mensagem completa do commit:</p><pre>{commitPreview.subject+"\n\n"+commitPreview.body}</pre><p>Autor técnico Open Dot Runner. A confirmação abre um diálogo nativo vinculado a esta tarefa e hash. Sem hooks, filtros, shell, push ou merge.</p>
                 <p>Hash da proposta revisada: <code>{commitPreview.proposalHash}</code>. Somente os arquivos abaixo serão incluídos; alterações fora deles ficam preservadas.</p>
                 {commitPreview.proposal.files.map(f=><article key={f.path}><h3>{f.path}</h3><p>Antes</p><pre>{f.beforeContent??"Arquivo novo"}</pre><p>Conteúdo completo aprovado para o commit</p><pre>{f.content}</pre></article>)}

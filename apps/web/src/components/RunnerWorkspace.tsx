@@ -60,6 +60,7 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
     [projectId, setProjectId] = useState(""),
     [mechanism, setMechanism] = useState<MechanismId>("codex");
   const [worktreeConsent,setWorktreeConsent]=useState(false);
+  useEffect(()=>setWorktreeConsent(false),[deviceId,projectId,mechanism]);
   const [prompt, setPrompt] = useState(""),
     [code, setCode] = useState(""),
     [name, setName] = useState("");

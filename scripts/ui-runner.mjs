@@ -117,6 +117,20 @@ await scenario("W6", "Payload divergente ou truncado bloqueia aprovação (API s
   expect(await page.getByRole("button",{name:"Aprovar estes arquivos no worktree"}).isDisabled(),"payload truncado liberou decisão");
   expect(decisions===0,"decisão invisível enviada");
 });
+await scenario("W7", "Trocar projeto limpa consentimentos de metadados e plano (API fixture)",async({page,open})=>{
+  const device="f11c1820-5a7c-47e9-90d4-22c78ed0ca21", a="f11c1820-5a7c-47e9-90d4-22c78ed0ca22",b="f11c1820-5a7c-47e9-90d4-22c78ed0ca23";
+  await page.route("**/api/runner/**",async route=>{
+    const path=new URL(route.request().url()).pathname;
+    const data=path.endsWith("/devices")?{devices:[{id:device,name:"Scope fixture",online:true,revoked:false,compatible:true,projects:[{id:a,label:"Project A"},{id:b,label:"Project B"}],drivers:[{id:"codex",installed:true,authenticated:true,executable:true,reason:"Fixture only"}]}]}:path.endsWith("/plans")?{plans:[]}:{tasks:[]};
+    await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(data)});
+  });
+  await open("/workspace");await page.getByRole("combobox",{name:/Computador/}).selectOption(device);await page.getByRole("combobox",{name:/Projeto autorizado/}).selectOption(a);
+  const metadata=page.getByLabel(/Autorizo criar um worktree isolado deste projeto/);await metadata.check();
+  const plans=page.getByRole("region",{name:"Planos sequenciais"});await plans.getByText("Criar plano de tarefas isoladas",{exact:true}).click();
+  const sequence=plans.getByLabel(/Autorizo a sequência descrita/);await sequence.check();
+  await page.getByRole("combobox",{name:/Projeto autorizado/}).selectOption(b);
+  expect(!(await metadata.isChecked()),"consentimento de projeto anterior reutilizado");expect(!(await sequence.isChecked()),"consentimento de plano anterior reutilizado");
+});
 process.exitCode = await finish();
 if (!process.exitCode) {
   process.argv.push("--dist", "apps/runner/dist");
@@ -175,7 +189,7 @@ if (!process.exitCode) {
       window.CHECKPOINT_CALLS=[];
       const task="f11c1820-5a7c-47e9-90d4-22c78ed0ca21";
       window.__TAURI__={core:{invoke:async(cmd,args)=>{
-        if(cmd==="checkpoint_preview")return {task,proposalHash:"b".repeat(64),baseSha:"a".repeat(40),branch:`agent/${task}`,subject:"feat(runner): checkpoint approved files",body:"Task: OD2-F11C18205A7C\nRunner-Task: "+task,proposal:{files:[{path:"result.txt",content:"Approved Unicode · 東京\n<script>window.COMMIT_UNSAFE=true</script>\n"}]}};
+        if(cmd==="checkpoint_preview")return {task,projectId:"f11c1820-5a7c-47e9-90d4-22c78ed0ca23",projectLabel:"Fixture project",proposalHash:"b".repeat(64),baseSha:"a".repeat(40),branch:`agent/${task}`,subject:"feat(runner): checkpoint approved files",body:"Task: OD2-F11C18205A7C\nRunner-Task: "+task,proposal:{files:[{path:"result.txt",content:"Approved Unicode · 東京\n<script>window.COMMIT_UNSAFE=true</script>\n"}]}};
         if(cmd==="checkpoint_commit"){window.CHECKPOINT_CALLS.push(args);return{commitSha:"c".repeat(40),branch:`agent/${task}`};}
         return{os:"fixture",arch:"fixture",version:"0.1.0",folders:[],paired:true,drivers:[],checkpoints:{items:[{task,phase:"applied",headSha:"a".repeat(40),terminalReceipt:"completed"}],unreadable:0,truncated:false}};
       }}};
@@ -183,6 +197,7 @@ if (!process.exitCode) {
     await open("/");await page.getByRole("button",{name:"Etapa 6: Conclusão"}).click();await page.getByRole("button",{name:"Atualizar checkpoints"}).click();
     await page.getByRole("button",{name:"Revisar commit local",exact:true}).click();
     const panel=page.getByRole("region",{name:"Revisão de commit local"});
+    await panel.getByText("Projeto: Fixture project",{exact:false}).waitFor(T);
     await panel.getByText("Approved Unicode · 東京\n<script>window.COMMIT_UNSAFE=true</script>",{exact:true}).waitFor(T);
     expect(await panel.getByRole("button",{name:"Confirmar commit local"}).isDisabled(),"commit sem consentimento");
     expect((await page.evaluate(()=>window.CHECKPOINT_CALLS.length))===0,"commit emitido na prévia");expect(!(await page.evaluate(()=>window.COMMIT_UNSAFE)),"conteúdo executado");

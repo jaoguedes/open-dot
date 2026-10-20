@@ -11,6 +11,7 @@ async function call(path: string, body?: unknown) {
 export function EngineeringPlans({ deviceId, projectId, ready, demo, selectTask }: { deviceId: string; projectId: string; ready: boolean; demo: boolean; selectTask: (id: string) => void }) {
   const [plans, setPlans] = useState<Plan[]>([]), [error, setError] = useState(""), [busy, setBusy] = useState(false), [title, setTitle] = useState(""), [consent, setConsent] = useState(false);
   const [tasks, setTasks] = useState([{ id: crypto.randomUUID(), title: "", prompt: "" }]);
+  useEffect(()=>setConsent(false),[deviceId,projectId]);
   const pending = useRef<{ fingerprint: string; key: string } | null>(null);
   useEffect(() => {
     if (demo) return;

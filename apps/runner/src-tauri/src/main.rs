@@ -185,7 +185,8 @@ async fn checkpoint_preview(app:tauri::AppHandle,task:String)->Result<serde_json
     tauri::async_runtime::spawn_blocking(move||{
         let s=app.state::<LocalState>();let settings=s.settings.lock().map_err(|_|"Permissões indisponíveis.")?;
         let (cp,proposal)=git_checkpoint::context(&s.dir,&task,&s.channel,&settings.folders)?;
-        Ok(serde_json::json!({"task":task,"proposalHash":cp.journal.proposal_hash,"baseSha":cp.base_sha,"branch":format!("agent/{task}"),"subject":git_checkpoint::SUBJECT,"body":git_checkpoint::trailer(&task),"proposal":proposal}))
+        let label=settings.folders.iter().find(|p|worktree::project_id(p)==cp.journal.project).and_then(|p|p.file_name()).map(|n|n.to_string_lossy().chars().take(80).collect::<String>()).unwrap_or_else(||"Projeto autorizado".into());
+        Ok(serde_json::json!({"task":task,"projectId":cp.journal.project,"projectLabel":label,"proposalHash":cp.journal.proposal_hash,"baseSha":cp.base_sha,"branch":format!("agent/{task}"),"subject":git_checkpoint::SUBJECT,"body":git_checkpoint::trailer(&task),"proposal":proposal}))
     }).await.map_err(|_|"Prévia de commit indisponível.".to_string())?
 }
 #[tauri::command]
@@ -196,7 +197,8 @@ async fn checkpoint_commit(app:tauri::AppHandle,task:String,proposal_hash:String
         let (cp,proposal)=git_checkpoint::context(&s.dir,&task,&s.channel,&settings.folders)?;
         if cp.journal.proposal_hash.as_deref()!=Some(proposal_hash.as_str()) || consent!="commit-exact-reviewed-files-locally" {return Err("Prévia ou consentimento mudou. Revise novamente.".into());}
         let files=proposal.files.iter().map(|f|f.path.escape_default().to_string()).collect::<Vec<_>>().join("\n");
-        let message=format!("Commit local dos bytes revisados.\nTarefa: {task}\nBranch: agent/{task}\nSHA-256 da proposta: {proposal_hash}\n{}\n{}\nArquivos:\n{files}\nNão inclui push ou merge.",git_checkpoint::SUBJECT,git_checkpoint::trailer(&task));
+        let label=settings.folders.iter().find(|p|worktree::project_id(p)==cp.journal.project).and_then(|p|p.file_name()).map(|n|n.to_string_lossy().escape_default().to_string()).unwrap_or_default();
+        let message=format!("Commit local dos bytes revisados.\nProjeto: {label} ({})\nTarefa: {task}\nBranch: agent/{task}\nSHA-256 da proposta: {proposal_hash}\n{}\n{}\nArquivos:\n{files}\nNão inclui push ou merge.",cp.journal.project,git_checkpoint::SUBJECT,git_checkpoint::trailer(&task));
         if !app.dialog().message(message).title("Autorizar checkpoint Git local").kind(tauri_plugin_dialog::MessageDialogKind::Warning).buttons(tauri_plugin_dialog::MessageDialogButtons::OkCancel).blocking_show(){return Err("Commit local não autorizado.".into());}
         // Recheck remote revocation, current files and scope after the native confirmation.
         let (cp,proposal)=git_checkpoint::context(&s.dir,&task,&s.channel,&settings.folders)?;
