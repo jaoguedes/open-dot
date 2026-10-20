@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "recordKind": "manual-engineering-handoff-not-product-odcp",
   "objective": "Remediate Runner security/recovery findings and integrate consented project memory without granting execution privileges",
-  "phase": "M: independent-audit preparation",
-  "currentTask": "Review consolidated evidence and obtain independent audit before enabling automation",
+  "phase": "E: checkpoint persistence partial; independent audit preparation",
+  "currentTask": "Integrate checkpoint attempts with Runner journal after independent security review",
   "branch": "codex/od2-runner-remediation",
   "worktreeName": "open-dot-od2-remediation",
   "worktreeResolution": "git worktree list --porcelain",
   "initialSha": "2b7d5c5fb7f6255c2bdefbabe67f38d34a2faea5",
-  "lastCodeHead": "c7b2426ec7f848546191cd52ed4937ac2c8a81aa",
+  "lastCodeHead": "5cd345fa3bd6fc1e9d128d6448ff187240b8393d",
   "currentHeadResolution": "git log -1 --format=%H",
   "documentationCheckpointResolution": "git log -1 --format=%H -- docs/audit/ENGINEERING_STATE.json",
   "commitsProducedBeforeDocumentation": [
@@ -196,11 +196,45 @@
     "notes": "Temporary paths may disappear. Use an approved local toolchain/CLT if unavailable; no full Xcode required. Restore dependencies without modifying the original checkout."
   },
   "coordination": {
-    "revision": 2,
+    "revision": 3,
     "agent": "codex",
-    "task": "OD2-SHARED-002",
+    "task": "OD2-AUDIT-016",
     "branch": "codex/od2-runner-remediation",
-    "observedHead": "8a878a0bc75b3be189bf7f556a5e210aafde58a9",
-    "status": "checkpointed"
-  }
+    "observedHead": "5cd345fa3bd6fc1e9d128d6448ff187240b8393d",
+    "status": "handoff"
+  },
+  "continuationBase": "1d9125f7af720df20e427e5d21eb35bb8ae26471",
+  "continuationCommits": [
+    "5d8dead docs(agents): establish shared continuity entry points",
+    "8a878a0 feat(odcp): persist encrypted task checkpoints with CAS",
+    "5cd345f feat(agents): coordinate shared state with durable revision checks"
+  ],
+  "continuationTests": [
+    {
+      "kind": "unit/integration",
+      "result": "PASS 306 Node, 7 Python, synthetic evaluation, typecheck/build",
+      "log": "od2-continuation-final-check.log"
+    },
+    {
+      "kind": "native-unit",
+      "result": "PASS 16; 5 ignored. Initial sandbox socket failure; rerun with local socket permission passed.",
+      "log": "od2-continuation-rust-socket.log"
+    },
+    {
+      "kind": "browser-real-backend",
+      "result": "PASS memory consent, reload, export, forget; project selector fixture; no provider call",
+      "log": "od2-continuation-memory-browser.log"
+    },
+    {
+      "kind": "native-real-channel",
+      "result": "PASS pairing, vault, restart, heartbeat, revocation against local HTTP/SQLite; no driver task",
+      "log": "od2-continuation-channel.log"
+    }
+  ],
+  "continuationLimits": [
+    "checkpoint persistence internal only, no scheduler or public route",
+    "shared coordination cooperative local writers, not authentication or cross-branch lease",
+    "no new model call, installers, CI or native ARM64/Windows execution",
+    "schema 0014 only disposable local test databases"
+  ]
 }

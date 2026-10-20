@@ -1,0 +1,26 @@
+name: Relatar falha
+description: Comportamento reproduzível, sem dados privados
+title: "bug: "
+body:
+  - type: markdown
+    attributes:
+      value: "Não publique vulnerabilidades, tokens, arquivos privados ou caminhos identificáveis. Consulte SECURITY.md para divulgação privada."
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Como reproduzir
+      description: Use projeto e dados fictícios; inclua resultado esperado e observado.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Ambiente e versão
+      description: Sistema, arquitetura e SHA/versão; diga se usou demo, fixture ou integração real. Não inclua nome de usuário ou pasta pessoal.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidências sanitizadas
+      description: Testes e mensagens mínimas; revise antes de enviar, sem credenciais ou conteúdo privado.

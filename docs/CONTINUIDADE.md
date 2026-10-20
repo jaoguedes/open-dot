@@ -1,3 +1,9 @@
+# Continuação compartilhada — 20/10/2026
+
+Entrada atual: [PROJECT_STATE](agents/PROJECT_STATE.md), [relatório atual](audit/FINAL_IMPLEMENTATION_REPORT.md) e handoff em docs/agents/handoffs. Último código 5cd345f; HEAD final deve ser conferido via Git. ODCP persistente interno e coordenação cooperante adicionados, sem scheduler/commit automático ou publicação. Histórico abaixo preservado.
+
+---
+
 # Continuidade vigente — branch isolada de remediação
 
 Objetivo: corrigir auditoria resumida pelo mantenedor e integrar memória segura sem habilitar comandos/paralelo. Base 2b7d5c5; código c7b2426 na branch `codex/od2-runner-remediation`. Não trabalhar automaticamente na branch antiga. Localizar worktree pelo Git. [Estado estruturado](audit/ENGINEERING_STATE.json), [relatório](audit/REMEDIATION_REPORT.md) e [handoff](AGENT_HANDOFF.md) prevalecem sobre os blocos históricos abaixo.

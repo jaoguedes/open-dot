@@ -9,6 +9,6 @@ Fonte estruturada única: [ENGINEERING_STATE.json](../audit/ENGINEERING_STATE.js
 Resultados anteriores: [REMEDIATION_REPORT.md](../audit/REMEDIATION_REPORT.md).
 [Backlog](BACKLOG.md), [arquitetura](ARCHITECTURE_MAP.md), [estado Codex](codex/STATUS.md).
 
-Rodada atual: consolidar índices de continuidade e persistir checkpoints ODCP cifrados com CAS. Executor genérico, paralelismo e commits automáticos permanecem desabilitados. Sem autorização de push para esta rodada; remoto não reconsultado. Auditorias originais do Cursor não localizadas na rodada anterior; não presumir aprovação independente.
+Rodada atual: índices consolidados, checkpoints ODCP internos cifrados/CAS e CLI de coordenação cooperante implementados. Último código 5cd345f; relatório vigente: [FINAL_IMPLEMENTATION_REPORT](../audit/FINAL_IMPLEMENTATION_REPORT.md). Executor genérico, paralelismo e commits automáticos permanecem desabilitados. Sem autorização de push para esta rodada; remoto não reconsultado. Auditorias originais do Cursor não localizadas na rodada anterior; não presumir aprovação independente.
 
 Retomada: conferir status/log/worktrees, ler estado estruturado e handoff mais recente, executar testes da área modificada. Não repetir ações incertas.

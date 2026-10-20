@@ -45,3 +45,7 @@ __pycache__/
 apps/runner/src-tauri/target/
 apps/runner/src-tauri/gen/
 apps/runner/installers/
+
+# Local cooperative shared-state write protocol (never commit transient locks)
+docs/audit/ENGINEERING_STATE.json.lock
+docs/audit/.agent-state-*.tmp

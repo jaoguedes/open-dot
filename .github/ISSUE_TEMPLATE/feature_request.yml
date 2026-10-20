@@ -1,0 +1,18 @@
+name: Propor melhoria
+description: Problema, critérios e limites
+title: "feat: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema e resultado desejado
+      description: Explique o caso de uso com dados fictícios.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite e restrições
+      description: Como validar? Há permissões, custo ou fontes externas? Não invente disponibilidade de APIs.
+    validations:
+      required: true

@@ -103,3 +103,7 @@ Base desta continuação 1d9125f. Índices compartilhados em docs/agents; checkp
 ## Continuação — OD2-SHARED-002
 
 Helper local operacional atualiza apenas coordination do ENGINEERING_STATE.json com revisão CAS, lock exclusivo, rename/fsync e bloqueio de troca de ownership ativo. CLI observa branch/HEAD com execFile sem shell. Testes reais de filesystem: escritor concorrente único, evidências preservadas, handoff explícito, stale revision, lock abandonado e symlink recusados. CLI executado neste worktree em revisões 1 e 2. Não é scheduler nem proteção contra editores que ignoram o protocolo. Gate 306 inclui dois testes do helper.
+
+## Gate de continuação — OD2-AUDIT-016
+
+Memória com browser/API/SQLite reais PASS (seleção de projeto fixture; sem IA). Canal nativo HTTP/SQLite/Keychain pareamento/restauração/heartbeat/revogação PASS, sem tarefa de driver. Rust 16 PASS/5 ignorados após permitir socket local; tentativa anterior falhou no bind por PermissionDenied do sandbox, não por regressão do código. Relatório atual e brief Claude preservam os resultados históricos separadamente. Templates locais de issues/PR preparados; renderização remota não testada. Sem push/Actions/installers/IA/ARM64/Windows nesta continuação.

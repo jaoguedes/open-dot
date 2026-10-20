@@ -1,3 +1,9 @@
+# Continuação compartilhada — 20/10/2026
+
+Entrada atual: [PROJECT_STATE](agents/PROJECT_STATE.md), [relatório atual](audit/FINAL_IMPLEMENTATION_REPORT.md) e handoff em docs/agents/handoffs. Último código 5cd345f; HEAD final deve ser conferido via Git. ODCP persistente interno e coordenação cooperante adicionados, sem scheduler/commit automático ou publicação. Histórico abaixo preservado.
+
+---
+
 # Handoff vigente — remediação isolada
 
 Branch `codex/od2-runner-remediation`, base `2b7d5c5`, código `c7b2426`. Resolver checkout com `git worktree list --porcelain`; não editar o checkout anterior ou de outro agente. Este documento/estado estruturado permitem continuar sem chat: [relatório](audit/REMEDIATION_REPORT.md), [registro por fase](audit/REMEDIATION_RUN.md), [estado](audit/ENGINEERING_STATE.json). SHA documental por log do arquivo.
