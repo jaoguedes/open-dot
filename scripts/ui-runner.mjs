@@ -82,7 +82,8 @@ await scenario("W5", "Aprovação com API simulada exige conteúdo visível e en
   await page.route("**/api/runner/**",async route=>{
     const path=new URL(route.request().url()).pathname;
     let data={};
-    if(path.endsWith("/devices"))data={devices:[{id:"device-test",name:"Runner de teste",online:true,revoked:false,compatible:true,projects:[],drivers:[]}]};
+    if(path.endsWith("/plans"))data={plans:[]};
+    else if(path.endsWith("/devices"))data={devices:[{id:"device-test",name:"Runner de teste",online:true,revoked:false,compatible:true,projects:[],drivers:[]}]};
     else if(path.endsWith("/tasks"))data={tasks:[{id:"task-test",deviceId:"device-test",mechanism:"codex",state:"awaiting_approval",cancelRequested:0,updatedAt:Date.now()}]};
     else if(path.endsWith("/events"))data={events:[{seq:1,kind:"proposal",text:JSON.stringify({summary:"Fixture simulada",files:[{path:"result.md",content:"<script>window.UNSAFE_PROPOSAL=true</script>",beforeHash:null}]})}],approval:{raw,hash,decision:decision?"approve":"pending",expiresAt:Date.now()+60000}};
     else if(path.endsWith("/decision")){decision=route.request().postDataJSON();data={ok:true};}
@@ -104,7 +105,8 @@ await scenario("W6", "Payload divergente ou truncado bloqueia aprovação (API s
   const hash=createHash("sha256").update(raw).digest("hex");let decisions=0;
   await page.route("**/api/runner/**",async route=>{
     const path=new URL(route.request().url()).pathname;let data={};
-    if(path.endsWith("/devices"))data={devices:[{id:"device-test",name:"Runner fixture",online:true,revoked:false,compatible:true,projects:[],drivers:[]}]};
+    if(path.endsWith("/plans"))data={plans:[]};
+    else if(path.endsWith("/devices"))data={devices:[{id:"device-test",name:"Runner fixture",online:true,revoked:false,compatible:true,projects:[],drivers:[]}]};
     else if(path.endsWith("/tasks"))data={tasks:[{id:"task-test",deviceId:"device-test",mechanism:"codex",state:"awaiting_approval",cancelRequested:0,updatedAt:Date.now()}]};
     else if(path.endsWith("/events"))data={events:[],approval:{raw:raw.slice(0,-3),hash,decision:"pending",expiresAt:Date.now()+60000}};
     else if(path.endsWith("/decision")){decisions++;data={};}

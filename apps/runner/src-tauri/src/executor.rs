@@ -472,12 +472,17 @@ mod live_tests {
         });
         let device = channel::identity(&c).unwrap();
         let expected = "# Open Dot Runner\n\nReal Codex execution validated.\n";
-        let submitted=client.post(format!("{url}/api/runner/tasks")).header("cookie",&cookie).header("x-open-dot","1").json(&json!({"deviceId":device,"projectId":project_id,"mechanism":"codex","prompt":format!("Create exactly one new file named RUNNER_RESULT.md with these exact UTF-8 contents, including the final newline: {}. Return the requested structured proposal. Do not change any other file, do not use tools and do not run commands.",serde_json::to_string(expected).unwrap()),"worktreeConsent":true,"requestKey":"f11c1820-5a7c-47e9-90d4-22c78ed0ca21"})).send().unwrap();
+        let plan_mode = std::env::var_os("OPEN_DOT_ENGINEERING_PLAN").is_some();
+        let prompt = format!("Create exactly one new file named RUNNER_RESULT.md with these exact UTF-8 contents, including the final newline: {}. Return the requested structured proposal. Do not change any other file, do not use tools and do not run commands.", serde_json::to_string(expected).unwrap());
+        let submitted = if plan_mode {
+            client.post(format!("{url}/api/runner/plans")).header("cookie", &cookie).header("x-open-dot", "1")
+                .json(&json!({"deviceId":device,"projectId":project_id,"mechanism":"codex","title":"Real Codex scheduled acceptance","consent":"schedule-isolated-approved-tasks","worktreeConsent":true,"requestKey":"f11c1820-5a7c-47e9-90d4-22c78ed0ca21","tasks":[{"id":"f11c1820-5a7c-47e9-90d4-22c78ed0ca24","phase":0,"title":"Approved isolated file","prompt":prompt,"dependencies":[],"acceptance":"approved-files-applied"}]})).send().unwrap()
+        } else {
+            client.post(format!("{url}/api/runner/tasks")).header("cookie", &cookie).header("x-open-dot", "1")
+                .json(&json!({"deviceId":device,"projectId":project_id,"mechanism":"codex","prompt":prompt,"worktreeConsent":true,"requestKey":"f11c1820-5a7c-47e9-90d4-22c78ed0ca21"})).send().unwrap()
+        };
         assert_eq!(submitted.status().as_u16(), 201);
-        let task_id = submitted.json::<Value>().unwrap()["id"]
-            .as_str()
-            .unwrap()
-            .to_string();
+        let submitted_id = submitted.json::<Value>().unwrap()["id"].as_str().unwrap().to_string();
         let work_c = c.clone();
         let work_dir = dir.clone();
         let work_project = project.clone();
@@ -486,6 +491,16 @@ mod live_tests {
                 p == work_project
             })
         });
+        let task_id = if plan_mode {
+            let deadline = Instant::now() + Duration::from_secs(30);
+            loop {
+                assert!(Instant::now() < deadline, "Scheduler did not assign the plan");
+                let plans: Value = client.get(format!("{url}/api/runner/plans")).header("cookie", &cookie).send().unwrap().json().unwrap();
+                let plan = plans["plans"].as_array().unwrap().iter().find(|p| p["id"] == submitted_id).unwrap();
+                if let Some(id) = plan["tasks"][0]["runnerTaskId"].as_str() { break id.to_string(); }
+                std::thread::sleep(Duration::from_millis(100));
+            }
+        } else { submitted_id.clone() };
         let deadline = Instant::now() + Duration::from_secs(300);
         let mut approved = false;
         loop {
@@ -575,6 +590,13 @@ mod live_tests {
         assert!(worktree::git(&project, &["status", "--porcelain"], 16384)
             .unwrap()
             .is_empty());
+        if plan_mode {
+            let plans: Value = client.get(format!("{url}/api/runner/plans")).header("cookie", &cookie).send().unwrap().json().unwrap();
+            let plan = plans["plans"].as_array().unwrap().iter().find(|p| p["id"] == submitted_id).unwrap();
+            assert_eq!(plan["state"], "completed");
+            assert_ne!(plan["tasks"][0]["attemptId"], plan["tasks"][0]["id"]);
+            println!("REAL_SCHEDULED_CODEX_PASS: persisted plan, automatic claim, native journal, one official model call, exact approval, isolated write and receipt-gated completion. No project shell or automatic code integration.");
+        }
         let revoked = client
             .post(format!("{url}/api/runner/devices/{device}/revoke"))
             .header("cookie", &cookie)
