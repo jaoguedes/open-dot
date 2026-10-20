@@ -235,3 +235,7 @@ Conferir no iPhone o botão “Abrir no app do Gmail” (abre a caixa de entrada
 3. Use `npm run dev` e abra http://localhost:8787 (entrada local de desenvolvimento; Node, não workerd).
 4. Antes de publicar: `npm run test:workerd` (`ok:true`, `schema:"0005"`). Publicar só com `npm run deploy`.
 5. Continue pela “Próxima ação exata” e atualize este arquivo ao terminar.
+
+## Continuação local — OD2-ODCP-015
+
+Entrada compartilhada: docs/agents/PROJECT_STATE.md. Checkpoints internos cifrados/CAS com estados e recuperação em SQLite; migração 0014 apenas em bancos descartáveis. Não integrados ao scheduler/Runner ainda. Gate atual: 306 Node e sete Python + eval/typecheck/build; lint sem erros e aviso preexistente. Sem novos testes de modelo/desktop/instaladores; não reutilizar resultados históricos como execução atual.

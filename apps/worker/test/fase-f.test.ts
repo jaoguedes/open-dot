@@ -18,7 +18,7 @@ test("diagnóstico: health, última rodada do cron e falhas com texto humano, se
   await tick(ctx);
   const d = await c.call("GET", "/api/diagnostics");
   assert.equal(d.status, 200);
-  assert.equal(d.json.health.schema, "0013");
+  assert.equal(d.json.health.schema, "0014");
   assert.ok(d.json.lastTick?.at, "sem a última rodada do cron");
   assert.ok(Array.isArray(d.json.lastTick.stepErrors));
   const fail = d.json.failures.find((f: { code: string }) => f.code === "subrequest_limit");

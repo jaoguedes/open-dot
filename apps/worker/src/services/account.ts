@@ -57,6 +57,7 @@ export async function exportData(ctx: Ctx, ownerId: string) {
 
 /** Tabelas com dados do dono, filhas antes das mães. A ordem importa quando há chave estrangeira. */
 const OWNER_TABLES = [
+  "od_task_checkpoints",
   "od_project_ledgers",
   "od_project_memory_policies",
   "od_runner_tasks",
