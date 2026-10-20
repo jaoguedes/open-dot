@@ -8,7 +8,7 @@ export interface Migration {
 }
 
 /** Versão de schema que este código exige. Atualize ao criar nova migração. */
-export const REQUIRED_SCHEMA = "0011";
+export const REQUIRED_SCHEMA = "0012";
 
 /** Schema mais novo que o código continua ok (expandir, publicar, contrair depois). */
 export function schemaCompatible(version: string | null | undefined, required: string): boolean {

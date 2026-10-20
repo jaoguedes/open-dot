@@ -43,7 +43,8 @@ pub fn git(root: &Path, args: &[&str], cap: usize) -> Result<Vec<u8>, String> {
         "Git recusou a operação. Escolha a raiz de um repositório com ao menos um commit.".into()
     })
 }
-pub fn create(project: &Path, store: &Path, task: &str) -> Result<PathBuf, String> {
+pub fn create(project: &Path, store: &Path, task: &str, consent: bool) -> Result<PathBuf, String> {
+    if !consent { return Err("Autorize a preparação de worktree antes de alterar metadados Git.".into()); }
     if task.len() != 36 || !task.bytes().all(|b| b.is_ascii_hexdigit() || b == b'-') {
         return Err("Identificador de tarefa inválido.".into());
     }
@@ -63,18 +64,19 @@ pub fn create(project: &Path, store: &Path, task: &str) -> Result<PathBuf, Strin
     let text = destination
         .to_str()
         .ok_or("Caminho de projeto incompatível.")?;
-    // --no-checkout evita smudge/process filters e hooks do checkout.
-    git(
-        &project,
-        &["worktree", "add", "--no-checkout", "--detach", text, "HEAD"],
-        16384,
-    )?;
-    git(&destination, &["read-tree", "HEAD"], 16384)?;
-    let archive = git(
-        &project,
-        &["archive", "--format=tar", "HEAD"],
-        32 * 1024 * 1024,
-    )?;
+    let base=String::from_utf8(git(&project,&["rev-parse","HEAD"],4096)?).map_err(|_|"Commit inválido.")?;
+    let base=base.trim();
+    // Preparação que pode falhar ocorre antes de mexer nos metadados compartilhados.
+    let archive=git(&project,&["archive","--format=tar",base],32*1024*1024)?;
+    let ownership=store.join(".ownership");fs::create_dir_all(&ownership).map_err(|_|"Ownership indisponível.")?;
+    let record=ownership.join(format!("{task}.json"));
+    let bytes=serde_json::to_vec(&serde_json::json!({"version":1,"task":task,"project":project_id(&project),"base":base,"consent":true,"state":"preparing-or-preserved"})).map_err(|_|"Ownership inválido.")?;
+    use std::io::Write;
+    let mut owner=fs::OpenOptions::new().write(true).create_new(true).open(record).map_err(|_|"Ownership anterior encontrado. Não repetir ou remover o worktree.")?;
+    owner.write_all(&bytes).and_then(|_|owner.sync_all()).map_err(|_|"Falha ao preservar ownership.")?;
+    // Sem limpeza automática: falhas intermediárias preservam ownership e arquivos para revisão.
+    git(&project,&["worktree","add","--no-checkout","--detach",text,base],16384)?;
+    git(&destination,&["read-tree",base],16384)?;
     let mut archive = tar::Archive::new(std::io::Cursor::new(archive));
     let mut total = 0u64;
     let mut count = 0;
@@ -132,12 +134,24 @@ pub fn create(project: &Path, store: &Path, task: &str) -> Result<PathBuf, Strin
         .canonicalize()
         .map_err(|_| "Não consegui confirmar o isolamento.".into())
 }
+/// Prova de ownership é local ao host; não autoriza apagar arquivos nem limpar metadata.
+pub fn verify_owner(store:&Path,task:&str,project:&str)->Result<(),String> {
+    let bytes=fs::read(store.join(".ownership").join(format!("{task}.json"))).map_err(|_|"Ownership ausente; preserve e revise o worktree.")?;
+    if bytes.len()>4096{return Err("Ownership inválido.".into());}
+    let v:serde_json::Value=serde_json::from_slice(&bytes).map_err(|_|"Ownership inválido.")?;
+    if v["version"]!=1 || v["task"]!=task || v["project"]!=project || v["consent"]!=true {
+        return Err("Worktree pertence a outro escopo. Recuperação bloqueada.".into());
+    }
+    Ok(())
+}
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Edit {
     pub path: String,
     pub content: String,
     pub before_hash: Option<String>,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub before_content: Option<String>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -194,6 +208,7 @@ pub fn prepare(root: &Path, mut proposal: Proposal) -> Result<Proposal, String> 
     }
     let mut seen = std::collections::HashSet::new();
     let mut total = 0;
+    let mut total_before = 0;
     for edit in &mut proposal.files {
         if !seen.insert(edit.path.to_lowercase()) {
             return Err("A proposta repete um caminho de arquivo.".into());
@@ -203,8 +218,14 @@ pub fn prepare(root: &Path, mut proposal: Proposal) -> Result<Proposal, String> 
             return Err("Proposta grande ou binária: limite total de 8 KB nesta beta.".into());
         }
         let path = target(root, &edit.path)?;
+        edit.before_content=None;
         edit.before_hash = match fs::read(&path) {
-            Ok(b) if b.len() <= 128000 => Some(hash(&b)),
+            Ok(b) if b.len() <= 8000 => {
+                total_before+=b.len();
+                if total_before>8000{return Err("Conteúdo anterior excedeu o limite de revisão.".into());}
+                edit.before_content=Some(String::from_utf8(b.clone()).map_err(|_|"Arquivo binário não pode ser aprovado neste modo.")?);
+                Some(hash(&b))
+            },
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
             _ => return Err("Não consegui verificar a versão inicial do arquivo.".into()),
         };
@@ -303,6 +324,20 @@ pub fn context(root: &Path) -> Result<String, String> {
 mod tests {
     use super::*;
     #[test]
+    fn metadata_requires_consent_and_preserves_owned_orphans() {
+        let dir=std::env::temp_dir().join(format!("od-ownership-{}",rand::random::<u64>()));
+        let project=dir.join("project");let store=dir.join("store");fs::create_dir_all(&project).unwrap();
+        fs::write(project.join("file.txt"),"original").unwrap();git(&project,&["init"],16384).unwrap();git(&project,&["add","file.txt"],16384).unwrap();
+        git(&project,&["-c","user.name=Fixture","-c","user.email=fixture@example.invalid","commit","--no-gpg-sign","-m","fixture"],16384).unwrap();
+        let before=git(&project,&["worktree","list","--porcelain"],16384).unwrap();let task="f11c1820-5a7c-47e9-90d4-22c78ed0ca21";
+        assert!(create(&project,&store,task,false).is_err());assert_eq!(git(&project,&["worktree","list","--porcelain"],16384).unwrap(),before);
+        let root=create(&project,&store,task,true).unwrap();verify_owner(&store,task,&project_id(&project.canonicalize().unwrap())).unwrap();assert!(verify_owner(&store,task,"different-project").is_err());
+        fs::write(root.join("valuable.txt"),"preserve owned uncommitted change").unwrap();assert!(create(&project,&store,task,true).is_err());
+        assert_eq!(fs::read_to_string(root.join("valuable.txt")).unwrap(),"preserve owned uncommitted change");assert!(git(&project,&["status","--porcelain"],16384).unwrap().is_empty());
+        // Só remove a fixture inteira criada pelo teste; nunca usa cleanup de worktree do produto.
+        fs::remove_dir_all(dir).unwrap();
+    }
+    #[test]
     fn paths() {
         for path in [
             "../escape",
@@ -331,7 +366,8 @@ mod tests {
                 files: vec![Edit {
                     path: "file.txt".into(),
                     content: "after".into(),
-                    before_hash: None,
+                    before_content: None,
+                        before_hash: None,
                 }],
             },
         )
@@ -356,6 +392,7 @@ mod tests {
                     files: vec![Edit {
                         path: "link".into(),
                         content: "oops".into(),
+                        before_content: None,
                         before_hash: None
                     }]
                 }
@@ -377,11 +414,13 @@ mod tests {
                     Edit {
                         path: "one.txt".into(),
                         content: "approved one".into(),
+                        before_content: None,
                         before_hash: None,
                     },
                     Edit {
                         path: "two.txt".into(),
                         content: "approved two".into(),
+                        before_content: None,
                         before_hash: None,
                     },
                 ],

@@ -140,7 +140,7 @@ fn crash_restart() {
     let device = channel::identity(&c).unwrap();
     let project_id = worktree::project_id(&project);
     let create = || {
-        let r=http.post(format!("{url}/api/runner/tasks")).header("cookie",&cookie).header("x-open-dot","1").json(&json!({"deviceId":device,"projectId":project_id,"mechanism":"codex","prompt":"Synthetic recovery fixture; no model call","requestKey":format!("{:08x}-1234-4234-8234-123456789abc",rand::random::<u32>())})).send().unwrap();
+        let r=http.post(format!("{url}/api/runner/tasks")).header("cookie",&cookie).header("x-open-dot","1").json(&json!({"deviceId":device,"projectId":project_id,"mechanism":"codex","prompt":"Synthetic recovery fixture; no model call","worktreeConsent":true,"requestKey":format!("{:08x}-1234-4234-8234-123456789abc",rand::random::<u32>())})).send().unwrap();
         assert_eq!(r.status().as_u16(), 201);
         r.json::<Value>().unwrap()["id"]
             .as_str()
@@ -153,7 +153,7 @@ fn crash_restart() {
             ["id"],
         task
     );
-    let root = worktree::create(&project, &dir.join("worktrees"), &task).unwrap();
+    let root = worktree::create(&project, &dir.join("worktrees"), &task, true).unwrap();
     let proposal = worktree::prepare(
         &root,
         worktree::Proposal {
@@ -162,12 +162,14 @@ fn crash_restart() {
                 worktree::Edit {
                     path: "one.txt".into(),
                     content: "approved one\n".into(),
-                    before_hash: None,
+                    before_content: None,
+                        before_hash: None,
                 },
                 worktree::Edit {
                     path: "two.txt".into(),
                     content: "approved two\n".into(),
-                    before_hash: None,
+                    before_content: None,
+                        before_hash: None,
                 },
             ],
         },
@@ -251,7 +253,7 @@ fn crash_restart() {
     // Outra tarefa fica reservada sem journal: não reiniciar geração nem tocar em arquivos existentes.
     let orphan = create();
     channel::device_request(&restored, "/api/runner/device/claim", Some(&json!({}))).unwrap();
-    let orphan_root = worktree::create(&project, &dir.join("worktrees"), &orphan).unwrap();
+    let orphan_root = worktree::create(&project, &dir.join("worktrees"), &orphan, true).unwrap();
     fs::write(orphan_root.join("preserved.txt"), "uncertain prior effect").unwrap();
     assert!(executor::poll(&restored, &[project.clone()], &dir, &|p| p == project).unwrap());
     assert_eq!(
@@ -265,7 +267,7 @@ fn crash_restart() {
             None
         )
         .unwrap()["state"],
-        "failed"
+        "uncertain"
     );
     assert!(
         channel::device_request(&restored, "/api/runner/device/active", None).unwrap()["active"]

@@ -19,7 +19,7 @@ async function setup() {
   const headers = { authorization: `Bearer ${token}` };
   const projectId = crypto.randomUUID();
   const beat = {
-    protocol:{version:2,approval:"sha256-utf8-json-v1",capabilities:["exact-content-approval","uncertain-terminal","lease-fencing","event-receipts"]},
+    protocol:{version:2,approval:"sha256-utf8-json-v1",capabilities:["exact-content-approval","uncertain-terminal","lease-fencing","event-receipts","worktree-consent","review-before-content"]},
     projects: [{ id: projectId, label: "Projeto teste" }],
     drivers: [{ id: "codex", installed: true, authenticated: true, executable: true, reason: "Adaptador falso de teste; não valida CLI" }],
   };
@@ -39,7 +39,7 @@ test("Runner: pareamento exige sessão, CSRF, nome exato, posse e uso único", a
 });
 test("Runner: presença expira, capacidades reais controlam envio e pasta não vem do browser", async () => {
   const s = await setup();
-  const task = { deviceId: s.deviceId, projectId: s.projectId, mechanism: "codex", prompt: "teste", requestKey: crypto.randomUUID() };
+  const task = { deviceId: s.deviceId, projectId: s.projectId, mechanism: "codex", prompt: "teste", "worktreeConsent":true,requestKey: crypto.randomUUID() };
   assert.equal((await s.web.call("POST", "/api/runner/tasks", task)).status, 409);
   assert.equal((await s.native.call("POST", "/api/runner/device/heartbeat", s.beat, s.headers)).status, 200);
   assert.equal((await s.web.call("GET", "/api/runner/devices")).json.devices[0].online, true);
@@ -54,7 +54,7 @@ test("Runner: presença expira, capacidades reais controlam envio e pasta não v
 test("Runner: claim concorrente único, reconexão não repete tarefa e conteúdo cifrado", async () => {
   const s = await setup();
   await s.native.call("POST", "/api/runner/device/heartbeat", s.beat, s.headers);
-  const task = { deviceId: s.deviceId, projectId: s.projectId, mechanism: "codex", prompt: "conteúdo privado único", requestKey: crypto.randomUUID() };
+  const task = { deviceId: s.deviceId, projectId: s.projectId, mechanism: "codex", prompt: "conteúdo privado único", "worktreeConsent":true,requestKey: crypto.randomUUID() };
   const created = await s.web.call("POST", "/api/runner/tasks", task);
   assert.equal(created.status, 201);
   assert.equal((await s.web.call("POST", "/api/runner/tasks", task)).json.id, created.json.id);
@@ -77,7 +77,7 @@ test("Runner: claim concorrente único, reconexão não repete tarefa e conteúd
 test("Runner: revogação invalida bearer e cancela fila; outro dispositivo não lê tarefa", async () => {
   const s = await setup();
   await s.native.call("POST", "/api/runner/device/heartbeat", s.beat, s.headers);
-  const created = await s.web.call("POST", "/api/runner/tasks", { deviceId: s.deviceId, projectId: s.projectId, mechanism: "codex", prompt: "teste", requestKey: crypto.randomUUID() });
+  const created = await s.web.call("POST", "/api/runner/tasks", { deviceId: s.deviceId, projectId: s.projectId, mechanism: "codex", prompt: "teste", "worktreeConsent":true,requestKey: crypto.randomUUID() });
   const otherToken = randomToken();
   await s.ctx.db.run("INSERT INTO od_runner_devices(id,owner_id,name,token_hash,expires_at,created_at) SELECT ?,owner_id,'Outro',?,?,? FROM od_runner_devices WHERE id=?", [
     crypto.randomUUID(),
@@ -111,7 +111,7 @@ test("Runner: isolamento por dono e CSRF também cobrem dispositivos, tarefas e 
   const b = client(s.ctx);
   b.setCookie((await startSession(s.ctx, new Request("http://localhost:8787/"), second)).split(";")[0]!);
   await s.native.call("POST", "/api/runner/device/heartbeat", s.beat, s.headers);
-  const created = await s.web.call("POST", "/api/runner/tasks", { deviceId: s.deviceId, projectId: s.projectId, mechanism: "codex", prompt: "privado", requestKey: crypto.randomUUID() });
+  const created = await s.web.call("POST", "/api/runner/tasks", { deviceId: s.deviceId, projectId: s.projectId, mechanism: "codex", prompt: "privado", "worktreeConsent":true,requestKey: crypto.randomUUID() });
   assert.equal((await b.call("GET", "/api/runner/devices")).json.devices.length, 0);
   assert.equal((await b.call("GET", "/api/runner/tasks")).json.tasks.length, 0);
   assert.equal((await b.call("GET", `/api/runner/tasks/${created.json.id}/events`)).status, 404);
@@ -135,7 +135,7 @@ test("Runner: limite de corpo e pareamentos concorrentes limitam a entrada anôn
 
 test("Runner: aprovação de proposta é vinculada ao conteúdo exato, expira e só vale uma vez", async () => {
   const s=await setup();await s.native.call("POST","/api/runner/device/heartbeat",s.beat,s.headers);
-  const created=await s.web.call("POST","/api/runner/tasks",{deviceId:s.deviceId,projectId:s.projectId,mechanism:"codex",prompt:"propor edição",requestKey:crypto.randomUUID()});
+  const created=await s.web.call("POST","/api/runner/tasks",{deviceId:s.deviceId,projectId:s.projectId,mechanism:"codex",prompt:"propor edição","worktreeConsent":true,requestKey:crypto.randomUUID()});
   const taskId=created.json.id;
   await s.native.call("POST","/api/runner/device/claim",{},s.headers);
   const text=JSON.stringify({summary:"Arquivo proposto, ainda não aplicado",files:[{path:"README.md",content:"conteúdo aprovado\n",beforeHash:null}]});
@@ -155,7 +155,7 @@ test("Runner: aprovação de proposta é vinculada ao conteúdo exato, expira e 
 test("Runner: rejeição, revogação e expiração não liberam a proposta",async()=>{
   for(const mode of ["reject","revoke","expire"]){
     const s=await setup();await s.native.call("POST","/api/runner/device/heartbeat",s.beat,s.headers);
-    const taskId=(await s.web.call("POST","/api/runner/tasks",{deviceId:s.deviceId,projectId:s.projectId,mechanism:"codex",prompt:"teste",requestKey:crypto.randomUUID()})).json.id;
+    const taskId=(await s.web.call("POST","/api/runner/tasks",{deviceId:s.deviceId,projectId:s.projectId,mechanism:"codex",prompt:"teste","worktreeConsent":true,requestKey:crypto.randomUUID()})).json.id;
     await s.native.call("POST","/api/runner/device/claim",{},s.headers);
     const proposal=await s.native.call("POST",`/api/runner/device/tasks/${taskId}/event`,{seq:1,kind:"proposal",text:JSON.stringify({summary:"teste",files:[{path:"file.txt",content:"safe",beforeHash:null}]})},s.headers);const hash=proposal.json.proposalHash;
     if(mode==="reject"){assert.equal((await s.web.call("POST",`/api/runner/tasks/${taskId}/decision`,{hash,decision:"reject"})).status,200);assert.equal((await s.web.call("GET","/api/runner/tasks")).json.tasks[0].state,"cancelled");}
@@ -170,7 +170,7 @@ test("Runner: rejeição, revogação e expiração não liberam a proposta",asy
 test("recuperação lista só tarefas ativas do dispositivo, sem prompt, e libera fila após falha honesta", async () => {
   const s = await setup();
   await s.native.call("POST", "/api/runner/device/heartbeat", s.beat, s.headers);
-  const create = () => s.web.call("POST", "/api/runner/tasks", {deviceId:s.deviceId,projectId:s.projectId,mechanism:"codex",prompt:"private fixture context",requestKey:crypto.randomUUID()});
+  const create = () => s.web.call("POST", "/api/runner/tasks", {deviceId:s.deviceId,projectId:s.projectId,mechanism:"codex",prompt:"private fixture context","worktreeConsent":true,requestKey:crypto.randomUUID()});
   await create();await create();
   assert.equal((await s.native.call("GET","/api/runner/device/active")).status,401);
   assert.deepEqual((await s.native.call("GET","/api/runner/device/active",undefined,s.headers)).json.active,[]);
@@ -190,7 +190,7 @@ test("recuperação lista só tarefas ativas do dispositivo, sem prompt, e liber
 test("orçamento de eventos preserva uma conclusão mesmo após excesso de progresso",async()=>{
  const s=await setup();try{
   await s.native.call("POST","/api/runner/device/heartbeat",s.beat,s.headers);
-  const t=await s.web.call("POST","/api/runner/tasks",{deviceId:s.deviceId,projectId:s.projectId,mechanism:"codex",prompt:"budget fixture",requestKey:crypto.randomUUID()});
+  const t=await s.web.call("POST","/api/runner/tasks",{deviceId:s.deviceId,projectId:s.projectId,mechanism:"codex",prompt:"budget fixture","worktreeConsent":true,requestKey:crypto.randomUUID()});
   await s.native.call("POST","/api/runner/device/claim",{},s.headers);
   const path=`/api/runner/device/tasks/${t.json.id}/event`;
   assert.equal((await s.native.call("POST",path,{seq:490,kind:"status",text:"bounded progress"},s.headers)).status,200);
@@ -206,7 +206,7 @@ test("orçamento de eventos preserva uma conclusão mesmo após excesso de progr
 test("P0: cancelamento running é pedido, timeout vira uncertain e não repete tentativa",async()=>{
  const s=await setup();try{
   await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);
-  const create=async()=> (await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'lifecycle fixture',requestKey:crypto.randomUUID()})).json.id;
+  const create=async()=> (await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'lifecycle fixture',"worktreeConsent":true,requestKey:crypto.randomUUID()})).json.id;
   const first=await create();s.ctx.clock.t++;const second=await create();
   assert.equal((await s.native.call('POST','/api/runner/device/claim',{},s.headers)).json.task.id,first);
   const requests=await Promise.all([s.web.call('POST',`/api/runner/tasks/${first}/cancel`,{}),s.web.call('POST',`/api/runner/tasks/${first}/cancel`,{})]);assert.ok(requests.every(r=>r.status===200));
@@ -224,7 +224,7 @@ test("P0: ACK de parada, conclusão tardia e revogação têm semânticas distin
  for(const mode of ['ack','late','revoke','lease','queued']as const){
   const s=await setup();try{
    await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);
-   const id=(await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',requestKey:crypto.randomUUID()})).json.id;
+   const id=(await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',"worktreeConsent":true,requestKey:crypto.randomUUID()})).json.id;
    if(mode!=='queued')await s.native.call('POST','/api/runner/device/claim',{},s.headers);
    if(mode==='revoke'){
     await s.web.call('POST',`/api/runner/devices/${s.deviceId}/revoke`,{});
@@ -241,7 +241,7 @@ test("P0: ACK de parada, conclusão tardia e revogação têm semânticas distin
 test("P1-6: recibos duplicados exigem conteúdo idêntico e rejeitam eventos atrasados",async()=>{
  const s=await setup();try{
   await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);
-  const id=(await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',requestKey:crypto.randomUUID()})).json.id;
+  const id=(await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',"worktreeConsent":true,requestKey:crypto.randomUUID()})).json.id;
   await s.native.call('POST','/api/runner/device/claim',{},s.headers);
   const path=`/api/runner/device/tasks/${id}/event`;const event={seq:2,kind:'message',text:'exact fixture'};
   const raced=await Promise.all([s.native.call('POST',path,event,s.headers),s.native.call('POST',path,event,s.headers)]);
@@ -264,7 +264,7 @@ test("P1-3: heartbeat transport não concede compatibilidade a Runner antigo ou 
    const beat=await s.native.call('POST','/api/runner/device/heartbeat',{...s.beat,protocol},s.headers);
    assert.equal(beat.json.compatible,false);
    const device=(await s.web.call('GET','/api/runner/devices')).json.devices[0];assert.equal(device.online,true);assert.equal(device.compatible,false);
-   assert.equal((await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',requestKey:crypto.randomUUID()})).json.error.code,'runner_incompatible');
+   assert.equal((await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',"worktreeConsent":true,requestKey:crypto.randomUUID()})).json.error.code,'runner_incompatible');
    assert.equal((await s.native.call('POST','/api/runner/device/claim',{},s.headers)).status,409);
   }
   assert.equal((await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers)).json.compatible,true);
@@ -275,5 +275,29 @@ test("P1-4: revogação pelo bearer nativo invalida imediatamente a própria cre
   assert.equal((await s.native.call('POST','/api/runner/device/revoke',{},s.headers)).json.revoked,true);
   assert.equal((await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers)).status,401);
   assert.equal((await s.native.call('POST','/api/runner/device/revoke',{},s.headers)).status,401);
+ }finally{s.ctx.db.raw.close();}
+});
+test("P1-1: preparação de metadados Git exige consentimento explícito antes do claim",async()=>{
+ const s=await setup();try{
+  await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);
+  const base={deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',requestKey:crypto.randomUUID()};
+  assert.equal((await s.web.call('POST','/api/runner/tasks',base)).status,400);
+  assert.equal((await s.web.call('POST','/api/runner/tasks',{...base,worktreeConsent:false})).status,400);
+  assert.equal((await s.web.call('POST','/api/runner/tasks',{...base,worktreeConsent:true})).status,201);
+  assert.equal((await s.native.call('POST','/api/runner/device/claim',{},s.headers)).json.task.worktreeConsent,true);
+ }finally{s.ctx.db.raw.close();}
+});
+test("P1-5: aprovação expõe bytes originais e rejeita substituição sem conteúdo anterior verificável",async()=>{
+ const s=await setup();try{
+  await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);
+  const id=(await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',worktreeConsent:true,requestKey:crypto.randomUUID()})).json.id;
+  await s.native.call('POST','/api/runner/device/claim',{},s.headers);
+  const before='prévio 東京\n';const proposal={summary:'Unicode exact review',files:[{path:'ação.txt',content:'novo 🟣\n\u202e',beforeHash:await sha256Hex(before)}]};
+  const path=`/api/runner/device/tasks/${id}/event`;
+  assert.equal((await s.native.call('POST',path,{seq:1,kind:'proposal',text:JSON.stringify(proposal)},s.headers)).status,400);
+  const raw=JSON.stringify({...proposal,files:[{...proposal.files[0],beforeContent:before}]});
+  assert.equal((await s.native.call('POST',path,{seq:1,kind:'proposal',text:raw},s.headers)).status,200);
+  const receipt=(await s.web.call('GET',`/api/runner/tasks/${id}/events`)).json.approval;
+  assert.equal(receipt.raw,raw);assert.equal(receipt.hash,await sha256Hex(raw));assert.equal(JSON.parse(receipt.raw).files[0].beforeContent,before);
  }finally{s.ctx.db.raw.close();}
 });

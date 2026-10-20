@@ -209,7 +209,7 @@ export function registerRunnerRoutes(route: Registrar) {
   });
   route("POST", "/api/runner/tasks", { auth: true }, async (ctx, req, _p, owner) => {
     const data = z
-      .object({ deviceId: id, projectId: id, mechanism: z.enum(["codex", "claude-code", "cursor"]), prompt: z.string().trim().min(1).max(8000), requestKey: id })
+      .object({ deviceId: id, projectId: id, mechanism: z.enum(["codex", "claude-code", "cursor"]), prompt: z.string().trim().min(1).max(8000), requestKey: id, worktreeConsent:z.literal(true) })
       .strict()
       .parse(await read(req));
     const existing = (await ctx.db.query<{ id: string }>("SELECT id FROM od_runner_tasks WHERE owner_id=? AND request_key=?", [owner!, data.requestKey]))[0];
@@ -231,7 +231,7 @@ export function registerRunnerRoutes(route: Registrar) {
     if ((count[0]?.n ?? 0) >= 10) return problem(429, "queue_full", "Limite de dez tarefas pendentes.");
     const taskId = crypto.randomUUID();
     await ctx.db.run(
-      "INSERT INTO od_runner_tasks(id,owner_id,device_id,project_id,mechanism,prompt_enc,state,request_key,created_at,updated_at) VALUES(?,?,?,?,?,?,'queued',?,?,?) ON CONFLICT(owner_id,request_key) DO NOTHING",
+      "INSERT INTO od_runner_tasks(id,owner_id,device_id,project_id,mechanism,prompt_enc,state,request_key,created_at,updated_at,worktree_consent) VALUES(?,?,?,?,?,?,'queued',?,?,?,1) ON CONFLICT(owner_id,request_key) DO NOTHING",
       [taskId, owner!, d.id, data.projectId, data.mechanism, await seal(ctx.keys, data.prompt, `runner:${owner}:${taskId}`), data.requestKey, ctx.now(), ctx.now()],
     );
     const stored = (await ctx.db.query<{ id: string }>("SELECT id FROM od_runner_tasks WHERE owner_id=? AND request_key=?", [owner!, data.requestKey]))[0]!;
@@ -256,18 +256,18 @@ export function registerRunnerRoutes(route: Registrar) {
     if(d.protocol_version!==RUNNER_PROTOCOL) return problem(409,"runner_incompatible","Negocie protocolo antes de executar.");
     // CAS em uma instrução: um processo por dispositivo; nunca reentregar running após reconexão.
     const tasks = await ctx.db.query<Task>(
-      "UPDATE od_runner_tasks SET state='running',updated_at=?,lease_until=?,attempt_deadline=? WHERE id=(SELECT id FROM od_runner_tasks WHERE device_id=? AND state='queued' ORDER BY created_at,id LIMIT 1) AND state='queued' AND NOT EXISTS(SELECT 1 FROM od_runner_tasks WHERE device_id=? AND state IN ('running','awaiting_approval','cancel_requested')) AND EXISTS(SELECT 1 FROM od_runner_devices WHERE id=? AND revoked_at IS NULL AND protocol_version=2) RETURNING *",
+      "UPDATE od_runner_tasks SET state='running',updated_at=?,lease_until=?,attempt_deadline=? WHERE id=(SELECT id FROM od_runner_tasks WHERE device_id=? AND state='queued' ORDER BY created_at,id LIMIT 1) AND state='queued' AND worktree_consent=1 AND NOT EXISTS(SELECT 1 FROM od_runner_tasks WHERE device_id=? AND state IN ('running','awaiting_approval','cancel_requested')) AND EXISTS(SELECT 1 FROM od_runner_devices WHERE id=? AND revoked_at IS NULL AND protocol_version=2) RETURNING *",
       [ctx.now(), ctx.now()+30_000, ctx.now()+1_200_000, d.id, d.id, d.id],
     );
     const t = tasks[0];
     if (!t) return json({ task: null });
-    return json({ task: { id: t.id, projectId: t.project_id, mechanism: t.mechanism, prompt: await open(ctx.keys, t.prompt_enc, `runner:${t.owner_id}:${t.id}`) } });
+    return json({ task: { id: t.id, projectId: t.project_id, mechanism: t.mechanism, worktreeConsent:true, prompt: await open(ctx.keys, t.prompt_enc, `runner:${t.owner_id}:${t.id}`) } });
   });
   route("POST", "/api/runner/device/tasks/:id/event", { auth: false, csrf: false }, async (ctx, req, p) => {
     const d = await device(ctx, req);
     if (!d) return problem(401, "device_revoked", "Dispositivo indisponível.");
     const data = z
-      .object({ seq: z.number().int().min(1).max(500), kind: z.enum(["status", "message", "files", "tests", "completed", "failed", "cancelled", "uncertain", "proposal"]), text: z.string().max(12000) })
+      .object({ seq: z.number().int().min(1).max(500), kind: z.enum(["status", "message", "files", "tests", "completed", "failed", "cancelled", "uncertain", "proposal"]), text: z.string().max(20000) })
       .strict()
       .parse(await read(req));
     await reconcileRunnerTasks(ctx);
@@ -289,17 +289,22 @@ export function registerRunnerRoutes(route: Registrar) {
     let proposalEnc: string | null = null;
     if (data.kind === "proposal") {
       if ((await ctx.db.query("SELECT task_id FROM od_runner_approvals WHERE task_id=?",[t.id])).length) return problem(409,"proposal_exists","Esta tarefa já possui uma proposta. Não vou substituir o conteúdo aprovado.");
-      const proposal = z.object({ summary: z.string().max(1200), files: z.array(z.object({ path: z.string().min(1).max(240), content: z.string().max(8000), beforeHash: z.string().regex(/^[a-f0-9]{64}$/).nullable() }).strict()).min(1).max(8) }).strict().parse(JSON.parse(data.text));
+      const proposal = z.object({ summary: z.string().max(1200), files: z.array(z.object({ path: z.string().min(1).max(240), content: z.string().max(8000), beforeHash: z.string().regex(/^[a-f0-9]{64}$/).nullable(), beforeContent:z.string().max(8000).optional() }).strict()).min(1).max(8) }).strict().parse(JSON.parse(data.text));
       if (safeRunnerText(data.text) !== data.text || proposal.files.reduce((n, f) => n + new TextEncoder().encode(f.content).length, 0) > 8000) return problem(400, "proposal_sensitive", "Proposta grande ou com padrão de segredo. Nenhum conteúdo foi publicado.");
+      for(const f of proposal.files){
+        if(f.beforeHash && (f.beforeContent===undefined || await sha256Hex(f.beforeContent)!==f.beforeHash)) return problem(400,"proposal_before_missing","Conteúdo anterior exato é necessário para revisar substituição.");
+        if(!f.beforeHash && f.beforeContent!==undefined) return problem(400,"proposal_before_conflict","Arquivo novo não pode declarar conteúdo anterior.");
+      }
       proposalDigest = await sha256Hex(data.text);
       proposalEnc = await seal(ctx.keys, data.text, `runner:proposal:${t.id}`);
     }
-    const payload = await seal(ctx.keys, safeRunnerText(data.text), `runner:event:${t.id}:${data.seq}`);
+    const storedKind=stopping && data.kind!=="cancelled" ? "uncertain" : data.kind;
+    const payload = await seal(ctx.keys, safeRunnerText(storedKind!==data.kind ? `Recibo tardio após pedido de parada; efeitos incertos. ${data.text}` : data.text), `runner:event:${t.id}:${data.seq}`);
     const result=await ctx.db.batch([
       ...(proposalDigest && proposalEnc ? [{ sql: "INSERT INTO od_runner_approvals(task_id,digest,proposal_enc,expires_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM od_runner_tasks WHERE id=? AND state='running' AND cancel_requested=0 AND (SELECT COALESCE(MAX(seq),0) FROM od_runner_events WHERE task_id=?)<?) ON CONFLICT(task_id) DO NOTHING", args: [t.id, proposalDigest, proposalEnc, ctx.now()+600_000, t.id, t.id, data.seq] }] : []),
       {
         sql: "INSERT INTO od_runner_events(task_id,seq,kind,payload_enc,created_at,digest) SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM od_runner_tasks WHERE id=? AND state=?) AND (SELECT COALESCE(MAX(seq),0) FROM od_runner_events WHERE task_id=?)<? ON CONFLICT(task_id,seq) DO NOTHING",
-        args: [t.id, data.seq, data.kind, payload, ctx.now(), eventDigest, t.id, t.state, t.id, data.seq],
+        args: [t.id, data.seq, storedKind, payload, ctx.now(), eventDigest, t.id, t.state, t.id, data.seq],
       },
       {
         sql: "UPDATE od_runner_tasks SET state=?,updated_at=? WHERE id=? AND state=? AND EXISTS(SELECT 1 FROM od_runner_events WHERE task_id=? AND seq=? AND payload_enc=?)",
@@ -322,7 +327,8 @@ export function registerRunnerRoutes(route: Registrar) {
     if (!t) return problem(404, "not_found", "Tarefa indisponível.");
     const rows = await ctx.db.query<{ seq: number; kind: string; payload_enc: string; created_at: number }>("SELECT * FROM od_runner_events WHERE task_id=? ORDER BY seq LIMIT 500", [t.id]);
     const approval=(await ctx.db.query<{digest:string;decision:string;expires_at:number}>("SELECT digest,decision,expires_at FROM od_runner_approvals WHERE task_id=?",[t.id]))[0];
-    return json({ approval:approval?{hash:approval.digest,decision:approval.expires_at<=ctx.now()&&approval.decision==='pending'?'expired':approval.decision,expiresAt:approval.expires_at}:null,events: await Promise.all(rows.map(async (e) => ({ seq: e.seq, kind: e.kind, text: await open(ctx.keys, e.payload_enc, `runner:event:${t.id}:${e.seq}`), at: e.created_at }))) });
+    const raw=approval ? (await ctx.db.query<{proposal_enc:string}>("SELECT proposal_enc FROM od_runner_approvals WHERE task_id=?",[t.id]))[0] : null;
+    return json({ approval:approval?{raw:raw?await open(ctx.keys,raw.proposal_enc,`runner:proposal:${t.id}`):null,hash:approval.digest,decision:approval.expires_at<=ctx.now()&&approval.decision==='pending'?'expired':approval.decision,expiresAt:approval.expires_at}:null,events: await Promise.all(rows.map(async (e) => ({ seq: e.seq, kind: e.kind, text: await open(ctx.keys, e.payload_enc, `runner:event:${t.id}:${e.seq}`), at: e.created_at }))) });
   });
   route("POST", "/api/runner/tasks/:id/cancel", { auth: true }, async (ctx, _r, p, owner) => {
     await ctx.db.run(

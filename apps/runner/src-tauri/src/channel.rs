@@ -214,7 +214,7 @@ pub fn disconnect(c: &SharedChannel, dir: &Path) -> Result<(), String> {
     g.status.message="Acesso remoto revogado ou expirado; vínculo local removido.".into();
     Ok(())
 }
-fn hello()->Value { json!({"version":2,"approval":"sha256-utf8-json-v1","capabilities":["exact-content-approval","uncertain-terminal","lease-fencing","event-receipts"]}) }
+fn hello()->Value { json!({"version":2,"approval":"sha256-utf8-json-v1","capabilities":["exact-content-approval","uncertain-terminal","lease-fencing","event-receipts","worktree-consent","review-before-content"]}) }
 fn compatible(p:&Value)->bool {
  p["version"]==2 && p["approval"]=="sha256-utf8-json-v1" && p["schemaReady"]==true && hello()["capabilities"].as_array().unwrap().iter().all(|c|p["capabilities"].as_array().is_some_and(|v|v.contains(c)))
 }
@@ -293,6 +293,20 @@ mod tests {
             let mut bad=p.clone();bad[key]=value;assert!(!compatible(&bad));
         }
         assert!(!compatible(&json!({"active":[]})));
+    }
+    #[test]
+    fn disconnect_network_failure_is_pending_and_blocks_execution() {
+        use std::net::TcpListener;
+        use std::io::{Read,Write};
+        let listener=TcpListener::bind("127.0.0.1:0").unwrap();let address=listener.local_addr().unwrap();
+        let server=std::thread::spawn(move||{let(mut stream,_)=listener.accept().unwrap();let mut bytes=[0;4096];let _=stream.read(&mut bytes);stream.write_all(b"HTTP/1.1 503 Service Unavailable\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").unwrap();});
+        let dir=std::env::temp_dir().join(format!("od-revoke-pending-{}",rand::random::<u64>()));fs::create_dir(&dir).unwrap();
+        let mut channel=Channel::default();let id="f11c1820-5a7c-47e9-90d4-22c78ed0ca21";
+        channel.link=Some(Link{origin:format!("http://{address}"),device_id:id.into()});channel.token=Some(secret());
+        channel.status=Status{paired:true,online:true,message:String::new(),device_id:Some(id.into())};
+        let c=Arc::new(Mutex::new(channel));assert!(disconnect(&c,&dir).is_err());assert!(dir.join("revocation-pending").exists());
+        assert!(!live(&c,id,""));assert!(c.lock().unwrap().token.is_some());assert!(c.lock().unwrap().status.message.contains("pendente"));server.join().unwrap();
+        fs::remove_dir_all(&dir).unwrap();
     }
     #[test]
     fn urls() {

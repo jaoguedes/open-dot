@@ -21,12 +21,14 @@ interface Device {
 interface Task {
   id: string;
   deviceId: string;
+  projectId: string;
   mechanism: MechanismId;
   state: string;
   cancelRequested: number;
   updatedAt: number;
 }
 interface Approval {
+  raw: string;
   hash: string;
   decision: "pending" | "approve" | "reject" | "expired";
   expiresAt: number;
@@ -55,6 +57,7 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
   const [deviceId, setDeviceId] = useState(""),
     [projectId, setProjectId] = useState(""),
     [mechanism, setMechanism] = useState<MechanismId>("codex");
+  const [worktreeConsent,setWorktreeConsent]=useState(false);
   const [prompt, setPrompt] = useState(""),
     [code, setCode] = useState(""),
     [name, setName] = useState("");
@@ -66,6 +69,18 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
   const [connectionError, setConnectionError] = useState("");
   const [events, setEvents] = useState<Event[]>([]),
     [revision, setRevision] = useState(0);
+  const [reviewedHash,setReviewedHash]=useState("");
+  useEffect(()=>{
+    let active=true;setReviewedHash("");
+    if(approval?.raw && approval.decision==="pending") {
+      const bytes=new TextEncoder().encode(approval.raw);
+      void crypto.subtle.digest("SHA-256",bytes).then(result=>{
+        const digest=Array.from(new Uint8Array(result),b=>b.toString(16).padStart(2,"0")).join("");
+        if(active && digest===approval.hash)setReviewedHash(digest);
+      }).catch(()=>{});
+    }
+    return()=>{active=false;};
+  },[approval?.raw,approval?.hash,approval?.decision,selected]);
   const device = devices.find((d) => d.id === deviceId);
   const ready = device?.online && device.compatible && device.drivers.some((d) => d.id === mechanism && d.authenticated && d.executable) && device.projects.some((p) => p.id === projectId);
   useEffect(() => {
@@ -163,10 +178,10 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
         className="ws-runner-form"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!ready || busy) return;
+          if (!ready || busy || !worktreeConsent) return;
           const fingerprint = JSON.stringify({ deviceId, projectId, mechanism, prompt });
           if (pending.current?.fingerprint !== fingerprint) pending.current = { fingerprint, key: crypto.randomUUID() };
-          void mutate("tasks", { deviceId, projectId, mechanism, prompt, requestKey: pending.current.key }).then((r) => {
+          void mutate("tasks", { deviceId, projectId, mechanism, prompt, worktreeConsent, requestKey: pending.current.key }).then((r) => {
             if (r?.id) {
               pending.current = null;
               setSelected(r.id);
@@ -182,7 +197,7 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
               value={deviceId}
               onChange={(e) => {
                 setDeviceId(e.target.value);
-                setProjectId("");
+                setProjectId("");setWorktreeConsent(false);
               }}
             >
               <option value="">Selecione um Runner</option>
@@ -198,7 +213,7 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
           </label>
           <label>
             Projeto autorizado
-            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} disabled={!device?.online}>
+            <select value={projectId} onChange={(e) => {setProjectId(e.target.value);setWorktreeConsent(false);}} disabled={!device?.online}>
               <option value="">Autorize uma pasta no Runner</option>
               {device?.projects.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -233,7 +248,8 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
           Modo inicial do Codex: propõe até oito arquivos e 8 KB de conteúdo. Você revisa os conteúdos antes da aplicação no worktree isolado. Shell e testes de projeto estão desabilitados; Claude
           Code e Cursor continuam sem execução disponível.
         </p>
-        <button className="btn primary" disabled={demo || busy || !ready || !prompt.trim()}>
+        <label><input type="checkbox" checked={worktreeConsent} onChange={e=>setWorktreeConsent(e.target.checked)} /> Autorizo criar um worktree isolado deste projeto e registrar seus metadados Git compartilhados. Alterações de conteúdo exigem outra aprovação; não autorizo commit, push ou limpeza automática.</label>
+        <button className="btn primary" disabled={demo || busy || !ready || !worktreeConsent || !prompt.trim()}>
           Enviar ao Runner
         </button>
       </form>
@@ -270,20 +286,24 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
             {events.map((e) => (
               <article key={e.seq}>
                 <b>{e.kind}</b>
-                {e.kind === "proposal" ? <ProposalView text={e.text} /> : <pre>{e.text}</pre>}
+                {e.kind === "proposal" ? <p>Proposta recebida. Conteúdo integral no painel de aprovação.</p> : <pre>{e.text}</pre>}
               </article>
             ))}
           </div>
           {approval && (
             <section className="ws-approval card" aria-label="Aprovação de arquivos">
               <h3>Revisar os arquivos propostos</h3>
+              <p>Projeto: {devices.flatMap(d=>d.projects).find(p=>p.id===tasks.find(t=>t.id===selected)?.projectId)?.label || tasks.find(t=>t.id===selected)?.projectId}. Mecanismo: {tasks.find(t=>t.id===selected)?.mechanism}. Operação: criar ou substituir arquivos completos no worktree desta tarefa.</p>
+              <p className="tiny">SHA-256 UTF-8: <code>{approval.hash}</code>. O hash vincula estes bytes à autorização de uso único.</p>
+              {approval.raw && <><ProposalView text={approval.raw} /><details><summary>Conteúdo exato em JSON escapado · {new TextEncoder().encode(approval.raw).length} bytes UTF-8</summary><pre>{JSON.stringify(approval.raw).replace(/[\u007f-\uffff]/g,c=>`\\u${c.charCodeAt(0).toString(16).padStart(4,"0")}`)}</pre></details></>}
+              {!reviewedHash && approval.decision==="pending" && <p role="alert">Conteúdo completo ainda não verificado. Aprovação bloqueada.</p>}
               <p>Leia o conteúdo completo acima. Aprovar vale apenas para esta proposta, na pasta isolada. Não concede shell, rede, commit, push ou acesso a outros caminhos.</p>
               {approval.decision === "pending" ? (
                 <>
                   <p className="tiny">Válida até {new Date(approval.expiresAt).toLocaleTimeString("pt-BR")}. Os arquivos originais do seu projeto não são alterados.</p>
                   <button
                     className="btn primary"
-                    disabled={demo || busy || Date.now() >= approval.expiresAt || !devices.some((d) => d.id === tasks.find((t) => t.id === selected)?.deviceId && d.online)}
+                    disabled={demo || busy || reviewedHash!==approval.hash || Date.now() >= approval.expiresAt || !devices.some((d) => d.id === tasks.find((t) => t.id === selected)?.deviceId && d.online)}
                     onClick={() => void mutate(`tasks/${encodeURIComponent(selected)}/decision`, { hash: approval.hash, decision: "approve" })}
                   >
                     Aprovar estes arquivos no worktree
@@ -311,7 +331,7 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
 
 function ProposalView({ text }: { text: string }) {
   try {
-    const p = JSON.parse(text) as { summary: string; files: Array<{ path: string; content: string; beforeHash: string | null }> };
+    const p = JSON.parse(text) as { summary: string; files: Array<{ path: string; content: string; beforeHash: string | null; beforeContent?:string }> };
     return (
       <div>
         <p>{p.summary}</p>
@@ -320,6 +340,7 @@ function ProposalView({ text }: { text: string }) {
             <h4>
               {f.path} · {f.beforeHash ? "substituição do conteúdo" : "arquivo novo"}
             </h4>
+            {f.beforeContent!==undefined && <details><summary>Diff de substituição completa</summary><pre>{f.beforeContent.split("\n").map(line=>`- ${line}`).join("\n")+"\n"+f.content.split("\n").map(line=>`+ ${line}`).join("\n")}</pre></details>}
             <pre>{f.content}</pre>
           </section>
         ))}

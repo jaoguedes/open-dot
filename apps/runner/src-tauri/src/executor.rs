@@ -46,6 +46,7 @@ fn status(c: &SharedChannel, j: &Journal) -> Result<Value, String> {
     )
 }
 fn root(dir: &Path, j: &Journal) -> Result<PathBuf, String> {
+    worktree::verify_owner(&dir.join("worktrees"),&j.task,&j.project)?;
     let store = dir
         .join("worktrees")
         .canonicalize()
@@ -267,7 +268,7 @@ pub fn poll(
                 .ok_or("Sequência de recuperação inválida.")?,
         };
         journal::save(dir, &orphan)?;
-        emit(c, &mut orphan, dir, "failed", "Reserva sem journal local: estado anterior incerto. Worktree preservado; nenhuma nova escrita ou chamada ao modelo. Revise os arquivos antes de enviar outra tarefa.")?;
+        emit(c, &mut orphan, dir, "uncertain", "Reserva sem journal local: estado anterior incerto. Worktree preservado; nenhuma nova escrita ou chamada ao modelo. Revise os arquivos antes de enviar outra tarefa.")?;
         journal::clear(dir)?;
         return Ok(true);
     }
@@ -297,7 +298,7 @@ pub fn poll(
         if !permitted(project) {
             return Err("A pasta foi revogada antes da execução.".into());
         }
-        let root = worktree::create(project, &dir.join("worktrees"), id)?;
+        let root = worktree::create(project, &dir.join("worktrees"), id, task["worktreeConsent"]==true)?;
         emit(c,&mut j,dir,"status","Worktree isolado criado a partir de HEAD sem hooks ou filtros de checkout. Credenciais e symlinks não são materializados. Arquivos originais preservados.")?;
         let cli = codex::installed()?;
         codex::preflight(&cli, &dir.join("proofs"))?;
@@ -471,7 +472,7 @@ mod live_tests {
         });
         let device = channel::identity(&c).unwrap();
         let expected = "# Open Dot Runner\n\nReal Codex execution validated.\n";
-        let submitted=client.post(format!("{url}/api/runner/tasks")).header("cookie",&cookie).header("x-open-dot","1").json(&json!({"deviceId":device,"projectId":project_id,"mechanism":"codex","prompt":format!("Create exactly one new file named RUNNER_RESULT.md with these exact UTF-8 contents, including the final newline: {}. Return the requested structured proposal. Do not change any other file, do not use tools and do not run commands.",serde_json::to_string(expected).unwrap()),"requestKey":"f11c1820-5a7c-47e9-90d4-22c78ed0ca21"})).send().unwrap();
+        let submitted=client.post(format!("{url}/api/runner/tasks")).header("cookie",&cookie).header("x-open-dot","1").json(&json!({"deviceId":device,"projectId":project_id,"mechanism":"codex","prompt":format!("Create exactly one new file named RUNNER_RESULT.md with these exact UTF-8 contents, including the final newline: {}. Return the requested structured proposal. Do not change any other file, do not use tools and do not run commands.",serde_json::to_string(expected).unwrap()),"worktreeConsent":true,"requestKey":"f11c1820-5a7c-47e9-90d4-22c78ed0ca21"})).send().unwrap();
         assert_eq!(submitted.status().as_u16(), 201);
         let task_id = submitted.json::<Value>().unwrap()["id"]
             .as_str()

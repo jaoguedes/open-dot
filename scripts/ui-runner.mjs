@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import { startHarness } from "./lib/ui-harness.mjs";
 import { mkdirSync } from "node:fs";
@@ -76,13 +77,14 @@ await scenario("W4", "Paleta aprovada fica na UI; Dot preserva gradiente em todo
   }
 });
 await scenario("W5", "Aprovação com API simulada exige conteúdo visível e envia o hash exato", async ({page,open})=>{
-  const hash="a".repeat(64);let decision=null;
+  const raw=JSON.stringify({summary:"Fixture simulada · ação 東京",files:[{path:"result.md",content:"<script>window.UNSAFE_PROPOSAL=true</script>",beforeHash:null}]});
+  const hash=createHash("sha256").update(raw).digest("hex");let decision=null;
   await page.route("**/api/runner/**",async route=>{
     const path=new URL(route.request().url()).pathname;
     let data={};
     if(path.endsWith("/devices"))data={devices:[{id:"device-test",name:"Runner de teste",online:true,revoked:false,compatible:true,projects:[],drivers:[]}]};
     else if(path.endsWith("/tasks"))data={tasks:[{id:"task-test",deviceId:"device-test",mechanism:"codex",state:"awaiting_approval",cancelRequested:0,updatedAt:Date.now()}]};
-    else if(path.endsWith("/events"))data={events:[{seq:1,kind:"proposal",text:JSON.stringify({summary:"Fixture simulada",files:[{path:"result.md",content:"<script>window.UNSAFE_PROPOSAL=true</script>",beforeHash:null}]})}],approval:{hash,decision:decision?"approve":"pending",expiresAt:Date.now()+60000}};
+    else if(path.endsWith("/events"))data={events:[{seq:1,kind:"proposal",text:JSON.stringify({summary:"Fixture simulada",files:[{path:"result.md",content:"<script>window.UNSAFE_PROPOSAL=true</script>",beforeHash:null}]})}],approval:{raw,hash,decision:decision?"approve":"pending",expiresAt:Date.now()+60000}};
     else if(path.endsWith("/decision")){decision=route.request().postDataJSON();data={ok:true};}
     await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(data)});
   });

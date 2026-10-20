@@ -43,26 +43,21 @@ fn config(root: &Path) -> Result<String, String> {
     let root = root
         .to_str()
         .ok_or("Caminho incompatível com o mecanismo.")?;
-    let quoted = serde_json::to_string(root).map_err(|_| "Caminho inválido.")?;
-    // Não herdar :workspace: não conceder escrita, temporários ou outra raiz.
-    let mut denied = String::new();
-    for tail in [
-        ".env",
-        ".env.*",
-        "**/.env*",
-        ".dev.vars",
-        "**/.dev.vars",
-        "**/*.pem",
-        "**/*.key",
-        ".aws",
-        ".codex",
-        ".agents",
-    ] {
-        let p =
-            serde_json::to_string(&format!("{root}/{tail}")).map_err(|_| "Caminho inválido.")?;
-        denied.push_str(&format!(",{p}=\"deny\""));
+    // O mecanismo interpreta regras de filesystem como padrões. Não aceitar metacaracteres
+    // na raiz, ainda que o TOML seja sintaticamente válido. Controles e escapes falham fechados.
+    if root.chars().any(|c|c.is_control() || "{}[]*?\\\"'".contains(c)) {
+        return Err("Caminho incompatível com regras de sandbox. Use uma pasta sem controles ou metacaracteres.".into());
     }
-    Ok(format!("permissions.{PROFILE}={{filesystem={{\":root\"=\"deny\",\":minimal\"=\"read\",\":slash_tmp\"=\"deny\",\":tmpdir\"=\"deny\",{quoted}=\"read\"{denied}}},network={{enabled=false}}}}"))
+    let mut filesystem=toml::map::Map::new();
+    for (path,permission) in [(":root","deny"),(":minimal","read"),(":slash_tmp","deny"),(":tmpdir","deny"),(root,"read")] {
+        filesystem.insert(path.into(),toml::Value::String(permission.into()));
+    }
+    for tail in [".git","**/.git/**",".env",".env.*","**/.env*",".dev.vars","**/.dev.vars","**/*.pem","**/*.key",".aws",".codex",".agents"] {
+        filesystem.insert(format!("{root}/{tail}"),toml::Value::String("deny".into()));
+    }
+    let mut profile=toml::map::Map::new();profile.insert("filesystem".into(),toml::Value::Table(filesystem));
+    let mut network=toml::map::Map::new();network.insert("enabled".into(),toml::Value::Boolean(false));profile.insert("network".into(),toml::Value::Table(network));
+    Ok(format!("permissions.{PROFILE}={}",toml::Value::Table(profile)))
 }
 fn safe_args(root: &Path) -> Result<Vec<String>, String> {
     let mut args = vec![
@@ -387,7 +382,8 @@ pub fn propose(
                 .map(|e| Edit {
                     path: e.path,
                     content: e.content,
-                    before_hash: None,
+                    before_content: None,
+                        before_hash: None,
                 })
                 .collect(),
         },
@@ -395,4 +391,34 @@ pub fn propose(
 }
 pub fn installed() -> Result<PathBuf, String> {
     drivers::resolve("codex").ok_or("CLI oficial do Codex não encontrado.".into())
+}
+
+#[cfg(test)]
+mod config_tests {
+ use super::*;
+ #[test]
+ fn paths_roundtrip_as_data_and_patterns_fail_closed() {
+  for root in ["/tmp/project with spaces","/tmp/projeto-ação-東京"] {
+   let conf=config(Path::new(root)).unwrap();
+   let parsed:toml::Table=toml::from_str(&conf).unwrap();
+   let fs=parsed["permissions"][PROFILE]["filesystem"].as_table().unwrap();
+   assert_eq!(fs[root].as_str(),Some("read"));assert_eq!(fs[":root"].as_str(),Some("deny"));
+   assert_eq!(parsed["permissions"][PROFILE]["network"]["enabled"].as_bool(),Some(false));
+   assert_eq!(fs.len(),17);
+  }
+  for root in ["/tmp/proj\"quoted","/tmp/single'quote","/tmp/{a,b}","/tmp/[x]","/tmp/a*","/tmp/a?","/tmp/a\\b","/tmp/a\nb","/tmp/a\rb","/tmp/a\tb"] {
+   assert!(config(Path::new(root)).is_err());
+  }
+ }
+ #[test]
+ #[ignore="Requer CLI oficial local; valida parser/sandbox sem chamada de IA"]
+ fn official_parser_path_negatives() {
+  let cli=installed().unwrap();
+  let root=std::env::temp_dir().join(format!("od-config-{}",rand::random::<u64>()));
+  for name in ["space name","unicode-ação-東京"] {
+   // preflight cria canários sob store; nenhum prompt ou modelo é utilizado.
+   preflight(&cli,&root.join(name)).unwrap_or_else(|_|panic!("Official sandbox case rejected: {name}"));
+  }
+  std::fs::remove_dir_all(&root).unwrap();
+ }
 }
