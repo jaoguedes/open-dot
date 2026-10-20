@@ -29,3 +29,11 @@ Testes: baseline completo PASS (287 Node/sete Python/eval/typecheck/build), apó
 Limites: lease não mata processo remoto nem desfaz arquivo; uncertain preserva essa distinção. Worktrees de tentativas não são reutilizados. Não valida crash do modelo durante geração. Nenhuma migração remota. P0 parcial até regressão nativa/negociação e auditoria independente; automação E–L continua bloqueada por P1.
 
 Próximo passo: P1-3 negociação explícita antes de heartbeat/claim; P1-4 revogação nativa com pending persistente; depois snapshots/worktree e parser/aprovação. Arquivos alterados e commit exato: git show --stat e git log. Nenhum push.
+
+## Fase C — negociação e desconexão (OD2-C2)
+
+Protocolo 2 e contrato sha256-utf8-json-v1 negociados explicitamente. Heartbeat legado mantém distinção transporte/compatibilidade, mas não libera tasks/claim; nativo consulta protocolo/schema antes de anunciar disponibilidade. Capacidades mínimas não representam catálogo de modelos nem entitlement. Migração 0011 aditiva, apenas bancos descartáveis. Rollout obrigatório: migrar/adotar Worker e Runner compatíveis em etapa autorizada; código antigo permanece bloqueado para execução, sem deploy implícito.
+
+Desconexão nativa agora persiste revocation-pending, bloqueia execução antes da rede e solicita revogação do próprio bearer. Só remove cofre/vínculo ao confirmar revogado ou credencial já recusada (401). Falta de rede mantém pedido e retenta no heartbeat/restart; frontend só recebe diagnóstico, nunca bearer. Endpoint de revogação próprio foi acrescentado em B1. Teste SQLite confirma reuso negado. Teste nativo estendido aguarda compilação em target isolado.
+
+Gate TS completo PASS: 292 Node/sete Python/eval/typecheck/build. Lint zero erros/aviso DotView preexistente. Testes cruzam protocolo ausente/antigo, contrato diferente, capacidades faltantes e protocolo atual. Não comprovam GUI ou rede móvel. Rust pendente: checkpoint de desenvolvimento explícito até prova nativa. Próxima unidade P1-2 usa serializador TOML já presente transitivamente (nova dependência direta pequena, sem nova crate no lock); testes de parser oficial não consomem IA. P1-1 e P1-5 ainda abertos; não liberar automação.

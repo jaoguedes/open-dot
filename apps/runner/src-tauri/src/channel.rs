@@ -37,6 +37,8 @@ pub struct Channel {
     pending: Option<Pending>,
     link: Option<Link>,
     token: Option<String>,
+    revocation_dir: Option<std::path::PathBuf>,
+    revoking: bool,
     cancelled: std::collections::HashSet<String>,
 }
 pub type SharedChannel = Arc<Mutex<Channel>>;
@@ -96,6 +98,9 @@ pub fn restore(dir: &Path) -> Channel {
                         message: "Reconectando…".into(),
                         device_id: Some(link.device_id.clone()),
                     };
+                    c.revocation_dir=Some(dir.to_path_buf());
+                    c.revoking=dir.join("revocation-pending").exists();
+                    if c.revoking {c.status.message="Revogação remota pendente. Execução bloqueada.".into();}
                     c.link = Some(link);
                     c.token = Some(token);
                 }
@@ -170,6 +175,7 @@ pub fn confirm(c: &SharedChannel, dir: &Path) -> Result<Status, String> {
         message: "Vínculo confirmado. Aguardando heartbeat.".into(),
         device_id: Some(link.device_id.clone()),
     };
+    guard.revocation_dir=Some(dir.to_path_buf());
     guard.link = Some(link);
     guard.token = Some(token);
     guard.pending = None;
@@ -177,7 +183,20 @@ pub fn confirm(c: &SharedChannel, dir: &Path) -> Result<Status, String> {
 }
 pub fn disconnect(c: &SharedChannel, dir: &Path) -> Result<(), String> {
     let mut g = c.lock().map_err(|_| "Canal ocupado.")?;
-    // Invalidação remota exige a sessão web; retirar o token local interrompe todos os heartbeats.
+    // Marcar antes da rede: nunca anunciar revogação sem confirmação nem retomar ao reiniciar.
+    if let (Some(link),Some(token))=(g.link.clone(),g.token.clone()) {
+        fs::write(dir.join("revocation-pending"),b"pending")
+            .map_err(|_|"Não consegui preservar o pedido de revogação. Tente novamente.")?;
+        g.revoking=true;g.revocation_dir=Some(dir.to_path_buf());g.status.online=false;
+        g.status.message="Desconectado localmente; revogação remota pendente.".into();
+        let res=http()?.post(format!("{}/api/runner/device/revoke",link.origin)).bearer_auth(token).json(&json!({})).send()
+            .map_err(|_|"Desconectado localmente. Sem rede para confirmar revogação; tentarei novamente. Você também pode revogar pelo Workspace.")?;
+        if res.status().as_u16()!=401 {
+            if !res.status().is_success() || read_json(res)?["revoked"]!=true {
+                return Err("Desconectado localmente; servidor não confirmou revogação. Atualize ou revogue pelo Workspace.".into());
+            }
+        }
+    }
     if let Some(l) = &g.link {
         entry(l)?
             .delete_credential()
@@ -188,10 +207,20 @@ pub fn disconnect(c: &SharedChannel, dir: &Path) -> Result<(), String> {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
         Err(_) => return Err("Não consegui remover o vínculo local.".into()),
     }
+    match fs::remove_file(dir.join("revocation-pending")) {
+        Ok(())=>{},Err(e) if e.kind()==std::io::ErrorKind::NotFound=>{},Err(_)=>return Err("Revogado remotamente; limpeza local pendente.".into())
+    }
     *g = Channel::default();
+    g.status.message="Acesso remoto revogado ou expirado; vínculo local removido.".into();
     Ok(())
 }
+fn hello()->Value { json!({"version":2,"approval":"sha256-utf8-json-v1","capabilities":["exact-content-approval","uncertain-terminal","lease-fencing","event-receipts"]}) }
+fn compatible(p:&Value)->bool {
+ p["version"]==2 && p["approval"]=="sha256-utf8-json-v1" && p["schemaReady"]==true && hello()["capabilities"].as_array().unwrap().iter().all(|c|p["capabilities"].as_array().is_some_and(|v|v.contains(c)))
+}
 pub fn heartbeat(c: &SharedChannel, projects: Value, drivers: Value) {
+    let retry=c.lock().ok().and_then(|g|if g.revoking {g.revocation_dir.clone()}else{None});
+    if let Some(dir)=retry {let _=disconnect(c,&dir);return;}
     // Não guardar o lock durante a rede: a UI e a revogação continuam disponíveis.
     let snapshot = c
         .lock()
@@ -201,20 +230,24 @@ pub fn heartbeat(c: &SharedChannel, projects: Value, drivers: Value) {
         return;
     };
     let res = http().and_then(|h| {
+        let negotiation=h.get(format!("{}/api/runner/protocol",link.origin)).send().map_err(|_| "Negociação indisponível.")?;
+        if !negotiation.status().is_success(){return Err("Servidor sem negociação de protocolo.".into());}
+        let protocol=read_json(negotiation)?;
+        if !compatible(&protocol){return Err("Servidor incompatível ou migração pendente.".into());}
         h.post(format!("{}/api/runner/device/heartbeat", link.origin))
             .bearer_auth(token)
-            .json(&json!({"projects":projects,"drivers":drivers}))
+            .json(&json!({"projects":projects,"drivers":drivers,"protocol":hello()}))
             .send()
             .map_err(|_| "Conexão interrompida.".into())
     });
     if let Ok(mut g) = c.lock() {
-        if g.link.as_ref().map(|l| &l.device_id) != Some(&link.device_id) {
+        if g.revoking || g.link.as_ref().map(|l| &l.device_id) != Some(&link.device_id) {
             return;
         }
         match res {
             Ok(r) if r.status().is_success() => {
                 if let Ok(data) = read_json(r) {
-                    if let Some(active) = data["active"].as_array() {
+                    if let Some(active) = data["active"].as_array().filter(|_|data["compatible"]==true) {
                         g.cancelled = active
                             .iter()
                             .filter(|v| v["cancel_requested"] == 1)
@@ -239,6 +272,10 @@ pub fn heartbeat(c: &SharedChannel, projects: Value, drivers: Value) {
                 g.status.message =
                     "Vínculo revogado ou expirado. Desconecte e pareie novamente.".into();
             }
+            Err(ref reason) => {
+                g.status.online=false;
+                g.status.message=reason.clone();
+            }
             _ => {
                 g.status.online = false;
                 g.status.message = "Sem confirmação do servidor. Tentando reconectar…".into();
@@ -249,6 +286,14 @@ pub fn heartbeat(c: &SharedChannel, projects: Value, drivers: Value) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn protocol_must_match_and_migrations_be_ready() {
+        let mut p=hello(); p["schemaReady"]=json!(true);assert!(compatible(&p));
+        for (key,value) in [("version",json!(1)),("approval",json!("other")),("schemaReady",json!(false)),("capabilities",json!([]))] {
+            let mut bad=p.clone();bad[key]=value;assert!(!compatible(&bad));
+        }
+        assert!(!compatible(&json!({"active":[]})));
+    }
     #[test]
     fn urls() {
         assert!(origin("https://example.com").is_ok());
@@ -331,6 +376,13 @@ mod live_tests {
         assert!(!restored.lock().unwrap().status.online);
         disconnect(&restored, &dir).unwrap();
         assert!(!restore(&dir).status.paired);
+        let p=begin(&restored,url.clone(),"Native disconnect smoke".into()).unwrap();
+        let r=client.post(format!("{url}/api/runner/pairings/approve")).header("cookie",&cookie).header("x-open-dot","1").json(&json!({"code":p["code"],"name":"Native disconnect smoke"})).send().unwrap();assert!(r.status().is_success());
+        confirm(&restored,&dir).unwrap();
+        let prior_token=restored.lock().unwrap().token.clone().unwrap();
+        disconnect(&restored,&dir).unwrap();
+        let replay=client.post(format!("{url}/api/runner/device/heartbeat")).bearer_auth(prior_token).json(&json!({"projects":[],"drivers":[],"protocol":hello()})).send().unwrap();assert_eq!(replay.status().as_u16(),401);
+        assert!(!restore(&dir).status.paired);
         fs::remove_dir(&dir).unwrap();
         println!("REAL_CHANNEL_PASS: HTTP, SQLite, session, pairing, native vault, restart, heartbeat, revocation, cleanup. No driver task executed.");
     }
@@ -385,7 +437,8 @@ fn read_json(response: reqwest::blocking::Response) -> Result<Value, String> {
 pub fn live(c: &SharedChannel, device: &str, task: &str) -> bool {
     c.lock()
         .map(|g| {
-            g.status.paired
+            !g.revoking
+                && g.status.paired
                 && g.status.online
                 && g.status.device_id.as_deref() == Some(device)
                 && !g.cancelled.contains(task)

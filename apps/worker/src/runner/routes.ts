@@ -1,3 +1,5 @@
+import { RUNNER_PROTOCOL, APPROVAL_CONTRACT, REQUIRED_CAPABILITIES, runnerHello, runnerCompatible } from "./protocol.ts";
+import { currentSchema, REQUIRED_SCHEMA, schemaCompatible } from "../db/migrate.ts";
 import { z } from "zod";
 import { sha256Hex } from "@open-dot/core";
 import type { Handler } from "../app.ts";
@@ -24,6 +26,7 @@ interface Device {
   projects: string;
   capabilities: string;
   seen_at: number;
+  protocol_version: number;
 }
 interface Task {
   id: string;
@@ -100,6 +103,10 @@ async function revokeDevice(ctx: Ctx, deviceId: string, owner: string): Promise<
   ]);
 }
 export function registerRunnerRoutes(route: Registrar) {
+  route("GET","/api/runner/protocol",{auth:false,csrf:false},async(ctx)=>{
+    const schema=await currentSchema(ctx.db);
+    return json({version:RUNNER_PROTOCOL,approval:APPROVAL_CONTRACT,capabilities:REQUIRED_CAPABILITIES,requiredSchema:REQUIRED_SCHEMA,schemaReady:schemaCompatible(schema.version,REQUIRED_SCHEMA)});
+  });
   route("POST", "/api/runner/pairings", { auth: false, csrf: false }, async (ctx, req) => {
     const data = z
       .object({ secretHash: hash, tokenHash: hash, name: label })
@@ -151,7 +158,7 @@ export function registerRunnerRoutes(route: Registrar) {
   });
   route("GET", "/api/runner/devices", { auth: true }, async (ctx, _r, _p, owner) => {
     const rows = await ctx.db.query<Device & { revoked_at: number | null; expires_at: number }>(
-      "SELECT id,owner_id,name,projects,capabilities,seen_at,revoked_at,expires_at FROM od_runner_devices WHERE owner_id=? ORDER BY created_at DESC LIMIT 20",
+      "SELECT id,owner_id,name,projects,capabilities,seen_at,protocol_version,revoked_at,expires_at FROM od_runner_devices WHERE owner_id=? ORDER BY created_at DESC LIMIT 20",
       [owner!],
     );
     return json({
@@ -160,6 +167,8 @@ export function registerRunnerRoutes(route: Registrar) {
         name: d.name,
         online: !d.revoked_at && d.expires_at > ctx.now() && d.seen_at > ctx.now() - 30_000,
         revoked: d.revoked_at !== null,
+        compatible: d.protocol_version===RUNNER_PROTOCOL,
+        compatibilityReason: d.protocol_version===RUNNER_PROTOCOL ? "Protocolo compatível" : "Atualize o Runner: protocolo ou contrato de aprovação incompatível.",
         seenAt: d.seen_at,
         projects: JSON.parse(d.projects),
         drivers: JSON.parse(d.capabilities),
@@ -179,22 +188,24 @@ export function registerRunnerRoutes(route: Registrar) {
     const d = await device(ctx, req);
     if (!d) return problem(401, "device_revoked", "Pareie novamente: dispositivo revogado ou sessão expirada.");
     const data = z
-      .object({ projects: z.array(project).max(20), drivers: z.array(driver).max(3) })
+      .object({ projects: z.array(project).max(20), drivers: z.array(driver).max(3), protocol:runnerHello.optional() })
       .strict()
       .parse(await read(req));
     if (new Set(data.projects.map((p) => p.id)).size !== data.projects.length || new Set(data.drivers.map((p) => p.id)).size !== data.drivers.length) throw new SyntaxError();
-    const updated = await ctx.db.run("UPDATE od_runner_devices SET projects=?,capabilities=?,seen_at=?,expires_at=? WHERE id=? AND revoked_at IS NULL", [
+    const compatible=runnerCompatible(data.protocol);
+    const updated = await ctx.db.run("UPDATE od_runner_devices SET projects=?,capabilities=?,seen_at=?,expires_at=?,protocol_version=? WHERE id=? AND revoked_at IS NULL", [
       JSON.stringify(data.projects),
       JSON.stringify(data.drivers),
       ctx.now(),
       ctx.now() + 86400_000,
+      compatible?RUNNER_PROTOCOL:0,
       d.id,
     ]);
     if (!updated.changes) return problem(401, "device_revoked", "Dispositivo revogado.");
     await reconcileRunnerTasks(ctx);
     await ctx.db.run("UPDATE od_runner_tasks SET lease_until=MIN(?,attempt_deadline) WHERE device_id=? AND state IN ('running','awaiting_approval')",[ctx.now()+30_000,d.id]);
     const active = await ctx.db.query<{ id: string; cancel_requested: number }>("SELECT id,cancel_requested FROM od_runner_tasks WHERE device_id=? AND state IN ('running','awaiting_approval','cancel_requested','uncertain')", [d.id]);
-    return json({ active, serverTime: ctx.now() });
+    return json({ active, serverTime: ctx.now(), compatible, protocolVersion:RUNNER_PROTOCOL, reason:compatible?null:"Atualize o Runner e confira o contrato de aprovação." });
   });
   route("POST", "/api/runner/tasks", { auth: true }, async (ctx, req, _p, owner) => {
     const data = z
@@ -211,6 +222,7 @@ export function registerRunnerRoutes(route: Registrar) {
         ctx.now() - 30_000,
       ])
     )[0];
+    if(d && d.protocol_version!==RUNNER_PROTOCOL) return problem(409,"runner_incompatible","Runner incompatível. Atualize antes de enviar tarefas.");
     if (!d) return problem(409, "runner_offline", "Runner indisponível. Abra o aplicativo e atualize.");
     if (!(JSON.parse(d.projects) as Array<{ id: string }>).some((p) => p.id === data.projectId)) return problem(403, "folder_denied", "Pasta não autorizada no Runner.");
     if (!(JSON.parse(d.capabilities) as Array<z.infer<typeof driver>>).some((v) => v.id === data.mechanism && v.executable && v.authenticated))
@@ -241,9 +253,10 @@ export function registerRunnerRoutes(route: Registrar) {
     const d = await device(ctx, req);
     if (!d) return problem(401, "device_revoked", "Dispositivo indisponível.");
     await reconcileRunnerTasks(ctx);
+    if(d.protocol_version!==RUNNER_PROTOCOL) return problem(409,"runner_incompatible","Negocie protocolo antes de executar.");
     // CAS em uma instrução: um processo por dispositivo; nunca reentregar running após reconexão.
     const tasks = await ctx.db.query<Task>(
-      "UPDATE od_runner_tasks SET state='running',updated_at=?,lease_until=?,attempt_deadline=? WHERE id=(SELECT id FROM od_runner_tasks WHERE device_id=? AND state='queued' ORDER BY created_at,id LIMIT 1) AND state='queued' AND NOT EXISTS(SELECT 1 FROM od_runner_tasks WHERE device_id=? AND state IN ('running','awaiting_approval','cancel_requested')) AND EXISTS(SELECT 1 FROM od_runner_devices WHERE id=? AND revoked_at IS NULL) RETURNING *",
+      "UPDATE od_runner_tasks SET state='running',updated_at=?,lease_until=?,attempt_deadline=? WHERE id=(SELECT id FROM od_runner_tasks WHERE device_id=? AND state='queued' ORDER BY created_at,id LIMIT 1) AND state='queued' AND NOT EXISTS(SELECT 1 FROM od_runner_tasks WHERE device_id=? AND state IN ('running','awaiting_approval','cancel_requested')) AND EXISTS(SELECT 1 FROM od_runner_devices WHERE id=? AND revoked_at IS NULL AND protocol_version=2) RETURNING *",
       [ctx.now(), ctx.now()+30_000, ctx.now()+1_200_000, d.id, d.id, d.id],
     );
     const t = tasks[0];

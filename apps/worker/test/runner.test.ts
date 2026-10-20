@@ -19,6 +19,7 @@ async function setup() {
   const headers = { authorization: `Bearer ${token}` };
   const projectId = crypto.randomUUID();
   const beat = {
+    protocol:{version:2,approval:"sha256-utf8-json-v1",capabilities:["exact-content-approval","uncertain-terminal","lease-fencing","event-receipts"]},
     projects: [{ id: projectId, label: "Projeto teste" }],
     drivers: [{ id: "codex", installed: true, authenticated: true, executable: true, reason: "Adaptador falso de teste; não valida CLI" }],
   };
@@ -254,5 +255,25 @@ test("P1-6: recibos duplicados exigem conteúdo idêntico e rejeitam eventos atr
   s.ctx.db.batch=async stmts=>{if(!injected&&stmts.some(v=>v.sql.startsWith('INSERT INTO od_runner_events'))){injected=true;await s.ctx.db.run("UPDATE od_runner_tasks SET state='uncertain' WHERE id=?",[id]);}return original(stmts);};
   assert.equal((await s.native.call('POST',path,{seq:3,kind:'completed',text:'raced'},s.headers)).status,409);
   assert.equal((await s.web.call('GET',`/api/runner/tasks/${id}/events`)).json.events.length,1);
+ }finally{s.ctx.db.raw.close();}
+});
+test("P1-3: heartbeat transport não concede compatibilidade a Runner antigo ou contrato diferente",async()=>{
+ const s=await setup();try{
+  const server=await s.native.call('GET','/api/runner/protocol');assert.equal(server.json.schemaReady,true);assert.equal(server.json.version,2);
+  for(const protocol of [undefined,{...s.beat.protocol,version:1},{...s.beat.protocol,approval:'different-contract'},{...s.beat.protocol,capabilities:[]}]){
+   const beat=await s.native.call('POST','/api/runner/device/heartbeat',{...s.beat,protocol},s.headers);
+   assert.equal(beat.json.compatible,false);
+   const device=(await s.web.call('GET','/api/runner/devices')).json.devices[0];assert.equal(device.online,true);assert.equal(device.compatible,false);
+   assert.equal((await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',requestKey:crypto.randomUUID()})).json.error.code,'runner_incompatible');
+   assert.equal((await s.native.call('POST','/api/runner/device/claim',{},s.headers)).status,409);
+  }
+  assert.equal((await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers)).json.compatible,true);
+ }finally{s.ctx.db.raw.close();}
+});
+test("P1-4: revogação pelo bearer nativo invalida imediatamente a própria credencial",async()=>{
+ const s=await setup();try{
+  assert.equal((await s.native.call('POST','/api/runner/device/revoke',{},s.headers)).json.revoked,true);
+  assert.equal((await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers)).status,401);
+  assert.equal((await s.native.call('POST','/api/runner/device/revoke',{},s.headers)).status,401);
  }finally{s.ctx.db.raw.close();}
 });

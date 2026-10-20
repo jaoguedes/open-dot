@@ -13,6 +13,8 @@ interface Device {
   name: string;
   online: boolean;
   revoked: boolean;
+  compatible: boolean;
+  compatibilityReason: string;
   projects: Array<{ id: string; label: string }>;
   drivers: Driver[];
 }
@@ -65,7 +67,7 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
   const [events, setEvents] = useState<Event[]>([]),
     [revision, setRevision] = useState(0);
   const device = devices.find((d) => d.id === deviceId);
-  const ready = device?.online && device.drivers.some((d) => d.id === mechanism && d.authenticated && d.executable) && device.projects.some((p) => p.id === projectId);
+  const ready = device?.online && device.compatible && device.drivers.some((d) => d.id === mechanism && d.authenticated && d.executable) && device.projects.some((p) => p.id === projectId);
   useEffect(() => {
     if (demo) return;
     const controller = new AbortController();
@@ -150,7 +152,7 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
       <div className="ws-device-list">
         {devices.map((d) => (
           <div key={d.id}>
-            <b>{d.name}</b> · {d.revoked ? "Revogado" : d.online ? "Heartbeat confirmado" : "Sem confirmação recente"}
+            <b>{d.name}</b> · {!d.compatible && <span>{d.compatibilityReason || "Compatibilidade não confirmada"} · </span>} {d.revoked ? "Revogado" : d.online ? "Heartbeat confirmado" : "Sem confirmação recente"}
             <button className="btn ghost" disabled={busy || d.revoked || demo} onClick={() => void mutate(`devices/${encodeURIComponent(d.id)}/revoke`, {})}>
               Revogar {d.name}
             </button>
