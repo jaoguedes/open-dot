@@ -208,6 +208,17 @@ export function registerRunnerRoutes(route: Registrar) {
     const stored = (await ctx.db.query<{ id: string }>("SELECT id FROM od_runner_tasks WHERE owner_id=? AND request_key=?", [owner!, data.requestKey]))[0]!;
     return json({ id: stored.id }, stored.id === taskId ? 201 : 200);
   });
+  // Metadados mínimos para reconciliar crash após claim e antes do journal local.
+  // Não reentrega prompt nem concede nova execução de modelo.
+  route("GET", "/api/runner/device/active", { auth: false, csrf: false }, async (ctx, req) => {
+    const d = await device(ctx, req);
+    if (!d) return problem(401, "device_revoked", "Dispositivo indisponível.");
+    const active = await ctx.db.query<{ id: string; projectId: string; seq: number }>(
+      "SELECT t.id,t.project_id AS projectId,COALESCE((SELECT MAX(e.seq) FROM od_runner_events e WHERE e.task_id=t.id),0) AS seq FROM od_runner_tasks t WHERE t.device_id=? AND t.state IN ('running','awaiting_approval') ORDER BY t.created_at,t.id LIMIT 2",
+      [d.id],
+    );
+    return json({ active });
+  });
   route("POST", "/api/runner/device/claim", { auth: false, csrf: false }, async (ctx, req) => {
     const d = await device(ctx, req);
     if (!d) return problem(401, "device_revoked", "Dispositivo indisponível.");

@@ -228,6 +228,39 @@ pub fn poll(
     if !channel::live(c, &device, "") || process::stopping() {
         return Ok(false);
     }
+    // Uma reserva pode ter sido confirmada no servidor antes de o journal chegar ao disco.
+    // Não chamar o modelo novamente e não reconstruir uma aprovação só do servidor.
+    let remote = channel::device_request(c, "/api/runner/device/active", None)?;
+    let active = remote["active"]
+        .as_array()
+        .ok_or("Reconciliação remota incompatível.")?;
+    if active.len() > 1 {
+        return Err(
+            "Mais de uma tarefa ativa: recuperação exige revisão. Arquivos preservados.".into(),
+        );
+    }
+    if let Some(task) = active.first() {
+        let mut orphan = Journal {
+            task: task["id"]
+                .as_str()
+                .ok_or("Tarefa de recuperação inválida.")?
+                .into(),
+            device,
+            project: task["projectId"]
+                .as_str()
+                .ok_or("Projeto de recuperação inválido.")?
+                .into(),
+            phase: "preparing".into(),
+            proposal_hash: None,
+            seq: task["seq"]
+                .as_u64()
+                .ok_or("Sequência de recuperação inválida.")?,
+        };
+        journal::save(dir, &orphan)?;
+        emit(c, &mut orphan, dir, "failed", "Reserva sem journal local: estado anterior incerto. Worktree preservado; nenhuma nova escrita ou chamada ao modelo. Revise os arquivos antes de enviar outra tarefa.")?;
+        journal::clear(dir)?;
+        return Ok(true);
+    }
     let claim = channel::device_request(c, "/api/runner/device/claim", Some(&json!({})))?;
     let Some(task) = claim.get("task").filter(|v| !v.is_null()) else {
         return Ok(false);

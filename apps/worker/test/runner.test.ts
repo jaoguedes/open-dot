@@ -164,3 +164,23 @@ test("Runner: rejeição, revogação e expiração não liberam a proposta",asy
     s.ctx.db.raw.close();
   }
 });
+
+
+test("recuperação lista só tarefas ativas do dispositivo, sem prompt, e libera fila após falha honesta", async () => {
+  const s = await setup();
+  await s.native.call("POST", "/api/runner/device/heartbeat", s.beat, s.headers);
+  const create = () => s.web.call("POST", "/api/runner/tasks", {deviceId:s.deviceId,projectId:s.projectId,mechanism:"codex",prompt:"private fixture context",requestKey:crypto.randomUUID()});
+  await create();await create();
+  assert.equal((await s.native.call("GET","/api/runner/device/active")).status,401);
+  assert.deepEqual((await s.native.call("GET","/api/runner/device/active",undefined,s.headers)).json.active,[]);
+  const claimed=await s.native.call("POST","/api/runner/device/claim",{},s.headers);
+  const recovered=await s.native.call("GET","/api/runner/device/active",undefined,s.headers);
+  assert.deepEqual(recovered.json.active,[{id:claimed.json.task.id,projectId:s.projectId,seq:0}]);
+  assert.ok(!JSON.stringify(recovered.json).includes("private fixture context"));
+  const other=await setup();
+  assert.deepEqual((await other.native.call("GET","/api/runner/device/active",undefined,other.headers)).json.active,[]);
+  assert.equal((await s.native.call("POST",`/api/runner/device/tasks/${claimed.json.task.id}/event`,{seq:1,kind:"failed",text:"Journal absent; effects unknown; no replay."},s.headers)).status,200);
+  assert.deepEqual((await s.native.call("GET","/api/runner/device/active",undefined,s.headers)).json.active,[]);
+  assert.ok((await s.native.call("POST","/api/runner/device/claim",{},s.headers)).json.task);
+  other.ctx.db.raw.close();s.ctx.db.raw.close();
+});
