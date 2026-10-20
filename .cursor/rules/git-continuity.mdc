@@ -1,0 +1,5 @@
+---
+description: git-continuity
+alwaysApply: true
+---
+Leia AGENTS.md e docs/agents/PROJECT_STATE.md. Um escritor por estado compartilhado; handoff próprio versionado. Commits semânticos com Task, staging explícito, sem push implícito.

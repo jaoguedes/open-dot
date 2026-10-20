@@ -1,0 +1,5 @@
+---
+description: testing-quality
+alwaysApply: true
+---
+Evidências devem separar real, fixture, mock e não executado. Consulte scripts antes de executar; preserve testes e registre limitações.

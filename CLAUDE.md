@@ -32,3 +32,7 @@ Comece por: `docs/CONTINUIDADE.md` (handoff e Git atual), `docs/STATUS.md` (esta
 - Sem comandos destrutivos, force push ou sobrescrita de trabalho de outro agente. Commit local não autoriza sincronização: push, transferência externa, merge, deploy e release precisam de autorização aplicável ao destino/conteúdo. O usuário suspendeu releases e publicação do repositório.
 - Atualize `docs/CONTINUIDADE.md` com objetivo, decisões, concluído/pendente, testes, branch, SHA de referência e próximo passo. Um arquivo não pode conter o hash do próprio commit: registre o último SHA conhecido e confira `git log -1 -- docs/CONTINUIDADE.md` para o checkpoint documental.
 - Proposta do produto (ainda não implementada): `docs/AGENT_CONTINUITY_PROTOCOL.md`. Não confundir política operacional dos agentes com enforcement já disponível no Runner.
+
+## Memória compartilhada e revisão independente
+
+Entrada obrigatória: `docs/agents/PROJECT_STATE.md`. Reutilize índices e fontes canônicas; escreva observações próprias em `docs/agents/claude/STATUS.md` e handoff versionado. A revisão Claude deve questionar conclusões, reproduzir testes e preservar relatórios originais. Não editar o worktree de outro agente nem atualizar estado compartilhado simultaneamente.
