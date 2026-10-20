@@ -253,7 +253,7 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
                 }}
               >
                 <MechanismLabel id={t.mechanism} />
-                {{ queued: "Na fila", running: "Em execução", awaiting_approval: "Esperando sua aprovação", completed: "Concluída no worktree", failed: "Falhou", cancelled: "Cancelada" }[t.state] ??
+                {{ queued: "Na fila", running: "Em execução", awaiting_approval: "Esperando sua aprovação", completed: "Concluída no worktree", failed: "Falhou", cancelled: "Cancelada", cancel_requested: "Aguardando confirmação de parada", uncertain: "Efeitos incertos · revisão necessária" }[t.state] ??
                   t.state}
                 {t.cancelRequested ? " · interrupção solicitada" : ""}
               </button>

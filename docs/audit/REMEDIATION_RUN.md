@@ -19,3 +19,13 @@ Os arquivos CURSOR_INDEPENDENT_AUDIT.md e CURSOR_REMEDIATION_PLAN.md não foram 
 ## Continuidade
 
 Fase A em andamento: baseline `npm run check` em execução; logs descartáveis fora do Git. Próximo: testar/reproduzir ciclo de vida e corrigir P0/P1-6 conjuntamente por compartilharem transações. Estado novo precisa distinguir cancelamento solicitado, parada confirmada e efeito incerto. Nunca reentregar tentativa anterior. Migrações somente em DBs descartáveis.
+
+## Fase B — ciclo de vida e recibos (OD2-B1)
+
+Implementado em routes.ts/jobs.ts/migração aditiva 0010: lease de 30 s renovada por heartbeat, prazo absoluto de tentativa 20 min; cancel_requested não renova lease; falta de ACK termina uncertain por cron/consulta/claim, sem reentregar a tentativa. Revogação deixa fila cancelled e tentativa ativa uncertain (não afirma processo parado). Recibos antigos não alteram terminal; duplicata exige mesmo digest/conteúdo, sequência regressiva é recusada e accepted exige evento + transição persistidos. Rejeição antes da aplicação continua terminal segura. Nativo reconhece uncertain e não reaplica journal. UI nomeia estados novos, sem alteração visual do Dot.
+
+Testes: baseline completo PASS (287 Node/sete Python/eval/typecheck/build), após repetir com permissão de socket tsx; primeira tentativa teve EPERM ambiental após todos os 287 Node passarem. Gate B1 PASS: 290 Node/sete Python/eval/typecheck/build; 14 testes Runner SQLite reais, executor fixture. Concorrência de claim/cancel, timeout sem retorno, revogação ativa, recibo tardio e corrida injetada entre leitura/batch exercitados. Teste novo inicialmente presumiu ordem de UUID em mesmo timestamp: corrigida fixture com relógio crescente, sem mudar ordenação da fila. Rust em compilação em target próprio, não declarado aprovado ainda.
+
+Limites: lease não mata processo remoto nem desfaz arquivo; uncertain preserva essa distinção. Worktrees de tentativas não são reutilizados. Não valida crash do modelo durante geração. Nenhuma migração remota. P0 parcial até regressão nativa/negociação e auditoria independente; automação E–L continua bloqueada por P1.
+
+Próximo passo: P1-3 negociação explícita antes de heartbeat/claim; P1-4 revogação nativa com pending persistente; depois snapshots/worktree e parser/aprovação. Arquivos alterados e commit exato: git show --stat e git log. Nenhum push.

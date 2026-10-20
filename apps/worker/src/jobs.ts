@@ -1,3 +1,4 @@
+import { reconcileRunnerTasks } from "./runner/routes.ts";
 import { applySample, correlateDeploy, explainError, initialIncident, planDue, type IncidentState } from "@open-dot/core";
 import { checkSite } from "@open-dot/connectors/http-check.ts";
 import { listDeployments } from "@open-dot/connectors/vercel.ts";
@@ -38,6 +39,7 @@ export async function tick(outer: Ctx): Promise<TickReport> {
   const now = ctx.now();
   try {
     await repo.expireStaleRuns(ctx.db, now);
+    await reconcileRunnerTasks(ctx);
 
     const failStep = async (step: string, e: unknown) => {
       if (e instanceof BudgetExhausted) throw e;

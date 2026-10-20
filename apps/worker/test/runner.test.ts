@@ -200,3 +200,59 @@ test("orçamento de eventos preserva uma conclusão mesmo após excesso de progr
   assert.deepEqual((await s.native.call("GET","/api/runner/device/active",undefined,s.headers)).json.active,[]);
  }finally{s.ctx.db.raw.close();}
 });
+
+// SQLite e roteador reais; relógio controlado, executor é fixture explicitamente.
+test("P0: cancelamento running é pedido, timeout vira uncertain e não repete tentativa",async()=>{
+ const s=await setup();try{
+  await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);
+  const create=async()=> (await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'lifecycle fixture',requestKey:crypto.randomUUID()})).json.id;
+  const first=await create();s.ctx.clock.t++;const second=await create();
+  assert.equal((await s.native.call('POST','/api/runner/device/claim',{},s.headers)).json.task.id,first);
+  const requests=await Promise.all([s.web.call('POST',`/api/runner/tasks/${first}/cancel`,{}),s.web.call('POST',`/api/runner/tasks/${first}/cancel`,{})]);assert.ok(requests.every(r=>r.status===200));
+  assert.equal((await s.web.call('GET','/api/runner/tasks')).json.tasks.find((t:{id:string})=>t.id===first).state,'cancel_requested');
+  assert.equal((await s.native.call('POST','/api/runner/device/claim',{},s.headers)).json.task,null);
+  s.ctx.clock.t+=31_000; // perda de rede: nenhum ACK de parada
+  await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);
+  assert.equal((await s.web.call('GET','/api/runner/tasks')).json.tasks.find((t:{id:string})=>t.id===first).state,'uncertain');
+  assert.equal((await s.native.call('POST',`/api/runner/device/tasks/${first}/event`,{seq:1,kind:'completed',text:'late completion'},s.headers)).status,409);
+  const claims=await Promise.all([s.native.call('POST','/api/runner/device/claim',{},s.headers),s.native.call('POST','/api/runner/device/claim',{},s.headers)]);
+  assert.deepEqual(claims.filter(r=>r.json.task).map(r=>r.json.task.id),[second]);
+ }finally{s.ctx.db.raw.close();}
+});
+test("P0: ACK de parada, conclusão tardia e revogação têm semânticas distintas",async()=>{
+ for(const mode of ['ack','late','revoke','lease','queued']as const){
+  const s=await setup();try{
+   await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);
+   const id=(await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',requestKey:crypto.randomUUID()})).json.id;
+   if(mode!=='queued')await s.native.call('POST','/api/runner/device/claim',{},s.headers);
+   if(mode==='revoke'){
+    await s.web.call('POST',`/api/runner/devices/${s.deviceId}/revoke`,{});
+    assert.equal((await s.native.call('POST',`/api/runner/device/tasks/${id}/event`,{seq:1,kind:'completed',text:'late'},s.headers)).status,401);
+   }else if(mode==='lease'){s.ctx.clock.t+=31_000;}
+   else{
+    await s.web.call('POST',`/api/runner/tasks/${id}/cancel`,{});
+    if(mode!=='queued')assert.equal((await s.native.call('POST',`/api/runner/device/tasks/${id}/event`,{seq:1,kind:mode==='ack'?'cancelled':'completed',text:'executor fixture stopped'},s.headers)).status,200);
+   }
+   assert.equal((await s.web.call('GET','/api/runner/tasks')).json.tasks[0].state,['ack','queued'].includes(mode)?'cancelled':'uncertain');
+  }finally{s.ctx.db.raw.close();}
+ }
+});
+test("P1-6: recibos duplicados exigem conteúdo idêntico e rejeitam eventos atrasados",async()=>{
+ const s=await setup();try{
+  await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers);
+  const id=(await s.web.call('POST','/api/runner/tasks',{deviceId:s.deviceId,projectId:s.projectId,mechanism:'codex',prompt:'fixture',requestKey:crypto.randomUUID()})).json.id;
+  await s.native.call('POST','/api/runner/device/claim',{},s.headers);
+  const path=`/api/runner/device/tasks/${id}/event`;const event={seq:2,kind:'message',text:'exact fixture'};
+  const raced=await Promise.all([s.native.call('POST',path,event,s.headers),s.native.call('POST',path,event,s.headers)]);
+  assert.ok(raced.some(r=>r.status===200));
+  assert.equal((await s.native.call('POST',path,event,s.headers)).json.duplicate,true);
+  assert.equal((await s.native.call('POST',path,{...event,text:'different'},s.headers)).status,409);
+  assert.equal((await s.native.call('POST',path,{...event,seq:1},s.headers)).status,409);
+  assert.equal((await s.web.call('GET',`/api/runner/tasks/${id}/events`)).json.events.length,1);
+  // Força mudança de estado entre a leitura do handler e seu batch, como outra transação.
+  const original=s.ctx.db.batch.bind(s.ctx.db);let injected=false;
+  s.ctx.db.batch=async stmts=>{if(!injected&&stmts.some(v=>v.sql.startsWith('INSERT INTO od_runner_events'))){injected=true;await s.ctx.db.run("UPDATE od_runner_tasks SET state='uncertain' WHERE id=?",[id]);}return original(stmts);};
+  assert.equal((await s.native.call('POST',path,{seq:3,kind:'completed',text:'raced'},s.headers)).status,409);
+  assert.equal((await s.web.call('GET',`/api/runner/tasks/${id}/events`)).json.events.length,1);
+ }finally{s.ctx.db.raw.close();}
+});

@@ -16,7 +16,7 @@ const label = z
   .regex(/^[\p{L}\p{N} ._()-]+$/u);
 const project = z.object({ id, label }).strict();
 const driver = z.object({ id: z.enum(["codex", "claude-code", "cursor"]), installed: z.boolean(), authenticated: z.boolean(), executable: z.boolean(), reason: z.string().max(200) }).strict();
-const terminal = new Set(["completed", "failed", "cancelled"]);
+const terminal = new Set(["completed", "failed", "cancelled", "uncertain"]);
 interface Device {
   id: string;
   owner_id: string;
@@ -82,6 +82,22 @@ export function safeRunnerText(text: string): string {
     .split("")
     .filter((c) => (c >= " " && c !== String.fromCharCode(127)) || "\n\r\t".includes(c))
     .join("");
+}
+// A lease expirada encerra a tentativa, nunca a reentrega. Escritas locais podem ser incertas.
+// Chamado por cron e leituras/claim: não depende do Runner voltar à rede.
+export async function reconcileRunnerTasks(ctx: Ctx): Promise<void> {
+  await ctx.db.run(`UPDATE od_runner_tasks SET state='uncertain',cancel_requested=1,updated_at=?
+    WHERE state IN ('running','awaiting_approval','cancel_requested') AND
+    (lease_until IS NULL OR lease_until<=? OR EXISTS(SELECT 1 FROM od_runner_devices d WHERE d.id=device_id AND (d.revoked_at IS NOT NULL OR d.expires_at<=?)))`, [ctx.now(),ctx.now(),ctx.now()]);
+  await ctx.db.run(`UPDATE od_runner_tasks SET state='failed',cancel_requested=1,updated_at=?
+    WHERE state='awaiting_approval' AND EXISTS(SELECT 1 FROM od_runner_approvals a WHERE a.task_id=id AND a.decision='pending' AND a.expires_at<=?)`, [ctx.now(),ctx.now()]);
+}
+async function revokeDevice(ctx: Ctx, deviceId: string, owner: string): Promise<void> {
+  await ctx.db.batch([
+    {sql:"UPDATE od_runner_devices SET revoked_at=COALESCE(revoked_at,?) WHERE id=? AND owner_id=?",args:[ctx.now(),deviceId,owner]},
+    {sql:`UPDATE od_runner_tasks SET cancel_requested=1,state=CASE WHEN state='queued' THEN 'cancelled' ELSE 'uncertain' END,updated_at=?
+      WHERE device_id=? AND owner_id=? AND state IN ('queued','running','awaiting_approval','cancel_requested')`,args:[ctx.now(),deviceId,owner]},
+  ]);
 }
 export function registerRunnerRoutes(route: Registrar) {
   route("POST", "/api/runner/pairings", { auth: false, csrf: false }, async (ctx, req) => {
@@ -151,14 +167,13 @@ export function registerRunnerRoutes(route: Registrar) {
     });
   });
   route("POST", "/api/runner/devices/:id/revoke", { auth: true }, async (ctx, _r, p, owner) => {
-    await ctx.db.batch([
-      { sql: "UPDATE od_runner_devices SET revoked_at=? WHERE id=? AND owner_id=?", args: [ctx.now(), p.id!, owner!] },
-      {
-        sql: "UPDATE od_runner_tasks SET cancel_requested=1,state=CASE WHEN state IN ('queued','awaiting_approval') THEN 'cancelled' ELSE state END,updated_at=? WHERE device_id=? AND owner_id=? AND state NOT IN ('completed','failed','cancelled')",
-        args: [ctx.now(), p.id!, owner!],
-      },
-    ]);
+    await revokeDevice(ctx, p.id!, owner!);
     return json({ revoked: true });
+  });
+  route("POST", "/api/runner/device/revoke", {auth:false,csrf:false}, async(ctx,req)=>{
+    const d=await device(ctx,req);if(!d)return problem(401,"device_revoked","Dispositivo já revogado ou expirado.");
+    await revokeDevice(ctx,d.id,d.owner_id);
+    return json({revoked:true});
   });
   route("POST", "/api/runner/device/heartbeat", { auth: false, csrf: false }, async (ctx, req) => {
     const d = await device(ctx, req);
@@ -176,7 +191,9 @@ export function registerRunnerRoutes(route: Registrar) {
       d.id,
     ]);
     if (!updated.changes) return problem(401, "device_revoked", "Dispositivo revogado.");
-    const active = await ctx.db.query<{ id: string; cancel_requested: number }>("SELECT id,cancel_requested FROM od_runner_tasks WHERE device_id=? AND state IN ('running','awaiting_approval')", [d.id]);
+    await reconcileRunnerTasks(ctx);
+    await ctx.db.run("UPDATE od_runner_tasks SET lease_until=MIN(?,attempt_deadline) WHERE device_id=? AND state IN ('running','awaiting_approval')",[ctx.now()+30_000,d.id]);
+    const active = await ctx.db.query<{ id: string; cancel_requested: number }>("SELECT id,cancel_requested FROM od_runner_tasks WHERE device_id=? AND state IN ('running','awaiting_approval','cancel_requested','uncertain')", [d.id]);
     return json({ active, serverTime: ctx.now() });
   });
   route("POST", "/api/runner/tasks", { auth: true }, async (ctx, req, _p, owner) => {
@@ -213,8 +230,9 @@ export function registerRunnerRoutes(route: Registrar) {
   route("GET", "/api/runner/device/active", { auth: false, csrf: false }, async (ctx, req) => {
     const d = await device(ctx, req);
     if (!d) return problem(401, "device_revoked", "Dispositivo indisponível.");
+    await reconcileRunnerTasks(ctx);
     const active = await ctx.db.query<{ id: string; projectId: string; seq: number }>(
-      "SELECT t.id,t.project_id AS projectId,COALESCE((SELECT MAX(e.seq) FROM od_runner_events e WHERE e.task_id=t.id),0) AS seq FROM od_runner_tasks t WHERE t.device_id=? AND t.state IN ('running','awaiting_approval') ORDER BY t.created_at,t.id LIMIT 2",
+      "SELECT t.id,t.project_id AS projectId,COALESCE((SELECT MAX(e.seq) FROM od_runner_events e WHERE e.task_id=t.id),0) AS seq FROM od_runner_tasks t WHERE t.device_id=? AND t.state IN ('running','awaiting_approval','cancel_requested') ORDER BY t.created_at,t.id LIMIT 2",
       [d.id],
     );
     return json({ active });
@@ -222,10 +240,11 @@ export function registerRunnerRoutes(route: Registrar) {
   route("POST", "/api/runner/device/claim", { auth: false, csrf: false }, async (ctx, req) => {
     const d = await device(ctx, req);
     if (!d) return problem(401, "device_revoked", "Dispositivo indisponível.");
+    await reconcileRunnerTasks(ctx);
     // CAS em uma instrução: um processo por dispositivo; nunca reentregar running após reconexão.
     const tasks = await ctx.db.query<Task>(
-      "UPDATE od_runner_tasks SET state='running',updated_at=? WHERE id=(SELECT id FROM od_runner_tasks WHERE device_id=? AND state='queued' ORDER BY created_at,id LIMIT 1) AND state='queued' AND NOT EXISTS(SELECT 1 FROM od_runner_tasks WHERE device_id=? AND state IN ('running','awaiting_approval')) AND EXISTS(SELECT 1 FROM od_runner_devices WHERE id=? AND revoked_at IS NULL) RETURNING *",
-      [ctx.now(), d.id, d.id, d.id],
+      "UPDATE od_runner_tasks SET state='running',updated_at=?,lease_until=?,attempt_deadline=? WHERE id=(SELECT id FROM od_runner_tasks WHERE device_id=? AND state='queued' ORDER BY created_at,id LIMIT 1) AND state='queued' AND NOT EXISTS(SELECT 1 FROM od_runner_tasks WHERE device_id=? AND state IN ('running','awaiting_approval','cancel_requested')) AND EXISTS(SELECT 1 FROM od_runner_devices WHERE id=? AND revoked_at IS NULL) RETURNING *",
+      [ctx.now(), ctx.now()+30_000, ctx.now()+1_200_000, d.id, d.id, d.id],
     );
     const t = tasks[0];
     if (!t) return json({ task: null });
@@ -235,14 +254,22 @@ export function registerRunnerRoutes(route: Registrar) {
     const d = await device(ctx, req);
     if (!d) return problem(401, "device_revoked", "Dispositivo indisponível.");
     const data = z
-      .object({ seq: z.number().int().min(1).max(500), kind: z.enum(["status", "message", "files", "tests", "completed", "failed", "cancelled", "proposal"]), text: z.string().max(12000) })
+      .object({ seq: z.number().int().min(1).max(500), kind: z.enum(["status", "message", "files", "tests", "completed", "failed", "cancelled", "uncertain", "proposal"]), text: z.string().max(12000) })
       .strict()
       .parse(await read(req));
+    await reconcileRunnerTasks(ctx);
     const t = (await ctx.db.query<Task>("SELECT * FROM od_runner_tasks WHERE id=? AND device_id=?", [p.id!, d.id]))[0];
     if (!t) return problem(404, "not_found", "Tarefa indisponível.");
-    const prior = (await ctx.db.query<{ kind: string }>("SELECT kind FROM od_runner_events WHERE task_id=? AND seq=?", [t.id, data.seq]))[0];
-    if (prior) return json({ accepted: true, duplicate: true });
-    if (t.state !== "running" && !(t.state === "awaiting_approval" && ["failed","cancelled"].includes(data.kind))) return problem(409, "task_closed", "Tarefa encerrada.");
+    const eventDigest=await sha256Hex(JSON.stringify([data.kind,data.text]));
+    const prior=(await ctx.db.query<{kind:string;payload_enc:string;digest:string|null}>("SELECT kind,payload_enc,digest FROM od_runner_events WHERE task_id=? AND seq=?",[t.id,data.seq]))[0];
+    if(prior){
+      const same=prior.digest ? prior.digest===eventDigest : prior.kind===data.kind && await open(ctx.keys,prior.payload_enc,`runner:event:${t.id}:${data.seq}`)===data.text;
+      return same ? json({accepted:true,duplicate:true}) : problem(409,"event_conflict","Sequência já pertence a outro conteúdo.");
+    }
+    const stopping=t.state==='cancel_requested';
+    if(t.state!=='running' && !(t.state==='awaiting_approval' && ['failed','cancelled','uncertain'].includes(data.kind)) && !(stopping && terminal.has(data.kind))) return problem(409,"task_closed","Tentativa encerrada ou aguardando parada.");
+    // O recibo tardio de conclusão após pedido de parada não comprova ausência de efeitos.
+    const nextState=stopping && data.kind!=='cancelled' ? 'uncertain' : data.kind==='proposal'?'awaiting_approval':terminal.has(data.kind)?data.kind:'running';
     const budget = data.kind === "status" || data.kind === "message" ? 490 : data.kind === "proposal" ? 496 : data.kind === "files" ? 498 : data.kind === "tests" ? 499 : 500;
     if (data.seq > budget) return problem(409, "event_budget", "Limite de progresso atingido; orçamento reservado para conclusão ou falha.");
     let proposalDigest: string | null = null;
@@ -255,20 +282,22 @@ export function registerRunnerRoutes(route: Registrar) {
       proposalEnc = await seal(ctx.keys, data.text, `runner:proposal:${t.id}`);
     }
     const payload = await seal(ctx.keys, safeRunnerText(data.text), `runner:event:${t.id}:${data.seq}`);
-    await ctx.db.batch([
-      ...(proposalDigest && proposalEnc ? [{ sql: "INSERT INTO od_runner_approvals(task_id,digest,proposal_enc,expires_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM od_runner_tasks WHERE id=? AND state='running') ON CONFLICT(task_id) DO NOTHING", args: [t.id, proposalDigest, proposalEnc, ctx.now()+600_000, t.id] }] : []),
+    const result=await ctx.db.batch([
+      ...(proposalDigest && proposalEnc ? [{ sql: "INSERT INTO od_runner_approvals(task_id,digest,proposal_enc,expires_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM od_runner_tasks WHERE id=? AND state='running' AND cancel_requested=0 AND (SELECT COALESCE(MAX(seq),0) FROM od_runner_events WHERE task_id=?)<?) ON CONFLICT(task_id) DO NOTHING", args: [t.id, proposalDigest, proposalEnc, ctx.now()+600_000, t.id, t.id, data.seq] }] : []),
       {
-        sql: "INSERT INTO od_runner_events(task_id,seq,kind,payload_enc,created_at) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM od_runner_tasks WHERE id=? AND state IN ('running','awaiting_approval')) ON CONFLICT(task_id,seq) DO NOTHING",
-        args: [t.id, data.seq, data.kind, payload, ctx.now(), t.id],
+        sql: "INSERT INTO od_runner_events(task_id,seq,kind,payload_enc,created_at,digest) SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM od_runner_tasks WHERE id=? AND state=?) AND (SELECT COALESCE(MAX(seq),0) FROM od_runner_events WHERE task_id=?)<? ON CONFLICT(task_id,seq) DO NOTHING",
+        args: [t.id, data.seq, data.kind, payload, ctx.now(), eventDigest, t.id, t.state, t.id, data.seq],
       },
       {
-        sql: "UPDATE od_runner_tasks SET state=?,updated_at=? WHERE id=? AND state IN ('running','awaiting_approval') AND EXISTS(SELECT 1 FROM od_runner_events WHERE task_id=? AND seq=? AND payload_enc=?)",
-        args: [data.kind === "proposal" ? "awaiting_approval" : terminal.has(data.kind) ? data.kind : "running", ctx.now(), t.id, t.id, data.seq, payload],
+        sql: "UPDATE od_runner_tasks SET state=?,updated_at=? WHERE id=? AND state=? AND EXISTS(SELECT 1 FROM od_runner_events WHERE task_id=? AND seq=? AND payload_enc=?)",
+        args: [nextState, ctx.now(), t.id, t.state, t.id, data.seq, payload],
       },
     ]);
+    if(!result.at(-2)?.changes || !result.at(-1)?.changes) return problem(409,"event_raced","Evento não confirmado: estado ou sequência mudou. Consulte os recibos antes de reenviar.");
     return json({ accepted: true, proposalHash: proposalDigest });
   });
   route("GET", "/api/runner/tasks", { auth: true }, async (ctx, _r, _p, owner) => {
+    await reconcileRunnerTasks(ctx);
     const tasks = await ctx.db.query(
       "SELECT id,device_id AS deviceId,project_id AS projectId,mechanism,state,cancel_requested AS cancelRequested,created_at AS createdAt,updated_at AS updatedAt FROM od_runner_tasks WHERE owner_id=? ORDER BY created_at DESC LIMIT 50",
       [owner!],
@@ -284,13 +313,16 @@ export function registerRunnerRoutes(route: Registrar) {
   });
   route("POST", "/api/runner/tasks/:id/cancel", { auth: true }, async (ctx, _r, p, owner) => {
     await ctx.db.run(
-      "UPDATE od_runner_tasks SET cancel_requested=1,state=CASE WHEN state IN ('queued','awaiting_approval') THEN 'cancelled' ELSE state END,updated_at=? WHERE id=? AND owner_id=? AND state IN ('queued','running','awaiting_approval')",
-      [ctx.now(), p.id!, owner!],
+      `UPDATE od_runner_tasks SET cancel_requested=1,state=CASE WHEN state='queued' THEN 'cancelled' ELSE 'cancel_requested' END,
+       lease_until=CASE WHEN state='queued' THEN lease_until ELSE MIN(COALESCE(lease_until,?),?) END,updated_at=?
+       WHERE id=? AND owner_id=? AND state IN ('queued','running','awaiting_approval')`,
+      [ctx.now()+30_000,ctx.now()+30_000,ctx.now(),p.id!,owner!],
     );
     return json({ requested: true });
   });
   route("GET", "/api/runner/device/tasks/:id/approval", { auth: false, csrf: false }, async (ctx, req, p) => {
     const d=await device(ctx,req);if(!d)return problem(401,"device_revoked","Dispositivo revogado.");
+    await reconcileRunnerTasks(ctx);
     const task=(await ctx.db.query<{state:string;cancel_requested:number}>("SELECT state,cancel_requested FROM od_runner_tasks WHERE id=? AND device_id=?",[p.id!,d.id]))[0];
     if(!task)return problem(404,"not_found","Tarefa não encontrada.");
     const row=(await ctx.db.query<{digest:string;proposal_enc:string;decision:string;expires_at:number}>("SELECT * FROM od_runner_approvals WHERE task_id=?",[p.id!]))[0];
@@ -301,6 +333,7 @@ export function registerRunnerRoutes(route: Registrar) {
   });
   route("POST", "/api/runner/tasks/:id/decision", { auth: true }, async (ctx, req, p, owner) => {
     const data=z.object({hash,decision:z.enum(["approve","reject"])}).strict().parse(await read(req));
+    await reconcileRunnerTasks(ctx);
     const now=ctx.now();
     const result=await ctx.db.batch([
       {sql:"UPDATE od_runner_approvals SET decision=?,decided_at=? WHERE task_id=? AND digest=? AND decision='pending' AND expires_at>? AND EXISTS(SELECT 1 FROM od_runner_tasks t JOIN od_runner_devices d ON d.id=t.device_id WHERE t.id=? AND t.owner_id=? AND t.state='awaiting_approval' AND d.revoked_at IS NULL)",args:[data.decision,now,p.id!,data.hash,now,p.id!,owner!]},

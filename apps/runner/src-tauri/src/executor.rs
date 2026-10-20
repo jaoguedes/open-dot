@@ -78,7 +78,7 @@ fn finish_proposal(
         j.seq = j.seq.max(decision["lastSeq"].as_u64().unwrap_or(0));
         if matches!(
             decision["state"].as_str(),
-            Some("completed" | "cancelled" | "failed")
+            Some("completed" | "cancelled" | "failed" | "uncertain")
         ) {
             journal::clear(dir)?;
             return Ok(());
@@ -200,7 +200,7 @@ fn recover(
     let current = status(c, &j)?;
     if matches!(
         current["state"].as_str(),
-        Some("completed" | "cancelled" | "failed")
+        Some("completed" | "cancelled" | "failed" | "uncertain")
     ) {
         journal::clear(dir)?;
         return Ok(true);
