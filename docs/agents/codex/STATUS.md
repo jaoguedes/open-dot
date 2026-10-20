@@ -1,5 +1,3 @@
-# Codex — continuação 2026-10-20
+# Codex — checkpoint operacional 20/10/2026
 
-Base 1d9125f, último código 5cd345f, branch codex/od2-runner-remediation. Checkpoints cifrados/CAS internos e helper local de coordenação implementados; scheduler/commits automáticos ainda não habilitados. Gate 306 Node + sete Python/eval/typecheck/build, 16 Rust; memória navegador/backend e canal/cofre reais revalidados. Sem nova chamada de modelo ou builds multiplataforma.
-
-Handoff: ../handoffs/2026-10-20-codex-shared-checkpoints.md. Relatório: ../../audit/FINAL_IMPLEMENTATION_REPORT.md. Auditoria independente pendente. Novos commits locais; sem push autorizado nesta rodada.
+Base 940b06c; código 48e3a15; branch codex/od2-runner-remediation. Onze commits de código, cinco na última retomada. Estado e evidências em ../PROJECT_STATE.md e ../../audit/FINAL_IMPLEMENTATION_REPORT.md. Handoff versionado: ../handoffs/2026-10-20-codex-operational-continuation.md. Não inferir sincronização remota nem conclusão total. Auditoria independente pendente; nenhum push autorizado para este HEAD.

@@ -2,254 +2,269 @@
   "schemaVersion": 1,
   "recordKind": "manual-engineering-handoff-not-product-odcp",
   "objective": "Remediate Runner security/recovery findings and integrate consented project memory without granting execution privileges",
-  "phase": "F: context Passport export validated locally; native save dialog untested",
-  "currentTask": "OD2-PASSPORT-023: completed bounded context export; next capability and native recovery validation",
+  "phase": "recoverable handoff; core product still partial",
+  "currentTask": "OD2-HANDOFF-028",
   "branch": "codex/od2-runner-remediation",
   "worktreeName": "open-dot-od2-remediation",
   "worktreeResolution": "git worktree list --porcelain",
   "initialSha": "2b7d5c5fb7f6255c2bdefbabe67f38d34a2faea5",
-  "lastCodeHead": "5cd102f",
+  "lastCodeHead": "48e3a15b549ed09662f97c876cc5049b735cad95",
   "currentHeadResolution": "git log -1 --format=%H",
   "documentationCheckpointResolution": "git log -1 --format=%H -- docs/audit/ENGINEERING_STATE.json",
-  "commitsProducedBeforeDocumentation": [
-    {
-      "sha": "48d5e60f0fd8f0a2c0f5acf8243958219c14c90e",
-      "subject": "docs(audit): baseline isolated remediation against current HEAD"
-    },
-    {
-      "sha": "2c250c62c4855bc8663f483a224f818c575e51a7",
-      "subject": "fix(runner): reconcile abandoned attempts and persist honest receipts"
-    },
-    {
-      "sha": "915f838a86468d9b8bfecb172d177320e2a2c703",
-      "subject": "fix(runner): negotiate protocol and confirm remote disconnection"
-    },
-    {
-      "sha": "681e44e01b448d1180d3e8e541f6caf077488fb2",
-      "subject": "fix(runner): require scoped consent and verifiable file review"
-    },
-    {
-      "sha": "88c2ecb190f19bbab451000e0d215cce9f5c52b9",
-      "subject": "test(runner): validate browser approval and durable crash recovery"
-    },
-    {
-      "sha": "5e521caf0b13873db60b90c91aee0b5b89cd33cc",
-      "subject": "feat(memory): enforce consent retention and private ledger access"
-    },
-    {
-      "sha": "b8ef7da9de6f5b96dc5764763fdfe6e685db7bd3",
-      "subject": "feat(memory): connect consent and persistent notes to Workspace"
-    },
-    {
-      "sha": "7bd76affae286050455e017ee68a17a15dc5f6fe",
-      "subject": "fix(runner): resume mixed approved files within review limits"
-    },
-    {
-      "sha": "c7b2426ec7f848546191cd52ed4937ac2c8a81aa",
-      "subject": "fix(runner): bind proposal receipts to persisted approval bytes"
-    }
-  ],
-  "changedFilesBeforeDocumentation": [
-    "apps/runner/src-tauri/Cargo.lock",
-    "apps/runner/src-tauri/Cargo.toml",
-    "apps/runner/src-tauri/src/channel.rs",
-    "apps/runner/src-tauri/src/codex.rs",
-    "apps/runner/src-tauri/src/executor.rs",
-    "apps/runner/src-tauri/src/journal.rs",
-    "apps/runner/src-tauri/src/recovery_tests.rs",
-    "apps/runner/src-tauri/src/worktree.rs",
-    "apps/web/src/components/ProjectMemory.tsx",
-    "apps/web/src/components/RunnerWorkspace.tsx",
-    "apps/web/src/workspace.css",
-    "apps/worker/migrations/0010_runner_lifecycle.sql",
-    "apps/worker/migrations/0011_runner_protocol.sql",
-    "apps/worker/migrations/0012_runner_worktree_consent.sql",
-    "apps/worker/migrations/0013_memory_consent.sql",
-    "apps/worker/src/app.ts",
-    "apps/worker/src/continuity/project-memory.ts",
-    "apps/worker/src/continuity/routes.ts",
-    "apps/worker/src/db/migrate.ts",
-    "apps/worker/src/jobs.ts",
-    "apps/worker/src/runner/protocol.ts",
-    "apps/worker/src/runner/routes.ts",
-    "apps/worker/src/services/account.ts",
-    "apps/worker/test/fase-f.test.ts",
-    "apps/worker/test/project-memory-api.test.ts",
-    "apps/worker/test/runner.test.ts",
-    "apps/worker/test/worker.test.ts",
-    "docs/architecture/ADR-0002-memory-ledger.md",
-    "docs/audit/REMEDIATION_RUN.md",
-    "packages/core/src/project-memory.ts",
-    "scripts/test-runner-browser.ts",
-    "scripts/ui-runner.mjs",
-    "tests/hrana.test.ts"
-  ],
-  "decisions": [
-    "sequential isolated worktree; original checkout untouched",
-    "uncertain is not cancellation confirmation or permission to retry",
-    "no automatic worktree cleanup",
-    "protocol compatibility distinct from heartbeat",
-    "memory and profiles never grant execution tools",
-    "all migrations only disposable databases"
-  ],
-  "tests": [
-    {
-      "kind": "unit/integration",
-      "command": "npm run check",
-      "result": "PASS: 301 Node, 7 Python, synthetic Correio eval, typecheck/build",
-      "log": "od2-301-check.log"
-    },
-    {
-      "kind": "native-unit",
-      "command": "cargo test --locked --manifest-path apps/runner/src-tauri/Cargo.toml",
-      "result": "PASS: 16; 5 optional ignored",
-      "log": "od2-mixed-fixed-rust.log"
-    },
-    {
-      "kind": "native-real-no-model",
-      "result": "official parser/sandbox and channel/vault/revocation PASS",
-      "logs": [
-        "od2-official-parser-final.log",
-        "od2-native-channel-final.log"
-      ]
-    },
-    {
-      "kind": "real-process-fixture-proposal",
-      "command": "node --import tsx scripts/test-runner-channel.ts --recovery",
-      "result": "PASS SIGKILL/restart once; no model-generation crash claim",
-      "log": "od2-receipt-recovery-final.log"
-    },
-    {
-      "kind": "real-model-and-browser",
-      "command": "node --import tsx scripts/test-runner-browser.ts",
-      "result": "PASS one official Codex/ChatGPT call, UI approval, native write; pairing/folder/prompt programmatic",
-      "log": "od2-browser-native-real.log"
-    },
-    {
-      "kind": "browser-real-memory-fixture-project",
-      "command": "node --import tsx scripts/test-runner-browser.ts --memory-only",
-      "result": "PASS HTTP/SQLite consent/save/reload/export/forget; mobile390/axe; no provider",
-      "log": "od2-memory-browser-mobile.log"
-    },
-    {
-      "kind": "browser-mocked-api-ipc",
-      "command": "npm run ui:runner",
-      "result": "PASS 8 scenarios on final build; explicit API/IPC mocks",
-      "log": "od2-final-eight-ui.log"
-    },
-    {
-      "kind": "lint",
-      "command": "npm run lint",
-      "result": "PASS 0 errors, 1 pre-existing DotView hook warning",
-      "log": "od2-final-301-lint.log"
-    }
-  ],
-  "remaining": [
-    "original Cursor audit files unavailable; summary revalidated",
-    "independent Claude audit pending",
-    "native graphical full pairing/folder/prompt/tray E2E",
-    "actual Codex generation crash",
-    "worktree orphan inventory/assisted cleanup and cross-app metadata coordination",
-    "ODCP persistent scheduler/snapshots/commits and distinct attempts",
-    "sandboxed project commands/tests",
-    "complete graph decisions and full Passport",
-    "Claude/Cursor drivers, provider registry and advanced modules",
-    "native ARM64/Windows and installers for current code",
-    "historical privacy/dependency/license/SBOM audit"
-  ],
-  "blockedOperations": [
-    "push without exact new approval",
-    "main merge",
-    "release/deploy/public visibility",
-    "remote migrations",
-    "paid services",
-    "arbitrary project shell/tests",
-    "parallel execution without resource leases and isolation"
-  ],
-  "sync": {
-    "roundPushes": 0,
-    "upstreamForNewBranch": null,
-    "lastKnownOriginRunnerRef": "feae70d4336ada21f37dd1515e869628b5b59a8c",
-    "remoteNotQueriedThisRound": true,
-    "priorAuthorizationDoesNotCoverTheseCommits": true
-  },
-  "nextExecutableSteps": [
-    "git status --short --branch",
-    "git log -12 --oneline",
-    "git worktree list --porcelain",
-    "read docs/audit/REMEDIATION_REPORT.md and docs/audit/INDEPENDENT_REVIEW.md",
-    "restore approved dependencies from lock if absent; do not change other worktrees",
-    "reproduce security cases by commit; do not repeat model call without justification"
-  ],
-  "localGeneratedState": "Temporary dependency link removed at closure; target, logs and screenshots are untracked generated artifacts outside source. Logs reside in OS temporary directory and may disappear.",
-  "releaseReadiness": "Not ready for public beta; no current installers/rollout/independent approval",
-  "environment": {
-    "observedPlatform": "macOS Intel",
-    "node": "24.21.0",
-    "temporaryRustEnvironment": {
-      "PATH_PREFIX": "/private/tmp/open-dot-cargo/bin",
-      "CARGO_HOME": "/private/tmp/open-dot-cargo",
-      "RUSTUP_HOME": "/private/tmp/open-dot-rustup",
-      "CARGO_TARGET_DIR": "/private/tmp/open-dot-od2-remediation-target",
-      "CARGO_BUILD_JOBS": "2"
-    },
-    "notes": "Temporary paths may disappear. Use an approved local toolchain/CLT if unavailable; no full Xcode required. Restore dependencies without modifying the original checkout."
-  },
   "coordination": {
-    "revision": 22,
+    "revision": 24,
     "agent": "codex",
-    "task": "OD2-MEMORY-027",
+    "task": "OD2-HANDOFF-028",
     "branch": "codex/od2-runner-remediation",
-    "observedHead": "350ce9faf7cd0614d6984ac287a69a6cb5905b3c",
-    "status": "checkpointed"
+    "observedHead": "48e3a15b549ed09662f97c876cc5049b735cad95",
+    "status": "handoff"
   },
-  "continuationBase": "1d9125f7af720df20e427e5d21eb35bb8ae26471",
-  "continuationCommits": [
-    "5d8dead docs(agents): establish shared continuity entry points",
-    "8a878a0 feat(odcp): persist encrypted task checkpoints with CAS",
-    "5cd345f feat(agents): coordinate shared state with durable revision checks"
-  ],
-  "continuationTests": [
-    {
-      "kind": "unit/integration",
-      "result": "PASS 306 Node, 7 Python, synthetic evaluation, typecheck/build",
-      "log": "od2-continuation-final-check.log"
-    },
-    {
-      "kind": "native-unit",
-      "result": "PASS 16; 5 ignored. Initial sandbox socket failure; rerun with local socket permission passed.",
-      "log": "od2-continuation-rust-socket.log"
-    },
-    {
-      "kind": "browser-real-backend",
-      "result": "PASS memory consent, reload, export, forget; project selector fixture; no provider call",
-      "log": "od2-continuation-memory-browser.log"
-    },
-    {
-      "kind": "native-real-channel",
-      "result": "PASS pairing, vault, restart, heartbeat, revocation against local HTTP/SQLite; no driver task",
-      "log": "od2-continuation-channel.log"
-    }
-  ],
-  "continuationLimits": [
-    "checkpoint persistence internal only, no scheduler or public route",
-    "shared coordination cooperative local writers, not authentication or cross-branch lease",
-    "no new model call, installers, CI or native ARM64/Windows execution",
-    "schema 0014 only disposable local test databases"
-  ],
   "sessionBase": "940b06c60138af8ebdf8a0291732f36cd21ea6de",
   "currentEvidence": {
-    "node": 319,
+    "node": 322,
+    "rust": 24,
+    "rustIgnoredDefault": 6,
     "python": 7,
-    "rust": 22,
-    "rustIgnored": 6,
-    "browser": "real browser/backend/SQLite; device/executor/native-file fixtures",
+    "browser": "real backend/SQLite; executor/native-file fixtures",
     "modelCallsThisResume": 0,
-    "nativeSaveDialog": "not tested",
-    "logs": [
-      "od2-context-final-node.log",
-      "od2-context-final-rust.log",
-      "od2-context-browser.log"
+    "nativeChannel": "real PASS",
+    "lint": "0 errors; existing DotView warning",
+    "builds": "local web/worker/runner; no current CI installers"
+  },
+  "priorRoundSnapshot": {
+    "commitsProducedBeforeDocumentation": [
+      {
+        "sha": "48d5e60f0fd8f0a2c0f5acf8243958219c14c90e",
+        "subject": "docs(audit): baseline isolated remediation against current HEAD"
+      },
+      {
+        "sha": "2c250c62c4855bc8663f483a224f818c575e51a7",
+        "subject": "fix(runner): reconcile abandoned attempts and persist honest receipts"
+      },
+      {
+        "sha": "915f838a86468d9b8bfecb172d177320e2a2c703",
+        "subject": "fix(runner): negotiate protocol and confirm remote disconnection"
+      },
+      {
+        "sha": "681e44e01b448d1180d3e8e541f6caf077488fb2",
+        "subject": "fix(runner): require scoped consent and verifiable file review"
+      },
+      {
+        "sha": "88c2ecb190f19bbab451000e0d215cce9f5c52b9",
+        "subject": "test(runner): validate browser approval and durable crash recovery"
+      },
+      {
+        "sha": "5e521caf0b13873db60b90c91aee0b5b89cd33cc",
+        "subject": "feat(memory): enforce consent retention and private ledger access"
+      },
+      {
+        "sha": "b8ef7da9de6f5b96dc5764763fdfe6e685db7bd3",
+        "subject": "feat(memory): connect consent and persistent notes to Workspace"
+      },
+      {
+        "sha": "7bd76affae286050455e017ee68a17a15dc5f6fe",
+        "subject": "fix(runner): resume mixed approved files within review limits"
+      },
+      {
+        "sha": "c7b2426ec7f848546191cd52ed4937ac2c8a81aa",
+        "subject": "fix(runner): bind proposal receipts to persisted approval bytes"
+      }
+    ],
+    "changedFilesBeforeDocumentation": [
+      "apps/runner/src-tauri/Cargo.lock",
+      "apps/runner/src-tauri/Cargo.toml",
+      "apps/runner/src-tauri/src/channel.rs",
+      "apps/runner/src-tauri/src/codex.rs",
+      "apps/runner/src-tauri/src/executor.rs",
+      "apps/runner/src-tauri/src/journal.rs",
+      "apps/runner/src-tauri/src/recovery_tests.rs",
+      "apps/runner/src-tauri/src/worktree.rs",
+      "apps/web/src/components/ProjectMemory.tsx",
+      "apps/web/src/components/RunnerWorkspace.tsx",
+      "apps/web/src/workspace.css",
+      "apps/worker/migrations/0010_runner_lifecycle.sql",
+      "apps/worker/migrations/0011_runner_protocol.sql",
+      "apps/worker/migrations/0012_runner_worktree_consent.sql",
+      "apps/worker/migrations/0013_memory_consent.sql",
+      "apps/worker/src/app.ts",
+      "apps/worker/src/continuity/project-memory.ts",
+      "apps/worker/src/continuity/routes.ts",
+      "apps/worker/src/db/migrate.ts",
+      "apps/worker/src/jobs.ts",
+      "apps/worker/src/runner/protocol.ts",
+      "apps/worker/src/runner/routes.ts",
+      "apps/worker/src/services/account.ts",
+      "apps/worker/test/fase-f.test.ts",
+      "apps/worker/test/project-memory-api.test.ts",
+      "apps/worker/test/runner.test.ts",
+      "apps/worker/test/worker.test.ts",
+      "docs/architecture/ADR-0002-memory-ledger.md",
+      "docs/audit/REMEDIATION_RUN.md",
+      "packages/core/src/project-memory.ts",
+      "scripts/test-runner-browser.ts",
+      "scripts/ui-runner.mjs",
+      "tests/hrana.test.ts"
+    ],
+    "decisions": [
+      "sequential isolated worktree; original checkout untouched",
+      "uncertain is not cancellation confirmation or permission to retry",
+      "no automatic worktree cleanup",
+      "protocol compatibility distinct from heartbeat",
+      "memory and profiles never grant execution tools",
+      "all migrations only disposable databases"
+    ],
+    "tests": [
+      {
+        "kind": "unit/integration",
+        "command": "npm run check",
+        "result": "PASS: 301 Node, 7 Python, synthetic Correio eval, typecheck/build",
+        "log": "od2-301-check.log"
+      },
+      {
+        "kind": "native-unit",
+        "command": "cargo test --locked --manifest-path apps/runner/src-tauri/Cargo.toml",
+        "result": "PASS: 16; 5 optional ignored",
+        "log": "od2-mixed-fixed-rust.log"
+      },
+      {
+        "kind": "native-real-no-model",
+        "result": "official parser/sandbox and channel/vault/revocation PASS",
+        "logs": [
+          "od2-official-parser-final.log",
+          "od2-native-channel-final.log"
+        ]
+      },
+      {
+        "kind": "real-process-fixture-proposal",
+        "command": "node --import tsx scripts/test-runner-channel.ts --recovery",
+        "result": "PASS SIGKILL/restart once; no model-generation crash claim",
+        "log": "od2-receipt-recovery-final.log"
+      },
+      {
+        "kind": "real-model-and-browser",
+        "command": "node --import tsx scripts/test-runner-browser.ts",
+        "result": "PASS one official Codex/ChatGPT call, UI approval, native write; pairing/folder/prompt programmatic",
+        "log": "od2-browser-native-real.log"
+      },
+      {
+        "kind": "browser-real-memory-fixture-project",
+        "command": "node --import tsx scripts/test-runner-browser.ts --memory-only",
+        "result": "PASS HTTP/SQLite consent/save/reload/export/forget; mobile390/axe; no provider",
+        "log": "od2-memory-browser-mobile.log"
+      },
+      {
+        "kind": "browser-mocked-api-ipc",
+        "command": "npm run ui:runner",
+        "result": "PASS 8 scenarios on final build; explicit API/IPC mocks",
+        "log": "od2-final-eight-ui.log"
+      },
+      {
+        "kind": "lint",
+        "command": "npm run lint",
+        "result": "PASS 0 errors, 1 pre-existing DotView hook warning",
+        "log": "od2-final-301-lint.log"
+      }
+    ],
+    "remaining": [
+      "original Cursor audit files unavailable; summary revalidated",
+      "independent Claude audit pending",
+      "native graphical full pairing/folder/prompt/tray E2E",
+      "actual Codex generation crash",
+      "worktree orphan inventory/assisted cleanup and cross-app metadata coordination",
+      "ODCP persistent scheduler/snapshots/commits and distinct attempts",
+      "sandboxed project commands/tests",
+      "complete graph decisions and full Passport",
+      "Claude/Cursor drivers, provider registry and advanced modules",
+      "native ARM64/Windows and installers for current code",
+      "historical privacy/dependency/license/SBOM audit"
+    ],
+    "blockedOperations": [
+      "push without exact new approval",
+      "main merge",
+      "release/deploy/public visibility",
+      "remote migrations",
+      "paid services",
+      "arbitrary project shell/tests",
+      "parallel execution without resource leases and isolation"
+    ],
+    "sync": {
+      "roundPushes": 0,
+      "upstreamForNewBranch": null,
+      "lastKnownOriginRunnerRef": "feae70d4336ada21f37dd1515e869628b5b59a8c",
+      "remoteNotQueriedThisRound": true,
+      "priorAuthorizationDoesNotCoverTheseCommits": true
+    },
+    "nextExecutableSteps": [
+      "git status --short --branch",
+      "git log -12 --oneline",
+      "git worktree list --porcelain",
+      "read docs/audit/REMEDIATION_REPORT.md and docs/audit/INDEPENDENT_REVIEW.md",
+      "restore approved dependencies from lock if absent; do not change other worktrees",
+      "reproduce security cases by commit; do not repeat model call without justification"
+    ],
+    "localGeneratedState": "Temporary dependency link removed at closure; target, logs and screenshots are untracked generated artifacts outside source. Logs reside in OS temporary directory and may disappear.",
+    "releaseReadiness": "Not ready for public beta; no current installers/rollout/independent approval",
+    "environment": {
+      "observedPlatform": "macOS Intel",
+      "node": "24.21.0",
+      "temporaryRustEnvironment": {
+        "PATH_PREFIX": "/private/tmp/open-dot-cargo/bin",
+        "CARGO_HOME": "/private/tmp/open-dot-cargo",
+        "RUSTUP_HOME": "/private/tmp/open-dot-rustup",
+        "CARGO_TARGET_DIR": "/private/tmp/open-dot-od2-remediation-target",
+        "CARGO_BUILD_JOBS": "2"
+      },
+      "notes": "Temporary paths may disappear. Use an approved local toolchain/CLT if unavailable; no full Xcode required. Restore dependencies without modifying the original checkout."
+    },
+    "continuationBase": "1d9125f7af720df20e427e5d21eb35bb8ae26471",
+    "continuationCommits": [
+      "5d8dead docs(agents): establish shared continuity entry points",
+      "8a878a0 feat(odcp): persist encrypted task checkpoints with CAS",
+      "5cd345f feat(agents): coordinate shared state with durable revision checks"
+    ],
+    "continuationTests": [
+      {
+        "kind": "unit/integration",
+        "result": "PASS 306 Node, 7 Python, synthetic evaluation, typecheck/build",
+        "log": "od2-continuation-final-check.log"
+      },
+      {
+        "kind": "native-unit",
+        "result": "PASS 16; 5 ignored. Initial sandbox socket failure; rerun with local socket permission passed.",
+        "log": "od2-continuation-rust-socket.log"
+      },
+      {
+        "kind": "browser-real-backend",
+        "result": "PASS memory consent, reload, export, forget; project selector fixture; no provider call",
+        "log": "od2-continuation-memory-browser.log"
+      },
+      {
+        "kind": "native-real-channel",
+        "result": "PASS pairing, vault, restart, heartbeat, revocation against local HTTP/SQLite; no driver task",
+        "log": "od2-continuation-channel.log"
+      }
+    ],
+    "continuationLimits": [
+      "checkpoint persistence internal only, no scheduler or public route",
+      "shared coordination cooperative local writers, not authentication or cross-branch lease",
+      "no new model call, installers, CI or native ARM64/Windows execution",
+      "schema 0014 only disposable local test databases"
     ]
-  }
+  },
+  "nextExecutableSteps": [
+    "Read PROJECT_STATE, inspect Git/worktrees and baseline 940b06c",
+    "Run safe recovery fixture before designing real generation-crash experiment",
+    "Never replay uncertain operations; preserve tracked child ownership",
+    "Validate native onboarding/dialogs with an operator; do not call browser IPC fixtures native E2E"
+  ],
+  "sync": "local only; no push authorized for current HEAD",
+  "remaining": [
+    "native GUI/save dialog",
+    "real generation crash/orphan process recovery",
+    "automatic scoped commits",
+    "sandboxed project commands",
+    "full Passport/Idea to Project/design/multiagent",
+    "Claude auth/driver and Cursor CLI/driver"
+  ],
+  "releaseReadiness": "not ready; independent audit pending"
 }

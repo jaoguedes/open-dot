@@ -1,18 +1,17 @@
-# Brief para auditoria independente — Claude Code
+# Brief vigente para auditoria independente — Claude Code
 
-Não aceitar as conclusões do Codex como prova. Ler AGENTS.md, CLAUDE.md e docs/agents/PROJECT_STATE.md. Localizar `open-dot-od2-remediation` com `git worktree list --porcelain`; branch `codex/od2-runner-remediation`. Conferir HEAD e estado limpo antes de abrir branch/worktree próprio. Não editar o checkout de outro agente.
+Localizar worktree `open-dot-od2-remediation` via Git, branch `codex/od2-runner-remediation`. Último código 48e3a15; conferir SHA completo/HEAD documental e status. Não editar este worktree simultaneamente; criar checkout próprio do HEAD correto. Remoto não contém necessariamente esses commits e push exige autorização específica.
 
-Escopo principal: [relatório atual](FINAL_IMPLEMENTATION_REPORT.md), [remediação anterior](REMEDIATION_REPORT.md), ADR-0003 e ADR-0004. Base atual 1d9125f; última unidade de código 5cd345f. Commits documentais posteriores devem ser descobertos via Git. A branch não foi sincronizada; remoto não contém estas correções por presunção.
+Ler AGENTS/CLAUDE, PROJECT_STATE, FINAL_IMPLEMENTATION_REPORT e REMEDIATION_RUN. Questionar as conclusões do Codex. Auditorias originais Cursor ausentes; resumo não substitui originais. Priorizar:
 
-Reproduzir especialmente:
+1. Cancel/revoke/lease/event receipts/CAS e resultados tardios; nunca aceitar HTTP200 como prova de persistência.
+2. Scheduler: concorrência, tentativa única, fase/dependência, pause/revoke, recibos incompletos e uncertain sem retry. Tarefas usam bases independentes; sem integração automática.
+3. Git checkpoint: ownership, índice temporário, hooks/filtros, arquivos alheios, CAS ref, morte antes/depois do commit e recuperação do mesmo SHA. Consentimento de arquivos não é consentimento de commit/push.
+4. Memória: escopo/CSRF/consentimento revisionado/forget race, limite de retries do bridge, edição com proveniência e revisão antiga. Passport não transfere privilégios nem executa conteúdo.
+5. Exportação: campos privados, bounds, arquivo nativo não confiável, identidade entre hosts, snapshot SQL, revogação durante leitura e exclusão de prompts por padrão. Diálogo Tauri não foi operado.
+6. Negociação: Worker antigo recebe driver antigo; features contraditórias/versões desconhecidas recusadas; catálogo de modelos não descoberto. Status Claude precisa sucesso+JSON.
+7. Perfis: prompt congelado não prova cumprimento; qualityGate not-attested deve sobreviver a completed. Nenhuma ferramenta/autoridade advém do contrato.
+8. Crash durante geração real e GUI Tauri continuam lacunas; comandos de projeto/paralelo permanecem desabilitados. Revalidar SO/instaladores atuais antes de beta.
 
-1. Cancel/revoke, lease expirado, resultado tardio e proposta concorrente em `runner.test.ts`; verificar transações e número de linhas, não só HTTP200.
-2. Ciphertext/AAD, CAS e reabertura dos checkpoints em `checkpoints.test.ts`. Inspecionar diferença entre dados de verificação declarados e evidência realmente observada pelo host futuro.
-3. Helper `scripts/lib/agent-state.ts`: lock abandonado, erro após rename, takeover e editores que ignoram o protocolo. Não é lease distribuído nem autenticação de fornecedor.
-4. Memória: owner/CSRF, revisão de consentimento, retenção, forget race, exclusão de conta. Nova tabela deve ser apagada junto à conta.
-5. Worktree: aprovação antes de metadados, ownership, escrita parcial/durabilidade, ausência de autocleanup perigoso. Sandbox estrutural e caminhos negativos.
-6. Cotejar cada alegação real/fixture/mock e limitações de plataforma. Verificar histórico, privacidade, licenças e compatibilidade antes de qualquer beta.
-
-Comandos existentes: `npm run check`, `npm run lint`, `cargo test --locked --manifest-path apps/runner/src-tauri/Cargo.toml`; `node --import tsx scripts/test-runner-browser.ts --memory-only`; `node --import tsx scripts/test-runner-channel.ts`. Sem flag, o script browser chama Codex real: não repetir sem justificativa e autenticação oficial. Ensaios que usam sockets exigem permissão local; não remover testes para contornar o sandbox.
-
-Documentar achados próprios em docs/agents/claude/STATUS.md e handoff versionado, com evidências, severidade e reproduções. Preserve os relatórios originais. Sem push, deploy, release, banco remoto ou comandos genéricos de projeto. Auditorias originais do Cursor não foram encontradas; não inventar seu conteúdo.
+Comandos: npm run check; npm run lint; cargo test --locked --manifest-path apps/runner/src-tauri/Cargo.toml; node --import tsx scripts/test-runner-browser.ts --plans-only; node --import tsx scripts/test-runner-channel.ts --recovery; node --import tsx scripts/check-continuity.ts --base 940b06c60138af8ebdf8a0291732f36cd21ea6de.
+Sem --plans-only/--memory-only, browser pode chamar Codex real: não repetir sem necessidade/autenticação oficial. Logs locais listados no relatório; fixtures não são prova de modelo ou UI nativa. Registrar achados em área Claude/handoff próprio. Sem push/release/deploy/migração remota ou gastos.

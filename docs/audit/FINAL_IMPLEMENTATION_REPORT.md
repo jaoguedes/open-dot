@@ -1,43 +1,60 @@
-# Relatório final de implementação — continuação de 20/10/2026
+# Relatório de implementação vigente — 20/10/2026
 
-Task OD2-AUDIT-016. Autor: Codex. Revisão própria; auditoria independente pendente.
+Autor Codex; revisão interna, não auditoria independente. Branch `codex/od2-runner-remediation`, worktree `open-dot-od2-remediation` (resolver com `git worktree list --porcelain`). Base desta continuação `940b06c60138af8ebdf8a0291732f36cd21ea6de`; base original `2b7d5c5fb7f6255c2bdefbabe67f38d34a2faea5`. Último código `48e3a15b549ed09662f97c876cc5049b735cad95`. HEAD documental: consultar Git; um documento não contém o hash do próprio commit.
 
-Branch `codex/od2-runner-remediation`, worktree `open-dot-od2-remediation`.
-Base desta continuação `1d9125f7af720df20e427e5d21eb35bb8ae26471`; base original da remediação `2b7d5c5fb7f6255c2bdefbabe67f38d34a2faea5`.
-Último código: `5cd345fa3bd6fc1e9d128d6448ff187240b8393d`. SHA documental final: `git log -1 --format=%H -- docs/audit/FINAL_IMPLEMENTATION_REPORT.md`.
+## Entregas e evidências
 
-## Entregas desta continuação
-
-| Commit | Unidade | Estado |
+| Área | Estado efetivo | Limitação |
 |---|---|---|
-| 5d8dead | Regras globais, Claude/Cursor, índices compartilhados, áreas e autoria | Documentação persistente; sem inventar atividade de outros agentes |
-| 8a878a0 | Checkpoints ODCP cifrados, escopo e CAS, transições, migração 0014 | Serviço interno testado em SQLite real; não integrado ao Runner/scheduler |
-| 5cd345f | Atualização de estado com revisão, lock, rename/fsync, CLI que observa Git | Executado neste worktree; protege somente escritores cooperantes |
+| Scheduler | Planos/fases/dependências/tentativas persistidos, claim real, CAS, pausa e progressão por recibos | Uma tentativa por tarefa; sem retry automático; worktrees independentes não integram código anterior |
+| ODCP | Checkpoints automáticos de fases/journal, ownership, inventário, Git explícito com recuperação do mesmo SHA após crash | Commit exige consentimento próprio; não há commits automáticos de planos ou handoff automático entre fornecedores |
+| Workspace | Planos, tarefas, eventos, aprovação exata e resultados ligados ao canal real | Pareamento/pasta/prompt dos ensaios nativos anteriores programáticos; onboarding gráfico completo pendente |
+| Memória | Consentimento, retenção, CAS, recibos factuais opcionais, editar/excluir/forget e revisão | Edição vira user-provided; memória não é autorização nem atestação independente |
+| Passport v2 | Exporta grafo de planos, tentativas, dependências, memória opt-in e arquivo nativo opcional; revisão/download reais | Não exporta fontes/tarefas fora dos planos; identidade da pasta requer remapeamento; diálogo Tauri salvar não operado |
+| Capacidades | Diagnóstico opcional negociado; legado preservado; afirmações contraditórias recusadas | Modelos não descobertos; recursos declarados por host autenticado, não prova independente |
+| Especialistas | Dez contratos ligados ao prompt persistido, claim, UI e Passport | Quality gate continua not-attested mesmo após recibos; verificação automática de entregáveis pendente |
+| Comandos de projeto | Desabilitados | Sem isolamento demonstrado de rede/fs/filhos/CPU/RAM; nome npm test não garante segurança |
+| Providers | Codex oficial instalado/autenticado; fluxo real limitado já exercitado nesta continuação | Claude instalado sem autenticação confirmada; Cursor CLI ausente; não há driver operacional Claude/Cursor |
+| Idea to Project / Design Intelligence / multiagentes | Não concluídos | Não chamar catálogo, formulário ou schema de execução completa; paralelo/merge continuam bloqueados |
+| Aprovações remotas | Canal existente com hash/escopo/expiração e decisão servidor | Sem teste iPhone/Web Push, reautenticação avançada ou deploy novo |
 
-As correções P0/P1 e integrações anteriores estão no [relatório detalhado preservado](REMEDIATION_REPORT.md), com limites e reproduções. Nenhum novo P0/P1 foi declarado encerrado apenas por esta continuação. Originais da auditoria Cursor não localizados na rodada anterior; o resumo do mantenedor não substitui aqueles documentos.
+## Commits de código desde a base
 
-## Evidências atuais
+```text
+bf49044 feat(odcp): schedule persistent phased plans through Runner claims
+2ea91e1 feat(workspace): run persistent plans with reviewed native results
+4ef1c89 feat(runner): preserve automatic phase checkpoints beyond active journal
+32788de feat(runner): checkpoint reviewed files with recoverable scoped Git commits
+64a8b60 fix(runner): bind consent and commit review to the selected project
+4e8d07e feat(memory): connect consented factual receipts to engineering tasks
+5cd102f feat(runner): export scoped local project context without authority
+44b733b feat(passport): export consented task graphs and native context for review
+9fcd9ee feat(runner): negotiate truthful per-driver feature discovery
+350ce9f feat(experts): bind quality contracts to persisted task dispatch
+48e3a15 feat(memory): edit and remove entries with revisioned provenance
+```
 
-- `npm run check`: PASS, 306 Node, sete Python, avaliação sintética Correio, typecheck e build.
-- `npm run lint`: zero erros, um aviso preexistente em DotView; identidade/arte não alteradas.
-- Rust: 16 PASS, cinco opcionais ignorados. Primeira execução teve PermissionDenied ao abrir socket do teste; reexecução com socket local permitido passou. Não ocultar essa diferença ambiental.
-- Canal real HTTP/SQLite/Keychain: pareamento, restauração, heartbeat e revogação PASS. Sem tarefa de driver neste teste.
-- Navegador com API/SQLite reais: memória com sessão, consentimento, recarga, export memory-only e exclusão PASS. Seleção de projeto usa fixture; nenhuma chamada de provedor.
-- Checkpoints: três testes SQLite (CAS, escopo/cifra, identidade, reabertura, bloqueio de replay incerto e campos de evidência).
-- Estado compartilhado: dois testes de filesystem (concorrência, ownership ativo, handoff, revisão, stale lock e symlink). CLI utilizado localmente com Git real.
+Onze unidades de código desde 940b06c; cinco nesta última retomada após 4e8d07e. Política Conventional Commits/Task passou para os onze. Registro incremental por unidade: [REMEDIATION_RUN](REMEDIATION_RUN.md). Remediações anteriores P0/P1 e riscos: [REMEDIATION_REPORT](REMEDIATION_REPORT.md); relatórios originais Cursor não localizados. Não afirmar fechamento independente por testes próprios.
 
-Logs temporários identificados em ENGINEERING_STATE.json podem desaparecer; os testes versionados são reproduzíveis. Não houve nova chamada de modelo, E2E gráfico nativo completo, instaladores, Actions ou teste ARM64/Windows nesta continuação. Codex real limitado foi validado na rodada anterior, separadamente; não é prova nova neste HEAD.
+## Testes e resultados
 
-## Banco, dependências e compatibilidade
+- 322 Node PASS, zero falhas (`od2-memory-edit-node.log`); typecheck/build Web+Worker PASS. Scripts do check executados diretamente com Node configurado pois npm não estava no PATH desta retomada.
+- Sete Python PASS e eval Correio sintético PASS (`od2-context-python.log`, `od2-context-eval.log`); não são medidas externas de qualidade.
+- 24 Rust PASS, seis ignored no gate padrão (`od2-features-rust.log`), incluindo Git real, interrupção SIGKILL de helper/recuperação do mesmo commit, locks e escopo. Não confundir com crash do Codex durante geração.
+- Canal nativo real HTTP/SQLite/Keychain PASS: pareamento, reinício, heartbeat e revogação (`od2-features-native-channel.log`); sem tarefa de modelo nesse ensaio.
+- Browser/backend/SQLite reais PASS: planos, pausa/claim/uncertain, recibos de memória, perfil no prompt, Passport/download, edição/exclusão/proveniência/rascunho, reload/forget (`od2-memory-edit-browser.log`). Device/executor/arquivo nativo são fixtures explícitas. Mobile 390 px sem overflow, axe sem serious/critical; captura inspecionada, sem redesign.
+- Duas chamadas oficiais Codex/ChatGPT em etapas anteriores desta continuação (`od2-scheduled-codex.log`, `od2-real-scheduled-git-codex.log`): plan/claim → proposta → aprovação Web → escrita isolada; segunda inclui commit com consentimento programático separado. Nenhuma chamada nova nesta retomada. Não é onboarding Tauri completo nem execução de testes de projeto.
+- Lint zero erros; aviso preexistente DotView permanece. Scanner de padrões sem achados nos arquivos rastreados; não é DLP nem auditoria de todo histórico. Regressão de Zod no bundle corrigida sem reduzir testes.
+- Build UI Runner e binário diagnóstico nativo local compilados; sem instaladores/CI atuais. macOS Intel local apenas; ARM64/Windows sem runtime atual. Builds históricos não validam este HEAD.
 
-Migração aditiva 0014 cria `od_task_checkpoints`; AAD inclui dono/projeto/tarefa/revisão, e exclusão de conta inclui a tabela. REQUIRED_SCHEMA=0014. Aplicada apenas em bancos descartáveis de teste. Nenhuma dependência acrescentada. Templates locais de issues/PR preparados, sem criação de issues/PR ou validação remota de renderização. Rollout exige migração controlada e verificação de negociação antes de publicar; não foi feito deploy. Rotas públicas de checkpoints, consentimento/retenção de checkpoints e scheduler ainda não existem.
+## Banco, dependências, segurança e sincronização
 
-## Estado dos módulos
+Migrações 0015/0016 desta continuação somente em bancos descartáveis locais; nenhuma migração nova nesta retomada. Zero dependências novas. Dot/paleta preservados. Checkout original permanece limpo na base 2b7d5c5, com seus commits locais preservados. Nenhum push, main merge, release, deploy, serviço pago ou alteração de visibilidade. Não houve autorização de sincronização deste HEAD; autorização histórica de feae70d não se estende a ele. Remoto não deve ser considerado atualizado.
 
-Runner e Codex: núcleo limitado preservado; canal real revalidado. GUI nativa completa e crash durante geração continuam pendentes. Comandos/testes arbitrários permanecem desabilitados. Claude/Cursor não possuem execução autenticada comprovada. ODCP: contratos e persistência real parciais; sem scheduler, timer, commits automáticos ou handoff operacional entre provedores. Memory Graph: persistência e consentimento no Workspace revalidados; Passport permanece memory-only. Expert Contracts: catálogo existente, sem autorização executável. Idea to Project, Design Intelligence, Council, coordenação paralela e Web Push mobile: não implementados nesta continuação. Aprovação exata web/Runner existente não equivale a notificação mobile validada.
+Pendente: auditoria independente, GUI nativa completa e diálogo de export/commit, crash real durante geração/gestão de processos órfãos após morte abrupta, recuperação multiplataforma, revisão de permissões/revisões de contratos, commits automáticos consentidos, integração entre worktrees e Passport completo. Não há evidência suficiente para beta pública. Licença definitiva e auditoria de assets/histórico continuam decisões/gates humanos.
 
-## Continuidade e sincronização
+## Continuidade
 
-Checkout anterior permaneceu em 2b7d5c5. Novos commits somente locais; nenhum push, merge, release, deploy, gasto ou migração remota. Última ref origin é somente informação local histórica, sem consulta atual. Para revisão remota, solicitar autorização do HEAD final exato e destino antes do envio. Revisor local: localizar worktree com `git worktree list --porcelain` e conferir branch/HEAD.
+Retomar por docs/agents/PROJECT_STATE.md e ENGINEERING_STATE.json, conferindo Git. Próxima unidade: ensaio recuperável de interrupção durante geração real em projeto temporário, sem replay nem perda de recibos; primeiro reproduzir o recovery fixture. GUI Tauri exige operador nativo porque a automação disponível nesta sessão não controla apps nativos. Providers externos dependem de autenticação/instalação oficial; continuar tarefas locais independentes sem contornar isso. Não repetir operação incerta por ausência de recibo.
 
-Próximo: [brief independente](CLAUDE_REVIEW_BRIEF.md), [estado compartilhado](../agents/PROJECT_STATE.md) e backlog canônico. Público beta: não recomendado antes de resolver gates pendentes e auditoria independente.
+Esta sessão chega ao checkpoint para preservar contexto recuperável antes de esgotá-lo; permanecem tarefas elegíveis, não foi declarada conclusão total. Houve falha transitória do revisor automático por limite de uso na sessão anterior; revisão voltou a funcionar e permitiu os testes/commits locais relatados.

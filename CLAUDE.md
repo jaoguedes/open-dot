@@ -31,7 +31,7 @@ Comece por: `docs/CONTINUIDADE.md` (handoff e Git atual), `docs/STATUS.md` (esta
 - Antes de cada commit: revise diff e seleção exata, segredos (incluindo arquivos novos), dados pessoais e arquivos indevidos. Não use staging genérico quando houver trabalho misturado. Não commite caches, instaladores, logs privados ou credenciais.
 - Sem comandos destrutivos, force push ou sobrescrita de trabalho de outro agente. Commit local não autoriza sincronização: push, transferência externa, merge, deploy e release precisam de autorização aplicável ao destino/conteúdo. O usuário suspendeu releases e publicação do repositório.
 - Atualize `docs/CONTINUIDADE.md` com objetivo, decisões, concluído/pendente, testes, branch, SHA de referência e próximo passo. Um arquivo não pode conter o hash do próprio commit: registre o último SHA conhecido e confira `git log -1 -- docs/CONTINUIDADE.md` para o checkpoint documental.
-- ODCP parcial: `docs/AGENT_CONTINUITY_PROTOCOL.md` e ADR-0004 documentam contratos e persistência interna. Scheduler, timers, commits automáticos e handoff entre provedores ainda não estão habilitados. Não confundir política dos agentes com enforcement no Runner.
+- ODCP parcial: `docs/AGENT_CONTINUITY_PROTOCOL.md` e ADR-0004 documentam contratos e persistência interna. Scheduler sequencial e checkpoints nativos estão integrados; commits locais exigem consentimento separado. Commits automáticos de planos e handoff automático entre provedores continuam pendentes. Estado vigente: docs/agents/PROJECT_STATE.md. Não confundir política dos agentes com enforcement no Runner.
 
 ## Memória compartilhada e revisão independente
 

@@ -1,5 +1,5 @@
 # Backlog — índice canônico
 
-Prioridades e fases são mantidas em [ROADMAP](../architecture/ROADMAP.md); riscos confirmados e gates em [relatório de remediação](../audit/REMEDIATION_REPORT.md). Não duplicar listas independentes aqui.
+Prioridades no [ROADMAP](../architecture/ROADMAP.md), estado no [PROJECT_STATE](PROJECT_STATE.md), riscos no [relatório](../audit/FINAL_IMPLEMENTATION_REPORT.md). Não manter três backlogs concorrentes.
 
-Scheduler, tentativas, checkpoints nativos e commit local explícito já possuem incrementos no registro audit/REMEDIATION_RUN. Próxima unidade elegível: Passport de contexto operacional, integrado ao estado real de tarefas e memória consentida. Depois: capacidades negociadas por feature e recuperação gráfica nativa. Commits automáticos exigem primeiro ownership, seleção exata e revisão determinística de diff. Comandos de projeto ficam bloqueados até isolamento demonstrado.
+Próxima unidade executável: reproduzir recovery fixture e preparar teste de crash durante geração real sem replay/processos alheios. Validar GUI nativa com operador. Em paralelo conceitual, sem edições simultâneas: política de checkpoint/commit automático consentido e integração sequencial de código entre worktrees. Isolamento de comandos, paralelismo e drivers novos dependem de provas/autenticação; não substituí-los por mocks. Passport e contratos possuem integração limitada, não completude do Blueprint.

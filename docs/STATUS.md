@@ -1,3 +1,11 @@
+# Estado vigente — checkpoint 48e3a15 (20/10/2026)
+
+Entrada: [PROJECT_STATE](agents/PROJECT_STATE.md), [relatório vigente](audit/FINAL_IMPLEMENTATION_REPORT.md), [registro incremental](audit/REMEDIATION_RUN.md). Branch codex/od2-runner-remediation; resolver worktree e HEAD documental pelo Git. Scheduler sequencial, checkpoints e commit explícito, memória editável, Passport de contexto, capacidades e perfis estão integrados com limites documentados. Gate 322 Node/24 Rust/sete Python; testes reais/fixtures separados no relatório. Sem push/deploy/release; não pronto para beta pública. Próximo: recuperação durante geração real e GUI nativa, sem replay de operações incertas.
+
+---
+
+## Histórico preservado (não usar contagens/pendências antigas como estado atual)
+
 # Scheduler persistente local — OD2-LOOP-017
 
 Planos autenticados com fases/DAG entregam tarefas à fila real por claim do Runner, com CAS, tentativa única, pausa e reconciliação. Sete testes específicos SQLite/router passaram; gate completo anterior desta unidade passou 312 Node, sete Python/eval/typecheck/build antes do teste adicional de starvation. Recibos do executor nos testes são fixtures, não chamadas de modelo. Migração 0015 apenas em bancos descartáveis. UI e ensaio nativo de planos serão a próxima unidade; worktrees de tarefas não são integrados automaticamente.

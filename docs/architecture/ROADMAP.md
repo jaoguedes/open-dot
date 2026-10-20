@@ -1,3 +1,11 @@
+# Dependências vigentes após 48e3a15
+
+Estado observado e gates em docs/agents/PROJECT_STATE.md e audit/FINAL_IMPLEMENTATION_REPORT.md. Scheduler/claim, checkpoints e commit explícito, memória/Passport limitado, descoberta de recursos e perfis receberam incrementos operacionais. Próximos: recovery de geração real e GUI nativa, política consentida de commit automático e integração entre tarefas; comandos/paralelo exigem isolamento/coordenação demonstrados. Claude/Cursor bloqueados por autenticação/instalação e drivers não concluídos. Idea to Project, Design Intelligence e módulos avançados permanecem não concluídos. Revisão independente continua necessária; sem push ou publicação.
+
+---
+
+## Histórico do roadmap
+
 # Próximas dependências após remediação c7b2426
 
 A/B/C/D/F produziram incrementos reais descritos em audit/REMEDIATION_REPORT.md (caminho relativo a docs). A etapa seguinte é revisão independente dos estados, recibos/ownership e memória autenticada, seguida por GUI nativa completa/crash durante geração. ODCP operacional com ações Git, comandos de projeto e paralelo não são elegíveis até provar isolamento/coordenação. Providers adicionais dependem de drivers/autenticação oficiais. Passport completo, Idea to Project, Design Intelligence e Council continuam trabalho futuro, sem declarar suporte por schema.
