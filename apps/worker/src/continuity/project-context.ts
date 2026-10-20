@@ -26,7 +26,7 @@ export async function exportProjectContext(ctx:Ctx,owner:string,project:string,i
   let plan=plans.find(p=>p.id===r.plan_id);
   if(!plan){plan={id:r.plan_id,title:await open(ctx.keys,r.title_enc,`engineering:plan:${owner}:${r.plan_id}`),state:r.plan_state,tasks:[]};plans.push(plan);}
   const payload=JSON.parse(await open(ctx.keys,r.payload_enc,`engineering:task:${owner}:${r.id}`));
-  plan.tasks.push({id:r.id,phase:r.phase,title:payload.title,state:r.state,dependencies:JSON.parse(r.dependencies),attempt:r.attempt_id?{id:r.attempt_id,runnerTaskId:r.runner_task_id}:null,acceptance:payload.acceptance,...(data.includePrompts?{prompt:payload.prompt}:{})});
+  plan.tasks.push({id:r.id,phase:r.phase,title:payload.title,state:r.state,dependencies:JSON.parse(r.dependencies),attempt:r.attempt_id?{id:r.attempt_id,runnerTaskId:r.runner_task_id}:null,acceptance:payload.acceptance,...(payload.expertId?{expertId:payload.expertId,expertVersion:payload.expertVersion,qualityGate:"not-attested"}:{}),...(data.includePrompts?{prompt:payload.prompt}:{})});
  }
  const memory=data.includeMemory?await readProjectMemory(ctx,owner,project):null;
  const native=data.nativeContext??null;

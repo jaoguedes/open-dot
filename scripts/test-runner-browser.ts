@@ -57,6 +57,7 @@ try{
   await panel.getByLabel('Título do plano',{exact:true}).fill('Fixture browser plan');
   await panel.getByLabel('Título da tarefa 1').fill('First fixture');
   await panel.getByLabel('Prompt da tarefa 1').fill('Create a harmless fixture document.');
+  await panel.getByLabel('Perfil de qualidade da tarefa 1').selectOption('qa-sdet');
   await panel.getByRole('button',{name:'Adicionar fase'}).click();
   await panel.getByLabel('Título da tarefa 2').fill('Second fixture');
   await panel.getByLabel('Prompt da tarefa 2').fill('Create a separate harmless document.');
@@ -70,7 +71,8 @@ try{
   await panel.getByRole('button',{name:'Retomar sequência'}).click();
   await panel.getByRole('heading',{name:'Fixture browser plan · Ativo',exact:true}).waitFor();
   const task=(await (await context.request.post(`${origin}/api/runner/device/claim`,{headers,data:{}})).json()).task;assert.ok(task);
-  assert.equal(task.prompt,'Create a harmless fixture document.');
+  assert.ok(task.prompt.includes('Create a harmless fixture document.'));assert.ok(task.prompt.includes('"expertId":"qa-sdet"'));
+  await panel.getByText(/perfil qa-sdet, qualidade não atestada/).waitFor();
   const event=await context.request.post(`${origin}/api/runner/device/tasks/${task.id}/event`,{headers,data:{seq:1,kind:'uncertain',text:'Fixture interruption; no model or native write performed.'}});assert.equal(event.status(),200);
   await panel.getByRole('heading',{name:/Fixture browser plan.*Efeitos incertos/}).waitFor();
   await page.reload();

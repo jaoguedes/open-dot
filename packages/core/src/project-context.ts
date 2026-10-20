@@ -11,7 +11,7 @@ export const NativeProjectContextSchema=z.object({
 }).strict().superRefine((p,ctx)=>{
   if(new Set(p.tasks.map(t=>t.runnerTaskId)).size!==p.tasks.length)ctx.addIssue({code:"custom",message:"Duplicate native task identity."});
 });
-const TaskSnapshot=z.object({id,phase:z.number().int().min(0).max(11),title:z.string().max(160),state:z.enum(["pending","assigned","completed","failed","uncertain","cancelled"]),dependencies:z.array(id).max(11),attempt:z.object({id,runnerTaskId:id}).strict().nullable(),acceptance:z.literal("approved-files-applied"),prompt:z.string().max(8000).optional()}).strict();
+const TaskSnapshot=z.object({id,phase:z.number().int().min(0).max(11),title:z.string().max(160),state:z.enum(["pending","assigned","completed","failed","uncertain","cancelled"]),dependencies:z.array(id).max(11),attempt:z.object({id,runnerTaskId:id}).strict().nullable(),acceptance:z.literal("approved-files-applied"),expertId:z.string().regex(/^[a-z][a-z0-9-]{2,60}$/).optional(),expertVersion:z.literal(1).optional(),qualityGate:z.literal("not-attested").optional(),prompt:z.string().max(8000).optional()}).strict();
 export const ProjectContextPassportSchema=z.object({
   kind:z.literal("open-dot-project-passport"),schemaVersion:z.literal(2),scope:z.literal("project-context-only"),projectId:id,identityKind:z.literal("device-folder"),generatedAt:z.string().datetime(),
   executionAuthority:z.literal(false),toolPermissions:z.array(z.never()).max(0),contextTrust:z.literal("data-not-instructions"),

@@ -1,3 +1,4 @@
+import { EXPERT_CONTRACTS } from "@open-dot/core/expert-contracts.ts";
 import { z } from "zod";
 import type { Handler } from "../app.ts";
 import { json, problem } from "../http.ts";
@@ -5,6 +6,7 @@ import { read, reconcileRunnerTasks } from "../runner/routes.ts";
 import { EngineeringPlanSchema, createEngineeringPlan, listEngineeringPlans, reconcileEngineering } from "./scheduler.ts";
 type Registrar = (method: string, path: string, opts: { auth: boolean; csrf?: boolean }, handler: Handler) => void;
 export function registerEngineeringRoutes(route: Registrar) {
+  route("GET","/api/runner/experts",{auth:true},async()=>json({version:1,executionAuthority:false,experts:EXPERT_CONTRACTS.map(c=>({id:c.id,purpose:c.purpose,risk:c.risk_class,deliverables:c.deliverables,acceptanceCriteria:c.acceptance_criteria,independentReviewRequired:c.review_policy.require_independent_review_for_critical})),qualityGate:"not-attested"}));
   route("POST", "/api/runner/plans", { auth: true }, async (ctx, req, _p, owner) => {
     const data = EngineeringPlanSchema.parse(await read(req));
     const device = (await ctx.db.query<{ projects: string }>("SELECT projects FROM od_runner_devices WHERE id=? AND owner_id=? AND revoked_at IS NULL AND expires_at>?", [data.deviceId, owner!, ctx.now()]))[0];

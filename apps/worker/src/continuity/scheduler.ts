@@ -1,3 +1,4 @@
+import { EXPERT_CONTRACTS, composeExpertPrompt } from "@open-dot/core/expert-contracts.ts";
 import { syncOneEngineeringMemory } from "./engineering-memory.ts";
 import { z } from "zod";
 import type { Ctx } from "../context.ts";
@@ -18,6 +19,7 @@ export const EngineeringPlanSchema = z.object({
     title: z.string().trim().min(1).max(160),
     prompt: z.string().trim().min(1).max(8000),
     dependencies: z.array(id).max(11),
+    expertId:z.string().refine(v=>EXPERT_CONTRACTS.some(c=>c.id===v),"Unknown expert contract.").optional(),
     acceptance: z.literal("approved-files-applied"),
   }).strict()).min(1).max(12),
   rememberResults: z.boolean().default(false),
@@ -49,7 +51,9 @@ export async function createEngineeringPlan(ctx: Ctx, owner: string, input: unkn
   if(rememberResults && !policy)throw new Error("Memory consent required.");
   const planId = crypto.randomUUID();
   const title = await seal(ctx.keys, data.title, `engineering:plan:${owner}:${planId}`);
-  const payloads = await Promise.all(data.tasks.map(t => seal(ctx.keys, JSON.stringify({ title: t.title, prompt: t.prompt, acceptance: t.acceptance }), `engineering:task:${owner}:${t.id}`)));
+  const compiled=data.tasks.map(t=>({...t,prompt:t.expertId?composeExpertPrompt(t.prompt,t.expertId):t.prompt}));
+  if(compiled.reduce((n,t)=>n+new TextEncoder().encode(t.prompt).length,0)>24000)throw new Error("Compiled plan prompt budget exceeded.");
+  const payloads = await Promise.all(compiled.map(t => seal(ctx.keys, JSON.stringify({ title: t.title, prompt: t.prompt, acceptance: t.acceptance,...(t.expertId?{expertId:t.expertId,expertVersion:1}: {}) }), `engineering:task:${owner}:${t.id}`)));
   const result = await ctx.db.batch([
     { sql: `INSERT INTO od_engineering_plans(id,owner_id,device_id,project_id,mechanism,request_key,definition_digest,title_enc,state,created_at,updated_at,memory_policy_revision)
       SELECT ?,?,?,?,?,?,?,?,'active',?,?,? WHERE EXISTS(SELECT 1 FROM od_runner_devices WHERE id=? AND owner_id=? AND revoked_at IS NULL AND expires_at>?)
@@ -126,6 +130,6 @@ export async function listEngineeringPlans(ctx: Ctx, owner: string) {
     tasks: await Promise.all((await ctx.db.query<{ id: string; phase: number; state: string; payload_enc: string; attemptId: string | null; runnerTaskId: string | null; memory_sync_state:string; memory_recorded_revision:number|null }>(
       "SELECT t.*,a.id AS attemptId,a.runner_task_id AS runnerTaskId FROM od_engineering_tasks t LEFT JOIN od_engineering_attempts a ON a.task_id=t.id WHERE t.plan_id=? ORDER BY t.position", [p.id],
     )).map(async t => ({ id: t.id, phase: t.phase, state: t.state, attemptId: t.attemptId, runnerTaskId: t.runnerTaskId, memoryState:p.memory_policy_revision!==null?t.memory_sync_state:"not_requested", memoryRevision:t.memory_recorded_revision,
-      title: JSON.parse(await open(ctx.keys, t.payload_enc, `engineering:task:${owner}:${t.id}`)).title }))),
+      ...await (async()=>{const payload=JSON.parse(await open(ctx.keys,t.payload_enc,`engineering:task:${owner}:${t.id}`));return {title:payload.title,...(payload.expertId?{expertId:payload.expertId,expertVersion:payload.expertVersion,qualityGate:"not-attested"}:{})};})() }))),
   })));
 }

@@ -197,3 +197,25 @@ test("engineering memory: disabled by default and task UUID aliases cannot creat
     assert.equal(EngineeringPlanSchema.safeParse({...s.plan,tasks:[s.plan.tasks[0],{...s.plan.tasks[0],id:s.plan.tasks[0]!.id.toUpperCase()}]}).success,false);
   }finally{s.ctx.db.raw.close();}
 });
+
+test('expert contract: persisted task reaches Runner claim with bounded quality context, not new permissions',async()=>{
+ const s=await setup();try{
+  const plan={...s.plan,tasks:[{...s.plan.tasks[0]!,expertId:'application-security'}]};
+  assert.equal((await s.web.call('POST','/api/runner/plans',plan)).status,201);
+  const dispatched=(await claim(s)).json.task;assert.ok(dispatched.prompt.includes('"expertId":"application-security"'));
+  assert.ok(dispatched.prompt.includes('"executionAuthority":false'));assert.ok(dispatched.prompt.includes('"projectCommands":false'));
+  await completeFixture(s,dispatched.id);
+  const listed=(await s.web.call('GET','/api/runner/plans')).json.plans[0].tasks[0];
+  assert.equal(listed.state,'completed');
+  assert.equal(listed.expertId,'application-security');assert.equal(listed.qualityGate,'not-attested');
+  const passport=(await s.web.call('POST',`/api/projects/${s.projectId}/passport`,{consent:'review-project-context'})).json.passport;
+  assert.equal(passport.plans[0].tasks[0].expertVersion,1);assert.equal(passport.plans[0].tasks[0].qualityGate,'not-attested');
+  assert.equal((await s.web.call('GET','/api/runner/experts')).json.executionAuthority,false);
+  assert.equal((await client(s.ctx).call('GET','/api/runner/experts')).status,401);
+  const invalid={...s.plan,requestKey:crypto.randomUUID(),tasks:[{...s.plan.tasks[1]!,dependencies:[],expertId:'unrestricted-shell'}]};
+  assert.equal((await s.web.call('POST','/api/runner/plans',invalid)).status,400);
+  const tooLarge={...invalid,tasks:[{...s.plan.tasks[1]!,dependencies:[],expertId:'qa-sdet',prompt:'x'.repeat(8000)}]};
+  assert.equal((await s.web.call('POST','/api/runner/plans',tooLarge)).status,409);
+  assert.equal((await s.ctx.db.query('SELECT * FROM od_engineering_plans')).length,1);
+ }finally{s.ctx.db.raw.close();}
+});
