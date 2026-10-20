@@ -10,6 +10,7 @@ interface Driver {
   authenticated: boolean;
   executable: boolean;
   reason: string;
+  features?: {version:1;proposalGeneration:boolean;approvedHostWrites:boolean;recovery:"approved-proposal-only"|"unavailable";projectCommands:false;modelsDiscovered:false;evidence:string};
 }
 interface Device {
   id: string;
@@ -242,6 +243,7 @@ export function RunnerWorkspace({ demo }: { demo: boolean }) {
                     : "Sem diagnóstico de Runner selecionado"}
                 </p>
                 {d && <p className="tiny">{d.reason}</p>}
+                {d&&<p className="tiny">{d.features?.version===1?`${d.features.proposalGeneration?"Proposta e aplicação aprovada habilitadas após preflight local":"Somente diagnóstico; execução indisponível"}. Recuperação: ${d.features.recovery==="approved-proposal-only"?"proposta já aprovada; geração interrompida não retoma automaticamente":"indisponível"}. Comandos de projeto desabilitados; modelos não descobertos.`:"Runner sem descoberta detalhada de capacidades; atualizar para diagnóstico por recurso."}</p>}
               </article>
             );
           })}

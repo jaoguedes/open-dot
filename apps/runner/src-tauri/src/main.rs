@@ -277,6 +277,7 @@ fn main() {
                                 Err(reason)=>{codex.executable=false;codex.reason=reason;}
                             }
                         }
+                        for driver in &mut detected {driver.features=drivers::features(driver.id,driver.installed&&driver.authenticated&&driver.executable);}
                         if let Ok(mut d)=state.drivers.lock(){*d=detected;}
 
                     for _ in 0..60 {if process::stopping(){break}std::thread::sleep(std::time::Duration::from_secs(1));}

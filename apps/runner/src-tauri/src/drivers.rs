@@ -14,6 +14,22 @@ pub struct Driver {
     pub authenticated: bool,
     pub executable: bool,
     pub reason: String,
+    pub features: Features,
+}
+#[derive(Clone,Serialize)]
+#[serde(rename_all="camelCase")]
+pub struct Features {pub version:u8,pub proposal_generation:bool,pub approved_host_writes:bool,pub recovery:&'static str,pub project_commands:bool,pub models_discovered:bool,pub evidence:&'static str}
+pub fn features(id:&str,ready:bool)->Features {
+    let enabled=id=="codex"&&ready;
+    Features{version:1,proposal_generation:enabled,approved_host_writes:enabled,recovery:if enabled{"approved-proposal-only"}else{"unavailable"},project_commands:false,models_discovered:false,evidence:if enabled{"local-preflight"}else{"diagnostic-only"}}
+}
+fn authenticated(id:&str,success:bool,text:&str)->bool {
+    if !success{return false;}
+    match id {
+        "codex"=>text.contains("Logged in using ChatGPT"),
+        "claude-code"=>serde_json::from_str::<serde_json::Value>(text).ok().and_then(|v|v["loggedIn"].as_bool()).unwrap_or(false),
+        _=>false,
+    }
 }
 pub fn resolve(name: &str) -> Option<PathBuf> {
     let mut dirs: Vec<PathBuf> = std::env::var_os("PATH")
@@ -116,18 +132,29 @@ fn probe(path: &PathBuf, args: &[&str]) -> Result<(bool, String), ()> {
 }
 pub fn detect() -> Vec<Driver> {
     [("codex","codex"),("claude-code","claude"),("cursor","agent")].into_iter().map(|(id,bin)|{
-        let Some(path)=resolve(bin) else{return Driver{id,installed:false,authenticated:false,executable:false,reason:"CLI oficial não encontrado. Instale pelo fornecedor.".into()}};
-        let authenticated=match id {
-            "codex"=>probe(&path,&["login","status"]).map(|(ok,text)|ok && text.contains("Logged in using ChatGPT")).unwrap_or(false),
-            "claude-code"=>probe(&path,&["auth","status"]).ok().and_then(|(_,text)|serde_json::from_str::<serde_json::Value>(&text).ok()).and_then(|v|v["loggedIn"].as_bool()).unwrap_or(false),
-            _=>false,
-        };
-        Driver{id,installed:true,authenticated,executable:false,reason:if !authenticated {"Autenticação não confirmada. Use o login oficial no terminal; nenhuma credencial é solicitada aqui.".into()} else if id=="codex" {"ChatGPT autenticado. Execução bloqueada: falta validar restrição de leitura por pasta e aprovações no driver.".into()}else{"Autenticado. Driver de execução ainda não validado.".into()}}
+        let Some(path)=resolve(bin) else{return Driver{id,features:features(id,false),installed:false,authenticated:false,executable:false,reason:"CLI oficial não encontrado. Instale pelo fornecedor.".into()}};
+        let args=if id=="codex"{Some(vec!["login","status"])}else if id=="claude-code"{Some(vec!["auth","status"])}else{None};
+        let authenticated=args.and_then(|args|probe(&path,&args).ok()).is_some_and(|(ok,text)|authenticated(id,ok,&text));
+        Driver{id,features:features(id,false),installed:true,authenticated,executable:false,reason:if !authenticated {"Autenticação não confirmada. Use o login oficial no terminal; nenhuma credencial é solicitada aqui.".into()} else if id=="codex" {"ChatGPT autenticado. Execução bloqueada: falta validar restrição de leitura por pasta e aprovações no driver.".into()}else{"Autenticado. Driver de execução ainda não validado.".into()}}
     }).collect()
 }
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn diagnostic_is_not_execution_or_model_discovery() {
+        assert!(!authenticated("claude-code",false,r#"{"loggedIn":true}"#));
+        assert!(authenticated("claude-code",true,r#"{"loggedIn":true}"#));
+        assert!(!authenticated("claude-code",true,"not-json"));
+        assert!(!authenticated("codex",false,"Logged in using ChatGPT"));
+        assert!(!authenticated("cursor",true,"authenticated"));
+        for id in ["codex","claude-code","cursor"] {
+            assert!(!features(id,false).proposal_generation);
+            assert!(!features(id,true).models_discovered);
+            assert!(!features(id,true).project_commands);
+            assert_eq!(features(id,true).proposal_generation,id=="codex");
+        }
+    }
     #[test]
     fn absent_program() {
         assert!(resolve("open-dot-nonexistent-executable-98765").is_none());

@@ -221,6 +221,12 @@ fn hello()->Value { json!({"version":2,"approval":"sha256-utf8-json-v1","capabil
 fn compatible(p:&Value)->bool {
  p["version"]==2 && p["approval"]=="sha256-utf8-json-v1" && p["schemaReady"]==true && hello()["capabilities"].as_array().unwrap().iter().all(|c|p["capabilities"].as_array().is_some_and(|v|v.contains(c)))
 }
+fn negotiated_drivers(mut drivers:Value,protocol:&Value)->Value {
+    if protocol["driverFeaturesVersion"]!=1 {
+        if let Some(list)=drivers.as_array_mut(){for driver in list {if let Some(row)=driver.as_object_mut(){row.remove("features");}}}
+    }
+    drivers
+}
 pub fn heartbeat(c: &SharedChannel, projects: Value, drivers: Value) {
     let retry=c.lock().ok().and_then(|g|if g.revoking {g.revocation_dir.clone()}else{None});
     if let Some(dir)=retry {let _=disconnect(c,&dir);return;}
@@ -239,7 +245,7 @@ pub fn heartbeat(c: &SharedChannel, projects: Value, drivers: Value) {
         if !compatible(&protocol){return Err("Servidor incompatível ou migração pendente.".into());}
         h.post(format!("{}/api/runner/device/heartbeat", link.origin))
             .bearer_auth(token)
-            .json(&json!({"projects":projects,"drivers":drivers,"protocol":hello()}))
+            .json(&json!({"projects":projects,"drivers":negotiated_drivers(drivers,&protocol),"protocol":hello()}))
             .send()
             .map_err(|_| "Conexão interrompida.".into())
     });
@@ -289,6 +295,13 @@ pub fn heartbeat(c: &SharedChannel, projects: Value, drivers: Value) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn driver_features_are_only_sent_to_opted_in_servers() {
+        let driver=json!([{"id":"codex","features":{"version":1}}]);
+        assert!(negotiated_drivers(driver.clone(),&json!({}))[0].get("features").is_none());
+        assert!(negotiated_drivers(driver.clone(),&json!({"driverFeaturesVersion":2}))[0].get("features").is_none());
+        assert_eq!(negotiated_drivers(driver.clone(),&json!({"driverFeaturesVersion":1})),driver);
+    }
     #[test]
     fn protocol_must_match_and_migrations_be_ready() {
         let mut p=hello(); p["schemaReady"]=json!(true);assert!(compatible(&p));

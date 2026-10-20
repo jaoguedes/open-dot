@@ -338,3 +338,22 @@ test('P1-6: proposta concorrente não recebe accepted sem persistir a aprovaçã
   assert.equal((await s.web.call('GET','/api/runner/tasks')).json.tasks[0].state,'running');
  }finally{s.ctx.db.raw.close();}
 });
+
+test('capability registry: optional discovery preserves old clients and rejects contradictory execution claims',async()=>{
+ const s=await setup();try{
+  assert.equal((await s.native.call('GET','/api/runner/protocol')).json.driverFeaturesVersion,1);
+  assert.equal((await s.native.call('POST','/api/runner/device/heartbeat',s.beat,s.headers)).status,200);
+  const features={version:1,proposalGeneration:true,approvedHostWrites:true,recovery:'approved-proposal-only',projectCommands:false,modelsDiscovered:false,evidence:'local-preflight'};
+  const beat={...s.beat,drivers:[{...s.beat.drivers[0],features}]};
+  assert.equal((await s.native.call('POST','/api/runner/device/heartbeat',beat,s.headers)).status,200);
+  const listed=(await s.web.call('GET','/api/runner/devices')).json.devices[0];assert.deepEqual(listed.drivers[0].features,features);
+  for(const bad of [
+   {...beat.drivers[0],authenticated:false},
+   {...beat.drivers[0],id:'claude-code'},
+   {...beat.drivers[0],features:{...features,projectCommands:true}},
+   {...beat.drivers[0],features:{...features,modelsDiscovered:true}},
+   {...beat.drivers[0],features:{...features,version:2}},
+  ])assert.equal((await s.native.call('POST','/api/runner/device/heartbeat',{...s.beat,drivers:[bad]},s.headers)).status,400);
+  assert.deepEqual((await s.web.call('GET','/api/runner/devices')).json.devices[0].drivers[0].features,features);
+ }finally{s.ctx.db.raw.close();}
+});

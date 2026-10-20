@@ -18,7 +18,12 @@ const label = z
   .max(80)
   .regex(/^[\p{L}\p{N} ._()-]+$/u);
 const project = z.object({ id, label }).strict();
-const driver = z.object({ id: z.enum(["codex", "claude-code", "cursor"]), installed: z.boolean(), authenticated: z.boolean(), executable: z.boolean(), reason: z.string().max(200) }).strict();
+const features=z.object({version:z.literal(1),proposalGeneration:z.boolean(),approvedHostWrites:z.boolean(),recovery:z.enum(["approved-proposal-only","unavailable"]),projectCommands:z.literal(false),modelsDiscovered:z.literal(false),evidence:z.enum(["local-preflight","diagnostic-only"])}).strict();
+const driver = z.object({ id: z.enum(["codex", "claude-code", "cursor"]), installed: z.boolean(), authenticated: z.boolean(), executable: z.boolean(), reason: z.string().max(200),features:features.optional() }).strict().superRefine((d,ctx)=>{
+ const f=d.features;if(!f)return;
+ const enabled=d.id==="codex"&&d.installed&&d.authenticated&&d.executable;
+ if(f.proposalGeneration!==enabled||f.approvedHostWrites!==enabled||f.recovery!==(enabled?"approved-proposal-only":"unavailable")||f.evidence!==(enabled?"local-preflight":"diagnostic-only"))ctx.addIssue({code:"custom",message:"Driver feature claims contradict the validated host profile."});
+});
 const terminal = new Set(["completed", "failed", "cancelled", "uncertain"]);
 interface Device {
   id: string;
@@ -106,7 +111,7 @@ async function revokeDevice(ctx: Ctx, deviceId: string, owner: string): Promise<
 export function registerRunnerRoutes(route: Registrar) {
   route("GET","/api/runner/protocol",{auth:false,csrf:false},async(ctx)=>{
     const schema=await currentSchema(ctx.db);
-    return json({version:RUNNER_PROTOCOL,approval:APPROVAL_CONTRACT,capabilities:REQUIRED_CAPABILITIES,requiredSchema:REQUIRED_SCHEMA,schemaReady:schemaCompatible(schema.version,REQUIRED_SCHEMA)});
+    return json({version:RUNNER_PROTOCOL,approval:APPROVAL_CONTRACT,capabilities:REQUIRED_CAPABILITIES,driverFeaturesVersion:1,requiredSchema:REQUIRED_SCHEMA,schemaReady:schemaCompatible(schema.version,REQUIRED_SCHEMA)});
   });
   route("POST", "/api/runner/pairings", { auth: false, csrf: false }, async (ctx, req) => {
     const data = z

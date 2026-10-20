@@ -47,10 +47,11 @@ try{
  if(plansOnly){
   const owner=(await ctx.db.query<{id:string}>('SELECT id FROM od_owners'))[0]!.id;
   const token=randomToken(), project=crypto.randomUUID(), device=crypto.randomUUID();
-  await ctx.db.run('INSERT INTO od_runner_devices(id,owner_id,name,token_hash,expires_at,seen_at,projects,capabilities,created_at,protocol_version) VALUES(?,?,?,?,?,?,?,?,?,2)',[device,owner,'Plan device fixture',await sha256Hex(token),Date.now()+600000,Date.now(),JSON.stringify([{id:project,label:'Plan fixture project'}]),JSON.stringify([{id:'codex',installed:true,authenticated:true,executable:true,reason:'Fixture executor only; no model'}]),Date.now()]);
+  await ctx.db.run('INSERT INTO od_runner_devices(id,owner_id,name,token_hash,expires_at,seen_at,projects,capabilities,created_at,protocol_version) VALUES(?,?,?,?,?,?,?,?,?,2)',[device,owner,'Plan device fixture',await sha256Hex(token),Date.now()+600000,Date.now(),JSON.stringify([{id:project,label:'Plan fixture project'}]),JSON.stringify([{id:'codex',installed:true,authenticated:true,executable:true,reason:'Fixture executor only; no model',features:{version:1,proposalGeneration:true,approvedHostWrites:true,recovery:'approved-proposal-only',projectCommands:false,modelsDiscovered:false,evidence:'local-preflight'}}]),Date.now()]);
   await page.goto(`${origin}/workspace`);
   await page.getByRole('combobox',{name:/Computador/}).selectOption({label:'Plan device fixture'});
   await page.getByRole('combobox',{name:/Projeto autorizado/}).selectOption({label:'Plan fixture project'});
+  await page.getByText(/Proposta e aplicação aprovada habilitadas após preflight local/).waitFor();
   const panel=page.getByRole('region',{name:'Planos sequenciais'});
   await panel.getByText('Criar plano de tarefas isoladas',{exact:true}).click();
   await panel.getByLabel('Título do plano',{exact:true}).fill('Fixture browser plan');
