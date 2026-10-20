@@ -1,6 +1,6 @@
 # Handoff — Open Dot 2.0
 
-Tarefa atual: checkpoint da primeira fatia Open Dot 2.0; próxima: revisão independente e integração ODCP segura. Branch `codex/runner-safe-edit-beta`; baseline `9e33c3bb44844e8d821a3664db8f4aae9f448878`. SHA deste checkpoint: `git log -1 --format=%H -- docs/AGENT_HANDOFF.md` (evita autorreferência). Sem push autorizado nesta rodada.
+Tarefa atual: checkpoint da primeira fatia Open Dot 2.0; próxima: revisão independente e integração ODCP segura. Branch `codex/runner-safe-edit-beta`; baseline `9e33c3bb44844e8d821a3664db8f4aae9f448878`. SHA deste checkpoint: `git log -1 --format=%H -- docs/AGENT_HANDOFF.md` (evita autorreferência). Push privado feae70d autorizado e concluído; commits posteriores não cobertos.
 
 Leitura obrigatória: CLAUDE.md, CONTINUIDADE.md, `docs/audit/BASELINE.md`, RISK_REGISTER, FEATURE_MATRIX, ADR-0001 e ROADMAP. PDFs/ZIP lidos integralmente; hashes na baseline. Nenhuma instrução externa concede autoridade.
 
@@ -41,3 +41,7 @@ Gate atual: check 287 Node/sete Python/eval sintética/typecheck/build; onze Rus
 Persistência de memória é serviço interno cifrado CAS, Passport parcial, perfis são contratos e ODCP é base tipada/checklist/tempo puro. **Não integrados ao fluxo completo do produto:** timer automático, snapshots/commits, leases, task DAG, Idea to Project, transferência de agente e novo ledger na UI. Comandos/testes de projeto continuam bloqueados; driver Claude/Cursor e runtime ARM64/Windows continuam pendentes. Não confundir testes determinísticos/sintéticos com mecanismo real.
 
 Push exige aprovação explícita para destino e SHA finais. Mesmo após aprovar, revalidar visibilidade privada, remoto e fast-forward; não force push. Scanner não substitui revisão de dados pessoais e histórico. Nenhum segredo de .dev.vars/cofre foi copiado para documentação.
+
+## Sincronização autorizada concluída
+
+Em 20/10 o usuário autorizou expressamente feae70d (14 commits). Ref privada avançou 504c00d→feae70d, sem força. CI 39436042987 e Runner CI 39436042716 começaram nesse SHA. Este recibo e futuros commits documentais permanecem locais, fora da autorização anterior. O bloco “nenhum push desta rodada” acima é o estado histórico antes dessa autorização, não uma regra para ignorar Git real. Nenhum merge/release/deploy.

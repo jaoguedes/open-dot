@@ -1,3 +1,7 @@
+# Sincronização privada autorizada — 20/10/2026
+
+Push exato de `feae70d` (14 commits) autorizado pelo usuário e concluído, sem força. CI 39436042987 e Runner CI 39436042716 em andamento nesse SHA. Nenhum merge, release, deploy ou alteração de visibilidade/cobrança. Recibo documental posterior fica local e não recebe autorização implícita de push. [Detalhes](audit/SYNC_REVIEW.md). O estado “sem push” nos blocos anteriores descreve a preparação antes da autorização.
+
 # Open Dot 2.0 — checkpoint local de 20/10/2026
 
 FASE ZERO e primeira fatia implementadas sobre `9e33c3b`, sem reiniciar ou redesenhar. Ler [handoff vigente](AGENT_HANDOFF.md) e [relatório detalhado para auditoria](audit/IMPLEMENTATION_REPORT.md). Estado histórico abaixo preservado.
