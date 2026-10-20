@@ -204,6 +204,13 @@ fn target(root: &Path, path: &str) -> Result<PathBuf, String> {
     }
     Ok(root.join(relative))
 }
+fn bounded_file(path:&Path)->Result<Option<Vec<u8>>,String> {
+    use std::io::Read;
+    let file=match fs::File::open(path){Ok(f)=>f,Err(e) if e.kind()==std::io::ErrorKind::NotFound=>return Ok(None),Err(_)=>return Err("Arquivo de revisão indisponível.".into())};
+    let mut bytes=Vec::new();file.take(8001).read_to_end(&mut bytes).map_err(|_|"Arquivo ilegível.")?;
+    if bytes.len()>8000{return Err("Arquivo excedeu limite de revisão de 8 KB.".into());}
+    Ok(Some(bytes))
+}
 pub fn prepare(root: &Path, mut proposal: Proposal) -> Result<Proposal, String> {
     if proposal.files.is_empty() || proposal.files.len() > 8 || proposal.summary.len() > 1200 {
         return Err("A proposta excedeu os limites de edição.".into());
@@ -221,15 +228,14 @@ pub fn prepare(root: &Path, mut proposal: Proposal) -> Result<Proposal, String> 
         }
         let path = target(root, &edit.path)?;
         edit.before_content=None;
-        edit.before_hash = match fs::read(&path) {
-            Ok(b) if b.len() <= 8000 => {
+        edit.before_hash = match bounded_file(&path)? {
+            Some(b) => {
                 total_before+=b.len();
                 if total_before>8000{return Err("Conteúdo anterior excedeu o limite de revisão.".into());}
                 edit.before_content=Some(String::from_utf8(b.clone()).map_err(|_|"Arquivo binário não pode ser aprovado neste modo.")?);
                 Some(hash(&b))
             },
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
-            _ => return Err("Não consegui verificar a versão inicial do arquivo.".into()),
+            None => None,
         };
     }
     Ok(proposal)
@@ -237,19 +243,21 @@ pub fn prepare(root: &Path, mut proposal: Proposal) -> Result<Proposal, String> 
 pub fn apply(root: &Path, proposal: &Proposal) -> Result<(), String> {
     // Antes de qualquer escrita, validar todos os arquivos e a versão apresentada na aprovação.
     let root = root.canonicalize().map_err(|_| "Worktree indisponível.")?;
-    let validated = prepare(&root, proposal.clone())?;
-    for (original, current) in proposal.files.iter().zip(&validated.files) {
-        if original.before_hash != current.before_hash
-            && current.before_hash != Some(hash(original.content.as_bytes()))
-        {
-            return Err("O arquivo mudou após a proposta. Gere uma nova aprovação.".into());
-        }
+    if proposal.files.is_empty() || proposal.files.len()>8 || proposal.summary.len()>1200 {return Err("Proposta fora dos limites.".into());}
+    let mut seen=std::collections::HashSet::new();let mut after_bytes=0;let mut before_bytes=0;
+    for edit in &proposal.files {
+        after_bytes+=edit.content.len();before_bytes+=edit.before_content.as_ref().map_or(0,|v|v.len());
+        if !seen.insert(edit.path.to_lowercase()) || edit.content.contains('\0') || after_bytes>8000 || before_bytes>8000 {return Err("Proposta fora dos limites de revisão.".into());}
+        if edit.before_content.as_ref().map(|v|hash(v.as_bytes()))!=edit.before_hash {return Err("Conteúdo anterior não corresponde à aprovação.".into());}
+        let current=bounded_file(&target(&root,&edit.path)?)?;
+        let current_hash=current.as_ref().map(|b|hash(b));
+        if current_hash!=edit.before_hash && current_hash!=Some(hash(edit.content.as_bytes())) {return Err("O arquivo mudou após a proposta. Gere uma nova aprovação.".into());}
     }
     for edit in &proposal.files {
         let path = target(&root, &edit.path)?;
-        if fs::read(&path).ok().as_deref() == Some(edit.content.as_bytes()) {
-            continue;
-        }
+        let current=bounded_file(&path)?;
+        if current.as_deref()==Some(edit.content.as_bytes()){continue;}
+        if current.as_ref().map(|b|hash(b))!=edit.before_hash{return Err("Arquivo alterado durante a aplicação; preserve o worktree para revisão.".into());}
         let parent = path.parent().ok_or("Destino inválido.")?;
         fs::create_dir_all(parent).map_err(|_| "Não consegui preparar o destino aprovado.")?;
         if !parent
@@ -344,6 +352,18 @@ mod tests {
         assert_eq!(fs::read_to_string(root.join("valuable.txt")).unwrap(),"preserve owned uncommitted change");assert!(git(&project,&["status","--porcelain"],16384).unwrap().is_empty());
         // Só remove a fixture inteira criada pelo teste; nunca usa cleanup de worktree do produto.
         fs::remove_dir_all(dir).unwrap();
+    }
+    #[test]
+    fn recovery_accepts_mixed_before_and_after_at_review_budget() {
+        let root=std::env::temp_dir().join(format!("od-mixed-budget-{}",rand::random::<u64>()));fs::create_dir_all(&root).unwrap();
+        fs::write(root.join("second.txt"),"b".repeat(8000)).unwrap();
+        let proposal=prepare(&root,Proposal{summary:"budget boundary".into(),files:vec![
+            Edit{path:"first.txt".into(),content:"a".repeat(8000),before_hash:None,before_content:None},
+            Edit{path:"second.txt".into(),content:String::new(),before_hash:None,before_content:None},
+        ]}).unwrap();
+        fs::write(root.join("first.txt"),"a".repeat(8000)).unwrap();
+        apply(&root,&proposal).unwrap();assert_eq!(fs::read(root.join("second.txt")).unwrap(),b"");
+        fs::remove_dir_all(root).unwrap();
     }
     #[test]
     fn paths() {
