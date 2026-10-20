@@ -29,3 +29,5 @@ OD2-C1 (parcial): schema ODCP versionado, checklist compara SHA/snapshot observa
 OD2-R4: orçamento de progresso limitado no host/servidor para preservar recibos finais. Onze testes API Runner e onze Rust PASS; kill/restart real repetido PASS após mudança, sem modelo. Check completo PASS com 286 Node/sete Python, lint sem erros. Dados legados já saturados em 500 eventos não são reparados silenciosamente; exigem inspeção/reconciliação específica.
 
 OD2-S1: removido caminho absoluto de máquina da saída do teste Codex. Revisão de sincronização até `8da1865`: 11 commits/54 versões de arquivos, zero padrões de segredo, zero novos caminhos de home ou e-mails fora de domínios fictícios no delta. Autoria Git e nomes/referências históricas preservados; não equivale a DLP ou autorização de push.
+
+OD2-M2: teste adicional em SQLite de arquivo real PASS: salvar ledger, fechar conexão, reabrir, recuperar conteúdo cifrado e comprovar ausência do resumo em texto puro no arquivo. Fixture gerada em diretório privado é removida ao terminar. Não prova perda de energia nem Turso remoto.
