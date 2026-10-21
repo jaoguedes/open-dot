@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { gmailWebHref } from "@open-dot/connectors/gmail.ts";
 
 /** O app do Gmail abre a caixa de entrada, não a mensagem. Sem timer e sem detecção de instalação. */

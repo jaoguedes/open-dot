@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import type { Accessory, AgentVisual } from "@open-dot/core";
 import { DotView, type DotViewProps } from "./DotView.tsx";
 import { showSentinelaRing } from "./ring.ts";

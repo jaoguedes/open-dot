@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Publica o Dot 3D validado (assets/dot) em <dist>/dot: só o manifesto e os GLB que ele cita.
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";

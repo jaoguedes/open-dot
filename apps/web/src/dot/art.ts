@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import { round2, type EyeShape } from "@open-dot/core/dot/index.ts";
 
 const INK = "#120F1E";

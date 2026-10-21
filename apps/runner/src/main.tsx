@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { Mechanisms } from "../../web/src/components/Mechanisms.tsx";
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";

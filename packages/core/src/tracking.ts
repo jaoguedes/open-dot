@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Detecção de códigos de rastreio, sem IA e sem rede.
  *

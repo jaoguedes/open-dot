@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { z } from "zod";
 import { NativeProjectContextSchema, serializeProjectContext } from "@open-dot/core/project-context.ts";
 import type { Ctx } from "../context.ts";

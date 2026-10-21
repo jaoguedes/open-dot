@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useMemo, useRef, useState } from "react";
 import { AGENTS, type AgentId } from "@open-dot/core";
 import { ApiError } from "../api.ts";

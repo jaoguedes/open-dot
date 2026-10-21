@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useRef } from "react";
 import type { buildEvents } from "../events.ts";
 import { fmtWhen } from "../format.ts";

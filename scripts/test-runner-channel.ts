@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Teste de integração: API/SQLite reais e cofre nativo. Sem contas ou bancos de produção. */
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";

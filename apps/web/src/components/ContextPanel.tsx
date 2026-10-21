@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useRef } from "react";
 import { useDialog } from "./useDialog.ts";
 import { islandReason } from "../presence.ts";

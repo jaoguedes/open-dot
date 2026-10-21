@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { checkTarget, type Sample } from "@open-dot/core";
 
 /**

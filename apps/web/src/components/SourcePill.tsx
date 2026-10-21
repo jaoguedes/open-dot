@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { toVisual, type AgentId } from "@open-dot/core";
 import { AgentDot } from "@open-dot/mascot";
 import { useApp } from "../store.tsx";

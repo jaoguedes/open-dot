@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Inspeção SOMENTE LEITURA de um banco Turso: lista tabelas, colunas e contagem de linhas.
  * Não altera nada. Use para conferir o banco existente antes de decidir onde o Open Dot mora.

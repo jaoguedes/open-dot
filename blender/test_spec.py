@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 """Testes do que roda sem Blender: conversão de cor e validador de GLB (com GLB sintético)."""
 import json
 import os

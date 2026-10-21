@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { NEWS_FEEDS, dedupeNews, feedStartIndex, groupPolitics, normalizeTitle, parseFeedXml, randomId, worldToday, type NewsItem } from "@open-dot/core";
 import { BudgetExhausted, type Ctx } from "../context.ts";
 import type { Db } from "../db/types.ts";

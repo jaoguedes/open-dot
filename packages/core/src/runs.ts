@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { TERMINAL_RUN_STATES, type RunState } from "./types.ts";
 
 /**

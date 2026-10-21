@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import type { AgentVisual, SemanticState } from "@open-dot/core";
 
 /** Contrato publicado por `blender/validate_glb.py` em `assets/dot/manifest.json`. */

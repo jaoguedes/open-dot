@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { SNAPSHOT_PART_LABEL } from "./refresh-policy.ts";
 import type { AgentId, AgentVisual, ProviderCard } from "@open-dot/core";
 

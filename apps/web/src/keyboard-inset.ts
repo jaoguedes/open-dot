@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Altura do teclado virtual (iOS Safari): o teclado encolhe só o visualViewport, e a caixa
  * de perguntas fixa ficaria atrás dele. Publica --kb no <html>; a caixa sobe essa altura.

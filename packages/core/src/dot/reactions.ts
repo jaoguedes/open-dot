@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import { hexRgb } from "./physics.ts";
 import type { EngineMut, ReactionName } from "./types.ts";
 

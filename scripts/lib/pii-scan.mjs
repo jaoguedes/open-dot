@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Varredura de dados pessoais e identificadores de instância (complementa secret-scan.mjs).
  * Nunca imprime o valor: só arquivo, linha e regra. Valor fictício proposital pode ser

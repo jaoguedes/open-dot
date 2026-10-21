@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DotEngine, type EyeShape } from "@open-dot/core/dot/index.ts";

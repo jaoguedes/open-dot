@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 /** Geometria do Dot (fonte: docs/referencias/dot_motor.html). Sem DOM. */
 
 export const CX = 130;

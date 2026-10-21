@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Apenas metadados locais: sem prompt, conteúdo de arquivo, token ou resposta do modelo.
 use serde::{Deserialize, Serialize};
 use std::{fs, io::Read, path::Path};

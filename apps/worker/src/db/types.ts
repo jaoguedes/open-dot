@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 export type SqlValue = string | number | null;
 
 export interface Stmt {

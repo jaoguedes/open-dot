@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { Mechanisms } from "../components/Mechanisms.tsx";
 import { AgentDot } from "@open-dot/mascot";
 import { useApp } from "../store.tsx";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { ownerTimeZone } from "../format.ts";
 import { useEffect, useRef } from "react";
 import { explainError, sanitizeDetail, type AgentId } from "@open-dot/core";

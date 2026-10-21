@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { initialAbsorption, reduceAbsorption, type AbsorptionEvent } from "../src/absorption.ts";

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 """
 Lançador para rodar o pipeline A PARTIR DO BLENDER ABERTO (quando não houver terminal disponível).
 No Blender: aba Scripting → console Python → cole e Enter:

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useState } from "react";
 /** Parent keys this component by project, so consent and imported context never leak across projects. */
 export function ProjectContext({projectId,demo}:{projectId:string;demo:boolean}){

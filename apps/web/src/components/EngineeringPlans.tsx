@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useRef, useState } from "react";
 interface Plan { id: string; title: string; projectId: string; state: string; revision: number; tasks: Array<{ id: string; title: string; phase: number; state: string; runnerTaskId: string | null; expertId?:string;qualityGate?:string;memoryState?:string; memoryRevision?:number|null }> }
 interface Expert {id:string;purpose:string;acceptanceCriteria:string[];independentReviewRequired:boolean}

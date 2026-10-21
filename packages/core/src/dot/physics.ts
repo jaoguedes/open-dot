@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 /** Molas subamortecidas e suavização independentes da taxa de quadros. */
 
 export function clamp(v: number, a: number, b: number): number {

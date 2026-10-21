@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Reserva de orçamento de IA. A reserva acontece ANTES da chamada e é atômica:
  * chamadas concorrentes no último saldo não ultrapassam o teto.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // `wrangler deploy` com a origem e o nome da SUA instância (de .deploy.local.json), nunca do repositório.
 import { spawnSync } from "node:child_process";
 import { deployTarget, wranglerVarArgs } from "./lib/deploy-target.mjs";

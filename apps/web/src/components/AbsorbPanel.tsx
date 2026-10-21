@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useReducer, useRef, useState } from "react";
 import { initialAbsorption, reduceAbsorption, toVisual, type SemanticState } from "@open-dot/core";
 import { useApp } from "../store.tsx";

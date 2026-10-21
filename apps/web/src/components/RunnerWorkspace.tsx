@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { ProjectContext } from "./ProjectContext.tsx";
 import { EngineeringPlans } from "./EngineeringPlans.tsx";
 import { ProjectMemory } from "./ProjectMemory.tsx";

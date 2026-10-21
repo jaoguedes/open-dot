@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Varredura de segredos nos arquivos versionados (F1). Regex própria, sem dependência.
  * Procura formatos de chave conhecidos e atribuições a nomes de segredo com valor real.

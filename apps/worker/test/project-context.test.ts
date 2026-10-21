@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import type {SqlValue} from '../src/db/types.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';

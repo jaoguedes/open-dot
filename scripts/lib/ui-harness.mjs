@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Harness dos testes de navegador da rodada 3: serve um dist, simula a API e roda cenários
 // em 390×844 com toque. Usado por scripts/ui-fase-a.mjs e scripts/ui-fase-d.mjs.
 import { createServer } from "node:http";

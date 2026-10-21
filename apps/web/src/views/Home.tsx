@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { AGENTS, TOOL_KIND, toVisual, type AgentId } from "@open-dot/core";
 import { lazy, Suspense, useRef, useState } from "react";
 

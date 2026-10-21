@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import type { FeedEntry } from "./api.ts";
 
 export type TriageMark = "importante" | "nao_importa";

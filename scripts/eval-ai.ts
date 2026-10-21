@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Avaliação da camada de IA. Padrão: provedor falso.
  * Conta Groq real só quando o João pedir (nunca nesta sessão autônoma).

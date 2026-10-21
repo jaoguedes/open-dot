@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Agenda por horário local + fuso IANA (capítulo 05 e Anexo A).
  * Guarda horário local e fuso; converte cada slot em instante UTC na hora de rodar.

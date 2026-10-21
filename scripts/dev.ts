@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Servidor local de desenvolvimento: interface + API + agendador, num único processo Node.
  * Banco: SQLite em .data/dev.sqlite (nunca o Turso). Configuração: .dev.vars (não versionado).

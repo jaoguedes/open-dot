@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Ícones vetoriais próprios (traço 1.6). Decorativos por padrão: o botão carrega o nome acessível. */
 const P: Record<string, string> = {
   search: "M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm10 2-4.35-4.35",

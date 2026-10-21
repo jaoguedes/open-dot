@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import { useEffect, useId, useRef, useState } from "react";
 import { AGENTS, HeartEmitter, type Accessory, type AgentVisual, type EffectFrame } from "@open-dot/core";
 

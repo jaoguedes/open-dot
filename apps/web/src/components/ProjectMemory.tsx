@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useState } from "react";
 interface Entry {id:string;kind:string;provenance:string;summary:string;sourceRefs:string[];observedAt:string;commit:string|null}
 interface Passport {schemaVersion:1;scope:"memory-only";projectId:string;revision:number;memories:Entry[];links:Array<{from:string;to:string;relation:string}>}

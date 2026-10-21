@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 """
 Gera os sons do Dot (originais, sintetizados do zero: nada foi copiado de outro projeto).
 

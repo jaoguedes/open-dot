@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import type { DotStateKey, EyePair, IndKind } from "./states.ts";
 
 export type ReactionName = "oi" | "success" | "surprised" | "love" | "dizzy" | "poke" | "slap" | "absorb";

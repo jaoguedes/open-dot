@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Build de produção: interface estática (apps/web/dist) + verificação do bundle do Worker.
 // Uso: npm run build
 import { checkAppJs, initialBytes } from "./lib/bundle-budget.mjs";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Smoke da URL pública: /, /sobre e /privacidade em 1440 e 390, sem erro de console.
 //   UI_BASE=https://open-dot.<SEU-SUBDOMINIO>.workers.dev node scripts/smoke-public.mjs
 import { chromium } from "playwright";

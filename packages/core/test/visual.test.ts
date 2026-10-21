@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { VisualStateStore, STATE_COLORS, AGENT_COLORS, type VisualEvent } from "../src/visual.ts";

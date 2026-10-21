@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { readProjectMemory } from "../src/continuity/project-memory.ts";
 import { startSession } from "../src/http.ts";
 import { mkdtempSync, rmSync } from "node:fs";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { MARKETING_CAN_PUBLISH, draftPostIdeas } from "@open-dot/core";
 import { listGscSites } from "@open-dot/connectors/gsc.ts";
 import { webAnalyticsHint } from "@open-dot/connectors/vercel.ts";

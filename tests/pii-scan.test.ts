@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import assert from "node:assert/strict";
 import test from "node:test";
 import { scanPii, localTerms } from "../scripts/lib/pii-scan.mjs";

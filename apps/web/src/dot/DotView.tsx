@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import { useEffect, useId, useRef, type PointerEvent, type KeyboardEvent } from "react";
 import type { Accessory, AgentVisual, SemanticState } from "@open-dot/core";
 import { DotEngine, bodyPath, type AccessoryKind, type DotFrame, type DotStateKey, type ParticleFrame } from "@open-dot/core/dot/index.ts";

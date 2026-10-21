@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { MailSummary } from "../components/MailSummary.tsx";
 import { useRef, useState } from "react";
 import { AGENTS, agentsInPlace, approvalQueue } from "@open-dot/core";

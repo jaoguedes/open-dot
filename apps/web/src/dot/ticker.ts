@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 /**
  * Um único requestAnimationFrame para todas as instâncias do Dot.
  * Pausa com a aba oculta. Fora da tela o inscrito se marca invisível.

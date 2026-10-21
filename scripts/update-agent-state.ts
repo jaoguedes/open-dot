@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { updateAgentState } from "./lib/agent-state.ts";

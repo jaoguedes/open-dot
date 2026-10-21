@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { exportProjectContext } from "./project-context.ts";
 import { z } from "zod";
 import { ProjectPassportSchema } from "@open-dot/core/project-memory.ts";

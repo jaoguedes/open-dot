@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { explainError, toVisual, AGENTS, SEMANTIC_PRIORITY, type AgentId, type AgentVisual, type SemanticState } from "@open-dot/core";
 import type { FeedEntry, Monitor } from "./api.ts";
 

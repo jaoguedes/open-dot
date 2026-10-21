@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 export type DotStateKey = "idle" | "thinking" | "working" | "waiting" | "error" | "disconnected" | "question" | "sleep";
 
 export type EyePair = "open" | "focused" | "attentive" | "big" | "serious" | "half" | "happy" | "closed" | "squint" | "wink" | "angry" | "spiral";

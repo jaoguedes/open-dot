@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { DEFAULT_ASSETS, QUOTE_DISCLAIMER, hasTradeCapability, quoteCard, type Quote } from "@open-dot/core";
 import { BudgetExhausted, type Ctx } from "../context.ts";
 import * as repo from "../repo.ts";

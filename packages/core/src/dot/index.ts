@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 export * from "./geometry.ts";
 export { spring, smooth, lerp, easeIO, hexRgb, mulberry32 } from "./physics.ts";
 export * from "./states.ts";

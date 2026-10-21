@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { chromium } from "playwright";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";

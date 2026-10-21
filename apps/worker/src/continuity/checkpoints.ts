@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { OdcpCheckpointSchema } from "@open-dot/core/odcp.ts";
 import type { Ctx } from "../context.ts";
 import { open, seal } from "../crypto.ts";

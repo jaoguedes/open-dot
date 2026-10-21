@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Processos do host: argv estruturado, ambiente mínimo, saída e tempo limitados.
 use std::{
     io::{Read, Write},

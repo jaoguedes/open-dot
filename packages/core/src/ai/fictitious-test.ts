@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { triageByRules, type EmailMeta } from "../email.ts";
 import { PROVIDER_REGISTRY, registryAllowsPaid } from "./registry.ts";
 

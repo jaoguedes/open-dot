@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { senderDomain, sha256Hex } from "@open-dot/core";
 
 /** Hash do domínio do remetente, por dono. O domínio em claro nunca vai para o banco. */

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import type { SavedAnswer } from "../ask.ts";
 
 /** Resposta do Dot com as fontes citadas. Usada pela caixa de perguntas e pela paleta. */

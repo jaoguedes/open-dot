@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Avalia o resumo do Correio (só regras, sem IA) no conjunto sintético rotulado.
  * Uso: npm run eval:correio (também roda no npm run check e na CI).

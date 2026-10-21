@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Splash (C4): na primeira abertura da sessão mostra o "oi" por 1,2 s; depois só se a carga passar de 400 ms. */
 export const SPLASH_KEY = "od-splash-seen";
 export const FIRST_MIN_MS = 1_200;

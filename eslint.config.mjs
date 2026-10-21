@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // ESLint (F2): TypeScript, regras de hooks do React e acessibilidade (jsx-a11y).
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";

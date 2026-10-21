@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { ConnectorError } from "@open-dot/connectors/errors.ts";
 import { refreshAccess } from "@open-dot/connectors/google.ts";
 import { getMetadata, getProfile, listHistory, listRecentIds } from "@open-dot/connectors/gmail.ts";

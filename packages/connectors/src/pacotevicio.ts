@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { fetchWithTimeout, ConnectorError } from "./errors.ts";
 import { isDeliveredStatus, statusLabel, type TrackingEvent } from "@open-dot/core";
 

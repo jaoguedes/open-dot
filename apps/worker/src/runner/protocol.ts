@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { z } from "zod";
 export const RUNNER_PROTOCOL = 2;
 export const APPROVAL_CONTRACT = "sha256-utf8-json-v1";

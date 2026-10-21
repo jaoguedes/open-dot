@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Celular 390×844. Requer npm run dev em http://localhost:8787.
 import { chromium } from "playwright";
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Gera uma chave de cifra para TOKEN_KEYS. Ela vai direto para o cofre de segredos,
 // nunca para o Git, chat ou print.
 //   npm run secrets:keygen            → imprime "v1:<base64>"

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Codex oficial: gera proposta estruturada em modo somente leitura e sem ferramentas locais.
 //! O host aplica o conteúdo exato apenas após decisão web vinculada ao hash da proposta.
 use crate::{

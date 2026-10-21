@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { ConnectorError } from "@open-dot/connectors/errors.ts";
 import { BudgetExhausted } from "./context.ts";
 

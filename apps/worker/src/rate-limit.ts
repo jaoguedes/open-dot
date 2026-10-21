@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { sha256Hex } from "@open-dot/core";
 import type { Ctx } from "./context.ts";
 

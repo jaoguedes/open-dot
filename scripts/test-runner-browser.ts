@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { randomToken } from "../apps/worker/src/crypto.ts";
 import { sha256Hex } from "@open-dot/core";
 import AxeBuilder from "@axe-core/playwright";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useState } from "react";
 import { AGENTS, PACOTEVICIO_ATTRIBUTION } from "@open-dot/core";
 import { ApiError, api, type ShipmentSnapshot, type ShipmentView } from "../api.ts";

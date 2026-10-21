@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Prova que o app compila, testa e gera build SEM os arquivos do Dot (licença própria),
 // usando o Marcador (AGPL). Roda numa cópia temporária dos arquivos versionados; não altera o repositório.
 //   node scripts/check-without-dot.mjs

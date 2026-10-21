@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Fixed Git plumbing only. Never stages the repository index, runs project hooks,
 //! invokes a shell, pushes, merges, or chooses paths from a model command.
 use crate::{journal, process, worktree};

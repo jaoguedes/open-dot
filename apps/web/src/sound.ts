@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Sons do Dot (E7). Arquivos originais em /sounds (ver public/sounds/README.md).
  * Desligado por padrão. Pré-carrega no primeiro toque (o iOS exige gesto), nunca toca com

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import { toVisual } from "@open-dot/core";
 import { AgentDot } from "./AgentDot.tsx";
 

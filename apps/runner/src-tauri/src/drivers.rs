@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Diagnóstico por interfaces públicas. Não abre arquivos de autenticação.
 use serde::Serialize;
 use std::{

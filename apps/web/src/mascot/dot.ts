@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 /**
  * Fronteira do mascote: o app importa só de "@open-dot/mascot". Este adaptador liga ao Dot,
  * cujo código e arte têm licença própria (LICENSE-DOT-ASSETS.md). Forks sem o Dot usam

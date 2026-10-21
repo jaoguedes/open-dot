@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 """
 Validação estrutural dos GLB do Dot, em Python puro (sem Blender, sem dependências).
 Confere contra o contrato de dot_spec.py: nós, clipes, morphs, triângulos, materiais,

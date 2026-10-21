@@ -1,4 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+// SPDX-License-Identifier: AGPL-3.0-only
 mod channel;
 mod codex;
 mod drivers;

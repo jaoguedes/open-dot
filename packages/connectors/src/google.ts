@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { parseRetryAfter } from "@open-dot/core";
 import { ConnectorError, fetchWithTimeout } from "./errors.ts";
 

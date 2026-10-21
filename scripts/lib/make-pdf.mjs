@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // PDF mínimo válido para testes: cada página recebe um texto, ou nada (simula PDF escaneado).
 export function makePdf(pages) {
   const objs = ["<< /Type /Catalog /Pages 2 0 R >>", "PAGES", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"];

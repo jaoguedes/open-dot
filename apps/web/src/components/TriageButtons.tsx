@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useState } from "react";
 import { api, ApiError } from "../api.ts";
 import { useApp } from "../store.tsx";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { MailSummary } from "./MailSummary.tsx";
 import { aberturaFor, openDigestItems } from "../digest-open.ts";
 import { SourcePill } from "./SourcePill.tsx";

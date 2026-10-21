@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { reconcileEngineering } from "./continuity/scheduler.ts";
 import { expireProjectMemory } from "./continuity/routes.ts";
 import { reconcileRunnerTasks } from "./runner/routes.ts";

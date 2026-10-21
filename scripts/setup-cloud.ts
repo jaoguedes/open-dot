@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Assistente de configuração da nuvem (rode no SEU terminal, nunca cole segredos no chat):
  *   npm run setup:cloud

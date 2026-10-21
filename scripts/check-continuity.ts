@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Inspeção local de commits, sem stage/commit/push e sem executar hooks do projeto. */
 import { execFileSync } from "node:child_process";
 import { validateCheckpointCommit } from "../packages/core/src/odcp.ts";

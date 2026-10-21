@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { build } from "esbuild";
 import { cpSync, mkdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";

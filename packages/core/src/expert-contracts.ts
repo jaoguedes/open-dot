@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { z } from "zod";
 
 const readTools = z.enum(["source_read", "structured_output", "git_diff", "test_receipt_read", "approved_test_runner"]);

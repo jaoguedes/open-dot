@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Testes de navegador da Fase A (rodada 3) contra um build qualquer, com API simulada.
 // Celular 390×844. Não precisa de `npm run dev` nem de banco: serve o dist e responde /api/* aqui.
 // Uso: node scripts/ui-fase-a.mjs [--dist apps/web/dist] [--only A1,A3]

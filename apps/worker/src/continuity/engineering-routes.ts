@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { EXPERT_CONTRACTS } from "@open-dot/core/expert-contracts.ts";
 import { z } from "zod";
 import type { Handler } from "../app.ts";

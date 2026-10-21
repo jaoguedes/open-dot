@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { RunnerWorkspace } from "../components/RunnerWorkspace.tsx";
 import { useState } from "react";
 import { AGENTS, agentsInPlace, approvalQueue, type AgentId } from "@open-dot/core";

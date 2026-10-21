@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import type { DataClass } from "../types.ts";
 import { parseRetryAfter } from "../util.ts";
 import type { BudgetLedger } from "./budget.ts";

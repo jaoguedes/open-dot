@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 """
 Especificação do Dot usada pelo build no Blender e pelo validador (Python puro).
 Fonte: catálogo visual (Anexo C) + capítulos 17-25 do PDF + correções do João.

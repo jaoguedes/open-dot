@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 const DEFAULT_TZ = "America/Sao_Paulo";
 let TZ = DEFAULT_TZ;
 

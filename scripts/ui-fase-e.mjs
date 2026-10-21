@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Testes de navegador da Fase E (fila de aprovações, conflito, pílulas, sons), com API simulada.
 // Uso: node scripts/ui-fase-e.mjs [--dist apps/web/dist] [--only E2,E7]
 import { startHarness } from "./lib/ui-harness.mjs";

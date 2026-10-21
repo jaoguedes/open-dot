@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { ProjectPassportSchema, serializePassport, type ProjectPassport } from "@open-dot/core/project-memory.ts";
 import type { Ctx } from "../context.ts";
 import { seal, open } from "../crypto.ts";

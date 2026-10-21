@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Instância de destino do deploy. Fica FORA do Git: `.deploy.local.json` na raiz
  * (ignorado) ou as variáveis OPEN_DOT_APP_ORIGIN / OPEN_DOT_OWNER_NAME. O wrangler.jsonc

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Fotografa o Dot na tela Mascote (demonstração, movimento reduzido) em alguns estados.
 // Uso: node scripts/capture-dot.mjs <pasta> [prefixo]   (precisa do npm run dev em :8787)
 import { chromium } from "playwright";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { explainError } from "@open-dot/core";
 import { revoke } from "@open-dot/connectors/google.ts";
 import type { Ctx } from "../context.ts";

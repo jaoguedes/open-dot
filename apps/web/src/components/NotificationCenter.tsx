@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { lazy, Suspense, useMemo, useState } from "react";
 import { buildEvents, readSeenAt, unseenCount, writeSeenAt } from "../events.ts";
 import { useApp } from "../store.tsx";

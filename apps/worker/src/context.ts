@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import type { Keyring } from "./crypto.ts";
 import type { Db } from "./db/types.ts";
 import type { Env } from "./env.ts";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Organização de arquivos absorvidos, por regras (sem IA). O texto é dado não confiável:
  * nada aqui interpreta o conteúdo como instrução; só conta, recorta e lista termos.

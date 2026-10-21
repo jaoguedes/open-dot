@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { NEWS_FEEDS, type NewsTheme } from "./news-feeds.ts";
 
 export interface NewsItem {

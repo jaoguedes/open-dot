@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useState } from "react";
 import { AGENTS, toVisual, type Accessory, type AgentId, type SemanticState, agentsInPlace } from "@open-dot/core";
 import { useApp } from "../store.tsx";

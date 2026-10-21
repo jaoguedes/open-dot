@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Quando o app pode buscar dados de novo (C1). Pura, para testar sem navegador. */
 export const POLL_MS = 60_000;
 export const FOCUS_MIN_GAP_MS = 15_000;

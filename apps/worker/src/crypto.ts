@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Cifra AEAD (AES-256-GCM) com chave versionada fora do banco.
  * TOKEN_KEYS="v2:<base64 32 bytes>,v1:<base64 32 bytes>" — a primeira é usada para cifrar;

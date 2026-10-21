@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import type { Db, RunResult, SqlValue, Stmt } from "./types.ts";
 
 /**

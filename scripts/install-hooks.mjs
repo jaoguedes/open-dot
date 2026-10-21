@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Instala o hook opcional de pré-commit (varredura de segredos e dados pessoais do conteúdo preparado).
 // Não sobrescreve um hook existente.
 import { copyFileSync, chmodSync, existsSync } from "node:fs";

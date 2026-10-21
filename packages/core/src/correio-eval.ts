@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { classifyBatch, CORREIO_CATEGORIAS } from "./correio.ts";
 import type { EmailMeta } from "./email.ts";
 

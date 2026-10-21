@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Service worker do shell. O hash muda a cada build; o arquivo deixa de ser cache eterno. */
 export function serviceWorkerSource(build) {
   const id =

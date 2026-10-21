@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Testes de navegador da Fase F (Diagnóstico e meus dados), com API simulada.
 // Uso: node scripts/ui-fase-f.mjs [--dist apps/web/dist]
 import { startHarness } from "./lib/ui-harness.mjs";

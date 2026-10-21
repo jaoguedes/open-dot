@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Sobe o Worker no motor real (workerd) e confere /api/health.
  * `npm run dev` roda em Node e não reproduz Illegal invocation do fetch.

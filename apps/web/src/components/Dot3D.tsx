@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import { useEffect, useRef, useState } from "react";
 import { AGENTS, type Accessory, type AgentVisual } from "@open-dot/core";
 import { Dot2D } from "./Dot2D.tsx";

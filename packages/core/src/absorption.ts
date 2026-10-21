@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Absorção de arquivos (capítulo 39 + correção do João).
  * A animação de absorção é visual; "recebido" e "organizado" só aparecem

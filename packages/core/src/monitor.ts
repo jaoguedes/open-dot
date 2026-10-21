@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Monitor HTTP (capítulo 10 e Anexo A): só alvos cadastrados, HTTPS, sem endereços
  * internos, com confirmação antes de alertar e sem afirmar causa.

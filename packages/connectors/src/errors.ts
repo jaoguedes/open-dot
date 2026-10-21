@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Erros normalizados entre conectores. Funções não suportadas falham explicitamente. */
 export type ConnectorErrorCode =
   | "reauth_required" // refresh inválido/revogado (invalid_grant)

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Identidade do mecanismo; nunca inferir driver a partir da função do agente. */
 export const MECHANISMS = [
   { id: "codex", name: "Codex", color: "#8878EE" },

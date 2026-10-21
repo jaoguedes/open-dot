@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Local metadata export. Never contains credential, private absolute path, prompt or file contents.
 use crate::{journal,worktree,git_checkpoint};
 use serde::Serialize;

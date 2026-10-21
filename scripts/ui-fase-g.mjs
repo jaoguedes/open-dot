@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Testes de navegador da Fase G (retorno do dono sobre o resumo do Correio), com API simulada.
 // Uso: node scripts/ui-fase-g.mjs [--dist apps/web/dist]
 import { startHarness } from "./lib/ui-harness.mjs";

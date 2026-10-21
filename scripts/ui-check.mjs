@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Verificação de interface no Chromium (Playwright). Requer o servidor local rodando (npm run dev).
 //   npm run test:ui            → base http://localhost:8787
 // Checa: login local, estados vazios, demo rotulada, 320 px sem rolagem horizontal,

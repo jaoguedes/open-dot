@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Aplica migrações no banco do Open Dot.
  *   npm run db:migrate                 → SQLite local (.data/dev.sqlite)

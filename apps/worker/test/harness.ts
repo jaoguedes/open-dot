@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { SqliteDb } from "../src/db/sqlite.ts";
 import { applyMigrations } from "../src/db/migrate.ts";
 import { loadMigrations } from "../../../scripts/lib/migrations.ts";

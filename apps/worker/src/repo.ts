@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { randomId, type BudgetLedger, type ReserveInput, type ReserveResult, type UsageRecord } from "@open-dot/core";
 import { open, seal, type Keyring } from "./crypto.ts";
 import type { Db, SqlValue, Stmt } from "./db/types.ts";

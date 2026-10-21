@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Entrada do Cloudflare Worker: API (/api/*), arquivos estáticos da interface e cron.
  * Um único Worker gratuito serve tudo; o Turso guarda o estado.

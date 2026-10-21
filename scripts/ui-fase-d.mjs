@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Testes de navegador da Fase D (interface e acessibilidade), com API simulada.
 // Uso: node scripts/ui-fase-d.mjs [--dist apps/web/dist] [--only D1,D4]
 import AxeBuilder from "@axe-core/playwright";

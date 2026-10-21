@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { markSplashSeen, readSplashSeen, splashPlan } from "./splash-policy.ts";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AGENTS, agentsInPlace, toVisual, versionChanged, type AgentId } from "@open-dot/core";

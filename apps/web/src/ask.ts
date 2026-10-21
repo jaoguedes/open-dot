@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { api, type AskAnswer, type Snapshot } from "./api.ts";
 
 /** Pergunta ao Dot: na demonstração responde com os dados fictícios, sem rede. */

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useState } from "react";
 import { explainError, providerCards, runFictitiousProviderTest, type ProviderCard } from "@open-dot/core";
 import { useApp } from "../store.tsx";

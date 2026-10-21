@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { registerEngineeringRoutes } from "./continuity/engineering-routes.ts";
 import { registerProjectMemoryRoutes } from "./continuity/routes.ts";
 import { registerRunnerRoutes } from "./runner/routes.ts";

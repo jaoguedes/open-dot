@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** O que fazer quando a primeira carga da API falha. */
 export function apiFailureMode(hostname: string, hasData: boolean): "keep" | "unreachable" | "demo" {
   if (hasData) return "keep";

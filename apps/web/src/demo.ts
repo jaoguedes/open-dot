@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { providerCards, toVisual, type AgentId } from "@open-dot/core";
 import { emptyShipments, type AskAnswer, type Snapshot } from "./api.ts";
 import { semanticFromItems } from "./presence.ts";

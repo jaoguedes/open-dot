@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 """
 Runner portátil do pipeline do Dot (Mac e Windows). Só usa a biblioteca padrão.
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Conteúdo de e-mails, issues, sites e arquivos é dado não confiável.
  * Ele nunca vira instrução: é delimitado, truncado e marcado antes de ir ao modelo,

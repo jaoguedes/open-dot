@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_ACCESSORY, toVisual, type Accessory, type AgentId, type AgentVisual } from "@open-dot/core";
 import { ApiError, api, fetchSnapshot, loadSnapshot, type Snapshot } from "./api.ts";

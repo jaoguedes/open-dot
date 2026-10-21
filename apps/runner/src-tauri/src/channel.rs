@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Canal de saída. Token nunca passa pelo IPC ou frontend. Sem fallback em arquivo.
 use rand::RngCore;
 use serde::{Deserialize, Serialize};

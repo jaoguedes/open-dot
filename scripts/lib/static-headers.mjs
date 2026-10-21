@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Conteúdo do `_headers` dos arquivos estáticos (Workers Static Assets). Testado em tests/static-headers.test.ts. */
 export const CSP =
   "default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'; media-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Fixture sem modelo: HTTP/SQLite, cofre, processos, Git e escrita são reais.
 use crate::{
     channel, executor,

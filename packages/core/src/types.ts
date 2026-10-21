@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Contratos compartilhados entre interface, worker e conectores.
  * Nada aqui depende de rede, banco ou navegador.

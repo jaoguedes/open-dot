@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { createHash } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 import { startHarness } from "./lib/ui-harness.mjs";

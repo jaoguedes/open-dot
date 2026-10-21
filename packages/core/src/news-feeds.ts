@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Temas do agente Notícias. Cada assunto político precisa de ≥ 2 veículos. */
 export type NewsTheme = "tecnologia" | "mundo" | "brasil" | "politica";
 

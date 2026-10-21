@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { ALLOWED_TYPES, MAX_BYTES, MAX_TEXT_CHARS, judgeExtraction, normalizeText, organizeText, randomId, sha256Hex, validateFile, type Organized } from "@open-dot/core";
 import type { Ctx } from "../context.ts";
 import { open, seal } from "../crypto.ts";

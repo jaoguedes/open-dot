@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Cotações só informativas. Nenhuma ordem, corretora ou carteira. */
 
 export const QUOTE_DISCLAIMER = "Só informativo, não é recomendação";

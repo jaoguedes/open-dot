@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 """Preflight dentro do Blender: versão, exportador glTF, render mínimo. Escreve preflight.json."""
 import json
 import os

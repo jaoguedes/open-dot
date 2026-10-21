@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Rodada 4: percorre as telas em 390×844 nos modos escuro e claro, falha se houver rolagem
 // horizontal, e salva capturas em docs/capturas/rodada4/<pasta>/ quando UI_CAPTURES=<pasta>.
 // Uso: node scripts/ui-rodada4.mjs [--dist apps/web/dist]

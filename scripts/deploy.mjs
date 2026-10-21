@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Publica só depois do build, do check, do workerd e do celular.
  * Uso: npm run deploy

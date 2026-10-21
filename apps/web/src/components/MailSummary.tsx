@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { gmailWebHref } from "@open-dot/connectors/gmail.ts";
 import { SourcePill } from "./SourcePill.tsx";
 import type { FeedEntry } from "../api.ts";

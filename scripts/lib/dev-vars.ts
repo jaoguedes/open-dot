@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Lê KEY=valor. Nunca registre o conteúdo — só os nomes. */
 export function parseDevVars(text: string): Record<string, string> {
   const out: Record<string, string> = {};

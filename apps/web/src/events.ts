@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { AGENTS, explainError, type AgentId } from "@open-dot/core";
 import type { Snapshot } from "./api.ts";
 

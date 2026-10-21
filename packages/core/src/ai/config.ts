@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import type { DataClass } from "../types.ts";
 
 export type Capability = "classify" | "summarize" | "answer" | "json";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { advanceEngineering } from "../continuity/scheduler.ts";
 import { RUNNER_PROTOCOL, APPROVAL_CONTRACT, REQUIRED_CAPABILITIES, runnerHello, runnerCompatible } from "./protocol.ts";
 import { currentSchema, REQUIRED_SCHEMA, schemaCompatible } from "../db/migrate.ts";

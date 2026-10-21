@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Monta apps/web/public/favicon.ico a partir dos PNG de 16, 32 e 256 px (ICO com PNG embutido).
 // Os PNG vêm do conjunto de ícones do João (mestre em assets/icones/dot-icone-1024.png).
 // Uso: node scripts/icons/make-ico.mjs

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 """
 Constrói o Dot do zero dentro do Blender e exporta GLB + poster + relatório.
 NÃO rode diretamente: use `python3 blender/run_blender.py build` (define caminhos e flags).

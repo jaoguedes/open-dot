@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Gera os ícones do Marcador (mascote genérico, AGPL) para builds sem o Dot.
 // Saída: assets/placeholder/icons/ (mesmos nomes e tamanhos de apps/web/public/icons) e favicon.ico.
 // Uso: node scripts/icons/make-placeholder-icons.mjs

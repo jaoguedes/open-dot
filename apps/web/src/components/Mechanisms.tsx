@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { MECHANISMS, type MechanismId } from "@open-dot/core/mechanisms.ts";
 import "../mechanisms.css";
 

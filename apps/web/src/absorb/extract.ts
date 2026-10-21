@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { MAX_BYTES, judgeExtraction, normalizeText, sha256Hex, validateFile } from "@open-dot/core";
 
 /**

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Efeitos transitórios (corações, partículas) com ciclo de vida independente.
  * Capítulo 24: cada instância tem id, seed, início, duração e trajetória próprios.

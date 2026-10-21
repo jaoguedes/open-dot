@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import type { EmailMeta } from "./email.ts";
 import { detectInText } from "./tracking.ts";
 

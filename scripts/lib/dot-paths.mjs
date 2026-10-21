@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Arquivos do Dot (código de desenho, motor, arte, sons, ícones e testes do próprio Dot).
  * Licença própria, todos os direitos reservados: LICENSE-DOT-ASSETS.md. Usado pelo

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Dicionário fixo de erros, em português. Sem IA: funciona offline e não inventa causa.
  * Código desconhecido usa a frase genérica e guarda o código.

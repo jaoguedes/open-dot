@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { agentsIn, buildRegistry, type AgentEntry, type AgentPlace } from "./agents.ts";
 import type { AgentId } from "./types.ts";
 import { AGENT_COLORS, DEFAULT_ACCESSORY } from "./visual.ts";

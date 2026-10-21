@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import type { Ctx } from "../context.ts";
 import { readProjectMemory, saveProjectMemory } from "./project-memory.ts";
 interface Candidate { task_id:string; owner_id:string; project_id:string; policy_revision:number; runner_id:string; attempt_id:string; completed_at:number }

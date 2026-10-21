@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { EXPERT_CONTRACTS, composeExpertPrompt } from "@open-dot/core/expert-contracts.ts";
 import { syncOneEngineeringMemory } from "./engineering-memory.ts";
 import { z } from "zod";

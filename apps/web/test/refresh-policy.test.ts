@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import assert from "node:assert/strict";
 import test from "node:test";
 import { FOCUS_MIN_GAP_MS, POLL_MS, shouldRefresh } from "../src/refresh-policy.ts";

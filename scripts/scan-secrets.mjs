@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Uso:
 //   node scripts/scan-secrets.mjs            arquivos versionados (CI e npm run check)
 //   node scripts/scan-secrets.mjs --staged   conteúdo preparado para commit (hook de pré-commit)

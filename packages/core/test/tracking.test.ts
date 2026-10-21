@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { decideCarrier, detectCode, detectInText, displayNameFor, s10CheckDigit, shopLabel, trackingGate, upsCheckDigit } from "../src/tracking.ts";

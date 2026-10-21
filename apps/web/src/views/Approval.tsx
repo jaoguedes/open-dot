@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 import { useState } from "react";
 import { approvalQueue, queuePosition, toVisual } from "@open-dot/core";
 import { useApp } from "../store.tsx";

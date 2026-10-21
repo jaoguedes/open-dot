@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /** Utilidades puras e portáveis (Node 22, Workers e navegador). */
 
 /** JSON canônico: chaves ordenadas, sem espaços. Base para hash de payload. */

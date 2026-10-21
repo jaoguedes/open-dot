@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import { bodyPt, round2, type DotFrame } from "@open-dot/core/dot/index.ts";
 
 /** Conquista: a coroa só liga quando existir a regra. */
