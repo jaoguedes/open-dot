@@ -1,0 +1,10 @@
+{
+  "id": "cobranca",
+  "ideia": "um bot que cobra clientes atrasados por WhatsApp e Pix",
+  "esperado": {
+    "tipos_incluem": "automacao",
+    "risco": "alto",
+    "precisa_design": false,
+    "precisa_pesquisa": false
+  }
+}

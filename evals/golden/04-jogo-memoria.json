@@ -1,0 +1,10 @@
+{
+  "id": "jogo-memoria",
+  "ideia": "um jogo da memória com placar para o navegador",
+  "esperado": {
+    "tipos_incluem": "jogo",
+    "risco": "baixo",
+    "precisa_design": true,
+    "precisa_pesquisa": false
+  }
+}

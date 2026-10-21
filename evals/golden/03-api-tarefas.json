@@ -1,0 +1,10 @@
+{
+  "id": "api-tarefas",
+  "ideia": "uma API REST de tarefas com endpoint para criar e listar",
+  "esperado": {
+    "tipos_incluem": "api",
+    "risco": "baixo",
+    "precisa_design": false,
+    "precisa_pesquisa": false
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "login",
+  "ideia": "adicionar login com conta e cadastro ao app existente",
+  "esperado": {
+    "tipos_incluem": "pwa",
+    "risco": "medio",
+    "precisa_design": true,
+    "precisa_pesquisa": false
+  }
+}

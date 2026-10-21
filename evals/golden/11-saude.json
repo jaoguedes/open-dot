@@ -1,0 +1,10 @@
+{
+  "id": "saude",
+  "ideia": "app que guarda remédios e horários de medicação da minha mãe",
+  "esperado": {
+    "tipos_incluem": "pwa",
+    "risco": "alto",
+    "precisa_design": true,
+    "precisa_pesquisa": false
+  }
+}

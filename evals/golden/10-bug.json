@@ -1,0 +1,10 @@
+{
+  "id": "bug",
+  "ideia": "corrigir o bug que duplica itens na lista do app",
+  "esperado": {
+    "tipos_incluem": "pwa",
+    "risco": "baixo",
+    "precisa_design": true,
+    "precisa_pesquisa": false
+  }
+}

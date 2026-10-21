@@ -256,6 +256,14 @@ export function registerPipelineRoutes(route: Registrar) {
     });
   });
 
+  // Calibração (parte G): só leitura dos resultados registrados; nenhum peso muda sozinho no v0.2.
+  route("GET", "/api/orchestrator/outcomes", { auth: true }, async (ctx, _r, _p, owner) =>
+    json({
+      outcomes: await ctx.db.query("SELECT role,tool_id AS tool,agent_id AS agent,outcome,calls,created_at AS createdAt FROM od_orchestrator_outcomes WHERE owner_id=? ORDER BY created_at DESC LIMIT 200", [owner!]),
+      ajusteAutomatico: false,
+    }),
+  );
+
   route("POST", "/api/orchestrator/pipelines/:id/cancel", { auth: true }, async (ctx, _r, p, owner) => {
     const r = await ctx.db.run("UPDATE od_pipelines SET state='cancelado',reason='Cancelado pelo dono. Tarefas já enfileiradas seguem as regras de cancelamento do Runner.',updated_at=? WHERE id=? AND owner_id=? AND state='ativo'", [ctx.now(), p.id!, owner!]);
     return r.changes ? json({ cancelled: true }) : problem(409, "not_active", "Equipe não está ativa.");

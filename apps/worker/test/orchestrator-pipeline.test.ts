@@ -109,3 +109,12 @@ test("saída fora do esquema bloqueia; falha por limite marca cota esgotada; nad
   s.ctx.db.raw.close();
   s2.ctx.db.raw.close();
 });
+
+test("resultados registrados ficam visíveis ao dono, sem ajuste automático de pesos", async () => {
+  const s = await setup();
+  const r = await s.web.call("GET", "/api/orchestrator/outcomes");
+  assert.equal(r.status, 200);
+  assert.equal(r.json.ajusteAutomatico, false);
+  assert.deepEqual(r.json.outcomes, []);
+  s.ctx.db.raw.close();
+});

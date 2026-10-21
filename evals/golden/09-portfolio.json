@@ -1,0 +1,10 @@
+{
+  "id": "portfolio",
+  "ideia": "uma página de portfólio com referências de design para inspirar",
+  "esperado": {
+    "tipos_incluem": "pwa",
+    "risco": "baixo",
+    "precisa_design": true,
+    "precisa_pesquisa": true
+  }
+}

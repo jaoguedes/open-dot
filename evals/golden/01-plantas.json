@@ -1,0 +1,10 @@
+{
+  "id": "plantas",
+  "ideia": "um app para lembrar de regar as plantas",
+  "esperado": {
+    "tipos_incluem": "pwa",
+    "risco": "baixo",
+    "precisa_design": true,
+    "precisa_pesquisa": false
+  }
+}

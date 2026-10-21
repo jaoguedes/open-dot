@@ -1,0 +1,10 @@
+{
+  "id": "renomear",
+  "ideia": "script que renomeia arquivos de fotos pela data no terminal",
+  "esperado": {
+    "tipos_incluem": "automacao",
+    "risco": "baixo",
+    "precisa_design": false,
+    "precisa_pesquisa": false
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "webhook",
+  "ideia": "receber webhook do GitHub e avisar quando o build falha",
+  "esperado": {
+    "tipos_incluem": "api",
+    "risco": "baixo",
+    "precisa_design": false,
+    "precisa_pesquisa": false
+  }
+}

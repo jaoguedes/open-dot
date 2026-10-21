@@ -1,0 +1,10 @@
+{
+  "id": "graficos",
+  "ideia": "comparar bibliotecas de gráficos para um painel offline",
+  "esperado": {
+    "tipos_incluem": "pwa",
+    "risco": "baixo",
+    "precisa_design": true,
+    "precisa_pesquisa": true
+  }
+}

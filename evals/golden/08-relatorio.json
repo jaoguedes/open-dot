@@ -1,0 +1,10 @@
+{
+  "id": "relatorio",
+  "ideia": "gerar um relatório mensal em documento a partir de uma planilha",
+  "esperado": {
+    "tipos_incluem": "automacao",
+    "risco": "baixo",
+    "precisa_design": false,
+    "precisa_pesquisa": false
+  }
+}
