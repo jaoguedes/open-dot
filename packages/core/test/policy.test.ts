@@ -140,7 +140,7 @@ test("monitor HTTP bloqueia SSRF e hosts fora da lista", () => {
     "https://[::1]/",
     "https://10.0.0.2",
     "https://2130706433",
-    "https://user:pw@meusite.vercel.app",
+    "https://user:pw@meusite.vercel.app", // pii-scan: fictício (credencial falsa em URL para testar bloqueio)
     "https://meusite.vercel.app:8443",
     "https://outro.com",
   ]) {

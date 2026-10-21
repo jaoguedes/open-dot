@@ -1,0 +1,4 @@
+#!/bin/sh
+# Hook opcional de pré-commit do Open Dot: recusa commit com segredo ou dado pessoal no conteúdo preparado.
+# Instale com: npm run hooks:install   (remova com: rm .git/hooks/pre-commit)
+exec node scripts/scan-secrets.mjs --staged

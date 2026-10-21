@@ -48,7 +48,7 @@ test("FedEx 96, USPS, Amazon e OnTrac têm formato próprio", () => {
 
 test("número só de dígitos no e-mail não vira encomenda; dois códigos altos seguem cada um", () => {
   assert.equal(detectInText("Pedido 123456789012 confirmado").length, 0);
-  assert.equal(detectInText("Seu telefone 11987654321 e o CNPJ 12.345.678/0001-90").length, 0);
+  assert.equal(detectInText("Seu telefone 11987654321 e o CNPJ 12.345.678/0001-90").length, 0); // pii-scan: fictício
   const both = detectInText("UPS 1Z5R89390357567127 e Correios NN427247410BR");
   assert.equal(both.filter((c) => c.confidence === "high").length, 2);
   const hinted = detectInText("Rastreio FedEx 123456789012 a caminho");

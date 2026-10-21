@@ -54,3 +54,6 @@ docs/audit/.agent-state-*.tmp
 
 # Anotações pessoais do mantenedor (contas, produção). Ficam só na máquina.
 docs/privado/
+
+# Termos pessoais procurados pelo scanner (handle, subdomínio). Só local.
+.pii-terms.local
