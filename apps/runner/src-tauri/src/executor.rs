@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 use crate::{
     channel::{self, SharedChannel},
-    codex,
+    claude, codex,
     journal::{self, Journal},
     process, worktree,
 };
@@ -293,8 +293,11 @@ pub fn poll(
     };
     journal::save(dir, &j)?;
     let result = (|| {
-        if task["mechanism"] != "codex" {
-            return Err("Este executor só oferece o modo seguro do Codex.".into());
+        let mechanism = task["mechanism"].as_str().unwrap_or("");
+        // Claude Code só com opt-in explícito: implementado, ainda não validado com o CLI real.
+        let claude_enabled = claude::experimental_enabled(std::env::var("OPEN_DOT_EXPERIMENTAL_DRIVERS").ok().as_deref());
+        if mechanism != "codex" && !(mechanism == "claude-code" && claude_enabled) {
+            return Err("Mecanismo sem driver seguro habilitado neste Runner. Nenhuma edição foi feita.".into());
         }
         let project = folders
             .iter()
@@ -305,8 +308,13 @@ pub fn poll(
         }
         let root = worktree::create(project, &dir.join("worktrees"), id, task["worktreeConsent"]==true)?;
         emit(c,&mut j,dir,"status","Worktree isolado criado a partir de HEAD sem hooks ou filtros de checkout. Credenciais e symlinks não são materializados. Arquivos originais preservados.")?;
-        let cli = codex::installed()?;
-        codex::preflight(&cli, &dir.join("proofs"))?;
+        let cli = if mechanism == "codex" {
+            let cli = codex::installed()?;
+            codex::preflight(&cli, &dir.join("proofs"))?;
+            cli
+        } else {
+            claude::installed()?
+        };
         j.phase = "proposing".into();
         journal::save(dir, &j)?;
         let project_for_cancel = project.clone();
@@ -319,11 +327,17 @@ pub fn poll(
         };
         let prompt = task["prompt"].as_str().ok_or("Prompt inválido.")?;
         let mut status_error = None;
-        let proposal = codex::propose(&cli, &root, prompt, &cancel, &mut |s| {
+        let mut report = |s: &str| {
             if let Err(e) = emit(c, &mut j, dir, "status", s) {
                 status_error = Some(e);
             }
-        })?;
+        };
+        let proposal = if mechanism == "codex" {
+            codex::propose(&cli, &root, prompt, &cancel, &mut report)?
+        } else {
+            claude::propose(&cli, &root, prompt, &cancel, &mut report)?
+        };
+        drop(report);
         if let Some(error) = status_error {
             return Err(error);
         }

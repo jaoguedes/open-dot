@@ -1,7 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 // SPDX-License-Identifier: AGPL-3.0-only
 mod channel;
+mod claude;
 mod codex;
+mod cursor;
 mod drivers;
 mod executor;
 mod journal;
@@ -278,6 +280,17 @@ fn main() {
                                 Err(reason)=>{codex.executable=false;codex.reason=reason;}
                             }
                         }
+                        let claude_opt_in=claude::experimental_enabled(std::env::var("OPEN_DOT_EXPERIMENTAL_DRIVERS").ok().as_deref());
+                        if let Some(claude_code)=detected.iter_mut().find(|d|d.id=="claude-code" && d.authenticated) {
+                            if !claude_opt_in {claude_code.executable=false;claude_code.reason="Driver implementado, ainda não validado com o CLI real. Desligado nesta beta.".into();}
+                            else {
+                                match journal::load(&state.dir).and_then(|_|claude::installed()).and_then(|cli|claude::preflight(&cli)) {
+                                    Ok(())=>{claude_code.executable=true;claude_code.reason="Experimental: Claude Code sem ferramentas; proposta aprovada pelo dono no worktree. Não validado com chamada real.".into();},
+                                    Err(reason)=>{claude_code.executable=false;claude_code.reason=reason;}
+                                }
+                            }
+                        }
+                        if let Some(cursor_agent)=detected.iter_mut().find(|d|d.id=="cursor" && d.installed) {cursor_agent.executable=cursor::safe_contract_available();cursor_agent.reason=cursor::UNAVAILABLE_REASON.into();}
                         for driver in &mut detected {driver.features=drivers::features(driver.id,driver.installed&&driver.authenticated&&driver.executable);}
                         if let Ok(mut d)=state.drivers.lock(){*d=detected;}
 
@@ -309,7 +322,7 @@ fn main() {
             std::thread::spawn(move || {
                 while !process::stopping() {
                     let state=worker.state::<LocalState>();
-                    let enabled=state.drivers.lock().map(|d|d.iter().any(|d|d.id=="codex"&&d.executable&&d.authenticated)).unwrap_or(false);
+                    let enabled=state.drivers.lock().map(|d|d.iter().any(|d|d.executable&&d.authenticated)).unwrap_or(false);
                     if enabled {
                         let folders=state.settings.lock().map(|s|s.folders.clone()).unwrap_or_default();
                         let permitted=|p:&std::path::Path|state.settings.lock().map(|s|s.folders.iter().any(|f|f==p&&f.canonicalize().ok().as_deref()==Some(p))).unwrap_or(false);

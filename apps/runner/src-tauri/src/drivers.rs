@@ -21,7 +21,8 @@ pub struct Driver {
 #[serde(rename_all="camelCase")]
 pub struct Features {pub version:u8,pub proposal_generation:bool,pub approved_host_writes:bool,pub recovery:&'static str,pub project_commands:bool,pub models_discovered:bool,pub evidence:&'static str}
 pub fn features(id:&str,ready:bool)->Features {
-    let enabled=id=="codex"&&ready;
+    // Cursor nunca: sem modo sem ferramentas verificável (cursor.rs).
+    let enabled=(id=="codex"||id=="claude-code")&&ready;
     Features{version:1,proposal_generation:enabled,approved_host_writes:enabled,recovery:if enabled{"approved-proposal-only"}else{"unavailable"},project_commands:false,models_discovered:false,evidence:if enabled{"local-preflight"}else{"diagnostic-only"}}
 }
 fn authenticated(id:&str,success:bool,text:&str)->bool {
@@ -153,7 +154,7 @@ mod tests {
             assert!(!features(id,false).proposal_generation);
             assert!(!features(id,true).models_discovered);
             assert!(!features(id,true).project_commands);
-            assert_eq!(features(id,true).proposal_generation,id=="codex");
+            assert_eq!(features(id,true).proposal_generation,id!="cursor");
         }
     }
     #[test]
