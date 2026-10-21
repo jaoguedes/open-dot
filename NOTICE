@@ -2,8 +2,17 @@ Open Dot
 Copyright © 2026 João Pedro Guedes
 
 Código: GNU Affero General Public License v3.0 only (LICENSE), ou licença comercial
-(COMMERCIAL-LICENSE.md). O mascote Dot e seus arquivos: todos os direitos reservados
-(LICENSE-DOT-ASSETS.md). Marca: TRADEMARK.md.
+(COMMERCIAL-LICENSE.md).
+
+Mascote Dot (código de desenho, arte, modelos, sons e ícones; lista em
+scripts/lib/dot-paths.mjs): licença própria só de visualização, todos os direitos
+reservados (LICENSE-DOT-ASSETS.md). O Dot aparece no app oficial e neste repositório.
+Permitido: ver e executar o app oficial sem modificações. Proibido: copiar, redistribuir,
+modificar, treinar IA e uso comercial. A AGPL-3.0 não se aplica a esses arquivos.
+Quem redistribui o app ou faz fork deve trocar o Dot pelo Marcador (AGPL-3.0) ou por um
+mascote próprio: docs/FORKS.md e npm run check:without-dot.
+
+Marca “Open Dot” e “Dot”: TRADEMARK.md.
 
 Atribuições de terceiros
 

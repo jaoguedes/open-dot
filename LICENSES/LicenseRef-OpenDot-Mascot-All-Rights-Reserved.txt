@@ -1,3 +1,5 @@
-Dot (mascote do Open Dot) — todos os direitos reservados.
+Dot (mascote do Open Dot) — licença só de visualização, todos os direitos reservados.
+Permitido ver e executar o app oficial sem modificações. Proibido copiar, redistribuir,
+modificar, treinar IA e uso comercial.
 Copyright © 2026 João Pedro Guedes.
 Termos completos em LICENSE-DOT-ASSETS.md, na raiz do repositório.

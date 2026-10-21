@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { toVisual } from "@open-dot/core";
@@ -31,4 +31,11 @@ test("ícones do Marcador têm os mesmos nomes e tamanhos do app", () => {
     const png = readFileSync(new URL(`../assets/placeholder/icons/${n}`, import.meta.url));
     assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [sz, sz], n);
   }
+});
+
+test("o padrão do app é o Dot; o Marcador só entra por opt-in de fork", { skip: !existsSync(new URL("../apps/web/src/mascot/dot.ts", import.meta.url)) && "build sem o Dot" }, () => {
+  const base = JSON.parse(readFileSync(new URL("../tsconfig.json", import.meta.url), "utf8"));
+  assert.deepEqual(base.compilerOptions.paths["@open-dot/mascot"], ["./apps/web/src/mascot/dot.ts"]);
+  const build = readFileSync(new URL("../scripts/build.mjs", import.meta.url), "utf8");
+  assert.match(build, /OPEN_DOT_MASCOT === "placeholder" \? "tsconfig\.placeholder\.json" : "tsconfig\.json"/);
 });

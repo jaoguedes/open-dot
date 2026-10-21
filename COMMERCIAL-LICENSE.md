@@ -20,7 +20,7 @@ Contato: **[CONTATO_A_DEFINIR]**
 
 ## O que nenhuma das duas cobre
 
-- **O Dot** (o mascote, seu código de desenho, arte, modelos, sons e ícones) tem licença própria, **todos os direitos reservados**: `LICENSE-DOT-ASSETS.md`. Nem a AGPL nem a licença comercial de código dão direito de usar o Dot. Licença de uso do Dot, se houver, é negociada à parte.
+- **O Dot** (o mascote, seu código de desenho, arte, modelos, sons e ícones) tem licença própria **só de visualização**: `LICENSE-DOT-ASSETS.md`. Nem a AGPL nem a licença comercial de código dão direito de usar o Dot. Licença de uso do Dot, se houver, é negociada à parte.
 - **A marca “Open Dot”**: veja `TRADEMARK.md`.
 - **Dependências de terceiros** seguem as próprias licenças (inventário em `docs/licencas/`).
 

@@ -1,7 +1,8 @@
-Dot — todos os direitos reservados.
+Dot — licença só de visualização. Todos os direitos reservados.
 SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 Copyright © 2026 João Pedro Guedes
 
-Os arquivos desta pasta fazem parte do mascote Dot e NÃO estão sob a AGPL-3.0
-do restante do repositório. Termos completos: LICENSE-DOT-ASSETS.md, na raiz.
-Forks devem usar o mascote genérico (Marcador): docs/FORKS.md.
+Os arquivos desta pasta fazem parte do mascote Dot e NÃO estão sob a AGPL-3.0 do restante
+do repositório. Permitido: ver e executar o app oficial sem modificações. Proibido: copiar,
+redistribuir, modificar, treinar IA e uso comercial. Quem redistribui ou faz fork deve trocar
+o Dot (docs/FORKS.md). Termos completos: LICENSE-DOT-ASSETS.md, na raiz.

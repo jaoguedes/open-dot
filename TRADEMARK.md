@@ -12,8 +12,8 @@
 ## Não permitido sem autorização escrita
 
 - Usar “Open Dot” ou “Dot” como nome, ou parte do nome, de produto, serviço, fork, domínio, app ou empresa.
-- Usar o mascote Dot (ver `LICENSE-DOT-ASSETS.md`).
-- Distribuir uma versão modificada com o nome “Open Dot”. Forks precisam de outro nome e do mascote genérico (Marcador) ou de um próprio.
+- Usar o mascote Dot fora do app oficial. O Dot tem licença só de visualização (`LICENSE-DOT-ASSETS.md`): pode ser visto e executado no app oficial sem modificações; copiar, redistribuir, modificar, treinar IA e uso comercial são proibidos.
+- Distribuir uma versão modificada, ou um fork, com o nome “Open Dot” ou com o Dot. Quem redistribui ou faz fork troca o nome e troca o Dot pelo Marcador (`docs/FORKS.md`) ou por um mascote próprio.
 - Sugerir que uma instância ou serviço de terceiros é oficial.
 
 Pedidos: **[CONTATO_A_DEFINIR]**.

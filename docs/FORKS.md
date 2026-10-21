@@ -1,6 +1,6 @@
 # Fazer um fork do Open Dot
 
-O código é AGPL-3.0 (`LICENSE`). O **Dot** (mascote, arte, sons, ícones e o código que o desenha) tem licença própria, todos os direitos reservados (`LICENSE-DOT-ASSETS.md`), e o nome “Open Dot” segue `TRADEMARK.md`. Um fork público precisa de outro nome e não pode distribuir o Dot.
+O código é AGPL-3.0 (`LICENSE`). O **Dot** (mascote, arte, sons, ícones e o código que o desenha) continua visível no app oficial e no repositório, mas tem licença só de visualização (`LICENSE-DOT-ASSETS.md`): copiar, redistribuir, modificar, treinar IA e uso comercial são proibidos. O nome “Open Dot” segue `TRADEMARK.md`. Por isso, **quem redistribui o app ou faz um fork precisa trocar o Dot e o nome**.
 
 ## 1. Trocar o Dot pelo Marcador
 

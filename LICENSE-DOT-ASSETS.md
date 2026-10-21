@@ -1,4 +1,4 @@
-# Licença do Dot — todos os direitos reservados
+# Licença do Dot — só visualização (todos os direitos reservados)
 
 > **Rascunho sem revisão jurídica.**
 
@@ -19,22 +19,29 @@ Os arquivos listados em `scripts/lib/dot-paths.mjs` (`DOT_PATHS`), entre eles:
 - imagens, referências e capturas do Dot em `docs/referencias/` e `docs/capturas/`
 - os testes do próprio Dot listados em `DOT_PATHS`
 
-## O que você pode fazer
+## Licença “só visualização”
 
-- Ver e ler esses arquivos neste repositório e executá-los **sem modificação**, como parte do Open Dot oficial, para uso pessoal ou para avaliar o projeto.
+O Dot **continua visível** no app oficial e neste repositório. A licença é só de visualização:
 
-## O que você não pode fazer sem autorização escrita
+**Permitido**
 
-- copiar, redistribuir ou publicar o Dot ou partes dele, em qualquer formato;
-- criar derivados (variações, recolorações, “fan arts” comerciais, modelos 3D, adesivos, ícones) ou treinar modelos de IA com ele;
-- usar o Dot em outro produto, serviço, fork, marca ou material de divulgação;
+- ver e ler esses arquivos neste repositório;
+- executar o app oficial do Open Dot, **sem modificações** no Dot, inclusive na sua própria instância pessoal configurada a partir deste repositório.
+
+**Proibido sem autorização escrita**
+
+- **copiar** o Dot ou partes dele para fora deste repositório e do app oficial;
+- **redistribuir** ou publicar o Dot em qualquer formato, inclusive dentro de um fork ou de um pacote do app;
+- **modificar** o Dot ou criar derivados (variações, recolorações, modelos 3D, adesivos, ícones, animações);
+- **treinar ou ajustar modelos de IA** com o Dot, ou usá-lo como referência de geração;
+- **uso comercial** do Dot, inclusive em produto, serviço, marca ou divulgação;
 - usar o Dot de forma que sugira que o seu projeto é o Open Dot oficial.
 
-A AGPL-3.0 do resto do código **não** se aplica a estes arquivos, e a licença comercial do código também não os inclui.
+A AGPL-3.0 do restante do código **não** se aplica a estes arquivos, e a licença comercial do código também não os inclui.
 
-## Forks
+## Forks e redistribuição
 
-Forks devem remover o Dot e usar o **Marcador**, mascote genérico sob AGPL-3.0 (`apps/web/src/mascot/placeholder/`, ícones em `assets/placeholder/icons/`):
+Quem redistribui o app ou faz um fork **deve trocar o Dot**. O padrão do repositório continua sendo o Dot; para a troca existe o **Marcador**, mascote genérico sob AGPL-3.0 (`apps/web/src/mascot/placeholder/`, ícones em `assets/placeholder/icons/`):
 
 ```bash
 OPEN_DOT_MASCOT=placeholder npm run build
