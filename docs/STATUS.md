@@ -1,3 +1,17 @@
+# Estado vigente — auditoria independente e preparação open source (20/10/2026)
+
+Branch segura `claude/od2-audit` (a partir de `9e1b3fd`); interface em `claude/od2-ui`. Relatório: [CLAUDE_FINAL_REPORT](audit/CLAUDE_FINAL_REPORT.md); achados: [CLAUDE_INDEPENDENT_AUDIT](audit/CLAUDE_INDEPENDENT_AUDIT.md). Nada publicado.
+
+- **Testado:** `npm run check`, lint, `check:without-dot`, `npm audit`, continuidade, SPDX; testes de regressão das correções (login sem `login_hint`, identidade fixada, limite de taxa, HSTS, configuração segura, políticas de CI, retenção do Runner, varredura de dados pessoais); UI com API simulada e axe em 9 rotas.
+- **Sem teste real:** código Rust novo (driver Claude Code, isolamento do Git) — sem toolchain Rust nesta máquina; Codex (CLI ausente nesta máquina); Claude Code (login oficial expirado: 2 chamadas sem geração).
+- **Simulado:** telas novas validadas em demonstração e API simulada.
+- **Planejado:** shell/testes de projeto, paralelismo, merge/commit/push automáticos, Web Push, executor Windows, Cursor.
+- **Bloqueado (mantenedor):** `cargo test`, roteiro manual, revisão jurídica, contatos, ações de produção (`OWNER_GOOGLE_SUB`, contato público, `.deploy.local.json`, migração 0017), 2FA.
+
+---
+
+## Histórico preservado
+
 # Estado vigente — checkpoint 48e3a15 (20/10/2026)
 
 Entrada: [PROJECT_STATE](agents/PROJECT_STATE.md), [relatório vigente](audit/FINAL_IMPLEMENTATION_REPORT.md), [registro incremental](audit/REMEDIATION_RUN.md). Branch codex/od2-runner-remediation; resolver worktree e HEAD documental pelo Git. Scheduler sequencial, checkpoints e commit explícito, memória editável, Passport de contexto, capacidades e perfis estão integrados com limites documentados. Gate 322 Node/24 Rust/sete Python; testes reais/fixtures separados no relatório. Sem push/deploy/release; não pronto para beta pública. Próximo: recuperação durante geração real e GUI nativa, sem replay de operações incertas.
