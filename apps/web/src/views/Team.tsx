@@ -175,7 +175,7 @@ export function Team() {
           authMethod: f.metodo,
           possiblyPaid: f.possivelmentePago,
           executable: f.executavel,
-          reason: "exemplo",
+          reason: f.estado,
         } as ToolSnap,
       }))
     : catalog.map((c) => ({ cat: c, snap: snap?.tools.find((t) => t.id === c.id) }));
