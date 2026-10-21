@@ -27,6 +27,6 @@ Se o histórico tiver sido reescrito (`HISTORY_REWRITTEN=1`), o script pede para
 
 ## Depois
 
-- Troque `<OWNER>` em `.github/CODEOWNERS`.
+- CODEOWNERS já aponta para `@jaoguedes`; confira só se quiser outros revisores.
 - Revise e publique o release em rascunho.
 - Confira as abas Security e Actions do repositório.

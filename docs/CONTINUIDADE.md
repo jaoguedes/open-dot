@@ -44,7 +44,7 @@ Próximo agente: ler relatório e revisar as fronteiras críticas antes de ligar
 - Main permanece em `5db4564`; branch de backup existente permanece em `0b66a76`. Não alterar essas referências para organizar o histórico.
 - Inspeção de 20/10: um único worktree registrado, checkout principal deste projeto; árvore limpa antes desta etapa documental. Conferir novamente, não assumir que permaneceu assim.
 - O commit `504c00d` reúne trabalho de sessões anteriores e foi enviado antes da nova política. Não atende ao novo padrão de granularidade/título. Preservar o histórico compartilhado; próximos commits pequenos e semânticos, sem amend/rebase/force push para reorganizá-lo.
-- [Draft privado de revisão #1](https://github.com/<OWNER>/open-dot/pull/1). Sem merge. Criado para revisão e disparo de Actions, não é release.
+- [Draft privado de revisão #1](https://github.com/jaoguedes/open-dot/pull/1). Sem merge. Criado para revisão e disparo de Actions, não é release.
 - O SHA do checkpoint que contém este documento é obtido com `git log -1 --format='%H %s' -- docs/CONTINUIDADE.md`; evita autorreferência impossível.
 
 ## Decisões vigentes
@@ -86,7 +86,7 @@ Rust temporário: acrescentar `/private/tmp/open-dot-cargo/bin` ao PATH, `CARGO_
 
 ## Em andamento e pendências
 
-1. [Runner CI 39425600153](https://github.com/<OWNER>/open-dot/actions/runs/39425600153) **SUCCESS**: verify e três jobs nativos concluídos. [CI 39425600235](https://github.com/<OWNER>/open-dot/actions/runs/39425600235) **SUCCESS**. Código fonte desses builds: `504c00d`. `RUNNER_BUILDS_ENABLED=true` permanece configurado; não redisparar sem mudança relevante.
+1. [Runner CI 39425600153](https://github.com/jaoguedes/open-dot/actions/runs/39425600153) **SUCCESS**: verify e três jobs nativos concluídos. [CI 39425600235](https://github.com/jaoguedes/open-dot/actions/runs/39425600235) **SUCCESS**. Código fonte desses builds: `504c00d`. `RUNNER_BUILDS_ENABLED=true` permanece configurado; não redisparar sem mudança relevante.
 2. Três instaladores e checksums baixados em `apps/runner/installers/actions-39425600153`, conjunto exato validado pelo script oficial. Hashes/tamanhos no guia de instaladores. DMGs Intel/ARM64: hdiutil VALID, arquitetura/versão conferidas. Intel do Actions: inicialização isolada PASS por dez segundos; Windows: estrutura PE conferida. ARM64 e Windows sem execução nativa. Artefatos GitHub retidos por um dia; cópias locais ignoradas pelo Git permanecem disponíveis nesta máquina.
 3. Validar GUI nativa completa (abrir, seletor, parear pelo Workspace, aprovar, tray, reabrir). O teste real usa autorização e aprovação programáticas no mesmo núcleo.
 4. Ensaio integrado de recuperação após encerramento abrupto e falha de rede durante aplicação. Unidade de escrita parcial/idempotência passou, mas não prova todo o restart. Há uma janela entre reserva remota e journal local; planejar reconciliação de tarefa órfã sem repetir o modelo.

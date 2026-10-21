@@ -44,7 +44,7 @@ Nenhum segredo real foi encontrado no repositório nem no histórico. Mesmo assi
 - **Code security:** secret scanning, **push protection**, Dependabot alerts e security updates, **private vulnerability reporting**.
 - **Actions:** “Require approval for all outside collaborators” em PRs de fork; permissões padrão do `GITHUB_TOKEN` como **somente leitura**; não permitir que Actions criem ou aprovem PRs.
 - **Environments:** `runner-release` com você como revisor obrigatório.
-- **CODEOWNERS:** troque `<OWNER>` em `.github/CODEOWNERS` pelo seu usuário e descomente as linhas.
+- **CODEOWNERS:** já aponta para `@jaoguedes`.
 - **Execuções antigas de Actions:** os logs atuais não têm segredos (varridos nesta auditoria), mas contêm o nome do repositório. Apague artefatos e execuções antigas se preferir começar limpo.
 
 ## 5. Sua máquina
