@@ -938,6 +938,15 @@ export async function applyRetention(db: Db, now: number) {
     { sql: "DELETE FROM od_oauth_states WHERE expires_at <= ?", args: [iso(now)] },
     { sql: "DELETE FROM od_sessions WHERE expires_at <= ?", args: [iso(now)] },
     { sql: "DELETE FROM od_rate_limits WHERE expires_at <= ?", args: [now] },
+    // Runner (R07): conteúdo cifrado de tarefas terminadas há 90 dias sai; metadados ficam.
+    // Incertas nunca saem sozinhas (exigem revisão), nem as ligadas a plano ainda ativo.
+    ...["od_runner_events", "od_runner_approvals"].map((table) => ({
+      sql: `DELETE FROM ${table} WHERE task_id IN (SELECT t.id FROM od_runner_tasks t WHERE t.state IN ('completed','failed','cancelled') AND t.updated_at <= ?
+        AND NOT EXISTS (SELECT 1 FROM od_engineering_attempts a JOIN od_engineering_tasks et ON et.id = a.task_id JOIN od_engineering_plans p ON p.id = et.plan_id
+          WHERE a.runner_task_id = t.id AND p.state IN ('active','paused')))`,
+      args: [now - 90 * 86_400_000],
+    })),
+    { sql: "DELETE FROM od_runner_pairings WHERE expires_at <= ?", args: [now - 86_400_000] },
     { sql: "DELETE FROM od_inbox_events WHERE received_at <= ?", args: [iso(now - 30 * 86_400_000)] },
     { sql: "DELETE FROM od_shipments WHERE active = 0 AND updated_at <= ?", args: [iso(now - 90 * 86_400_000)] },
   ]);
