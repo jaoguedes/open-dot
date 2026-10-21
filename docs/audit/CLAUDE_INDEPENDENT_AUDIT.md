@@ -152,18 +152,18 @@ Atualizado conforme os commits entram. SHA do commit em que a correção entrou.
 
 | ID | Severidade | Status | Commit |
 |---|---|---|---|
-| OD2-CLAUDE-01 | P1 | pendente | — |
-| OD2-CLAUDE-02 | P1 | pendente | — |
-| OD2-CLAUDE-03 | P2 | pendente | — |
-| OD2-CLAUDE-04 | P2 | pendente | — |
-| OD2-CLAUDE-05 | P2 | pendente | — |
-| OD2-CLAUDE-06 | P2 | pendente | — |
-| OD2-CLAUDE-07 | P2 | pendente | — |
-| OD2-CLAUDE-08 | P2 | pendente | — |
-| OD2-CLAUDE-09 | P2 | pendente | — |
-| OD2-CLAUDE-10 | P3 | pendente | — |
-| OD2-CLAUDE-11 | P3 | pendente | — |
-| OD2-CLAUDE-12 | P0 | pendente | — |
-| OD2-CLAUDE-13 | P3 | planejado | — |
-| OD2-CLAUDE-14 | P2 | bloqueado (toolchain) | — |
-| OD2-CLAUDE-15 | P1 | ação do mantenedor | — |
+| OD2-CLAUDE-01 | P1 | corrigido, teste de regressão | `b0c6a6c` |
+| OD2-CLAUDE-02 | P1 | corrigido, teste de regressão; ação do mantenedor antes do próximo deploy (`.deploy.local.json`) | `771ef4c` |
+| OD2-CLAUDE-03 | P2 | corrigido (por origem + teto global); risco residual: botnet | `4aaff67`, `50db2d7` |
+| OD2-CLAUDE-04 | P2 | corrigido | `4aaff67` |
+| OD2-CLAUDE-05 | P2 | corrigido, teste de regressão | `9f623b1` |
+| OD2-CLAUDE-06 | P2 | corrigido, teste de política dos workflows | `b955fbb`, `10d33be` |
+| OD2-CLAUDE-07 | P2 | corrigido no código; **não compilado** (sem toolchain Rust) | `69ead54` |
+| OD2-CLAUDE-08 | P2 | corrigido na árvore atual; permanece no histórico (sem reescrita, ver relatório final) | `e0b3b44`, `2927106` |
+| OD2-CLAUDE-09 | P2 | corrigido (árvore, preparado, histórico, CI, hook) | `9416db1` |
+| OD2-CLAUDE-10 | P3 | corrigido | `bb47638` |
+| OD2-CLAUDE-11 | P3 | mitigado: publicação envia só refs explícitas | `048cee4` |
+| OD2-CLAUDE-12 | P0 | corrigido: AGPL + comercial + CLA; Dot só visualização; SPDX; Marcador e prova sem o Dot. Revisão jurídica pendente | `d76826e`…`89f1917` |
+| OD2-CLAUDE-13 | P3 | planejado (Windows desligado) | — |
+| OD2-CLAUDE-14 | P2 | bloqueado: sem toolchain Rust; roteiro manual seção 0 | — |
+| OD2-CLAUDE-15 | P1 | ação do mantenedor (produção) | — |
