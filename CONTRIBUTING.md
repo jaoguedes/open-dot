@@ -1,5 +1,13 @@
 # Como contribuir
 
+## Licença e CLA
+
+- O código é **AGPL-3.0-only** (`LICENSE`), com licença comercial alternativa (`COMMERCIAL-LICENSE.md`). Por isso toda contribuição exige aceitar o **CLA** (`CLA.md`). A coleta automática do aceite ainda não existe: escreva o aceite na descrição do primeiro PR, como explicado no CLA.
+- Arquivos de código novos começam com `// SPDX-License-Identifier: AGPL-3.0-only` (ou o comentário equivalente da linguagem). Confira com `node scripts/license/spdx.mjs --check`.
+- **Não altere o Dot.** Os arquivos listados em `scripts/lib/dot-paths.mjs` têm licença própria, todos os direitos reservados (`LICENSE-DOT-ASSETS.md`). O app usa o mascote só pela fronteira `@open-dot/mascot`; `npm run check:without-dot` precisa continuar passando.
+- Nada de segredos, credenciais ou dados pessoais reais. `npm run hooks:install` instala um hook opcional que recusa o commit se achar algum.
+- Vulnerabilidades vão por canal privado (`SECURITY.md`), nunca por issue.
+
 ## Regra de ouro
 
 **O app prepara, o usuário aprova.** Nenhuma escrita fora do Open Dot (enviar e-mail, abrir issue, redeploy, publicar post) acontece sem uma aprovação ligada ao conteúdo exato: a tela mostra o texto, guarda o hash, e o servidor só aceita a decisão se versão e hash baterem (`repo.decideApproval`). Conteúdo externo (e-mail, feed, página) é dado, nunca instrução. O supervisor de permissões é código (`authorizeTool`), não o modelo.
@@ -22,7 +30,8 @@ Abre http://localhost:8787 com API, banco SQLite em `.data/` e agendador local. 
 
 | Comando | O que faz |
 |---|---|
-| `npm run check` | typecheck + testes + Blender + build. Precisa passar antes de qualquer commit. |
+| `npm run check` | varredura de segredos/dados pessoais + typecheck + testes + Blender + build. Precisa passar antes de qualquer commit. |
+| `npm run check:without-dot` | prova que o app compila e testa sem os arquivos do Dot, com o Marcador. |
 | `npm test` | só os testes (`node --test`). |
 | `npm run ui:mobile` | celular 390×844 contra o `npm run dev`. |
 | `npm run ui:fase-a` / `npm run ui:fase-d` | navegador com API simulada contra o `apps/web/dist` (não precisa do dev). |
