@@ -4,7 +4,7 @@ Gerado em 20/10/2026 a partir dos lockfiles. Não substitui revisão jurídica.
 
 | Arquivo | Conteúdo | Como gerar |
 |---|---|---|
-| `sbom-npm.cdx.json` | SBOM CycloneDX das dependências npm (290 componentes) | `npm sbom --sbom-format cyclonedx --sbom-type application` |
+| `sbom-npm.cdx.json` | SBOM CycloneDX das dependências npm (290 componentes) | `node scripts/license/npm-sbom.mjs` (sem e-mails de autores) |
 | `cargo-licenses.json` | Licença de cada crate do Runner (508), da API pública do crates.io | `node scripts/license/cargo-inventory.mjs` |
 | `sbom-cargo.cdx.json` | SBOM CycloneDX mínimo das crates | mesmo script |
 
