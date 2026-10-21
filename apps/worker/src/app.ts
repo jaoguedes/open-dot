@@ -3,6 +3,7 @@ import { registerEngineeringRoutes } from "./continuity/engineering-routes.ts";
 import { registerProjectMemoryRoutes } from "./continuity/routes.ts";
 import { registerRunnerRoutes } from "./runner/routes.ts";
 import { registerOrchestratorRoutes, registerTeamRoutes } from "./orchestrator/routes.ts";
+import { registerPipelineRoutes } from "./orchestrator/pipeline.ts";
 import { z } from "zod";
 import {
   AGENTS,
@@ -77,6 +78,7 @@ registerProjectMemoryRoutes(route);
 registerEngineeringRoutes(route);
 registerOrchestratorRoutes(route);
 registerTeamRoutes(route);
+registerPipelineRoutes(route);
 
 export async function handleApi(ctx: Ctx, req: Request): Promise<Response> {
   const url = new URL(req.url);

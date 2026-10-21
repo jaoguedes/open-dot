@@ -58,6 +58,7 @@ export async function exportData(ctx: Ctx, ownerId: string) {
 
 /** Tabelas com dados do dono, filhas antes das mães. A ordem importa quando há chave estrangeira. */
 const OWNER_TABLES = [
+  "od_pipelines",
   "od_orchestrator_settings",
   "od_tool_quota",
   "od_orchestrator_outcomes",
@@ -117,6 +118,7 @@ export async function deleteAccount(ctx: Ctx, ownerId: string): Promise<{ revoke
     {sql:"DELETE FROM od_engineering_attempts WHERE task_id IN (SELECT t.id FROM od_engineering_tasks t JOIN od_engineering_plans p ON p.id=t.plan_id WHERE p.owner_id=?)",args:[ownerId]},
     {sql:"DELETE FROM od_engineering_tasks WHERE plan_id IN (SELECT id FROM od_engineering_plans WHERE owner_id=?)",args:[ownerId]},
     {sql:"DELETE FROM od_engineering_plans WHERE owner_id=?",args:[ownerId]},
+    {sql:"DELETE FROM od_pipeline_steps WHERE pipeline_id IN (SELECT id FROM od_pipelines WHERE owner_id=?)",args:[ownerId]},
     {sql:"DELETE FROM od_runner_events WHERE task_id IN (SELECT id FROM od_runner_tasks WHERE owner_id=?)",args:[ownerId]},
     {sql:"DELETE FROM od_runner_approvals WHERE task_id IN (SELECT id FROM od_runner_tasks WHERE owner_id=?)",args:[ownerId]},
     ...OWNER_TABLES.map((t) => ({ sql: `DELETE FROM ${t} WHERE owner_id = ?`, args: [ownerId] })),

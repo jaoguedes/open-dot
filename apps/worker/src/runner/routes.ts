@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { advanceEngineering } from "../continuity/scheduler.ts";
+import { advancePipelines, stepForTask } from "../orchestrator/pipeline.ts";
 import { RUNNER_PROTOCOL, APPROVAL_CONTRACT, REQUIRED_CAPABILITIES, runnerHello, runnerCompatible } from "./protocol.ts";
 import { currentSchema, REQUIRED_SCHEMA, schemaCompatible } from "../db/migrate.ts";
 import { z } from "zod";
@@ -267,6 +268,7 @@ export function registerRunnerRoutes(route: Registrar) {
     if (!d) return problem(401, "device_revoked", "Dispositivo indisponível.");
     await reconcileRunnerTasks(ctx);
     if(d.protocol_version!==RUNNER_PROTOCOL) return problem(409,"runner_incompatible","Negocie protocolo antes de executar.");
+    await advancePipelines(ctx, d.id);
     await advanceEngineering(ctx, d.id);
     // CAS em uma instrução: um processo por dispositivo; nunca reentregar running após reconexão.
     const tasks = await ctx.db.query<Task>(
@@ -275,13 +277,15 @@ export function registerRunnerRoutes(route: Registrar) {
     );
     const t = tasks[0];
     if (!t) return json({ task: null });
-    return json({ task: { id: t.id, projectId: t.project_id, mechanism: t.mechanism, worktreeConsent:true, prompt: await open(ctx.keys, t.prompt_enc, `runner:${t.owner_id}:${t.id}`) } });
+    // Passo de pipeline: o Runner recebe papel e esquema; tarefas avulsas seguem como implementador.
+    const step = await stepForTask(ctx, t.id);
+    return json({ task: { id: t.id, projectId: t.project_id, mechanism: t.mechanism, worktreeConsent:true, ...(step ? { role: step.role, outputSchema: step.outputSchema } : {}), prompt: await open(ctx.keys, t.prompt_enc, `runner:${t.owner_id}:${t.id}`) } });
   });
   route("POST", "/api/runner/device/tasks/:id/event", { auth: false, csrf: false }, async (ctx, req, p) => {
     const d = await device(ctx, req);
     if (!d) return problem(401, "device_revoked", "Dispositivo indisponível.");
     const data = z
-      .object({ seq: z.number().int().min(1).max(500), kind: z.enum(["status", "message", "files", "tests", "completed", "failed", "cancelled", "uncertain", "proposal"]), text: z.string().max(20000) })
+      .object({ seq: z.number().int().min(1).max(500), kind: z.enum(["status", "message", "result", "files", "tests", "completed", "failed", "cancelled", "uncertain", "proposal"]), text: z.string().max(20000) })
       .strict()
       .parse(await read(req));
     await reconcileRunnerTasks(ctx);
@@ -297,7 +301,7 @@ export function registerRunnerRoutes(route: Registrar) {
     if(t.state!=='running' && !(t.state==='awaiting_approval' && ['failed','cancelled','uncertain'].includes(data.kind)) && !(stopping && terminal.has(data.kind))) return problem(409,"task_closed","Tentativa encerrada ou aguardando parada.");
     // O recibo tardio de conclusão após pedido de parada não comprova ausência de efeitos.
     const nextState=stopping && data.kind!=='cancelled' ? 'uncertain' : data.kind==='proposal'?'awaiting_approval':terminal.has(data.kind)?data.kind:'running';
-    const budget = data.kind === "status" || data.kind === "message" ? 490 : data.kind === "proposal" ? 496 : data.kind === "files" ? 498 : data.kind === "tests" ? 499 : 500;
+    const budget = data.kind === "status" || data.kind === "message" || data.kind === "result" ? 490 : data.kind === "proposal" ? 496 : data.kind === "files" ? 498 : data.kind === "tests" ? 499 : 500;
     if (data.seq > budget) return problem(409, "event_budget", "Limite de progresso atingido; orçamento reservado para conclusão ou falha.");
     let proposalDigest: string | null = null;
     let proposalEnc: string | null = null;

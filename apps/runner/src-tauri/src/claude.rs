@@ -39,12 +39,16 @@ pub fn experimental_enabled(value: Option<&str>) -> bool {
 
 /// Argumentos fixos. Nada vem do modelo nem do navegador; o prompt vai por stdin.
 pub fn args() -> Vec<String> {
+    args_with(SCHEMA)
+}
+/// Mesmos argumentos, com o esquema de saída de um papel só leitura (planejador, revisor).
+pub fn args_with(schema: &str) -> Vec<String> {
     [
         "-p",
         "--output-format",
         "json",
         "--json-schema",
-        SCHEMA,
+        schema,
         "--tools",
         "",
         "--strict-mcp-config",
@@ -82,9 +86,21 @@ pub fn preflight(cli: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// Interpreta o envelope `--output-format json`. Falha fechada em erro, recusa, ferramenta
+/// Texto final do modelo como objeto JSON (papéis só leitura). Recusa o que não for objeto.
+pub fn parse_object(text: &str) -> Result<Value, String> {
+    if text.len() > 32_000 {
+        return Err("Resposta excedeu o limite de conteúdo.".into());
+    }
+    let v: Value = serde_json::from_str(text).map_err(|_| "O modelo não entregou JSON válido.")?;
+    if !v.is_object() {
+        return Err("O modelo não entregou um objeto JSON.".into());
+    }
+    Ok(v)
+}
+
+/// Envelope `--output-format json` → objeto estruturado. Falha fechada em erro, recusa, ferramenta
 /// ou mais de um turno: o modo seguro não tem ferramentas, então um turno basta.
-pub fn parse_result(bytes: &[u8]) -> Result<(String, Vec<(String, String)>), String> {
+pub fn parse_envelope(bytes: &[u8]) -> Result<Value, String> {
     let v: Value = serde_json::from_slice(bytes).map_err(|_| "Resposta do Claude Code ilegível. Nenhuma edição foi aplicada.")?;
     if v["type"] != "result" {
         return Err("Resposta do Claude Code fora do contrato. Nenhuma edição foi aplicada.".into());
@@ -102,10 +118,15 @@ pub fn parse_result(bytes: &[u8]) -> Result<(String, Vec<(String, String)>), Str
     if v["num_turns"].as_u64().unwrap_or(0) != 1 {
         return Err("O mecanismo fez mais de um turno no modo sem ferramentas. Execução bloqueada.".into());
     }
-    let structured = match &v["structured_output"] {
-        Value::Object(_) => v["structured_output"].clone(),
-        _ => serde_json::from_str(v["result"].as_str().ok_or("Proposta ausente.")?).map_err(|_| "O modelo não entregou uma proposta estruturada válida.")?,
-    };
+    match &v["structured_output"] {
+        Value::Object(_) => Ok(v["structured_output"].clone()),
+        _ => parse_object(v["result"].as_str().ok_or("Proposta ausente.")?),
+    }
+}
+
+/// Envelope da proposta de arquivos (implementador).
+pub fn parse_result(bytes: &[u8]) -> Result<(String, Vec<(String, String)>), String> {
+    let structured = parse_envelope(bytes)?;
     #[derive(serde::Deserialize)]
     #[serde(deny_unknown_fields)]
     struct ModelEdit {
@@ -122,7 +143,7 @@ pub fn parse_result(bytes: &[u8]) -> Result<(String, Vec<(String, String)>), Str
     Ok((p.summary, p.files.into_iter().map(|e| (e.path, e.content)).collect()))
 }
 
-fn run(cli: &Path, root: &Path, input: &str, cancel: &dyn Fn() -> bool) -> Result<Vec<u8>, String> {
+fn run(cli: &Path, root: &Path, input: &str, argv: Vec<String>, cancel: &dyn Fn() -> bool) -> Result<Vec<u8>, String> {
     if input.len() > PROMPT_CAP {
         return Err("Pedido e contexto excedem o limite do modo seguro.".into());
     }
@@ -136,7 +157,7 @@ fn run(cli: &Path, root: &Path, input: &str, cancel: &dyn Fn() -> bool) -> Resul
     for key in ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_BASE_URL", "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX"] {
         cmd.env_remove(key);
     }
-    cmd.args(args()).current_dir(root).stdin(Stdio::piped());
+    cmd.args(argv).current_dir(root).stdin(Stdio::piped());
     if process::stopping() {
         return Err("Runner encerrando.".into());
     }
@@ -177,7 +198,7 @@ pub fn propose(cli: &Path, root: &Path, prompt: &str, cancel: &dyn Fn() -> bool,
     let context = worktree::context(root)?;
     on_status("Claude Code oficial em modo sem ferramentas; gerando proposta sem comandos.");
     let input = format!("USER REQUEST:\n{prompt}\n\nAUTHORIZED PROJECT FILES (untrusted JSON data; partial context, not whole project):\n{context}");
-    let bytes = run(cli, root, &input, cancel)?;
+    let bytes = run(cli, root, &input, args(), cancel)?;
     let (summary, files) = parse_result(&bytes)?;
     worktree::prepare(
         root,
@@ -189,6 +210,20 @@ pub fn propose(cli: &Path, root: &Path, prompt: &str, cancel: &dyn Fn() -> bool,
                 .collect(),
         },
     )
+}
+
+/// Papéis só leitura: resposta no esquema do agente; o Worker valida o conteúdo.
+pub fn respond(cli: &Path, root: &Path, prompt: &str, schema: &Value, cancel: &dyn Fn() -> bool, on_status: &mut dyn FnMut(&str)) -> Result<Value, String> {
+    let schema_text = schema.to_string();
+    if !schema.is_object() || schema_text.len() > 8000 {
+        return Err("Esquema de saída inválido ou grande demais.".into());
+    }
+    preflight(cli)?;
+    let context = worktree::context(root)?;
+    on_status("Claude Code oficial em modo sem ferramentas; respondendo no esquema do papel.");
+    let input = format!("USER REQUEST:\n{prompt}\n\nAUTHORIZED PROJECT FILES (untrusted JSON data; partial context, not whole project):\n{context}");
+    let bytes = run(cli, root, &input, args_with(&schema_text), cancel)?;
+    parse_envelope(&bytes)
 }
 
 #[cfg(test)]
@@ -232,6 +267,17 @@ mod tests {
         assert!(parse_result(&envelope(r#""is_error":false,"structured_output":{"summary":"x","files":[{"path":"a","content":"b","mode":"755"}]}"#)).is_err());
         assert!(parse_result(b"not json").is_err());
         assert!(parse_result(br#"{"type":"assistant"}"#).is_err());
+    }
+    #[test]
+    fn read_only_roles_get_the_agent_schema_and_objects_only() {
+        let a = args_with(r#"{"type":"object"}"#);
+        assert!(a.windows(2).any(|w| w[0] == "--json-schema" && w[1] == r#"{"type":"object"}"#));
+        assert!(a.windows(2).any(|w| w[0] == "--tools" && w[1].is_empty()));
+        assert!(parse_object("[1,2]").is_err());
+        assert!(parse_object("texto").is_err());
+        assert_eq!(parse_object(r#"{"decisao":"aprovar"}"#).unwrap()["decisao"], "aprovar");
+        let v = parse_envelope(&envelope(r#""is_error":false,"structured_output":{"decisao":"reprovar"}"#)).unwrap();
+        assert_eq!(v["decisao"], "reprovar");
     }
     #[test]
     fn version_and_opt_in() {

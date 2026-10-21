@@ -20,6 +20,7 @@ import { device, read } from "../runner/routes.ts";
 type Registrar = (method: string, path: string, opts: { auth: boolean; csrf?: boolean }, handler: Handler) => void;
 export const CATALOG = parseCatalog(catalogJson);
 const WEIGHTS = weightsJson as unknown as Weights & { padraoDeChamadasPorDia: Partial<Record<ToolId, number | null>> };
+export const WEIGHTS_FOR_PIPELINE: Weights = WEIGHTS;
 let agentsCache: Promise<AgentPackage[]> | null = null;
 /** Pacotes de agentes gerados no build, conferidos pelo hash de cada um. */
 export function agentPackages(): Promise<AgentPackage[]> {
@@ -45,7 +46,7 @@ async function evidence(ctx: Parameters<Handler>[0], owner: string) {
   return out;
 }
 
-async function settings(ctx: Parameters<Handler>[0], owner: string) {
+export async function settingsFor(ctx: Parameters<Handler>[0], owner: string) {
   const row = (await ctx.db.query<{ claude_opt_in: number; claude_ack_at: number | null }>("SELECT claude_opt_in,claude_ack_at FROM od_orchestrator_settings WHERE owner_id=?", [owner]))[0];
   return { claudeCode: row?.claude_opt_in === 1, claudeAvisoAceitoEm: row?.claude_ack_at ?? null };
 }
@@ -100,7 +101,7 @@ export function registerTeamRoutes(route: Registrar) {
       quotas: await quotas(ctx, owner!),
       evidence: await evidence(ctx, owner!),
       weights: WEIGHTS,
-      optIn: { claudeCode: (await settings(ctx, owner!)).claudeCode },
+      optIn: { claudeCode: (await settingsFor(ctx, owner!)).claudeCode },
       ...(data.overrides ? { overrides: data.overrides } : {}),
       ...(data.permitirPossivelmentePago ? { permitirPossivelmentePago: data.permitirPossivelmentePago } : {}),
       now: ctx.now(),
@@ -108,7 +109,7 @@ export function registerTeamRoutes(route: Registrar) {
     return json({ team, snapshotDisponivel: snapshot !== null, executa: false, nota: "Proposta de equipe. Nada roda sem a sua confirmação." });
   });
 
-  route("GET", "/api/orchestrator/settings", { auth: true }, async (ctx, _r, _p, owner) => json({ ...(await settings(ctx, owner!)), quotas: await quotas(ctx, owner!) }));
+  route("GET", "/api/orchestrator/settings", { auth: true }, async (ctx, _r, _p, owner) => json({ ...(await settingsFor(ctx, owner!)), quotas: await quotas(ctx, owner!) }));
 
   route("PUT", "/api/orchestrator/settings", { auth: true }, async (ctx, req, _p, owner) => {
     const data = z.object({ claudeCode: z.boolean(), aviso: z.literal("uso-programatico-consome-credito-do-plano").optional() }).strict().parse(await read(req));
@@ -117,7 +118,7 @@ export function registerTeamRoutes(route: Registrar) {
       "INSERT INTO od_orchestrator_settings(owner_id,claude_opt_in,claude_ack_at,updated_at) VALUES(?,?,?,?) ON CONFLICT(owner_id) DO UPDATE SET claude_opt_in=excluded.claude_opt_in,claude_ack_at=COALESCE(excluded.claude_ack_at,od_orchestrator_settings.claude_ack_at),updated_at=excluded.updated_at",
       [owner!, data.claudeCode ? 1 : 0, data.claudeCode ? ctx.now() : null, ctx.now()],
     );
-    return json(await settings(ctx, owner!));
+    return json(await settingsFor(ctx, owner!));
   });
 
   route("PUT", "/api/orchestrator/quota/:tool", { auth: true }, async (ctx, req, p, owner) => {

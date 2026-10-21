@@ -13,7 +13,7 @@ use std::{
 // Deixar espaço para proposta, arquivos, testes e recibo terminal.
 fn event_limit(kind: &str) -> u64 {
     match kind {
-        "status" | "message" => 490,
+        "status" | "message" | "result" => 490,
         "proposal" => 496,
         "files" => 498,
         "tests" => 499,
@@ -332,6 +332,33 @@ pub fn poll(
                 status_error = Some(e);
             }
         };
+        // Papéis só leitura do orquestrador: resposta no esquema do agente, sem escrita no host.
+        let role = task["role"].as_str().unwrap_or("implementador");
+        if role == "planejador" || role == "revisor" {
+            let schema = task["outputSchema"].clone();
+            let answer = if mechanism == "codex" {
+                codex::respond(&cli, &root, prompt, &schema, &cancel, &mut report)?
+            } else {
+                claude::respond(&cli, &root, prompt, &schema, &cancel, &mut report)?
+            };
+            drop(report);
+            if let Some(error) = status_error {
+                return Err(error);
+            }
+            if cancel() {
+                return Err("Tarefa interrompida antes da resposta.".into());
+            }
+            let text = serde_json::to_string(&answer).map_err(|_| "Resposta inválida.")?;
+            if text.len() > 20_000 {
+                return Err("Resposta acima do limite de 20 KB.".into());
+            }
+            emit(c, &mut j, dir, "result", &text)?;
+            emit(c, &mut j, dir, "completed", "Resposta de papel só leitura registrada. Nenhum arquivo foi alterado; nada foi executado.")?;
+            journal::clear(dir)?;
+            return Ok(());
+        } else if role != "implementador" {
+            return Err("Papel desconhecido. Nada foi executado.".into());
+        }
         let proposal = if mechanism == "codex" {
             codex::propose(&cli, &root, prompt, &cancel, &mut report)?
         } else {
