@@ -223,11 +223,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const olderRef = useRef<Snapshot["feed"]>([]);
   const lastTryRef = useRef<number | null>(null);
   const inFlight = useRef<Promise<void> | null>(null);
+  const sessionSeenRef = useRef(false);
 
-  const showLogin = useCallback(async () => {
+  const showLogin = useCallback(async (known?: Awaited<ReturnType<typeof api.session>>) => {
     etagRef.current = null;
     try {
-      const s = await api.session();
+      const s = known ?? (await api.session());
       setLogin({ dev: Boolean(s.devLoginAvailable), google: Boolean(s.googleLoginAvailable) });
     } catch {
       /* sem opções de login: a tela mostra a entrada padrão */
@@ -239,6 +240,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (new URLSearchParams(location.search).has("demo")) return enterDemo("Você abriu o modo demonstração.");
     lastTryRef.current = Date.now();
     try {
+      // Primeira carga: pergunta a sessão (sempre 200) antes do snapshot autenticado, para um
+      // visitante sem login não gerar um 401 esperado no console a cada abertura.
+      if (!sessionSeenRef.current) {
+        const s = await api.session();
+        if (!s.authenticated) return showLogin(s);
+        sessionSeenRef.current = true;
+      }
       const r = await fetchSnapshot(snap ? etagRef.current : null);
       if (r.kind === "same") {
         setFailures([]);
@@ -272,6 +280,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setSetupMissing(e.missing ?? []);
         setMode("setup");
       } else if (e instanceof ApiError && e.status === 401) {
+        sessionSeenRef.current = false;
         await showLogin();
       } else {
         const next = apiFailureMode(location.hostname, mode === "live" || Boolean(snap));

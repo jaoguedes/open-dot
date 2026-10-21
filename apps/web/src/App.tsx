@@ -21,7 +21,11 @@ const Entregas = lazy(() => import("./views/Entregas.tsx").then((m) => ({ defaul
 const Routines = lazy(() => import("./views/Routines.tsx").then((m) => ({ default: m.Routines })));
 const Connections = lazy(() => import("./views/Connections.tsx").then((m) => ({ default: m.Connections })));
 const ContextPanel = lazy(() => import("./components/ContextPanel.tsx").then((m) => ({ default: m.ContextPanel })));
-const CommandPalette = lazy(() => import("./components/CommandPalette.tsx").then((m) => ({ default: m.CommandPalette })));
+// A paleta fica fora da primeira tela, mas é pré-carregada logo depois: ⌘K abre na hora e o que
+// a pessoa digita em seguida não se perde enquanto o pedaço carrega.
+let paletteModule: typeof import("./components/CommandPalette.tsx") | null = null;
+const paletteImport = () => import("./components/CommandPalette.tsx").then((m) => (paletteModule = m));
+const CommandPalette = lazy(() => paletteImport().then((m) => ({ default: m.CommandPalette })));
 const Approval = lazy(() => import("./views/Approval.tsx").then((m) => ({ default: m.Approval })));
 const About = lazy(() => import("./views/About.tsx").then((m) => ({ default: m.About })));
 const Privacy = lazy(() => import("./views/Privacy.tsx").then((m) => ({ default: m.Privacy })));
@@ -134,6 +138,11 @@ export function App() {
       document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("od-trouble", onTrouble);
     };
+  }, []);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => void paletteImport().catch(() => undefined), 1500);
+    return () => window.clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -372,11 +381,14 @@ export function App() {
         </div>
       </div>
       {!hideDock && <Dock go={go} current={app.path} onAsk={() => setPalette(true)} />}
-      {palette && (
-        <Suspense fallback={null}>
-          <CommandPalette onClose={() => setPalette(false)} go={go} destinations={PALETTE_DESTINATIONS} agents={LIST_AGENTS} />
-        </Suspense>
-      )}
+      {palette &&
+        (paletteModule ? (
+          <paletteModule.CommandPalette onClose={() => setPalette(false)} go={go} destinations={PALETTE_DESTINATIONS} agents={LIST_AGENTS} />
+        ) : (
+          <Suspense fallback={null}>
+            <CommandPalette onClose={() => setPalette(false)} go={go} destinations={PALETTE_DESTINATIONS} agents={LIST_AGENTS} />
+          </Suspense>
+        ))}
       <div className="sr-only" aria-live="polite">
         {app.announcement}
       </div>
