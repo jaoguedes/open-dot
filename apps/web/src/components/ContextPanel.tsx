@@ -3,7 +3,7 @@ import { useDialog } from "./useDialog.ts";
 import { islandReason } from "../presence.ts";
 import type { AgentId } from "@open-dot/core";
 import { useApp } from "../store.tsx";
-import { AgentDot } from "../dot/AgentDot.tsx";
+import { AgentDot } from "@open-dot/mascot";
 import { Icon } from "./Icons.tsx";
 import { fmtTime, RUN_LABEL } from "../format.ts";
 

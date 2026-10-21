@@ -1,4 +1,4 @@
-import { bodyPt, round2, type DotFrame } from "@open-dot/core";
+import { bodyPt, round2, type DotFrame } from "@open-dot/core/dot/index.ts";
 
 /** Conquista: a coroa só liga quando existir a regra. */
 export const CROWN_UNLOCKED = false;

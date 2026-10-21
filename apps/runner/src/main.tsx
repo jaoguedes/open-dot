@@ -2,7 +2,7 @@ import { Mechanisms } from "../../web/src/components/Mechanisms.tsx";
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { toVisual } from "@open-dot/core";
-import { AgentDot } from "../../web/src/dot/AgentDot.tsx";
+import { AgentDot } from "@open-dot/mascot";
 import { invoke, nativeAvailable, type LocalDiagnostics } from "./bridge.ts";
 import "../../web/src/theme.css";
 import "./runner.css";

@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type PointerEvent, type KeyboardEvent } from "react";
-import { DotEngine, bodyPath, type Accessory, type AccessoryKind, type AgentVisual, type DotFrame, type DotStateKey, type ParticleFrame, type SemanticState } from "@open-dot/core";
+import type { Accessory, AgentVisual, SemanticState } from "@open-dot/core";
+import { DotEngine, bodyPath, type AccessoryKind, type DotFrame, type DotStateKey, type ParticleFrame } from "@open-dot/core/dot/index.ts";
 import { EYE, INK_COLOR, artDefs, badgeInner, heartPath, star4 } from "./art.ts";
 import { CROWN_UNLOCKED, accLayout } from "./accessories.ts";
 import { subscribe, type TickerHandle } from "./ticker.ts";

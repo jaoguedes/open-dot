@@ -2,7 +2,7 @@ import { useState } from "react";
 import { approvalQueue, queuePosition, toVisual } from "@open-dot/core";
 import { useApp } from "../store.tsx";
 import { api, ApiError } from "../api.ts";
-import { AgentDot } from "../dot/AgentDot.tsx";
+import { AgentDot } from "@open-dot/mascot";
 import { Icon } from "../components/Icons.tsx";
 
 /** Tela 03: uma aprovação por vez, hash + CAS. Gmail só leitura — não envia. */

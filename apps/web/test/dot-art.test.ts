@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DotEngine, type EyeShape } from "@open-dot/core";
+import { DotEngine, type EyeShape } from "@open-dot/core/dot/index.ts";
 import { EYE } from "../src/dot/art.ts";
 import { CROWN_UNLOCKED, accLayout, hatCrown } from "../src/dot/accessories.ts";
 

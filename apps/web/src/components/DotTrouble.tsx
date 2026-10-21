@@ -1,7 +1,7 @@
 import { ownerTimeZone } from "../format.ts";
 import { useEffect, useRef } from "react";
 import { explainError, sanitizeDetail, type AgentId } from "@open-dot/core";
-import { AgentDot } from "../dot/AgentDot.tsx";
+import { AgentDot } from "@open-dot/mascot";
 import { toVisual } from "@open-dot/core";
 
 export interface TroubleInfo {

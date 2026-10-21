@@ -20,7 +20,8 @@
     "paths": {
       "@open-dot/core": ["./packages/core/src/index.ts"],
       "@open-dot/core/*": ["./packages/core/src/*"],
-      "@open-dot/connectors/*": ["./packages/connectors/src/*"]
+      "@open-dot/connectors/*": ["./packages/connectors/src/*"],
+      "@open-dot/mascot": ["./apps/web/src/mascot/dot.ts"]
     }
   },
   "include": ["packages", "apps", "tests", "scripts"],

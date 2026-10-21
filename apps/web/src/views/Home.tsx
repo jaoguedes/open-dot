@@ -9,7 +9,7 @@ import { useApp } from "../store.tsx";
 import { ApiError, api } from "../api.ts";
 import { DigestBlock, FeedRow } from "../components/FeedViews.tsx";
 import { Icon } from "../components/Icons.tsx";
-import { AgentDot } from "../dot/AgentDot.tsx";
+import { AgentDot } from "@open-dot/mascot";
 import { DotTrouble } from "../components/DotTrouble.tsx";
 import { fmtWhen, greeting, ownerTimeZone } from "../format.ts";
 

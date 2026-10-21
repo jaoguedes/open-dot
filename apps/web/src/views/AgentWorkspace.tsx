@@ -2,7 +2,7 @@ import { RunnerWorkspace } from "../components/RunnerWorkspace.tsx";
 import { useState } from "react";
 import { AGENTS, agentsInPlace, approvalQueue, type AgentId } from "@open-dot/core";
 import { useApp } from "../store.tsx";
-import { AgentDot } from "../dot/AgentDot.tsx";
+import { AgentDot } from "@open-dot/mascot";
 import { askDot, type SavedAnswer } from "../ask.ts";
 import { AnswerView } from "../components/AnswerView.tsx";
 import { fmtDateTime, RUN_LABEL } from "../format.ts";

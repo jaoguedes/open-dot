@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { AGENTS, toVisual, type Accessory, type AgentId, type SemanticState, agentsInPlace } from "@open-dot/core";
 import { useApp } from "../store.tsx";
-import { AgentDot } from "../dot/AgentDot.tsx";
-import { CROWN_UNLOCKED } from "../dot/accessories.ts";
+import { AgentDot } from "@open-dot/mascot";
+import { CROWN_UNLOCKED } from "@open-dot/mascot";
 import { MAX_VOLUME, SOUND_NAMES, sound, type SoundName } from "../sound.ts";
 
 const STATES: Array<{ id: SemanticState; label: string }> = [

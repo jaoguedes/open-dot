@@ -2,7 +2,7 @@ import { MailSummary } from "../components/MailSummary.tsx";
 import { useRef, useState } from "react";
 import { AGENTS, agentsInPlace, approvalQueue } from "@open-dot/core";
 import { useApp } from "../store.tsx";
-import { AgentDot } from "../dot/AgentDot.tsx";
+import { AgentDot } from "@open-dot/mascot";
 import { fmtTime, fmtWhen, greeting, needYouLine } from "../format.ts";
 import { agentConnected, agentPresence, dominantVisual, type ConnectionFacts } from "../presence.ts";
 import type { ApprovalView, FeedEntry } from "../api.ts";

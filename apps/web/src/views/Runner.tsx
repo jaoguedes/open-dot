@@ -1,5 +1,5 @@
 import { Mechanisms } from "../components/Mechanisms.tsx";
-import { AgentDot } from "../dot/AgentDot.tsx";
+import { AgentDot } from "@open-dot/mascot";
 import { useApp } from "../store.tsx";
 import "../workspace.css";
 export function Runner() {

@@ -3,7 +3,7 @@ import { initialAbsorption, reduceAbsorption, toVisual, type SemanticState } fro
 import { useApp } from "../store.tsx";
 import { api, ApiError, sendUpload, type UploadView } from "../api.ts";
 import type { ExtractMessage } from "../absorb/extract.worker.ts";
-import { AgentDot } from "../dot/AgentDot.tsx";
+import { AgentDot } from "@open-dot/mascot";
 
 /**
  * Arraste ou escolha um arquivo para o Dot absorver. Fases reais (packages/core/src/absorption.ts):

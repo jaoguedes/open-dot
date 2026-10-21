@@ -1,5 +1,5 @@
 import { toVisual, type AgentId } from "@open-dot/core";
-import { AgentDot } from "../dot/AgentDot.tsx";
+import { AgentDot } from "@open-dot/mascot";
 import { useApp } from "../store.tsx";
 
 /** Pílula de fonte (E5): carinha do agente + origem. O toque abre o e-mail ou a notícia original. */

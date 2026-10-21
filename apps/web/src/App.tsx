@@ -3,8 +3,8 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } 
 import { AGENTS, agentsInPlace, toVisual, versionChanged, type AgentId } from "@open-dot/core";
 import { useApp } from "./store.tsx";
 import { Icon, type IconName } from "./components/Icons.tsx";
-import { AgentDot } from "./dot/AgentDot.tsx";
-import { SplashScreen } from "./dot/SplashScreen.tsx";
+import { AgentDot } from "@open-dot/mascot";
+import { SplashScreen } from "@open-dot/mascot";
 import { api } from "./api.ts";
 import { Home } from "./views/Home.tsx";
 
