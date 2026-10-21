@@ -351,7 +351,7 @@ test('capability registry: optional discovery preserves old clients and rejects 
   const listed=(await s.web.call('GET','/api/runner/devices')).json.devices[0];assert.deepEqual(listed.drivers[0].features,features);
   for(const bad of [
    {...beat.drivers[0],authenticated:false},
-   {...beat.drivers[0],id:'claude-code'},
+   {...beat.drivers[0],id:'cursor'}, // Cursor nunca anuncia execução; Claude Code pode (opt-in no Runner).
    {...beat.drivers[0],features:{...features,projectCommands:true}},
    {...beat.drivers[0],features:{...features,modelsDiscovered:true}},
    {...beat.drivers[0],features:{...features,version:2}},
