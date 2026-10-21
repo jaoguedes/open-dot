@@ -5,7 +5,12 @@ import { sha256Hex } from "@open-dot/core";
 import { randomToken } from "../src/crypto.ts";
 
 async function pair(c: ReturnType<typeof client>, ip: string) {
-  return c.call("POST", "/api/runner/pairings", { secretHash: await sha256Hex(randomToken()), tokenHash: await sha256Hex(randomToken()), name: "Teste" }, { "cf-connecting-ip": ip, "x-open-dot": "1" });
+  return c.call(
+    "POST",
+    "/api/runner/pairings",
+    { secretHash: await sha256Hex(randomToken()), tokenHash: await sha256Hex(randomToken()), name: "Teste" },
+    { "cf-connecting-ip": ip, "x-open-dot": "1" },
+  );
 }
 
 test("pareamento anônimo é limitado por origem: um atacante não bloqueia o dono (OD2-CLAUDE-03)", async () => {
