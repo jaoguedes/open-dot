@@ -25,8 +25,12 @@ pub fn project_id(path: &Path) -> String {
         &hex[20..]
     )
 }
-pub fn git(root: &Path, args: &[&str], cap: usize) -> Result<Vec<u8>, String> {
-    let mut cmd = process::command(Path::new("git"));
+/// Comando Git do host. Ignora configuração global e de sistema (filtros de conteúdo,
+/// LFS, includes) além dos hooks: `git archive` aplicaria filtros definidos fora do projeto.
+fn git_command(root: &Path, args: &[&str]) -> std::process::Command {
+    let mut cmd = process::command(Path::new(if cfg!(unix) { "/usr/bin/git" } else { "git" }));
+    cmd.env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_CONFIG_GLOBAL", if cfg!(windows) { "NUL" } else { "/dev/null" });
     cmd.args([
         "-c",
         "core.hooksPath=/dev/null",
@@ -38,8 +42,11 @@ pub fn git(root: &Path, args: &[&str], cap: usize) -> Result<Vec<u8>, String> {
     ])
     .arg(root)
     .args(args);
+    cmd
+}
+pub fn git(root: &Path, args: &[&str], cap: usize) -> Result<Vec<u8>, String> {
     // Os argumentos vêm de código do host. Não há shell nem comando fornecido pelo modelo.
-    process::bounded(cmd, Duration::from_secs(20), cap).map_err(|_| {
+    process::bounded(git_command(root, args), Duration::from_secs(20), cap).map_err(|_| {
         "Git recusou a operação. Escolha a raiz de um repositório com ao menos um commit.".into()
     })
 }
@@ -377,6 +384,22 @@ mod tests {
         fs::write(root.join("first.txt"),"a".repeat(8000)).unwrap();
         apply(&root,&proposal).unwrap();assert_eq!(fs::read(root.join("second.txt")).unwrap(),b"");
         fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn git_ignores_global_and_system_configuration() {
+        let cmd = git_command(Path::new("/tmp"), &["archive", "HEAD"]);
+        let envs: std::collections::HashMap<_, _> = cmd
+            .get_envs()
+            .filter_map(|(k, v)| Some((k.to_string_lossy().into_owned(), v?.to_string_lossy().into_owned())))
+            .collect();
+        assert_eq!(envs.get("GIT_CONFIG_NOSYSTEM").map(String::as_str), Some("1"));
+        assert_eq!(envs.get("GIT_CONFIG_GLOBAL").map(String::as_str), Some(if cfg!(windows) { "NUL" } else { "/dev/null" }));
+        for inherited in ["GIT_DIR", "GIT_EXEC_PATH", "GIT_SSH_COMMAND", "GIT_ASKPASS", "GIT_CONFIG_PARAMETERS"] {
+            assert!(!envs.contains_key(inherited), "{inherited}");
+        }
+        let args: Vec<_> = cmd.get_args().map(|a| a.to_string_lossy().into_owned()).collect();
+        assert!(args.windows(2).any(|w| w[0] == "-c" && w[1] == "core.hooksPath=/dev/null"));
+        assert!(args.windows(2).any(|w| w[0] == "-c" && w[1] == "core.fsmonitor=false"));
     }
     #[test]
     fn paths() {
