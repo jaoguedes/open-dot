@@ -64,7 +64,7 @@ Arquitetura: [`docs/agents/ARCHITECTURE_MAP.md`](docs/agents/ARCHITECTURE_MAP.md
 
 ## Licenças
 
-- **Código:** [AGPL-3.0-only](LICENSE), ou [licença comercial](COMMERCIAL-LICENSE.md) para quem não quer cumprir a AGPL. Contribuições exigem o [CLA](CLA.md).
+- **Código:** [AGPL-3.0-only](LICENSE), ou [licença comercial](COMMERCIAL-LICENSE.md) para quem não quer cumprir a AGPL. Pull requests são bem-vindos para análise; o merge só acontece após revisão do mantenedor (que pode pedir apoio de uma análise de segurança e qualidade), CI verde e aceite expresso do [CLA](CLA.md) pelo autor. Ver [CONTRIBUTING.md](CONTRIBUTING.md).
 - **O Dot fica visível** no app oficial e neste repositório, sob licença própria **só de visualização** ([LICENSE-DOT-ASSETS.md](LICENSE-DOT-ASSETS.md)): é permitido ver e executar o app oficial sem modificações; é **proibido copiar, redistribuir, modificar, treinar IA e uso comercial**. A AGPL não se aplica aos arquivos do Dot.
 - **Quem redistribui ou faz fork deve trocar o Dot** (e o nome). O repositório traz o **Marcador**, mascote genérico sob AGPL, e `npm run check:without-dot` (também na CI) prova que o app funciona sem o Dot. Passo a passo: [`docs/FORKS.md`](docs/FORKS.md).
 - **Marca:** [TRADEMARK.md](TRADEMARK.md). Atribuições: [NOTICE](NOTICE).

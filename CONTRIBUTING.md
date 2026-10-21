@@ -1,8 +1,18 @@
 # Como contribuir
 
+## Pull requests
+
+PRs são bem-vindos para análise. O merge só acontece depois de:
+
+1. **revisão do mantenedor**, que pode pedir apoio de uma análise de segurança e qualidade;
+2. **CI verde**;
+3. **aceite expresso do CLA** pelo autor do PR (caixa obrigatória no modelo `.github/PULL_REQUEST_TEMPLATE.md`).
+
+Até a revisão, o código do PR é tratado como não confiável. A CI de PR roda só com leitura (`permissions: contents: read`), sem segredos e sem `pull_request_target`; os jobs nativos não rodam em PR de fork. Abrir um PR não garante merge.
+
 ## Licença e CLA
 
-- O código é **AGPL-3.0-only** (`LICENSE`), com licença comercial alternativa (`COMMERCIAL-LICENSE.md`). Por isso toda contribuição exige aceitar o **CLA** (`CLA.md`). A coleta automática do aceite ainda não existe: escreva o aceite na descrição do primeiro PR, como explicado no CLA.
+- O código é **AGPL-3.0-only** (`LICENSE`), com licença comercial alternativa (`COMMERCIAL-LICENSE.md`). Por isso toda contribuição exige aceitar o **CLA** (`CLA.md`): marque a caixa “Li e aceito o CLA (CLA.md)” no modelo do PR. Não há bot nem serviço externo de CLA.
 - Arquivos de código novos começam com `// SPDX-License-Identifier: AGPL-3.0-only` (ou o comentário equivalente da linguagem). Confira com `node scripts/license/spdx.mjs --check`.
 - **Não altere o Dot.** Os arquivos listados em `scripts/lib/dot-paths.mjs` têm licença própria, todos os direitos reservados (`LICENSE-DOT-ASSETS.md`). O app usa o mascote só pela fronteira `@open-dot/mascot`; `npm run check:without-dot` precisa continuar passando.
 - Nada de segredos, credenciais ou dados pessoais reais. `npm run hooks:install` instala um hook opcional que recusa o commit se achar algum.

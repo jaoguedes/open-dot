@@ -49,7 +49,7 @@ Interface only, with labeled demo data: `npm run demo`. Your own cloud instance:
 
 ## Licenses
 
-- **Code:** [AGPL-3.0-only](LICENSE), or a [commercial license](COMMERCIAL-LICENSE.md) if you do not want AGPL obligations. Contributions require the [CLA](CLA.md).
+- **Code:** [AGPL-3.0-only](LICENSE), or a [commercial license](COMMERCIAL-LICENSE.md) if you do not want AGPL obligations. Pull requests are welcome for review; merging only happens after maintainer review (which may include a security and quality analysis), green CI and the author's express acceptance of the [CLA](CLA.md). See [CONTRIBUTING.md](CONTRIBUTING.md).
 - **The Dot stays visible** in the official app and in this repository under its own **view-only** license ([LICENSE-DOT-ASSETS.md](LICENSE-DOT-ASSETS.md)): you may view it and run the official app unmodified; **copying, redistributing, modifying, AI training and commercial use are prohibited**. The AGPL does not apply to Dot files.
 - **If you redistribute or fork, you must replace the Dot** (and the name). The repository ships the **Marcador**, a generic AGPL mascot, and `npm run check:without-dot` (also in CI) proves the app works without the Dot. See [`docs/FORKS.md`](docs/FORKS.md).
 - **Trademark:** [TRADEMARK.md](TRADEMARK.md). Attributions: [NOTICE](NOTICE).

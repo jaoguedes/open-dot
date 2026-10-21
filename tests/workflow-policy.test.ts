@@ -32,3 +32,11 @@ test("sem pull_request_target, permissões mínimas no topo e jobs nativos fora 
     assert.match(block, /head\.repo\.full_name == github\.repository/, job);
   }
 });
+
+test("PR de fork não recebe segredos nem token com escrita", () => {
+  for (const { f, text } of workflows) {
+    assert.ok(!/\bsecrets\./.test(text), `${f} usa secrets`);
+    assert.ok(!/workflow_run/.test(text), `${f} usa workflow_run`);
+    if (/^\s+pull_request:/m.test(text)) assert.ok(!/:\s*write\b/.test(text), `${f} roda em PR e pede escrita`);
+  }
+});
