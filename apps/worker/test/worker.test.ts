@@ -58,7 +58,7 @@ test("migrações: idempotentes, detectam alteração e recusam destrutivas", as
 
 test("fluxo completo simulado: conectar Gmail (leitura), sincronizar e publicar revisão com links e cobertura", async () => {
   const google = new FakeGoogle();
-  google.addMessage({ id: "m1", subject: "Confirme a entrega de amanhã?", from: "Loja <pedidos@loja.com>" }, false);
+  google.addMessage({ id: "m1", subject: "Confirme a entrega de amanhã?", from: "Loja <pedidos@loja.example>" }, false);
   google.addMessage({ id: "m2", subject: "Ofertas da semana", listUnsubscribe: true }, false);
   const ctx = await makeCtx({ fetch: google.fetch });
   const c = await connectGmail(google, ctx);
@@ -254,7 +254,7 @@ test("cron repetido no mesmo slot das 08h cria uma única revisão", async () =>
 
 test("lease/CAS: duas execuções disputando o mesmo run, só uma vence", async () => {
   const ctx = await makeCtx();
-  const owner = await repo.upsertOwner(ctx.db, { sub: "s", email: "e@x.com", name: null, now: ctx.now() });
+  const owner = await repo.upsertOwner(ctx.db, { sub: "s", email: "e@x.example", name: null, now: ctx.now() });
   await repo.createRunForSlot(ctx.db, { ownerId: owner, routineId: null, agentId: "correio", kind: "email_review", slotKey: "k", scheduledAt: ctx.now(), late: false, now: ctx.now() });
   const [run] = await repo.dueRuns(ctx.db, ctx.now());
   const [x, y] = await Promise.all([repo.claimRun(ctx.db, run!, ctx.now()), repo.claimRun(ctx.db, run!, ctx.now())]);
@@ -263,8 +263,8 @@ test("lease/CAS: duas execuções disputando o mesmo run, só uma vence", async 
 
 test("aprovações concorrentes no banco: um único efeito", async () => {
   const ctx = await makeCtx();
-  const owner = await repo.upsertOwner(ctx.db, { sub: "s", email: "e@x.com", name: null, now: ctx.now() });
-  const proposal = { action: "gmail.draft", service: "gmail", account: "e@x.com", resource: "t1", payload: { body: "ok" }, consequence: "rascunho" };
+  const owner = await repo.upsertOwner(ctx.db, { sub: "s", email: "e@x.example", name: null, now: ctx.now() });
+  const proposal = { action: "gmail.draft", service: "gmail", account: "e@x.example", resource: "t1", payload: { body: "ok" }, consequence: "rascunho" };
   const h = await hashProposal(proposal);
   await ctx.db.run(
     "INSERT INTO od_approvals (id, owner_id, action, proposal_enc, payload_hash, status, version, expires_at, created_at) VALUES ('ap1', ?, 'gmail.draft', 'x', ?, 'pending', 1, ?, ?)",
@@ -280,7 +280,7 @@ test("aprovação: editar gera hash novo; aprovar não envia", async () => {
   const c = client(ctx);
   await c.call("POST", "/api/session/dev");
   const ownerId = (await ctx.db.query<{ id: string }>("SELECT id FROM od_owners"))[0]!.id;
-  const proposal = { action: "gmail.send", service: "gmail", account: "dev@localhost", resource: "t1", payload: { to: "a@b.com", subject: "Re", body: "oi" }, consequence: "teste" };
+  const proposal = { action: "gmail.send", service: "gmail", account: "dev@localhost", resource: "t1", payload: { to: "a@b.example", subject: "Re", body: "oi" }, consequence: "teste" };
   const h = await hashProposal(proposal);
   const id = await repo.createApproval(ctx.db, ctx.keys, { ownerId, action: "gmail.send", proposal, payloadHash: h, now: ctx.now() });
   const list = await c.call("GET", "/api/approvals");
@@ -318,7 +318,7 @@ test("orçamento de IA no banco: reservas concorrentes no último saldo não est
 
 test("webhook GitHub: assinatura inválida, entrega duplicada e evento fora de ordem", async () => {
   const ctx = await makeCtx({ env: { GITHUB_WEBHOOK_SECRET: "segredo-webhook" } }); // scan-secrets: teste
-  const owner = await repo.upsertOwner(ctx.db, { sub: "s", email: "e@x.com", name: null, now: ctx.now() });
+  const owner = await repo.upsertOwner(ctx.db, { sub: "s", email: "e@x.example", name: null, now: ctx.now() });
   await ctx.db.run("INSERT INTO od_github_installations (installation_id, owner_id, active, updated_at) VALUES (42, ?, 1, ?)", [owner, new Date().toISOString()]);
   const sign = async (body: string) => {
     const key = await crypto.subtle.importKey("raw", new TextEncoder().encode("segredo-webhook"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
@@ -437,7 +437,7 @@ test("legal público: contato do ambiente, sem login e sem segredo", async () =>
 
 test("pergunta sem IA aprovada responde só com fontes do feed do próprio dono", async () => {
   const google = new FakeGoogle();
-  google.addMessage({ id: "f1", subject: "Fatura do cartão vence sexta", from: "Banco <aviso@banco.com>" }, false);
+  google.addMessage({ id: "f1", subject: "Fatura do cartão vence sexta", from: "Banco <aviso@banco.example>" }, false);
   const ctx = await makeCtx({ fetch: google.fetch, env: { GROQ_API_KEY: "k" } });
   const c = await connectGmail(google, ctx);
   const rid = (await c.call("GET", "/api/routines")).json.routines.find((r: { kind: string }) => r.kind === "email_review").id;

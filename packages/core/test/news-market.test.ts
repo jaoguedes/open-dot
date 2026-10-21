@@ -26,13 +26,13 @@ test("notícias: allowlist tem ≥ 2 veículos por tema e termos datados", () =>
 });
 
 test("notícias: dedupe por link e título normalizado", () => {
-  const a = item({ title: "Senado vota orçamento", link: "https://exemplo.com/a", outlet: "BBC News" });
-  const b = item({ title: "Senado vota orçamento!!!", link: "https://exemplo.com/a#x", outlet: "BBC News" });
+  const a = item({ title: "Senado vota orçamento", link: "https://example.com/a", outlet: "BBC News" });
+  const b = item({ title: "Senado vota orçamento!!!", link: "https://example.com/a#x", outlet: "BBC News" });
   const c = item({ title: "Senado vota orçamento", link: "https://outro.com/a", outlet: "BBC News" });
-  const d = item({ title: "Outra pauta", link: "https://exemplo.com/b", outlet: "NPR" });
+  const d = item({ title: "Outra pauta", link: "https://example.com/b", outlet: "NPR" });
   const out = dedupeNews([a, b, c, d]);
   assert.equal(out.length, 2);
-  assert.equal(out[0]!.link, "https://exemplo.com/a");
+  assert.equal(out[0]!.link, "https://example.com/a");
 });
 
 test("notícias: agrupamento político exige 2 veículos; um só avisa", () => {

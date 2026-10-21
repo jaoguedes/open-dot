@@ -57,12 +57,12 @@ export class FakeGoogle {
     }
     if (url.host === "oauth2.googleapis.com" && url.pathname === "/revoke") return new Response("", { status: 200 });
     if (url.host === "www.googleapis.com" && url.pathname === "/webmasters/v3/sites") {
-      return jsonResponse({ siteEntry: [{ siteUrl: "https://exemplo.com/", permissionLevel: "siteOwner" }] });
+      return jsonResponse({ siteEntry: [{ siteUrl: "https://example.com/", permissionLevel: "siteOwner" }] });
     }
     if (url.host === "gmail.googleapis.com") {
       if (this.rateLimited) return jsonResponse({ error: { errors: [{ reason: "rateLimitExceeded" }] } }, 429, { "retry-after": "30" });
       const path = url.pathname.replace("/gmail/v1/users/me", "");
-      if (path === "/profile") return jsonResponse({ emailAddress: "joao@gmail.com", historyId: String(this.historyId) });
+      if (path === "/profile") return jsonResponse({ emailAddress: "joao@example.com", historyId: String(this.historyId) });
       if (path === "/messages")
         return jsonResponse({
           messages: this.messages.slice(0, Number(url.searchParams.get("maxResults") ?? 20)).map((m) => ({ id: m.id, threadId: m.threadId })),
@@ -76,7 +76,7 @@ export class FakeGoogle {
         const headers = [
           { name: "From", value: m.from },
           { name: "Subject", value: m.subject },
-          { name: "To", value: "joao@gmail.com" },
+          { name: "To", value: "joao@example.com" },
           ...(m.listUnsubscribe ? [{ name: "List-Unsubscribe", value: "<mailto:x>" }] : []),
         ];
         return jsonResponse({ id: m.id, threadId: m.threadId, labelIds: m.labels ?? ["INBOX"], snippet: m.snippet, internalDate: String(m.internalDate), payload: { headers } });
@@ -98,7 +98,7 @@ export class FakeGoogle {
   grantedScope = "openid email https://www.googleapis.com/auth/gmail.readonly";
 
   addMessage(m: Partial<FakeMessage> & { id: string }, viaHistory = true) {
-    const full: FakeMessage = { threadId: `t-${m.id}`, from: "Ana <ana@exemplo.com>", subject: "Olá", snippet: "", internalDate: Date.parse("2026-10-13T09:00:00Z"), ...m };
+    const full: FakeMessage = { threadId: `t-${m.id}`, from: "Ana <ana@example.com>", subject: "Olá", snippet: "", internalDate: Date.parse("2026-10-13T09:00:00Z"), ...m };
     this.messages.unshift(full);
     if (viaHistory) {
       this.historyId += 1;

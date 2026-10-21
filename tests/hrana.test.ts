@@ -85,7 +85,7 @@ function fakeTurso(token: string) {
 
 test("cliente Turso (Hrana): tipos, parâmetros e URL libsql://", async () => {
   const t = fakeTurso("tok");
-  const h = new HranaDb("libsql://open-dot-joao.turso.io", "tok", t.fetchImpl);
+  const h = new HranaDb("libsql://open-dot-exemplo.turso.io", "tok", t.fetchImpl);
   await h.run("CREATE TABLE x (id TEXT, n INTEGER, f REAL, z TEXT)");
   await h.run("INSERT INTO x VALUES (?, ?, ?, ?)", ["a", 42, 1.5, null]);
   const rows = await h.query<{ id: string; n: number; f: number; z: null }>("SELECT * FROM x WHERE id = ?", ["a"]);

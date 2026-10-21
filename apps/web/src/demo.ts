@@ -18,9 +18,9 @@ const DEMO_AGENTS: AgentId[] = ["dot", "correio", "codigo", "sentinela", "notici
 
 export function demoSnapshot(): Snapshot {
   const monitors: Snapshot["monitors"] = [
-    { id: "m1", url: "https://exemplo.com", label: "exemplo.com", enabled: true, incident: { open: true, kind: "slow" }, lastCheckAt: at(7, 58) },
-    { id: "m2", url: "https://loja.exemplo.com", label: "loja.exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
-    { id: "m3", url: "https://docs.exemplo.com", label: "docs.exemplo.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
+    { id: "m1", url: "https://example.com", label: "example.com", enabled: true, incident: { open: true, kind: "slow" }, lastCheckAt: at(7, 58) },
+    { id: "m2", url: "https://loja.example.com", label: "loja.example.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
+    { id: "m3", url: "https://docs.example.com", label: "docs.example.com", enabled: true, incident: { open: false }, lastCheckAt: at(7, 58) },
   ];
   const feed: Snapshot["feed"] = [
     {
@@ -78,7 +78,7 @@ export function demoSnapshot(): Snapshot {
           {
             messageId: "e1",
             threadId: "t1",
-            from: "Loja Exemplo <pedidos@exemplo.com>",
+            from: "Loja Exemplo <pedidos@example.com>",
             subject: "Confirme a entrega de amanhã",
             reason: "Pede confirmação até amanhã às 14h.",
             receivedAt: at(7, 12),
@@ -88,7 +88,7 @@ export function demoSnapshot(): Snapshot {
           {
             messageId: "e2",
             threadId: "t2",
-            from: "Faculdade <secretaria@exemplo.edu>",
+            from: "Faculdade <secretaria@example.edu>",
             subject: "Prazo de rematrícula",
             reason: "Menciona “prazo”.",
             receivedAt: at(6, 40),
@@ -98,7 +98,7 @@ export function demoSnapshot(): Snapshot {
           {
             messageId: "e3",
             threadId: "t3",
-            from: "Ana <ana@exemplo.com>",
+            from: "Ana <ana@example.com>",
             subject: "Você consegue revisar o documento?",
             reason: "Mensagem direta com pergunta para você.",
             receivedAt: at(6, 5),
@@ -110,7 +110,7 @@ export function demoSnapshot(): Snapshot {
           {
             messageId: "e4",
             threadId: "t4",
-            from: "Banco <aviso@exemplo.com>",
+            from: "Banco <aviso@example.com>",
             subject: "Extrato disponível",
             reason: "Aviso automático sem pedido de ação.",
             receivedAt: at(5),
@@ -120,7 +120,7 @@ export function demoSnapshot(): Snapshot {
           {
             messageId: "e5",
             threadId: "t5",
-            from: "Newsletter <news@exemplo.com>",
+            from: "Newsletter <news@example.com>",
             subject: "Novidades da semana",
             reason: "Lista, newsletter ou promoção.",
             receivedAt: at(4),
@@ -298,7 +298,7 @@ export function demoSnapshot(): Snapshot {
           account: "exemplo@demo.local",
           resource: "thread:t1",
           payload: {
-            to: "entregas@lojaexemplo.com.br",
+            to: "entregas@loja.example",
             subject: "Re: Confirmação de entrega",
             body: "Olá! Confirmo a entrega para amanhã, quinta, no período da tarde. Alguém estará em casa a partir das 13h.\n\nObrigado,\nAlex",
           },

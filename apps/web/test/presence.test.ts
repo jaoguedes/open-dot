@@ -38,7 +38,7 @@ test("presença: uma fonte da verdade, incidente nunca é 'Em repouso'", () => {
   assert.notEqual(code.label, "1 incidente");
 
   const site = entry({ agentId: "sentinela", kind: "site_incident", title: "Lento" });
-  const monitors: Monitor[] = [{ id: "m1", url: "https://exemplo.com", label: "exemplo.com", enabled: true, incident: { open: true, kind: "slow" }, lastCheckAt: null }];
+  const monitors: Monitor[] = [{ id: "m1", url: "https://example.com", label: "example.com", enabled: true, incident: { open: true, kind: "slow" }, lastCheckAt: null }];
   const sent = agentPresence("sentinela", toVisual("sentinela", "idle"), [site], monitors);
   assert.equal(sent.tone, "error");
   assert.equal(sent.label, "Lento");

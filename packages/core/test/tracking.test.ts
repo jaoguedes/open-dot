@@ -67,9 +67,9 @@ test("ambíguo: FedEx e DHL no mesmo número pedem escolha", () => {
 });
 
 test("loja sem e-mail, telefone ou CNPJ", () => {
-  assert.equal(shopLabel("Loja Exemplo <pedidos@loja.com>"), "Loja Exemplo");
-  assert.equal(shopLabel("vendas@loja.com"), null);
-  assert.equal(shopLabel("Loja 12.345.678/0001-90 <a@b.com>"), null);
+  assert.equal(shopLabel("Loja Exemplo <pedidos@loja.example>"), "Loja Exemplo");
+  assert.equal(shopLabel("vendas@loja.example"), null);
+  assert.equal(shopLabel("Loja 12.345.678/0001-90 <a@b.example>"), null);
 });
 
 test("provedor só liga com chave e confirmação de termos", () => {

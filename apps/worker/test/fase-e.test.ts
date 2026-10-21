@@ -9,7 +9,7 @@ async function setup() {
   const c = client(ctx);
   await c.call("POST", "/api/session/dev");
   const ownerId = (await ctx.db.query<{ id: string }>("SELECT id FROM od_owners"))[0]!.id;
-  const proposal = { action: "gmail.send", service: "gmail", account: "dev@localhost", resource: "t1", payload: { to: "a@b.com", subject: "Re", body: "oi" }, consequence: "teste" };
+  const proposal = { action: "gmail.send", service: "gmail", account: "dev@localhost", resource: "t1", payload: { to: "a@b.example", subject: "Re", body: "oi" }, consequence: "teste" };
   const hash = await hashProposal(proposal);
   const id = await repo.createApproval(ctx.db, ctx.keys, { ownerId, action: "gmail.send", proposal, payloadHash: hash, now: ctx.now() });
   return { ctx, c, id, proposal, hash };
