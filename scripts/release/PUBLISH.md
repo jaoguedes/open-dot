@@ -26,7 +26,7 @@ O plano confere, e **aborta** se falhar: SHA igual ao esperado, árvore limpa, n
 REPO=jaoguedes/open-dot EXPECTED_SHA=<sha revisado> scripts/release/publish.sh --execute
 ```
 
-O script pede que você digite o nome do repositório, envia a `main` e a tag (reativando o push só durante cada envio e voltando a `DISABLED`), liga secret scanning, push protection, alertas e correções do Dependabot, relatório privado de vulnerabilidades, permissões somente leitura do Actions, aprovação para PRs de fork e proteção da `main`; apaga artefatos e execuções antigas do Actions; torna o repositório público; cria o release **em rascunho**.
+O script pede que você digite o nome do repositório, envia a `main` e a tag (reativando o push só durante cada envio e voltando a `DISABLED`), liga secret scanning, push protection, alertas e correções do Dependabot, relatório privado de vulnerabilidades, permissões somente leitura do Actions, aprovação para PRs de fork e proteção da `main` (cada proteção tolera falha, porque no plano grátis algumas não funcionam em repositório privado: aparece `FALHOU: <nome>` e ela é reaplicada depois de o repositório ficar público; no fim sai o resumo “aplicadas / falharam”); apaga artefatos e execuções antigas do Actions; torna o repositório público; cria o release **em rascunho**.
 
 O histórico não foi reescrito: não é preciso recriar o repositório remoto.
 

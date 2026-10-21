@@ -90,14 +90,69 @@ run git remote set-url --push origin "https://github.com/$REPO.git"
 run git push origin "$SHA:refs/heads/main"
 run git remote set-url --push origin DISABLED
 
-say "2. Proteções antes de abrir o acesso"
-run gh api -X PATCH "repos/$REPO" -F "security_and_analysis[secret_scanning][status]=enabled" -F "security_and_analysis[secret_scanning_push_protection][status]=enabled"
-run gh api -X PUT "repos/$REPO/vulnerability-alerts"
-run gh api -X PUT "repos/$REPO/automated-security-fixes"
-run gh api -X PUT "repos/$REPO/private-vulnerability-reporting"
-run gh api -X PUT "repos/$REPO/actions/permissions/workflow" -f default_workflow_permissions=read -F can_approve_pull_request_reviews=false
-run gh api -X PUT "repos/$REPO/actions/permissions/fork-pr-contributor-approval" -f approval_policy=all_external_contributors
-run gh api -X PUT "repos/$REPO/branches/main/protection" --input scripts/release/branch-protection.json
+# >>> proteções (testado em tests/publish-script.test.ts com gh simulado)
+# Passo 2: no plano grátis do GitHub algumas falham em repositório privado.
+# Cada uma é tolerante a falha; as que falharem são reaplicadas depois do passo 5 (público).
+PROTECTIONS="secret dependabot vulnreport actions forkpr branch"
+label() {
+  case "$1" in
+    secret) echo "secret scanning e push protection" ;;
+    dependabot) echo "alertas e correções do Dependabot" ;;
+    vulnreport) echo "relatório privado de vulnerabilidades" ;;
+    actions) echo "permissões do Actions" ;;
+    forkpr) echo "aprovação para PRs de fork" ;;
+    branch) echo "proteção da main" ;;
+  esac
+}
+protection() {
+  case "$1" in
+    secret) run gh api -X PATCH "repos/$REPO" -F "security_and_analysis[secret_scanning][status]=enabled" -F "security_and_analysis[secret_scanning_push_protection][status]=enabled" ;;
+    dependabot) run gh api -X PUT "repos/$REPO/vulnerability-alerts" && run gh api -X PUT "repos/$REPO/automated-security-fixes" ;;
+    vulnreport) run gh api -X PUT "repos/$REPO/private-vulnerability-reporting" ;;
+    actions) run gh api -X PUT "repos/$REPO/actions/permissions/workflow" -f default_workflow_permissions=read -F can_approve_pull_request_reviews=false ;;
+    forkpr) run gh api -X PUT "repos/$REPO/actions/permissions/fork-pr-contributor-approval" -f approval_policy=all_external_contributors ;;
+    branch) run gh api -X PUT "repos/$REPO/branches/main/protection" --input scripts/release/branch-protection.json ;;
+  esac
+}
+APPLIED=""
+FAILED=""
+try_protection() {
+  echo "  - $(label "$1")"
+  if protection "$1"; then
+    [[ $EXECUTE == 1 ]] && APPLIED="$APPLIED $1"
+    return 0
+  fi
+  echo "  FALHOU: $(label "$1")"
+  FAILED="$FAILED $1"
+}
+
+retry_failed() {
+  if [[ $EXECUTE == 0 ]]; then
+    echo "  (no plano nada é aplicado; com --execute, reaplica na ordem: $(for p in $PROTECTIONS; do printf '%s; ' "$(label "$p")"; done))"
+  elif [[ -z "$FAILED" ]]; then
+    echo "  nenhuma falhou"
+  else
+    RETRY="$FAILED"
+    FAILED=""
+    for p in $PROTECTIONS; do
+      case " $RETRY " in *" $p "*) try_protection "$p" ;; esac
+    done
+  fi
+}
+summary() {
+  if [[ $EXECUTE == 1 ]]; then
+    echo "  aplicadas: $(for p in $APPLIED; do printf '%s; ' "$(label "$p")"; done)"
+    echo "  falharam:  $(for p in $FAILED; do printf '%s; ' "$(label "$p")"; done)"
+    [[ -z "$FAILED" ]] || echo "  Aplique as que falharam à mão em github.com/$REPO/settings."
+  else
+    echo "  aplicadas: nenhuma (plano)"
+    echo "  falharam:  nenhuma (plano)"
+  fi
+}
+# <<< proteções
+
+say "2. Proteções antes de abrir o acesso (falha não interrompe; reaplicadas depois do passo 5)"
+for p in $PROTECTIONS; do try_protection "$p"; done
 echo "  CODEOWNERS já aponta para @jaoguedes. Confira o environment runner-release (revisor obrigatório)."
 
 say "3. Limpar execuções e artefatos antigos do Actions (logs sem segredos, mas antigos)"
@@ -113,8 +168,14 @@ run git remote set-url --push origin DISABLED
 say "5. Tornar público (depois de revisar as refs do aviso acima)"
 run gh repo edit "$REPO" --visibility public --accept-visibility-change-consequences
 
+say "5b. Reaplicar só as proteções que falharam no passo 2 (agora com o repositório público)"
+retry_failed
+
 say "6. Release em rascunho (não publicado)"
 run gh release create "$TAG" -R "$REPO" --draft --prerelease --title "Open Dot $TAG" --notes-file "$NOTES"
+
+say "Resumo das proteções"
+summary
 
 say "Fim"
 if [[ $EXECUTE == 1 ]]; then echo "Publicado. Revise o release em rascunho antes de publicá-lo."; else echo "Plano apenas (dry-run). Nada foi alterado."; fi
