@@ -110,6 +110,9 @@ pub fn parse_envelope(bytes: &[u8]) -> Result<Value, String> {
         if text.contains("log") && (text.contains("in") || text.contains("expired")) || text.contains("authenticate") {
             return Err("Login oficial do Claude Code ausente ou expirado. Entre pelo terminal com o CLI do fornecedor; nenhuma credencial é pedida aqui.".into());
         }
+        if text.contains("limit") || text.contains("usage") || text.contains("credit") || text.contains("quota") {
+            return Err("Limite de uso do Claude Code atingido. Parei sem repetir; a cota renova pelo seu plano. Mantenha o uso extra desligado.".into());
+        }
         return Err("O Claude Code não concluiu a proposta. Nenhuma edição foi aplicada.".into());
     }
     if v["permission_denials"].as_array().is_some_and(|a| !a.is_empty()) {
@@ -261,6 +264,7 @@ mod tests {
         assert!(login.contains("Login oficial"));
         assert!(parse_result(&envelope(r#""is_error":true,"result":"Not logged in · Please run /login""#)).unwrap_err().contains("Login oficial"));
         assert!(parse_result(&envelope(r#""is_error":true,"result":"overloaded""#)).is_err());
+        assert!(parse_result(&envelope(r#""is_error":true,"result":"You've hit your usage limit · resets 5pm""#)).unwrap_err().contains("Limite de uso"));
         assert!(parse_result(br#"{"type":"result","is_error":false,"num_turns":1,"permission_denials":[{"tool_name":"Bash"}],"structured_output":{"summary":"x","files":[]}}"#).unwrap_err().contains("ferramenta"));
         assert!(parse_result(br#"{"type":"result","is_error":false,"num_turns":3,"permission_denials":[],"structured_output":{"summary":"x","files":[]}}"#).is_err());
         assert!(parse_result(&envelope(r#""is_error":false,"structured_output":{"summary":"x","files":[],"run":"rm -rf ~"}"#)).is_err());

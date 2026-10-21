@@ -29,7 +29,8 @@ fn authenticated(id:&str,success:bool,text:&str)->bool {
     if !success{return false;}
     match id {
         "codex"=>text.contains("Logged in using ChatGPT"),
-        "claude-code"=>serde_json::from_str::<serde_json::Value>(text).ok().and_then(|v|v["loggedIn"].as_bool()).unwrap_or(false),
+        // Só assinatura: login por chave de API ou terceiros é possivelmente pago e nunca executa por padrão.
+        "claude-code"=>{let (logged,method)=crate::tools::claude_login(text,success);logged==Some(true)&&matches!(method,Some("claude.ai"|"oauth_token"))},
         _=>false,
     }
 }
@@ -146,7 +147,9 @@ mod tests {
     #[test]
     fn diagnostic_is_not_execution_or_model_discovery() {
         assert!(!authenticated("claude-code",false,r#"{"loggedIn":true}"#));
-        assert!(authenticated("claude-code",true,r#"{"loggedIn":true}"#));
+        assert!(authenticated("claude-code",true,r#"{"loggedIn":true,"authMethod":"claude.ai"}"#));
+        assert!(!authenticated("claude-code",true,r#"{"loggedIn":true}"#));
+        assert!(!authenticated("claude-code",true,r#"{"loggedIn":true,"authMethod":"api_key"}"#));
         assert!(!authenticated("claude-code",true,"not-json"));
         assert!(!authenticated("codex",false,"Logged in using ChatGPT"));
         assert!(!authenticated("cursor",true,"authenticated"));
