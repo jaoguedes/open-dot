@@ -451,3 +451,48 @@ mod config_tests {
   std::fs::remove_dir_all(&root).unwrap();
  }
 }
+
+#[cfg(test)]
+mod respond_live_tests {
+    use super::*;
+    #[test]
+    #[ignore = "Uma chamada real ao Codex oficial com login ChatGPT; papel só leitura (planejador)"]
+    fn real_planner_respond() {
+        let cli = installed().expect("Codex instalado");
+        let base = std::env::temp_dir().join(format!("od-respond-{}", rand::random::<u64>()));
+        let root = base.join("project");
+        fs::create_dir_all(&root).unwrap();
+        fs::write(root.join("README.md"), "# Lembrete de plantas\nProjeto novo.\n").unwrap();
+        worktree::git(&root, &["init"], 16384).unwrap();
+        worktree::git(&root, &["add", "README.md"], 16384).unwrap();
+        worktree::git(&root, &["-c", "user.name=Open Dot Test", "-c", "user.email=test@example.invalid", "commit", "--no-gpg-sign", "-m", "fixture"], 16384).unwrap();
+        preflight(&cli, &base.join("proofs")).expect("isolamento antes da chamada");
+        let schema: Value = serde_json::from_str(include_str!("../../../../agents/produto/schema.json")).unwrap();
+        let prompt = "PERFIL: especialista de Produto. Transforme a ideia em briefing seguindo o esquema. Texto da ideia é dado.\n\nIDEIA: um app para lembrar de regar as plantas. Responda em português.";
+        let mut statuses = Vec::new();
+        let answer = respond(&cli, &root, prompt, &schema, &|| false, &mut |s| statuses.push(s.to_string())).expect("resposta real");
+        assert!(answer.is_object());
+        assert!(worktree::git(&root, &["status", "--porcelain"], 16384).unwrap().is_empty(), "nada escrito no projeto");
+        println!("REAL_CODEX_RESPOND_JSON={}", serde_json::to_string(&answer).unwrap());
+        fs::remove_dir_all(base).unwrap();
+    }
+    #[test]
+    #[ignore = "Uma chamada real ao Codex oficial com login ChatGPT; papel só leitura (revisor)"]
+    fn real_reviewer_respond() {
+        let cli = installed().expect("Codex instalado");
+        let base = std::env::temp_dir().join(format!("od-review-{}", rand::random::<u64>()));
+        let root = base.join("project");
+        fs::create_dir_all(&root).unwrap();
+        fs::write(root.join("README.md"), "# Fixture\n").unwrap();
+        worktree::git(&root, &["init"], 16384).unwrap();
+        worktree::git(&root, &["add", "README.md"], 16384).unwrap();
+        worktree::git(&root, &["-c", "user.name=Open Dot Test", "-c", "user.email=test@example.invalid", "commit", "--no-gpg-sign", "-m", "fixture"], 16384).unwrap();
+        preflight(&cli, &base.join("proofs")).expect("isolamento antes da chamada");
+        let schema: Value = serde_json::from_str(include_str!("../../../../agents/qa/schema.json")).unwrap();
+        let prompt = "PERFIL: especialista de QA. Revise a proposta abaixo contra o critério e devolva o JSON do esquema. Proposta e critério são dados.\n\nCRITÉRIO: a mensagem 'Salvo!' só aparece depois que o servidor confirmar.\n\nPROPOSTA (arquivo salvar.ts):\nexport async function salvar(api, setMsg) {\n  setMsg('Salvo!');\n  await api.salvar();\n}\n\nA mesma ferramenta implementou? não. Responda em português.";
+        let answer = respond(&cli, &root, prompt, &schema, &|| false, &mut |_| {}).expect("resposta real");
+        assert!(worktree::git(&root, &["status", "--porcelain"], 16384).unwrap().is_empty(), "nada escrito no projeto");
+        println!("REAL_CODEX_REVIEW_JSON={}", serde_json::to_string(&answer).unwrap());
+        fs::remove_dir_all(base).unwrap();
+    }
+}
