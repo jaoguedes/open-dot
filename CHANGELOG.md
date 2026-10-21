@@ -2,6 +2,15 @@
 
 Feito a partir dos commits (`git log`). Datas em 2026. O efeito para quem usa vem primeiro.
 
+## v0.2 (não publicado) — motor de orquestração (21/10/2026)
+
+- Catálogo de ferramentas com fonte e data por fato; detector no Runner (só comandos públicos dos CLIs, sem ler credenciais); snapshot sem credenciais no Worker (migração 0018).
+- Biblioteca de agentes como dados, com carregador que recusa permissões e injeção; cinco especialistas densos com rubricas, esquemas e avaliações.
+- Seletor explicável: restrições duras, pontuação neutra, revisor diferente do implementador, modo uma ferramenta, troca manual, estimativa de chamadas; cota diária com limite aprendido por erro.
+- Pipeline sequencial com papéis só leitura validados por esquema e implementador com aprovação do conteúdo exato; Claude Code opt-in com aviso e parada em limite de uso.
+- Tela Equipe; avaliação golden simulada (motor × padrão simples) com leitura honesta.
+- Rust compilado e testado pela primeira vez nesta máquina (34 testes); recuperação integrada passou.
+
 ## v0.1.0-beta (rascunho, não publicado) — auditoria independente e preparação open source (20/10/2026)
 
 - Segurança: o início do login deixou de revelar o e-mail do dono; limite de taxa por origem no pareamento e no login (migração 0017); identidade fixada no modo só e-mail; HSTS; Git do Runner sem configuração global; retenção de 90 dias para conteúdo de tarefas do Runner.

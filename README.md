@@ -16,6 +16,15 @@ Assistente pessoal com agentes, rotinas remotas e o mascote **Dot**. Revisa o se
 | Runner (desktop) + Codex | Proposta → aprovação do conteúdo exato → aplicação num worktree isolado. Validado no macOS Intel |
 | Commit local de arquivos aprovados | Só com confirmação nativa separada; nunca push ou merge |
 
+## Orquestrador v0.2 (novo, em teste)
+
+A tela **Equipe** mostra as ferramentas de IA de programação que o Runner detectou no seu computador (instalada, logada, método, cota), explica como configurar o resto e propõe uma equipe de especialistas (Produto, Pesquisa, Design, Desenvolvedor, QA) com o motivo de cada escolha. Os passos rodam em sequência; arquivos só mudam depois da sua aprovação.
+
+- **Testado de verdade:** detecção local (Codex logado, Claude Code sem login nesta máquina de desenvolvimento); Codex respondendo nos papéis de planejador e revisor (2 chamadas reais, saída válida no esquema).
+- **Simulado:** pipeline completo de ponta a ponta e a comparação com o padrão simples (`docs/orquestrador/AVALIACAO.md`): o motor cobre os papéis certos e evita login pago, ao custo de cerca de 2× chamadas; **qualidade não foi medida**.
+- **Sem teste real:** Claude Code no pipeline (login expirado). **Indisponível:** Gemini CLI e Cursor.
+- Detalhes: `docs/orquestrador/`.
+
 ## Experimental ou desligado
 
 - **Claude Code no Runner:** driver implementado no modo somente-proposta, **não validado com o CLI real**; desligado salvo opt-in (`OPEN_DOT_EXPERIMENTAL_DRIVERS=claude-code`).

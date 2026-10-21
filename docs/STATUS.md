@@ -1,3 +1,15 @@
+# Estado vigente — orquestrador v0.2 (21/10/2026)
+
+Branch `claude/od2-v02` (base `d9fe92d`); integração local `integration/v0.2-candidate` (com a interface de `claude/od2-ui`). Nada publicado. Relatório: `docs/audit/V02_REPORT.md`.
+
+- **Testado:** `npm run check`, `cargo test` (34 + 8 ignorados), recuperação integrada, detecção real nesta máquina, 2 chamadas reais ao Codex (planejador e revisor), UI com axe.
+- **Sem teste real:** Claude Code no pipeline (login expirado), Codex como implementador neste ciclo (validado em rodadas anteriores).
+- **Simulado:** pipeline de ponta a ponta, avaliação golden.
+- **Planejado:** H (catálogo automático), Gemini e Cursor, paralelismo, execução de testes.
+- **Bloqueado (mantenedor):** publicar, migrações 0017/0018 em produção, contato, revisão jurídica, login do Claude Code.
+
+---
+
 # Estado vigente — auditoria independente e preparação open source (20/10/2026)
 
 Branch segura `claude/od2-audit` (a partir de `9e1b3fd`); interface em `claude/od2-ui`. Relatório: [CLAUDE_FINAL_REPORT](audit/CLAUDE_FINAL_REPORT.md); achados: [CLAUDE_INDEPENDENT_AUDIT](audit/CLAUDE_INDEPENDENT_AUDIT.md). Nada publicado.

@@ -16,6 +16,14 @@ Personal assistant with agents, remote routines and the **Dot** mascot. It revie
 | Desktop Runner + Codex | Proposal → exact-content approval → applied in an isolated worktree. Validated on Intel macOS |
 | Local commit of approved files | Only with a separate native confirmation; never push or merge |
 
+## Orchestrator v0.2 (new, in testing)
+
+The **Equipe** (Team) screen shows the AI coding tools the Runner detected on your computer (installed, logged in, method, quota), explains how to set up the rest and proposes a team of specialists (Product, Research, Design, Developer, QA) with the reason for each choice. Steps run in sequence; files change only after you approve them.
+
+- **Really tested:** local detection; Codex answering as planner and reviewer (2 real calls, schema-valid output).
+- **Simulated:** the full pipeline and the comparison with a simple baseline (`docs/orquestrador/AVALIACAO.md`): the engine covers the right roles and avoids paid logins at about 2× the calls; **quality was not measured**.
+- **No real test:** Claude Code in the pipeline (login expired). **Unavailable:** Gemini CLI and Cursor.
+
 ## Experimental or off
 
 - **Claude Code in the Runner:** proposal-only driver implemented, **not validated against the real CLI**; off unless opted in (`OPEN_DOT_EXPERIMENTAL_DRIVERS=claude-code`).
