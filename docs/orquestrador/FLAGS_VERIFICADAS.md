@@ -58,6 +58,7 @@ Fonte: repositório oficial `google-gemini/gemini-cli`, `docs/cli/cli-reference.
 | `-s` / `--sandbox` | Sandbox | documentado, comportamento não verificado |
 | Códigos de saída | 0 sucesso, 1 erro, 42 entrada inválida, 53 limite de turnos | documentado |
 | Comando de status de login | **Não existe** na documentação lida | detecção só por chamada mínima |
+| Cota gratuita | `docs/resources/quota-and-pricing.md` (último commit do arquivo: 18/06/2026): login Google (Code Assist Individual) 1.000 requisições/usuário/dia; chave de API gratuita 250/dia (só Flash); limite por minuto sem número. O README atual **não** traz mais números (60/min e 1.000/dia saíram dele) | lido em 21/10/2026 |
 
 Consequência: Gemini **indisponível como implementador** (escreve `.md` mesmo no modo plan). Como planejador/revisor, só em cópia descartável do repositório, e só quando o CLI estiver instalado e as flags forem verificadas localmente. Nesta máquina: **indisponível**.
 

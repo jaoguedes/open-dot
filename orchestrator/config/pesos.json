@@ -7,13 +7,27 @@
     "fatorOffline": "Multiplicador quando o Runner que tem a ferramenta está offline (a equipe pode ser montada, mas não roda agora).",
     "folgaMinima": "Piso do fator de cota para não zerar uma ferramenta com cota quase no fim; cota esgotada é restrição dura, não fator.",
     "custoRelativo": "Divisor por ferramenta. 1 para todas no v0.2: sem preço público comparável por chamada. Ajuste manual possível.",
-    "padraoDeChamadasPorDia": "Limite diário conservador usado só quando o fabricante publica um número; null = desconhecido (não inventamos)."
+    "padraoDeChamadasPorDia": "Limite diário conservador usado só quando o fabricante publica um número; null = desconhecido (não inventamos). Gemini: 250, o menor número gratuito publicado (chave de API gratuita); com login Google o limite publicado é 1.000, mas o método nem sempre é informado pelo CLI."
   },
   "pontuacaoInicial": 1,
   "pesoEvidenciaMedida": 0,
   "minimoDeAmostras": 5,
   "fatorOffline": 0.5,
   "folgaMinima": 0.2,
-  "custoRelativo": { "codex": 1, "claude-code": 1, "gemini": 1, "cursor": 1, "ollama": 1, "opencode": 1 },
-  "padraoDeChamadasPorDia": { "codex": null, "claude-code": null, "gemini": null, "cursor": null, "ollama": null, "opencode": null }
+  "custoRelativo": {
+    "codex": 1,
+    "claude-code": 1,
+    "gemini": 1,
+    "cursor": 1,
+    "ollama": 1,
+    "opencode": 1
+  },
+  "padraoDeChamadasPorDia": {
+    "codex": null,
+    "claude-code": null,
+    "gemini": 250,
+    "cursor": null,
+    "ollama": null,
+    "opencode": null
+  }
 }

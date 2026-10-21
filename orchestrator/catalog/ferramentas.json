@@ -9,15 +9,43 @@
       "fabricante": "OpenAI",
       "binario": "codex",
       "estado": "suportado",
-      "licencaCli": { "valor": "Apache-2.0", "fonte": "https://github.com/openai/codex", "data": "2026-10-21" },
-      "modos": {
-        "somenteLeitura": { "valor": true, "fonte": "https://developers.openai.com/codex/noninteractive", "data": "2026-10-21" },
-        "jsonComEsquema": { "valor": true, "fonte": "https://developers.openai.com/codex/noninteractive", "data": "2026-10-21" },
-        "editaArquivosDiretamente": { "valor": true, "fonte": "https://developers.openai.com/codex/noninteractive", "data": "2026-10-21" },
-        "acp": { "valor": null, "fonte": null, "data": null }
+      "licencaCli": {
+        "valor": "Apache-2.0",
+        "fonte": "https://github.com/openai/codex",
+        "data": "2026-10-21"
       },
-      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
-      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "modos": {
+        "somenteLeitura": {
+          "valor": true,
+          "fonte": "https://developers.openai.com/codex/noninteractive",
+          "data": "2026-10-21"
+        },
+        "jsonComEsquema": {
+          "valor": true,
+          "fonte": "https://developers.openai.com/codex/noninteractive",
+          "data": "2026-10-21"
+        },
+        "editaArquivosDiretamente": {
+          "valor": true,
+          "fonte": "https://developers.openai.com/codex/noninteractive",
+          "data": "2026-10-21"
+        },
+        "acp": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        }
+      },
+      "janelaDeContexto": {
+        "valor": null,
+        "fonte": null,
+        "data": null
+      },
+      "limitesPublicados": {
+        "valor": null,
+        "fonte": null,
+        "data": null
+      },
       "comandoDeLogin": "codex login",
       "comoConfigurar": [
         "Instale o Codex CLI pelo instalador oficial da OpenAI.",
@@ -31,15 +59,43 @@
       "fabricante": "Anthropic",
       "binario": "claude",
       "estado": "experimental",
-      "licencaCli": { "valor": null, "fonte": null, "data": null },
-      "modos": {
-        "somenteLeitura": { "valor": true, "fonte": "claude --help (2.1.296): --tools \"\" desliga todas as ferramentas", "data": "2026-10-21" },
-        "jsonComEsquema": { "valor": true, "fonte": "claude --help (2.1.296): --json-schema", "data": "2026-10-21" },
-        "editaArquivosDiretamente": { "valor": false, "fonte": "claude --help (2.1.296): com --tools \"\" não há ferramenta de escrita", "data": "2026-10-21" },
-        "acp": { "valor": null, "fonte": null, "data": null }
+      "licencaCli": {
+        "valor": null,
+        "fonte": null,
+        "data": null
       },
-      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
-      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "modos": {
+        "somenteLeitura": {
+          "valor": true,
+          "fonte": "claude --help (2.1.296): --tools \"\" desliga todas as ferramentas",
+          "data": "2026-10-21"
+        },
+        "jsonComEsquema": {
+          "valor": true,
+          "fonte": "claude --help (2.1.296): --json-schema",
+          "data": "2026-10-21"
+        },
+        "editaArquivosDiretamente": {
+          "valor": false,
+          "fonte": "claude --help (2.1.296): com --tools \"\" não há ferramenta de escrita",
+          "data": "2026-10-21"
+        },
+        "acp": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        }
+      },
+      "janelaDeContexto": {
+        "valor": null,
+        "fonte": null,
+        "data": null
+      },
+      "limitesPublicados": {
+        "valor": null,
+        "fonte": null,
+        "data": null
+      },
       "comandoDeLogin": "claude (e depois /login)",
       "comoConfigurar": [
         "Instale o Claude Code pelo instalador oficial e entre com a sua assinatura (`claude`, depois `/login`).",
@@ -53,15 +109,43 @@
       "fabricante": "Google",
       "binario": "gemini",
       "estado": "indisponivel",
-      "licencaCli": { "valor": "Apache-2.0", "fonte": "https://github.com/google-gemini/gemini-cli", "data": "2026-10-21" },
-      "modos": {
-        "somenteLeitura": { "valor": false, "fonte": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/plan-mode.md (o modo plan permite escrever arquivos .md)", "data": "2026-10-21" },
-        "jsonComEsquema": { "valor": null, "fonte": null, "data": null },
-        "editaArquivosDiretamente": { "valor": true, "fonte": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/cli-reference.md", "data": "2026-10-21" },
-        "acp": { "valor": true, "fonte": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/acp-mode.md", "data": "2026-10-21" }
+      "licencaCli": {
+        "valor": "Apache-2.0",
+        "fonte": "https://github.com/google-gemini/gemini-cli",
+        "data": "2026-10-21"
       },
-      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
-      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "modos": {
+        "somenteLeitura": {
+          "valor": false,
+          "fonte": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/plan-mode.md (o modo plan permite escrever arquivos .md)",
+          "data": "2026-10-21"
+        },
+        "jsonComEsquema": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        },
+        "editaArquivosDiretamente": {
+          "valor": true,
+          "fonte": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/cli-reference.md",
+          "data": "2026-10-21"
+        },
+        "acp": {
+          "valor": true,
+          "fonte": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/acp-mode.md",
+          "data": "2026-10-21"
+        }
+      },
+      "janelaDeContexto": {
+        "valor": null,
+        "fonte": null,
+        "data": null
+      },
+      "limitesPublicados": {
+        "valor": "Login Google, Code Assist Individual (gratuito): 1.000 requisições por usuário por dia. Chave de API gratuita: 250 por dia, só modelo Flash. Há limite por minuto, sem número publicado.",
+        "fonte": "https://github.com/google-gemini/gemini-cli/blob/main/docs/resources/quota-and-pricing.md",
+        "data": "2026-10-21"
+      },
       "comandoDeLogin": "gemini (escolha login com Google)",
       "comoConfigurar": [
         "Instale o Gemini CLI pelo pacote oficial e entre com a conta Google na primeira execução.",
@@ -74,15 +158,43 @@
       "fabricante": "Anysphere",
       "binario": "agent",
       "estado": "indisponivel",
-      "licencaCli": { "valor": null, "fonte": null, "data": null },
-      "modos": {
-        "somenteLeitura": { "valor": null, "fonte": null, "data": null },
-        "jsonComEsquema": { "valor": null, "fonte": null, "data": null },
-        "editaArquivosDiretamente": { "valor": null, "fonte": null, "data": null },
-        "acp": { "valor": null, "fonte": null, "data": null }
+      "licencaCli": {
+        "valor": null,
+        "fonte": null,
+        "data": null
       },
-      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
-      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "modos": {
+        "somenteLeitura": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        },
+        "jsonComEsquema": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        },
+        "editaArquivosDiretamente": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        },
+        "acp": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        }
+      },
+      "janelaDeContexto": {
+        "valor": null,
+        "fonte": null,
+        "data": null
+      },
+      "limitesPublicados": {
+        "valor": null,
+        "fonte": null,
+        "data": null
+      },
       "comandoDeLogin": "agent login",
       "comoConfigurar": [
         "Integração indisponível nesta versão: não há modo sem ferramentas verificável. Planejada via ACP."
@@ -94,17 +206,47 @@
       "fabricante": "Ollama",
       "binario": "ollama",
       "estado": "planejado",
-      "licencaCli": { "valor": null, "fonte": null, "data": null },
-      "modos": {
-        "somenteLeitura": { "valor": null, "fonte": null, "data": null },
-        "jsonComEsquema": { "valor": null, "fonte": null, "data": null },
-        "editaArquivosDiretamente": { "valor": null, "fonte": null, "data": null },
-        "acp": { "valor": null, "fonte": null, "data": null }
+      "licencaCli": {
+        "valor": null,
+        "fonte": null,
+        "data": null
       },
-      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
-      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "modos": {
+        "somenteLeitura": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        },
+        "jsonComEsquema": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        },
+        "editaArquivosDiretamente": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        },
+        "acp": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        }
+      },
+      "janelaDeContexto": {
+        "valor": null,
+        "fonte": null,
+        "data": null
+      },
+      "limitesPublicados": {
+        "valor": null,
+        "fonte": null,
+        "data": null
+      },
       "comandoDeLogin": null,
-      "comoConfigurar": ["Modelos locais: planejado para uma próxima versão."]
+      "comoConfigurar": [
+        "Modelos locais: planejado para uma próxima versão."
+      ]
     },
     {
       "id": "opencode",
@@ -112,17 +254,47 @@
       "fabricante": "OpenCode",
       "binario": "opencode",
       "estado": "planejado",
-      "licencaCli": { "valor": null, "fonte": null, "data": null },
-      "modos": {
-        "somenteLeitura": { "valor": null, "fonte": null, "data": null },
-        "jsonComEsquema": { "valor": null, "fonte": null, "data": null },
-        "editaArquivosDiretamente": { "valor": null, "fonte": null, "data": null },
-        "acp": { "valor": null, "fonte": null, "data": null }
+      "licencaCli": {
+        "valor": null,
+        "fonte": null,
+        "data": null
       },
-      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
-      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "modos": {
+        "somenteLeitura": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        },
+        "jsonComEsquema": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        },
+        "editaArquivosDiretamente": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        },
+        "acp": {
+          "valor": null,
+          "fonte": null,
+          "data": null
+        }
+      },
+      "janelaDeContexto": {
+        "valor": null,
+        "fonte": null,
+        "data": null
+      },
+      "limitesPublicados": {
+        "valor": null,
+        "fonte": null,
+        "data": null
+      },
       "comandoDeLogin": null,
-      "comoConfigurar": ["Planejado para uma próxima versão."]
+      "comoConfigurar": [
+        "Planejado para uma próxima versão."
+      ]
     }
   ]
 }
