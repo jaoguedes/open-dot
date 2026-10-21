@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Open Dot Runner — base local de agentes"
 edition = "2021"
 rust-version = "1.90"
-license = "LicenseRef-Proprietary"
+license = "AGPL-3.0-only"
+# Ícones do Runner são arte do Dot (LICENSE-DOT-ASSETS.md). Aplicativo, não biblioteca: nunca publicar no crates.io.
+publish = false
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

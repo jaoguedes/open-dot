@@ -1,7 +1,19 @@
-Open Dot — atribuições
+Open Dot
+Copyright © 2026 João Pedro Guedes
+
+Código: GNU Affero General Public License v3.0 only (LICENSE), ou licença comercial
+(COMMERCIAL-LICENSE.md). O mascote Dot e seus arquivos: todos os direitos reservados
+(LICENSE-DOT-ASSETS.md). Marca: TRADEMARK.md.
+
+Atribuições de terceiros
 
 Detecção de códigos de rastreio em packages/core/src/tracking.ts
 Os formatos e os dígitos verificadores seguem trycom/tracking_number_data
 (fork de jkeen/tracking_number_data), licença MIT.
 Este repositório não inclui o corpus JSON original; só a regra usada no código.
 https://github.com/trycom/tracking_number_data
+
+Fontes em apps/web/public/fonts (Inter, Instrument Serif, JetBrains Mono): SIL Open Font
+License 1.1; textos das licenças ao lado de cada fonte.
+
+Dependências npm e Cargo: inventário e SBOM em docs/licencas/.

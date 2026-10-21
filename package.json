@@ -4,7 +4,7 @@
   "private": true,
   "description": "Open Dot — assistente pessoal com agentes, rotinas remotas e o mascote Dot.",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "AGPL-3.0-only",
   "engines": {
     "node": ">=22.13.0"
   },
