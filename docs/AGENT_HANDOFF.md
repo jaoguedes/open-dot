@@ -1,5 +1,7 @@
 # Continuação compartilhada — 20/10/2026
 
+> **Documento histórico (anterior à auditoria de 20/10/2026).** Pode contradizer o estado atual (licença, drivers, privacidade). Estado vigente: `README.md`, `docs/STATUS.md` e `docs/audit/CLAUDE_FINAL_REPORT.md`.
+
 Entrada atual: [PROJECT_STATE](agents/PROJECT_STATE.md), [relatório atual](audit/FINAL_IMPLEMENTATION_REPORT.md) e handoff em docs/agents/handoffs. Último código 5cd345f; HEAD final deve ser conferido via Git. ODCP persistente interno e coordenação cooperante adicionados, sem scheduler/commit automático ou publicação. Histórico abaixo preservado.
 
 ---

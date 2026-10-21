@@ -1,5 +1,7 @@
 # Dependências vigentes após 48e3a15
 
+> **Documento histórico (anterior à auditoria de 20/10/2026).** Pode contradizer o estado atual (licença, drivers, privacidade). Estado vigente: `README.md`, `docs/STATUS.md` e `docs/audit/CLAUDE_FINAL_REPORT.md`.
+
 Estado observado e gates em docs/agents/PROJECT_STATE.md e audit/FINAL_IMPLEMENTATION_REPORT.md. Scheduler/claim, checkpoints e commit explícito, memória/Passport limitado, descoberta de recursos e perfis receberam incrementos operacionais. Próximos: recovery de geração real e GUI nativa, política consentida de commit automático e integração entre tarefas; comandos/paralelo exigem isolamento/coordenação demonstrados. Claude/Cursor bloqueados por autenticação/instalação e drivers não concluídos. Idea to Project, Design Intelligence e módulos avançados permanecem não concluídos. Revisão independente continua necessária; sem push ou publicação.
 
 ---

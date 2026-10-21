@@ -1,5 +1,7 @@
 # Relatório de implementação vigente — 20/10/2026
 
+> **Documento histórico (anterior à auditoria de 20/10/2026).** Pode contradizer o estado atual (licença, drivers, privacidade). Estado vigente: `README.md`, `docs/STATUS.md` e `docs/audit/CLAUDE_FINAL_REPORT.md`.
+
 Autor Codex; revisão interna, não auditoria independente. Branch `codex/od2-runner-remediation`, worktree `open-dot-od2-remediation` (resolver com `git worktree list --porcelain`). Base desta continuação `940b06c60138af8ebdf8a0291732f36cd21ea6de`; base original `2b7d5c5fb7f6255c2bdefbabe67f38d34a2faea5`. Último código `48e3a15b549ed09662f97c876cc5049b735cad95`. HEAD documental: consultar Git; um documento não contém o hash do próprio commit.
 
 ## Entregas e evidências

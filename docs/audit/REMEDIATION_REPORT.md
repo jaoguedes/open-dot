@@ -1,5 +1,7 @@
 # Relatório de remediação — Open Dot 2.0
 
+> **Documento histórico (anterior à auditoria de 20/10/2026).** Pode contradizer o estado atual (licença, drivers, privacidade). Estado vigente: `README.md`, `docs/STATUS.md` e `docs/audit/CLAUDE_FINAL_REPORT.md`.
+
 Data: 20/10/2026. Branch própria `codex/od2-runner-remediation`; base real `2b7d5c5fb7f6255c2bdefbabe67f38d34a2faea5`. Código final: c7b2426ec7f848546191cd52ed4937ac2c8a81aa. SHA do relatório: `git log -1 --format=%H -- docs/audit/REMEDIATION_REPORT.md`. Worktree isolado identificável pela branch em `git worktree list --porcelain`. Checkout anterior preservado. Nenhum push desta rodada, merge/main, release, deploy, migração remota, mudança de visibilidade ou cobrança.
 
 ## Auditoria disponível e método

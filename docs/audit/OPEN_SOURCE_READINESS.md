@@ -1,5 +1,7 @@
 # Preparação open source — gate não aprovado
 
+> **Documento histórico (anterior à auditoria de 20/10/2026).** Pode contradizer o estado atual (licença, drivers, privacidade). Estado vigente: `README.md`, `docs/STATUS.md` e `docs/audit/CLAUDE_FINAL_REPORT.md`.
+
 2026-10-20. Nenhuma alteração de visibilidade ou licença autorizada. package.json mantém UNLICENSED; MIT é candidato sujeito à decisão do mantenedor e análise de compatibilidade.
 
 Existem README, CONTRIBUTING, SECURITY, CHANGELOG, arquitetura, segurança Runner e instruções de instaladores. Fontes locais têm avisos de licença preservados. Isso não constitui SBOM completo, auditoria jurídica ou aprovação de redistribuição de todos os assets.

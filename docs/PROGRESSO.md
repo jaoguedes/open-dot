@@ -1,5 +1,7 @@
 # Histórico de progresso
 
+> **Documento histórico (anterior à auditoria de 20/10/2026).** Pode contradizer o estado atual (licença, drivers, privacidade). Estado vigente: `README.md`, `docs/STATUS.md` e `docs/audit/CLAUDE_FINAL_REPORT.md`.
+
 ## 13/10/2026 · Sessão 1
 
 **Inventário**

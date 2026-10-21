@@ -1,5 +1,7 @@
 # Comece aqui (Cursor)
 
+> **Documento histórico (anterior à auditoria de 20/10/2026).** Pode contradizer o estado atual (licença, drivers, privacidade). Estado vigente: `README.md`, `docs/STATUS.md` e `docs/audit/CLAUDE_FINAL_REPORT.md`.
+
 Este guia tem só o que você realmente precisa fazer. O resto já está pronto ou está explicado no `docs/STATUS.md`.
 
 ## 1. Qual pasta abrir

@@ -1,5 +1,7 @@
 # Registro de riscos — OD2-P0
 
+> **Documento histórico (anterior à auditoria de 20/10/2026).** Pode contradizer o estado atual (licença, drivers, privacidade). Estado vigente: `README.md`, `docs/STATUS.md` e `docs/audit/CLAUDE_FINAL_REPORT.md`.
+
 | ID | Severidade / prova | Impacto | Mitigação / gate |
 |---|---|---|---|
 | R01 | Alta: `executor::poll` reserva antes do journal | Crash prende fila; efeito incerto | Reconciliação autenticada de tarefa ativa, sem repetir modelo nem aplicar proposta sem journal; teste kill/restart |
