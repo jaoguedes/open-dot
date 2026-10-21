@@ -10,4 +10,4 @@ Esta pasta é preenchida **somente** por `npm run blender:build`, depois que a v
 
 O build (`scripts/build.mjs`) e o servidor local (`scripts/dev.ts`) copiam o manifesto e os GLB citados por ele para `/dot/` no app. GLB antigos do pipeline são apagados a cada publicação.
 
-**Estado atual:** exportado e validado estruturalmente no Blender 4.5.14 LTS; carrega no app (`Dot3D.tsx`). A aprovação artística é do João (`docs/SETUP.md`, grupo A). O arquivo fonte editável (`dot_master.blend`) fica em `blender/out/<build>/` e não é versionado; copie para `blender/dot_master.blend` quando o modelo for aprovado.
+**Estado atual:** exportado e validado estruturalmente no Blender 4.5.14 LTS; carrega no app (`Dot3D.tsx`). A aprovação artística é do mantenedor. O arquivo fonte editável (`dot_master.blend`) fica em `blender/out/<build>/` e não é versionado; copie para `blender/dot_master.blend` quando o modelo for aprovado.
