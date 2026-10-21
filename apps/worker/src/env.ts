@@ -7,7 +7,16 @@ import { z } from "zod";
 export const EnvSchema = z.object({
   APP_ENV: z.enum(["development", "production"]).default("production"),
   /** URL pública do app, ex.: https://open-dot.<sub>.workers.dev */
-  APP_ORIGIN: z.string().url(),
+  APP_ORIGIN: z
+    .string()
+    .url()
+    .refine((v) => {
+      // Falha fechada: placeholder versionado, caminho ou HTTP fora do localhost não iniciam o Worker.
+      if (/[<>]|SEU-SUBDOMINIO/i.test(v)) return false;
+      const u = new URL(v);
+      const local = u.hostname === "localhost" || u.hostname === "127.0.0.1";
+      return u.origin === v && (u.protocol === "https:" || (local && u.protocol === "http:"));
+    }, "APP_ORIGIN precisa ser a origem https da sua instância (sem caminho)."),
   TOKEN_KEYS: z.string().min(10),
   SESSION_DAYS: z.coerce.number().int().min(1).max(90).default(30),
 

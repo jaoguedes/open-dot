@@ -1,5 +1,5 @@
 // Smoke da URL pública: /, /sobre e /privacidade em 1440 e 390, sem erro de console.
-//   UI_BASE=https://open-dot.jpguedesbarbieri.workers.dev node scripts/smoke-public.mjs
+//   UI_BASE=https://open-dot.<SEU-SUBDOMINIO>.workers.dev node scripts/smoke-public.mjs
 import { chromium } from "playwright";
 
 const BASE = (process.env.UI_BASE ?? "").replace(/\/$/, "");

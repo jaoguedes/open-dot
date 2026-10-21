@@ -19,13 +19,21 @@ import { HranaDb } from "../apps/worker/src/db/hrana.ts";
 import { applyMigrations } from "../apps/worker/src/db/migrate.ts";
 import { loadMigrations } from "./lib/migrations.ts";
 import { parseDevVars } from "./lib/dev-vars.ts";
+import { DEPLOY_FILE, deployTarget, validOrigin, wranglerVarArgs } from "./lib/deploy-target.mjs";
 
 const WRANGLER = ["--yes", "wrangler@4"];
-/** Origem publicada lida do wrangler.jsonc (APP_ORIGIN), não de um domínio fixo no código. */
-const PROD_ORIGIN = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8").match(/"APP_ORIGIN":\s*"(https:[^"]+)"/)?.[1] ?? "";
+/** Origem da SUA instância: arquivo local ignorado pelo Git, nunca o wrangler.jsonc versionado. */
+const ROOT = new URL("..", import.meta.url).pathname;
+function savedTarget(): { appOrigin: string; ownerName: string } | null {
+  try {
+    return deployTarget({ root: ROOT });
+  } catch {
+    return null;
+  }
+}
 const FROM_DEV = process.argv.includes("--from-dev-vars");
 const REQUIRED = ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "OWNER_EMAIL"] as const;
-const OPTIONAL = ["GROQ_API_KEY", "FINNHUB_API_KEY", "PACOTEVICIO_API_KEY"] as const;
+const OPTIONAL = ["OWNER_GOOGLE_SUB", "GROQ_API_KEY", "FINNHUB_API_KEY", "PACOTEVICIO_API_KEY"] as const;
 
 function ask(question: string, hidden = false): Promise<string> {
   return new Promise((resolve) => {
@@ -66,6 +74,8 @@ async function main() {
   let googleId: string;
   let googleSecret: string;
   let ownerEmail: string;
+  let ownerSub: string;
+  let ownerName: string;
   let groq: string;
   let finnhub: string;
   let pacote: string;
@@ -75,7 +85,10 @@ async function main() {
     const missing = REQUIRED.filter((n) => !vars[n]);
     if (missing.length) throw new Error(`Faltam no .dev.vars: ${missing.join(", ")}`);
     if (vars.TOKEN_KEYS) console.log("TOKEN_KEYS local ignorado — produção recebe chave nova.");
-    origin = PROD_ORIGIN;
+    const saved = savedTarget();
+    origin = saved?.appOrigin ?? (await ask("URL pública da SUA instância (ex.: https://open-dot.SEU-SUBDOMINIO.workers.dev): "));
+    ownerName = saved?.ownerName ?? "";
+    ownerSub = vars.OWNER_GOOGLE_SUB ?? "";
     tursoUrl = vars.TURSO_DATABASE_URL!;
     tursoToken = vars.TURSO_AUTH_TOKEN!;
     googleId = vars.GOOGLE_CLIENT_ID!;
@@ -85,24 +98,27 @@ async function main() {
     finnhub = vars.FINNHUB_API_KEY ?? "";
     pacote = vars.PACOTEVICIO_API_KEY ?? "";
     for (const n of [...REQUIRED, ...OPTIONAL.filter((k) => vars[k])]) console.log(`✓ ${n}`);
-    console.log("✓ APP_ORIGIN (produção)");
+    console.log("✓ APP_ORIGIN (instância local de deploy)");
   } else {
-    origin = await ask("URL pública do app (ex.: https://open-dot.SEU-SUBDOMINIO.workers.dev): ");
-    if (!/^https:\/\/[a-z0-9.-]+$/i.test(origin)) throw new Error("URL inválida (sem barra no fim).");
+    origin = await ask("URL pública da SUA instância (ex.: https://open-dot.SEU-SUBDOMINIO.workers.dev): ");
     tursoUrl = await ask("TURSO_DATABASE_URL do banco SEPARADO do Open Dot (libsql://...): ");
     tursoToken = await ask("TURSO_AUTH_TOKEN (oculto): ", true);
     googleId = await ask("GOOGLE_CLIENT_ID: ");
     googleSecret = await ask("GOOGLE_CLIENT_SECRET (oculto): ", true);
     ownerEmail = await ask("Seu e-mail Google (dono único): ");
+    ownerSub = await ask("OWNER_GOOGLE_SUB (recomendado: identificador estável da sua conta Google; Enter para usar só o e-mail): ");
+    ownerName = await ask("Nome na saudação (opcional, Enter para pular): ");
     groq = await ask("GROQ_API_KEY (opcional, Enter para pular; oculto): ", true);
     finnhub = await ask("FINNHUB_API_KEY (opcional, plano gratuito, Enter para pular; oculto): ", true);
     pacote = await ask("PACOTEVICIO_API_KEY (opcional, Enter para pular; oculto): ", true);
   }
 
-  // URL pública é variável não secreta: vai para o wrangler.jsonc.
-  const wr = readFileSync("wrangler.jsonc", "utf8").replace(/"APP_ORIGIN":\s*"[^"]*"/, `"APP_ORIGIN": "${origin}"`);
-  writeFileSync("wrangler.jsonc", wr);
-  console.log("✓ APP_ORIGIN gravado em wrangler.jsonc");
+  if (!validOrigin(origin)) throw new Error("URL inválida: use https://<host>, sem caminho e sem barra no fim.");
+  if (ownerName.length > 40) throw new Error("Nome da saudação com mais de 40 caracteres.");
+  // Origem e nome não são segredos, mas são da SUA instância: ficam fora do Git e entram no deploy por --var.
+  writeFileSync(DEPLOY_FILE, JSON.stringify({ appOrigin: origin, ownerName }, null, 2) + "\n", { mode: 0o600 });
+  console.log(`✓ APP_ORIGIN gravado em ${DEPLOY_FILE} (ignorado pelo Git)`);
+  if (!ownerSub) console.log("Aviso: sem OWNER_GOOGLE_SUB, o primeiro login com o e-mail fixa a identidade. Para produção, defina o sub.");
 
   console.log("\nMigrando o banco do Open Dot…");
   const db = new HranaDb(tursoUrl, tursoToken);
@@ -119,6 +135,7 @@ async function main() {
     GOOGLE_CLIENT_ID: googleId,
     GOOGLE_CLIENT_SECRET: googleSecret,
     OWNER_EMAIL: ownerEmail,
+    ...(ownerSub ? { OWNER_GOOGLE_SUB: ownerSub } : {}),
     ...(groq ? { GROQ_API_KEY: groq } : {}),
     ...(finnhub ? { FINNHUB_API_KEY: finnhub } : {}),
     ...(pacote ? { PACOTEVICIO_API_KEY: pacote } : {}),
@@ -140,7 +157,7 @@ async function main() {
   if (check.status !== 0) throw new Error("Verificações falharam; não publiquei.");
   const workerd = spawnSync("npm", ["run", "test:workerd"], { stdio: "inherit" });
   if (workerd.status !== 0) throw new Error("Health no wrangler dev --local falhou; não publiquei.");
-  if (npx(["deploy"]).status !== 0) throw new Error("Deploy falhou.");
+  if (npx(["deploy", ...wranglerVarArgs({ appOrigin: origin, ownerName })]).status !== 0) throw new Error("Deploy falhou.");
   const health = await fetch(`${origin}/api/health`)
     .then((x) => x.json())
     .catch(() => null);

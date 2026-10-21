@@ -13,6 +13,8 @@ test-results/
 .dev.vars
 .dev.vars.*
 !.dev.vars.example
+# Instância de destino do deploy (origem e nome do dono), por máquina
+.deploy.local.json
 *.pem
 *.key
 

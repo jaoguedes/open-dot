@@ -8,13 +8,20 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { activeVersionId, parseDeploymentsJson, waitForSmoke } from "./lib/deploy-plan.mjs";
+import { deployTarget, wranglerVarArgs } from "./lib/deploy-target.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
-const wranglerText = readFileSync(join(root, "wrangler.jsonc"), "utf8");
-const origin = wranglerText.match(/"APP_ORIGIN":\s*"(https:[^"]+)"/)?.[1];
+let target;
+try {
+  target = deployTarget({ root });
+} catch (e) {
+  console.error(e instanceof Error ? e.message : String(e));
+  process.exit(1);
+}
+const origin = target.appOrigin;
 const required = readFileSync(join(root, "apps/worker/src/db/migrate.ts"), "utf8").match(/REQUIRED_SCHEMA = "(\d+)"/)?.[1];
-if (!origin || !required) {
-  console.error("Não achei APP_ORIGIN ou REQUIRED_SCHEMA.");
+if (!required) {
+  console.error("Não achei REQUIRED_SCHEMA.");
   process.exit(1);
 }
 
@@ -87,7 +94,7 @@ if (hashOf() !== builtHash) {
 // novo (A7). Depois dela, o workerd local (que usa o mesmo banco) confere o health do código novo.
 run("npm", ["run", "db:migrate", "--", "--remote"]);
 run("npm", ["run", "test:workerd"]);
-run("npx", ["--yes", "wrangler@4", "deploy"]);
+run("npx", ["--yes", "wrangler@4", "deploy", ...wranglerVarArgs(target)]);
 
 const localHash = builtHash;
 const smoke = await waitForSmoke({ origin, appHash: localHash, timeoutMs: 60_000, fetchImpl: fetch });
