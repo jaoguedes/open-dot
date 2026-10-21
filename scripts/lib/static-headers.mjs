@@ -8,6 +8,7 @@ export function staticHeaders() {
     "  X-Content-Type-Options: nosniff",
     "  Referrer-Policy: no-referrer",
     "  X-Frame-Options: DENY",
+    "  Strict-Transport-Security: max-age=31536000",
     "  Permissions-Policy: camera=(), microphone=(), geolocation=()",
     `  Content-Security-Policy: ${CSP}`,
     // app.js, app.css e o worker de extração não têm hash no nome: sempre revalidar.

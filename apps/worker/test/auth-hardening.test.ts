@@ -65,3 +65,11 @@ test("modo só OWNER_EMAIL fixa a primeira identidade e recusa outro sub com o m
   assert.equal(owners[0]!.n, 1);
   assert.equal((await login(other, google, { sub: "sub-original", email: "dono@example.com" })).location, "/");
 });
+
+test("API e arquivos estáticos pedem HTTPS estrito (OD2-CLAUDE-10)", async () => {
+  const ctx = await makeCtx();
+  const r = await client(ctx).call("GET", "/api/health");
+  assert.equal(r.headers.get("strict-transport-security"), "max-age=31536000");
+  const { staticHeaders } = await import("../../../scripts/lib/static-headers.mjs");
+  assert.match(staticHeaders(), /^ {2}Strict-Transport-Security: max-age=31536000$/m);
+});
