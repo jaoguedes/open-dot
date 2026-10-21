@@ -1,0 +1,128 @@
+{
+  "versao": 1,
+  "atualizadoEm": "2026-10-21",
+  "aviso": "O Open Dot não é afiliado a nenhum fabricante. Cada fato tem fonte e data; desconhecido é null. Nada aqui é opinião sobre qualidade.",
+  "ferramentas": [
+    {
+      "id": "codex",
+      "nome": "Codex CLI",
+      "fabricante": "OpenAI",
+      "binario": "codex",
+      "estado": "suportado",
+      "licencaCli": { "valor": "Apache-2.0", "fonte": "https://github.com/openai/codex", "data": "2026-10-21" },
+      "modos": {
+        "somenteLeitura": { "valor": true, "fonte": "https://developers.openai.com/codex/noninteractive", "data": "2026-10-21" },
+        "jsonComEsquema": { "valor": true, "fonte": "https://developers.openai.com/codex/noninteractive", "data": "2026-10-21" },
+        "editaArquivosDiretamente": { "valor": true, "fonte": "https://developers.openai.com/codex/noninteractive", "data": "2026-10-21" },
+        "acp": { "valor": null, "fonte": null, "data": null }
+      },
+      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
+      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "comandoDeLogin": "codex login",
+      "comoConfigurar": [
+        "Instale o Codex CLI pelo instalador oficial da OpenAI.",
+        "Rode `codex login` no terminal e entre com a sua conta ChatGPT.",
+        "O Open Dot só pergunta ao CLI se há login; nunca lê arquivos de credencial."
+      ]
+    },
+    {
+      "id": "claude-code",
+      "nome": "Claude Code",
+      "fabricante": "Anthropic",
+      "binario": "claude",
+      "estado": "experimental",
+      "licencaCli": { "valor": null, "fonte": null, "data": null },
+      "modos": {
+        "somenteLeitura": { "valor": true, "fonte": "claude --help (2.1.296): --tools \"\" desliga todas as ferramentas", "data": "2026-10-21" },
+        "jsonComEsquema": { "valor": true, "fonte": "claude --help (2.1.296): --json-schema", "data": "2026-10-21" },
+        "editaArquivosDiretamente": { "valor": false, "fonte": "claude --help (2.1.296): com --tools \"\" não há ferramenta de escrita", "data": "2026-10-21" },
+        "acp": { "valor": null, "fonte": null, "data": null }
+      },
+      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
+      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "comandoDeLogin": "claude (e depois /login)",
+      "comoConfigurar": [
+        "Instale o Claude Code pelo instalador oficial e entre com a sua assinatura (`claude`, depois `/login`).",
+        "Uso programático (`claude -p`) consome o crédito programático do seu plano. Mantenha o uso extra desligado.",
+        "No Open Dot, o Claude Code fica desligado até você ativar em Equipe. Login por chave de API é tratado como possivelmente pago e não é usado por padrão."
+      ]
+    },
+    {
+      "id": "gemini",
+      "nome": "Gemini CLI",
+      "fabricante": "Google",
+      "binario": "gemini",
+      "estado": "indisponivel",
+      "licencaCli": { "valor": "Apache-2.0", "fonte": "https://github.com/google-gemini/gemini-cli", "data": "2026-10-21" },
+      "modos": {
+        "somenteLeitura": { "valor": false, "fonte": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/plan-mode.md (o modo plan permite escrever arquivos .md)", "data": "2026-10-21" },
+        "jsonComEsquema": { "valor": null, "fonte": null, "data": null },
+        "editaArquivosDiretamente": { "valor": true, "fonte": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/cli-reference.md", "data": "2026-10-21" },
+        "acp": { "valor": true, "fonte": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/acp-mode.md", "data": "2026-10-21" }
+      },
+      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
+      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "comandoDeLogin": "gemini (escolha login com Google)",
+      "comoConfigurar": [
+        "Instale o Gemini CLI pelo pacote oficial e entre com a conta Google na primeira execução.",
+        "Nesta versão do Open Dot o Gemini não implementa: nem o modo plan é somente leitura estrito. Uso para planejar e revisar fica para quando as flags forem verificadas no CLI instalado."
+      ]
+    },
+    {
+      "id": "cursor",
+      "nome": "Cursor Agent CLI",
+      "fabricante": "Anysphere",
+      "binario": "agent",
+      "estado": "indisponivel",
+      "licencaCli": { "valor": null, "fonte": null, "data": null },
+      "modos": {
+        "somenteLeitura": { "valor": null, "fonte": null, "data": null },
+        "jsonComEsquema": { "valor": null, "fonte": null, "data": null },
+        "editaArquivosDiretamente": { "valor": null, "fonte": null, "data": null },
+        "acp": { "valor": null, "fonte": null, "data": null }
+      },
+      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
+      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "comandoDeLogin": "agent login",
+      "comoConfigurar": [
+        "Integração indisponível nesta versão: não há modo sem ferramentas verificável. Planejada via ACP."
+      ]
+    },
+    {
+      "id": "ollama",
+      "nome": "Ollama",
+      "fabricante": "Ollama",
+      "binario": "ollama",
+      "estado": "planejado",
+      "licencaCli": { "valor": null, "fonte": null, "data": null },
+      "modos": {
+        "somenteLeitura": { "valor": null, "fonte": null, "data": null },
+        "jsonComEsquema": { "valor": null, "fonte": null, "data": null },
+        "editaArquivosDiretamente": { "valor": null, "fonte": null, "data": null },
+        "acp": { "valor": null, "fonte": null, "data": null }
+      },
+      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
+      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "comandoDeLogin": null,
+      "comoConfigurar": ["Modelos locais: planejado para uma próxima versão."]
+    },
+    {
+      "id": "opencode",
+      "nome": "OpenCode",
+      "fabricante": "OpenCode",
+      "binario": "opencode",
+      "estado": "planejado",
+      "licencaCli": { "valor": null, "fonte": null, "data": null },
+      "modos": {
+        "somenteLeitura": { "valor": null, "fonte": null, "data": null },
+        "jsonComEsquema": { "valor": null, "fonte": null, "data": null },
+        "editaArquivosDiretamente": { "valor": null, "fonte": null, "data": null },
+        "acp": { "valor": null, "fonte": null, "data": null }
+      },
+      "janelaDeContexto": { "valor": null, "fonte": null, "data": null },
+      "limitesPublicados": { "valor": null, "fonte": null, "data": null },
+      "comandoDeLogin": null,
+      "comoConfigurar": ["Planejado para uma próxima versão."]
+    }
+  ]
+}

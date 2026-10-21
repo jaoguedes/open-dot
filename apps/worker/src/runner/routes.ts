@@ -50,7 +50,7 @@ interface Task {
   updated_at: number;
 }
 // A declaração de suporte é do Runner autenticado, nunca do navegador.
-async function device(ctx: Ctx, req: Request): Promise<Device | null> {
+export async function device(ctx: Ctx, req: Request): Promise<Device | null> {
   const auth = req.headers.get("authorization") ?? "";
   if (!/^Bearer [A-Za-z0-9_-]{43}$/.test(auth)) return null;
   const rows = await ctx.db.query<Device>("SELECT * FROM od_runner_devices WHERE token_hash=? AND revoked_at IS NULL AND expires_at>?", [await sha256Hex(auth.slice(7)), ctx.now()]);
