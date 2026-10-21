@@ -28,21 +28,23 @@ Versão: `2.1.296 (Claude Code)` (`claude --version`).
 
 Valores de `authMethod` tratados: `claude.ai`, `oauth_token` (assinatura); `api_key`, `api_key_helper`, `third_party` (**possivelmente pago**, nunca por padrão); `none` (sem login). Qualquer outro valor: desconhecido, indisponível.
 
-## Codex CLI — só documentação (não instalado nesta máquina)
+## Codex CLI — verificado localmente
 
-Fonte: https://developers.openai.com/codex/noninteractive (lida em 21/10/2026).
+Versão: `codex-cli 0.163.0-alpha.10.2`, binário dentro do app ChatGPT (`/Applications/ChatGPT.app/.../CodexCLI.app/Contents/MacOS/codex`; o Runner já procurava ali). `codex login status` → `Logged in using ChatGPT`, código 0. `codex exec --help` confirma `--json`, `--output-schema`, `-o/--output-last-message`, `--ephemeral`, `-s/--sandbox`, `--skip-git-repo-check`, `-m/--model`.
+
+Fonte complementar: https://developers.openai.com/codex/noninteractive (lida em 21/10/2026).
 
 | Comando / flag | O que a documentação diz | Estado |
 |---|---|---|
-| `codex exec` | Modo não interativo; por padrão roda em sandbox **somente leitura** | documentado, não verificado localmente |
+| `codex exec` | Modo não interativo; por padrão roda em sandbox **somente leitura** | verificado (`codex exec --help`) |
 | `--json` | Saída JSON Lines de eventos | documentado |
 | `--output-schema <arquivo>` | Resposta final conforme um JSON Schema | documentado |
 | `-o` / `--output-last-message <arquivo>` | Grava a mensagem final | documentado |
 | `--ephemeral` | Não grava a sessão em disco | documentado |
 | `--sandbox read-only` (padrão), `workspace-write`, `danger-full-access` | Permissões | documentado; o Open Dot só aceita o padrão somente leitura |
-| `codex login status` | **Não encontrado** na documentação oficial lida | não verificado: a detecção depende de `codex login --help` local |
+| `codex login status` | Não está na documentação oficial lida | verificado por execução local (código 0, `Logged in using ChatGPT`) |
 
-O driver do Codex já existente usa `codex app-server` com perfil de permissões somente leitura e foi validado com chamadas reais em rodadas anteriores (outra máquina/sessão). Nesta máquina, sem CLI, fica **sem teste real**.
+O driver do Codex do Runner usa `codex app-server` com perfil de permissões somente leitura (validado com chamadas reais em rodadas anteriores). As flags de `codex exec` acima ficam registradas para o pipeline do orquestrador.
 
 ## Gemini CLI — só documentação (não instalado nesta máquina)
 

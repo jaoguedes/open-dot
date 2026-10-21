@@ -11,6 +11,7 @@ mod git_checkpoint;
 mod project_context;
 mod policy;
 mod process;
+mod tools;
 #[cfg(test)]
 mod recovery_tests;
 mod worktree;
@@ -234,6 +235,7 @@ fn main() {
             "{}",
             serde_json::to_string(&drivers::detect()).expect("Diagnóstico inválido.")
         );
+        println!("{}", tools::snapshot(&drivers::detect(), 1));
         return;
     }
     tauri::Builder::default()
@@ -292,6 +294,9 @@ fn main() {
                         }
                         if let Some(cursor_agent)=detected.iter_mut().find(|d|d.id=="cursor" && d.installed) {cursor_agent.executable=cursor::safe_contract_available();cursor_agent.reason=cursor::UNAVAILABLE_REASON.into();}
                         for driver in &mut detected {driver.features=drivers::features(driver.id,driver.installed&&driver.authenticated&&driver.executable);}
+                        let observed=SystemTime::now().duration_since(UNIX_EPOCH).map(|d|d.as_millis() as u64).unwrap_or(1);
+                        // Snapshot sem credenciais para o orquestrador; falha de rede não muda o diagnóstico local.
+                        let _=channel::device_request(&state.channel,"/api/runner/device/tools",Some(&tools::snapshot(&detected,observed)));
                         if let Ok(mut d)=state.drivers.lock(){*d=detected;}
 
                     for _ in 0..60 {if process::stopping(){break}std::thread::sleep(std::time::Duration::from_secs(1));}

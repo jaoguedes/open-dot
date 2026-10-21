@@ -59,7 +59,7 @@ pub fn resolve(name: &str) -> Option<PathBuf> {
     }
     None
 }
-fn probe(path: &PathBuf, args: &[&str]) -> Result<(bool, String), ()> {
+pub(crate) fn probe(path: &PathBuf, args: &[&str]) -> Result<(bool, String), ()> {
     let mut cmd = crate::process::command(path);
     cmd.args(args)
         .stdin(Stdio::null())
