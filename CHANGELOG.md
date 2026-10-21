@@ -2,6 +2,15 @@
 
 Feito a partir dos commits (`git log`). Datas em 2026. O efeito para quem usa vem primeiro.
 
+## v0.1.0-beta (rascunho, não publicado) — auditoria independente e preparação open source (20/10/2026)
+
+- Segurança: o início do login deixou de revelar o e-mail do dono; limite de taxa por origem no pareamento e no login (migração 0017); identidade fixada no modo só e-mail; HSTS; Git do Runner sem configuração global; retenção de 90 dias para conteúdo de tarefas do Runner.
+- Configuração segura para quem clona: `wrangler.jsonc` só com placeholders, origem real em `.deploy.local.json` ignorado.
+- CI: actions por SHA, sem credencial persistida, sem código de fork nos runners nativos, Dependabot, `cargo audit` opt-in, prova sem o Dot.
+- Privacidade: varredura de segredos e dados pessoais (árvore, preparado e histórico), endereços de teste em domínios reservados, identificadores do mantenedor fora dos arquivos atuais.
+- Licenças: AGPL-3.0-only + licença comercial + CLA; Dot com licença só de visualização; Marcador para forks; SPDX em todos os arquivos de código; SBOM.
+- Runner: driver Claude Code somente-proposta (experimental, desligado, não validado com o CLI real); Cursor marcado indisponível.
+
 ## Não publicado — remediação Open Dot 2.0 (20/10/2026)
 
 - Cancelamento solicitado, parada confirmada e efeitos incertos separados; lease/teto evitam tarefas eternas e recibos tardios não reabrem execução.

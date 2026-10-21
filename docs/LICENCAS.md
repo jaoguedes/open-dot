@@ -12,8 +12,8 @@
 | Playwright | (ambiente) | Apache-2.0 | `npm run test:ui` | Opcional: `npx playwright` |
 | **Inter** 4.0 (Regular, Medium, SemiBold; recorte latino) | 4.0 | SIL OFL 1.1 | Fonte local da interface | Texto completo em `apps/web/public/fonts/LICENSE-Inter.txt` |
 | Blender | 4.5.14 LTS | GPL-3.0 | Ferramenta de criação (não é distribuída com o app) | Os arquivos produzidos (`.blend`, `.glb`) pertencem ao autor |
-| **Dot** (personagem, catálogo, `.blend`, `.glb`, posters) | — | © João Pedro Guedes, todos os direitos reservados | Mascote | Definir licença antes de qualquer publicação |
+| **Dot** (personagem, código de desenho, `.blend`, `.glb`, posters, ícones, sons) | — | Licença só de visualização, todos os direitos reservados (`LICENSE-DOT-ASSETS.md`) | Mascote | Forks trocam pelo Marcador (AGPL) |
 | Ícones da interface | — | Próprios (desenhados no código) | Interface | Sem biblioteca de terceiros |
 | Sons do Dot (`apps/web/public/sounds/*.mp3`) | — | Originais, sintetizados por `scripts/sounds/make_dot_sounds.py` | Sons opcionais (desligados por padrão) | Nenhum áudio de terceiros |
 
-**Pendente:** depois do primeiro `npm install` com rede, rode `npx license-checker --summary` (ou equivalente) e anexe o resultado aqui, para cobrir as dependências transitivas.
+Inventário completo das dependências transitivas e SBOM CycloneDX: `docs/licencas/` (npm e Cargo).
