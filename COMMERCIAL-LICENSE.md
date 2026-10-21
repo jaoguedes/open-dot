@@ -16,7 +16,7 @@ O arquivo `LICENSE` contém o texto oficial da **GNU Affero General Public Licen
 
 Para quem quer usar, embutir, hospedar ou vender o Open Dot (ou um derivado) **sem** cumprir as obrigações da AGPL, como manter o código modificado fechado, o mantenedor oferece uma licença comercial. Ela prevê pagamento (por exemplo, royalties sobre a receita do produto que usa o código), definido caso a caso. Não há tabela de preços pública.
 
-Contato: **[CONTATO_A_DEFINIR]**
+Contato: **jpguedesbarbieri@gmail.com**
 
 ## O que nenhuma das duas cobre
 

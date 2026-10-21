@@ -16,4 +16,4 @@
 - Distribuir uma versão modificada, ou um fork, com o nome “Open Dot” ou com o Dot. Quem redistribui ou faz fork troca o nome e troca o Dot pelo Marcador (`docs/FORKS.md`) ou por um mascote próprio.
 - Sugerir que uma instância ou serviço de terceiros é oficial.
 
-Pedidos: **[CONTATO_A_DEFINIR]**.
+Pedidos: **jpguedesbarbieri@gmail.com**.

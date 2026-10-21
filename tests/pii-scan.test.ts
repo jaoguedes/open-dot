@@ -38,3 +38,20 @@ test("termos locais do mantenedor ficam fora do repositório e são procurados s
   assert.deepEqual(rules("conta MeuHandle123 no texto", ["meuhandle123"]), ["local-term"]);
   assert.deepEqual(localTerms("/caminho/que/nao/existe", { OPEN_DOT_PII_TERMS: "abcd, xy ,efghij" }), ["abcd", "efghij"]);
 });
+
+test("contato público: aceito só nos cinco arquivos autorizados e recusado em qualquer outro", async () => {
+  const { readFileSync } = await import("node:fs");
+  const security = readFileSync(new URL("../SECURITY.md", import.meta.url), "utf8");
+  const contact = /[A-Za-z0-9._%+-]+@gmail\.com/.exec(security)?.[0];
+  assert.ok(contact, "SECURITY.md tem o contato público");
+  const line = `Contato: ${contact}`;
+  for (const ok of ["SECURITY.md", "COMMERCIAL-LICENSE.md", "LICENSE-DOT-ASSETS.md", "TRADEMARK.md", "CODE_OF_CONDUCT.md"]) assert.deepEqual(scanPii(ok, line, ["jpguedesbarbieri"]), [], ok);
+  for (const bad of ["README.md", "docs/SETUP.md", "apps/web/src/App.tsx", "security.md", "docs/SECURITY.md", "SECURITY.md.bak"]) {
+    const rules = scanPii(bad, line, ["jpguedesbarbieri"]).map((h) => h.rule);
+    assert.ok(rules.includes("email-real-domain"), bad);
+  }
+  assert.ok(scanPii("SECURITY.md", `${contact} e outra.pessoa@gmail.com`).some((h) => h.rule === "email-real-domain"), "outro e-mail na mesma linha continua recusado");
+  const allow = JSON.parse(readFileSync(new URL("../scripts/lib/pii-allowlist.json", import.meta.url), "utf8"));
+  assert.equal(allow.entradas.length, 1);
+  assert.ok(!JSON.stringify(allow).includes("@"), "a lista guarda só o hash, não o endereço");
+});

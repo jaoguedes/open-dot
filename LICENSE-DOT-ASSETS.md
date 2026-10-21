@@ -50,4 +50,4 @@ npm run check:without-dot
 
 O passo a passo está em `docs/FORKS.md`.
 
-Pedidos de autorização: **[CONTATO_A_DEFINIR]**.
+Pedidos de autorização: **jpguedesbarbieri@gmail.com**.

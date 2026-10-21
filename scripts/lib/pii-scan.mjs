@@ -8,6 +8,21 @@
  * em `.pii-terms.local` (ignorado pelo Git) ou na variável OPEN_DOT_PII_TERMS (separados por vírgula).
  */
 import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+
+/**
+ * Exceções versionadas (scripts/lib/pii-allowlist.json): cada uma é um endereço exato, guardado como
+ * SHA-256, aceito só nos arquivos listados. Em qualquer outro arquivo o mesmo endereço continua recusado.
+ */
+const ALLOWLIST = JSON.parse(readFileSync(new URL("./pii-allowlist.json", import.meta.url), "utf8")).entradas;
+const sha = (s) => createHash("sha256").update(s.toLowerCase()).digest("hex");
+
+/** Troca, só nas linhas de arquivos autorizados, o endereço exato da exceção por um marcador neutro. */
+export function applyAllowlist(path, line) {
+  const allowed = ALLOWLIST.filter((e) => e.arquivos.includes(path));
+  if (!allowed.length) return line;
+  return line.replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/g, (m) => (allowed.some((e) => e.sha256 === sha(m)) ? "contato-publico-autorizado" : m));
+}
 
 /** Domínios que não pertencem a ninguém (RFC 2606/6761) ou que são fictícios de propósito. */
 const SAFE_EMAIL_DOMAIN = /(^|\.)(example\.(com|net|org|edu)|example|invalid|test|localhost|local|exemplo)$/i;
@@ -90,8 +105,9 @@ export function localTerms(root = ".", env = process.env) {
 export function scanPii(path, text, terms = []) {
   const out = [];
   const lowered = terms.map((t) => t.toLowerCase());
-  text.split("\n").forEach((line, i) => {
-    if (/pii-scan: fictício/.test(line)) return;
+  text.split("\n").forEach((raw, i) => {
+    if (/pii-scan: fictício/.test(raw)) return;
+    const line = applyAllowlist(path, raw);
     for (const r of PII_RULES) if (r.test(line)) out.push({ path, line: i + 1, rule: r.id });
     if (lowered.some((t) => line.toLowerCase().includes(t))) out.push({ path, line: i + 1, rule: "local-term" });
   });

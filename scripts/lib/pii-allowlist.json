@@ -1,0 +1,10 @@
+{
+  "comentario": "Exceções explícitas e mínimas do scanner de dados pessoais. Única entrada: o contato público escolhido pelo mantenedor em 21/10/2026, aceito SÓ nestes cinco arquivos e SÓ como este endereço exato (guardado como SHA-256 do endereço em minúsculas, para o endereço não aparecer em mais nenhum arquivo). Em qualquer outro arquivo ele continua recusado.",
+  "entradas": [
+    {
+      "motivo": "contato público do projeto (decisão do mantenedor)",
+      "sha256": "376c9c800440626281f9a89135767c8ad8dcfd589450ab3820e4a1e332b411c8",
+      "arquivos": ["SECURITY.md", "COMMERCIAL-LICENSE.md", "LICENSE-DOT-ASSETS.md", "TRADEMARK.md", "CODE_OF_CONDUCT.md"]
+    }
+  ]
+}

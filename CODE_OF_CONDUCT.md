@@ -14,4 +14,4 @@ Assédio, ofensas, ameaças, linguagem ou imagens sexualizadas, ataques pessoais
 
 ## Como relatar
 
-Escreva para **[CONTATO_A_DEFINIR]**. Relatos são tratados com sigilo. O mantenedor pode editar ou remover conteúdo e bloquear participantes que descumpram este código, de forma temporária ou permanente.
+Escreva para **jpguedesbarbieri@gmail.com**. Relatos são tratados com sigilo. O mantenedor pode editar ou remover conteúdo e bloquear participantes que descumpram este código, de forma temporária ou permanente.

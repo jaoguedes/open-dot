@@ -5,7 +5,7 @@ O Open Dot é uma **beta**. Leia o que está habilitado e o que continua desliga
 ## Como relatar uma vulnerabilidade
 
 - **Não abra issue pública** para vulnerabilidades.
-- Use o relatório privado do GitHub (**Security → Report a vulnerability**) neste repositório, ou escreva para **[CONTATO_A_DEFINIR]**.
+- Use o relatório privado do GitHub (**Security → Report a vulnerability**) neste repositório, ou escreva para **jpguedesbarbieri@gmail.com**.
 - Inclua versão ou SHA, a fronteira afetada (Worker, Runner, memória, CI), o comportamento observado e um teste mínimo com **dados fictícios**.
 - Nunca envie tokens, dumps de banco, conteúdo de e-mail, caminhos pessoais ou dados de terceiros. Se um segredo vazou, diga só onde e de que tipo; nós pedimos a rotação.
 
