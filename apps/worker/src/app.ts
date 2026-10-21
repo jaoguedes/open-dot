@@ -40,6 +40,7 @@ import { REQUIRED_SCHEMA, currentSchema, schemaCompatible } from "./db/migrate.t
 import { pkceChallenge, randomToken } from "./crypto.ts";
 import { csrfOk, currentOwner, currentSessionHash, endSession, json, problem, redirect, SECURITY_HEADERS, startSession, sessionCookie, withSessionCookie } from "./http.ts";
 import * as repo from "./repo.ts";
+import { take as rateLimit } from "./rate-limit.ts";
 import * as account from "./services/account.ts";
 import * as triage from "./services/triage-feedback.ts";
 import { makeRouter, runEmailReview } from "./services/email-review.ts";
@@ -273,8 +274,10 @@ async function beginGoogle(ctx: Ctx, purpose: "login" | "gmail" | "gsc", ownerId
   });
 }
 
-route("GET", "/api/auth/google/start", { auth: false }, async (ctx) => {
+route("GET", "/api/auth/google/start", { auth: false }, async (ctx, req) => {
   if (!configured(ctx.env).google || !configured(ctx.env).owner) return redirect("/?erro=login_nao_configurado");
+  // Cada início grava um estado OAuth sem autenticação: limitar por origem antes de gravar.
+  if (!(await rateLimit(ctx, req, "login", 20, 500, 600_000))) return redirect("/?erro=muitas_tentativas");
   // Sem login_hint: esta rota é pública e o redirecionamento revelaria o e-mail do dono.
   return redirect(await beginGoogle(ctx, "login", null));
 });

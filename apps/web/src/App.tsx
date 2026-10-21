@@ -660,6 +660,7 @@ function Login() {
     estado_expirado: "O login expirou ou foi reaproveitado. Tente de novo.",
     consentimento_negado: "Você cancelou no Google. Nada foi conectado.",
     login_nao_configurado: "Login com Google ainda não foi configurado no servidor.",
+    muitas_tentativas: "Muitas tentativas de entrar a partir desta rede. Espere alguns minutos e tente de novo.",
     callback_invalido: "O retorno do Google veio incompleto. Tente entrar de novo.",
     sem_id_token: "O Google não confirmou a sua conta. Tente entrar de novo.",
     sessao_trocada: "A sessão mudou no meio do caminho. Entre de novo.",

@@ -936,6 +936,7 @@ export async function applyRetention(db: Db, now: number) {
     { sql: "DELETE FROM od_monitor_samples WHERE at <= ?", args: [iso(now - 90 * 86_400_000)] },
     { sql: "DELETE FROM od_oauth_states WHERE expires_at <= ?", args: [iso(now)] },
     { sql: "DELETE FROM od_sessions WHERE expires_at <= ?", args: [iso(now)] },
+    { sql: "DELETE FROM od_rate_limits WHERE expires_at <= ?", args: [now] },
     { sql: "DELETE FROM od_inbox_events WHERE received_at <= ?", args: [iso(now - 30 * 86_400_000)] },
     { sql: "DELETE FROM od_shipments WHERE active = 0 AND updated_at <= ?", args: [iso(now - 90 * 86_400_000)] },
   ]);

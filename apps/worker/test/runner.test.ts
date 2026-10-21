@@ -128,8 +128,9 @@ test("Runner: limite de corpo e pareamentos concorrentes limitam a entrada anôn
   const responses = await Promise.all(
     Array.from({ length: 32 }, async () => native.call("POST", "/api/runner/pairings", { secretHash: await sha256Hex(randomToken()), tokenHash: await sha256Hex(randomToken()), name: "Teste" })),
   );
-  assert.equal(responses.filter((r) => r.status === 201).length, 30);
-  assert.equal(responses.filter((r) => r.status === 429).length, 2);
+  // Mesma origem: limite por origem (OD2-CLAUDE-03). Outras origens são cobertas em rate-limit.test.ts.
+  assert.equal(responses.filter((r) => r.status === 201).length, 5);
+  assert.equal(responses.filter((r) => r.status === 429).length, 27);
   ctx.db.raw.close();
 });
 

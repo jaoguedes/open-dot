@@ -7,6 +7,7 @@ import type { Handler } from "../app.ts";
 import type { Ctx } from "../context.ts";
 import { randomToken, seal, open } from "../crypto.ts";
 import { json, problem } from "../http.ts";
+import { take as rateLimit } from "../rate-limit.ts";
 
 type Registrar = (method: string, path: string, opts: { auth: boolean; csrf?: boolean }, handler: Handler) => void;
 const hash = z.string().regex(/^[a-f0-9]{64}$/);
@@ -118,16 +119,20 @@ export function registerRunnerRoutes(route: Registrar) {
       .object({ secretHash: hash, tokenHash: hash, name: label })
       .strict()
       .parse(await read(req));
-    const n = await ctx.db.query<{ n: number }>("SELECT COUNT(*) AS n FROM od_runner_pairings WHERE created_at>?", [ctx.now() - 300_000]);
-    if ((n[0]?.n ?? 0) >= 30) return problem(429, "rate_limit", "Aguarde cinco minutos para parear.");
+    // Limite por origem antes do teto global: uma origem abusiva não impede o pareamento do dono.
+    if (!(await rateLimit(ctx, req, "pairing", 5, 200, 300_000))) return problem(429, "rate_limit", "Aguarde cinco minutos para parear.");
     const pairingId = crypto.randomUUID();
     const code = randomToken(12); // 96 bits, exibido só no Runner; consulta web exige sessão.
     await ctx.db.run("DELETE FROM od_runner_pairings WHERE expires_at<?", [ctx.now()]);
-    const inserted = await ctx.db.run(
-      "INSERT INTO od_runner_pairings(id,code,secret_hash,token_hash,name,expires_at,created_at) SELECT ?,?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM od_runner_pairings WHERE created_at>?)<30",
-      [pairingId, code, data.secretHash, data.tokenHash, data.name, ctx.now() + 300_000, ctx.now(), ctx.now() - 300_000],
-    );
-    if (!inserted.changes) return problem(429, "rate_limit", "Aguarde cinco minutos para parear.");
+    await ctx.db.run("INSERT INTO od_runner_pairings(id,code,secret_hash,token_hash,name,expires_at,created_at) VALUES(?,?,?,?,?,?,?)", [
+      pairingId,
+      code,
+      data.secretHash,
+      data.tokenHash,
+      data.name,
+      ctx.now() + 300_000,
+      ctx.now(),
+    ]);
     return json({ id: pairingId, code, expiresAt: ctx.now() + 300_000 }, 201);
   });
   route("POST", "/api/runner/pairings/:id/status", { auth: false, csrf: false }, async (ctx, req, p) => {
