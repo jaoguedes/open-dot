@@ -20,3 +20,16 @@ CREATE TABLE IF NOT EXISTS od_orchestrator_outcomes (
   created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS od_orchestrator_outcomes_owner ON od_orchestrator_outcomes (owner_id, created_at);
+CREATE TABLE IF NOT EXISTS od_tool_quota (
+  owner_id TEXT NOT NULL REFERENCES od_owners(id),
+  tool_id TEXT NOT NULL,
+  state_json TEXT NOT NULL,
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (owner_id, tool_id)
+);
+CREATE TABLE IF NOT EXISTS od_orchestrator_settings (
+  owner_id TEXT PRIMARY KEY REFERENCES od_owners(id),
+  claude_opt_in INTEGER NOT NULL DEFAULT 0,
+  claude_ack_at INTEGER,
+  updated_at INTEGER NOT NULL
+);

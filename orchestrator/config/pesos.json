@@ -1,0 +1,19 @@
+{
+  "versao": 1,
+  "explicacao": {
+    "pontuacaoInicial": "Ponto de partida igual para todas as ferramentas. Não há opinião embutida sobre qualidade.",
+    "pesoEvidenciaMedida": "Quanto os resultados medidos nesta máquina (aprovado/reprovado) mexem na pontuação. 0 no v0.2: os resultados são só registrados.",
+    "minimoDeAmostras": "Quantos resultados medidos são necessários antes de a evidência contar.",
+    "fatorOffline": "Multiplicador quando o Runner que tem a ferramenta está offline (a equipe pode ser montada, mas não roda agora).",
+    "folgaMinima": "Piso do fator de cota para não zerar uma ferramenta com cota quase no fim; cota esgotada é restrição dura, não fator.",
+    "custoRelativo": "Divisor por ferramenta. 1 para todas no v0.2: sem preço público comparável por chamada. Ajuste manual possível.",
+    "padraoDeChamadasPorDia": "Limite diário conservador usado só quando o fabricante publica um número; null = desconhecido (não inventamos)."
+  },
+  "pontuacaoInicial": 1,
+  "pesoEvidenciaMedida": 0,
+  "minimoDeAmostras": 5,
+  "fatorOffline": 0.5,
+  "folgaMinima": 0.2,
+  "custoRelativo": { "codex": 1, "claude-code": 1, "gemini": 1, "cursor": 1, "ollama": 1, "opencode": 1 },
+  "padraoDeChamadasPorDia": { "codex": null, "claude-code": null, "gemini": null, "cursor": null, "ollama": null, "opencode": null }
+}

@@ -48,3 +48,36 @@ test("snapshot com segredo, campo extra, estado contraditório ou mais antigo é
   assert.equal(r.json.devices[0].snapshot.tools[0].id, "claude-code", "snapshot antigo não sobrescreve o novo");
   s.ctx.db.raw.close();
 });
+
+const ready = (id: string, authMethod = "chatgpt") => ({ id, installed: true, version: "1.0.0", loggedIn: true, authMethod, possiblyPaid: false, executable: true, reason: "Driver pronto" });
+
+test("montar equipe: usa o snapshot do Runner, respeita o opt-in do Claude e explica exclusões", async () => {
+  const s = await paired();
+  await s.native.call("POST", "/api/runner/device/heartbeat", { protocol: { version: 2, approval: "sha256-utf8-json-v1", capabilities: ["exact-content-approval", "uncertain-terminal", "lease-fencing", "event-receipts", "worktree-consent", "review-before-content"] }, projects: [], drivers: [] }, s.headers);
+  await s.native.call("POST", "/api/runner/device/tools", { version: 1, observedAt: s.ctx.now(), tools: [ready("codex"), ready("claude-code", "claude.ai"), emptySnapshot("gemini", "CLI não instalado")] }, s.headers);
+  const team = await s.web.call("POST", "/api/orchestrator/team", { ideia: "um app para lembrar de regar as plantas", deviceId: s.deviceId });
+  assert.equal(team.status, 200);
+  assert.equal(team.json.executa, false);
+  assert.ok(team.json.team.modoUmaFerramenta, "Claude desligado por padrão ⇒ só Codex");
+  const qa = team.json.team.passos.find((p: { agente: string }) => p.agente === "qa");
+  assert.match(qa.candidatas.find((c: { tool: string }) => c.tool === "claude-code").excluida, /opt-in/);
+  assert.equal((await s.web.call("PUT", "/api/orchestrator/settings", { claudeCode: true })).status, 409, "precisa aceitar o aviso");
+  assert.equal((await s.web.call("PUT", "/api/orchestrator/settings", { claudeCode: true, aviso: "uso-programatico-consome-credito-do-plano" })).status, 200);
+  const two = await s.web.call("POST", "/api/orchestrator/team", { ideia: "um app para lembrar de regar as plantas", deviceId: s.deviceId });
+  const tools = two.json.team.passos.map((p: { ferramenta: string }) => p.ferramenta);
+  const dev = two.json.team.passos.find((p: { agente: string }) => p.agente === "desenvolvedor").ferramenta;
+  assert.notEqual(two.json.team.passos.find((p: { agente: string }) => p.agente === "qa").ferramenta, dev);
+  assert.ok(tools.includes("claude-code") && tools.includes("codex"));
+  s.ctx.db.raw.close();
+});
+
+test("limite de cota informado pelo usuário e escopo por dono", async () => {
+  const s = await paired();
+  const r = await s.web.call("PUT", "/api/orchestrator/quota/codex", { limiteDia: 40 });
+  assert.equal(r.status, 200);
+  assert.equal(r.json.quota.origemLimite, "usuario");
+  assert.equal((await s.web.call("GET", "/api/orchestrator/settings")).json.quotas.codex.limiteDia, 40);
+  assert.equal((await s.web.call("PUT", "/api/orchestrator/quota/gpt-5", { limiteDia: 1 })).status, 400);
+  assert.equal((await s.web.call("POST", "/api/orchestrator/team", { ideia: "abc", deviceId: crypto.randomUUID() })).status, 404);
+  s.ctx.db.raw.close();
+});
