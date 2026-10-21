@@ -87,7 +87,48 @@ Ver `docs/orquestrador/FLAGS_VERIFICADAS.md`. Claude Code e Codex verificados lo
 ## Riscos abertos
 
 - Qualidade do resultado dos especialistas não medida em escala.
-- Heurística de perfil por palavras erra casos simples.
+- Heurística de perfil por palavras ainda erra (15/16 no golden; falha do lado seguro).
 - Saída do modelo passa por `safeRunnerText` antes de ser validada: um texto parecido com segredo pode invalidar a saída (falha fechada, mas o passo bloqueia).
-- 7 falhas antigas do `test:ui`.
+- 1 falha do `test:ui` (altura do 1º cartão no celular, decisão de design).
 - Instaladores não assinados; Runner só testado no macOS Intel.
+
+## Rodada de fechamento (21/10/2026)
+
+Branch `release/v0.2`, criada de `integration/v0.2-candidate` = `df67198f42eefc1d1193f51ccf397b925222959e` (a mudança de uma linha no `Cargo.lock` foi descartada). Nada publicado; sem merge na `main`; push do `origin` continua `DISABLED`.
+
+| SHA | Item |
+|---|---|
+| `c954236` | 1. Contato público em `SECURITY.md`, `COMMERCIAL-LICENSE.md`, `LICENSE-DOT-ASSETS.md`, `TRADEMARK.md`, `CODE_OF_CONDUCT.md` (via `fill-contact.sh`, dry-run e real). Allowlist versionada por hash (`scripts/lib/pii-allowlist.json`); teste prova que o endereço continua recusado em qualquer outro arquivo. |
+| `3883e09` | 2. `publish.sh` para `refs/heads/release/v0.2`, `EXPECTED_SHA` obrigatório, tag `v0.2.0-beta`, notas `docs/release/v0.2.0-beta.md`; aborta com e-mail gmail em commit alcançável, arquivo privado rastreado ou varredura com achado; envia só `main` e a tag; lista refs remotas e avisa, sem apagar. |
+| `767192c` | 3. Gemini: 1.000 req/dia (login Google, Code Assist Individual) e 250/dia (chave gratuita, só Flash), fonte `docs/resources/quota-and-pricing.md` do repositório oficial, consultada em 21/10/2026. Limite por minuto sem número publicado. |
+| `1909fc1` | 4. `test:ui`: os erros 401 vinham do `/api/snapshot` no boot de visitante (agora consulta a sessão antes); ⌘K falhava porque a paleta era carregada sob demanda (agora pré-carregada). |
+| `443c218` | 5. Heurística de risco: “arquivo” sozinho deixou de ser risco médio; e-mail/apagar/sobrescrever/remédio são alto; documentos de clientes/pacientes são médio; “automatizar” reconhecido. Golden 13–16 acrescentados. |
+| `2faa3f2` | 6 e 10. `docs/audit/INVENTARIO_LICENCAS.md`; aviso de modelo sem revisão no topo de `LICENSE-DOT-ASSETS.md`, `COMMERCIAL-LICENSE.md`, `CLA.md`, `TRADEMARK.md` (`LICENSE` intacto). |
+| `4ae3ce9` | 7. PRs bem-vindos para análise (CONTRIBUTING, READMEs, notas); merge só com revisão do mantenedor, CI verde e aceite do CLA; `.github/PULL_REQUEST_TEMPLATE.md` com caixa obrigatória e lembrete de código não confiável; teste novo: nenhum workflow usa `secrets`, `workflow_run` ou escrita em gatilho de PR. |
+| commit deste relatório | 8. `PUBLISH_READINESS.md`, `STATUS.md`, `CHANGELOG.md`, handoff, continuidade. |
+
+### `test:ui`: das 7 falhas antigas, 6 corrigidas
+
+| Falha | Causa | Resultado |
+|---|---|---|
+| 5 × erro 401 no console em páginas públicas | boot pedia `/api/snapshot` sem sessão | **corrigida** |
+| ⌘K não abria a paleta | `lazy()` ainda carregando quando o teste checava | **corrigida** (pré-carga após 1,5 s; abre síncrona) |
+| Tela 02 (390 px): 1º cartão acima do dock | o 1º cartão da demonstração (resumo do Correio, todos os itens expandidos) mede 1.748 px; termina em 2.440 px e o dock está em 770 px | **não corrigida**: decisão de design (resumir ou recolher o cartão no celular). A asserção não foi relaxada. |
+
+### Avaliação golden depois da correção da heurística
+
+Perfil 15/16 (erra “logs-locais”: “conta erros” lido como conta de usuário, falso positivo do lado seguro). Papéis: motor 16/16, padrão simples 8/16. Custo: 3,63 chamadas por ideia × 2,00. Continua **simulado**; o motor não demonstrou qualidade superior.
+
+### Gate em `release/v0.2@4ae3ce9`
+
+| Verificação | Resultado |
+|---|---|
+| `npm run check` | PASS — 392 testes Node, 7 Python, `eval:correio`, typecheck, build |
+| `node scripts/check-without-dot.mjs` | PASS — 371 testes, 369 passam, 0 falhas; bundle sem desenho do Dot |
+| `cargo test --locked` | 34 PASS, 8 ignorados (rede/modelo) |
+| `npm run test:ui` (worktree descartável, banco limpo, porta 8793) | 83/84 |
+| Varredura de segredos e dados pessoais | limpa (713 arquivos) |
+| `npm audit` | 0 vulnerabilidades |
+| Primeira tela | 356,0 KB (meta 350 KB): aviso **preexistente** (355,7 KB na base `df67198`); a pré-carga da paleta somou 0,3 KB |
+
+O plano de `publish.sh` (dry-run) é rodado no SHA final da branch; a saída fica na mensagem final da rodada, porque um arquivo não pode registrar o SHA do próprio commit.

@@ -1,3 +1,15 @@
+# Estado vigente — fechamento do v0.2 (21/10/2026)
+
+Objetivo: fechar o v0.2 para uma futura publicação de `v0.2.0-beta`, sem publicar. Branch `release/v0.2`, criada de `integration/v0.2-candidate` = `df67198`. Último SHA conhecido antes deste checkpoint documental: `4ae3ce9`; confira com `git log -1 -- docs/CONTINUIDADE.md`.
+
+- Decisões: contato público só em cinco documentos (allowlist testada); `CONTACT_EMAIL` de produção continua o pessoal (João); PRs bem-vindos, merge só com revisão, CI verde e caixa do CLA; textos jurídicos marcados como modelo sem revisão; `LICENSE` intacto.
+- Concluído: itens 1–10 da rodada (ver `docs/audit/V02_REPORT.md`).
+- Testes: `npm run check` 392 Node + 7 Python; `check:without-dot` 0 falhas; `cargo test` 34 PASS; `test:ui` 83/84 (1 falha de design registrada); varredura limpa; `npm audit` 0.
+- Pendente (João): publicar, migrações 0017/0018, revisão jurídica, origem de ícones, refs remotas antigas, login do Claude Code.
+- Próximo passo: o João revisa `release/v0.2` e decide publicar com `scripts/release/publish.sh`.
+
+---
+
 # Estado vigente — checkpoint 48e3a15 (20/10/2026)
 
 Entrada: [PROJECT_STATE](agents/PROJECT_STATE.md), [relatório vigente](audit/FINAL_IMPLEMENTATION_REPORT.md), [registro incremental](audit/REMEDIATION_RUN.md). Branch codex/od2-runner-remediation; resolver worktree e HEAD documental pelo Git. Scheduler sequencial, checkpoints e commit explícito, memória editável, Passport de contexto, capacidades e perfis estão integrados com limites documentados. Gate 322 Node/24 Rust/sete Python; testes reais/fixtures separados no relatório. Sem push/deploy/release; não pronto para beta pública. Próximo: recuperação durante geração real e GUI nativa, sem replay de operações incertas.

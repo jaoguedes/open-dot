@@ -1,37 +1,42 @@
-# Prontidão para publicar (v0.2)
+# Prontidão para publicar (v0.2.0-beta)
 
-Checklist do que falta antes de publicar. Nada aqui foi executado.
+Checklist do que falta antes de publicar `release/v0.2`. Nada aqui foi executado pelo agente. Atualizado em 21/10/2026 (rodada de fechamento).
 
 | Item | Estado | Como resolver |
 |---|---|---|
-| Contato público `[CONTATO_A_DEFINIR]` | pendente | `scripts/release/fill-contact.sh --dry-run <contato>` e depois sem `--dry-run`; use alias ou link de issues |
-| `OWNER_GOOGLE_SUB` em produção | pendente | `npx wrangler secret put OWNER_GOOGLE_SUB` |
-| 2FA/chaves de acesso e revisão de sessões | pendente | `docs/audit/SEGURANCA_DO_MANTENEDOR.md` |
-| Rotação de segredos (se houver dúvida) | pendente | idem |
-| Contato público de produção sem e-mail pessoal | pendente | Conexões → Contato público; remover `CONTACT_EMAIL` pessoal |
-| Migrações `0017` e `0018` na produção | pendente | `npm run deploy` aplica antes do Worker novo (expansão apenas); conferir backup do Turso antes |
-| `.deploy.local.json` com a origem da instância | pendente | `npm run setup:cloud` |
-| `cargo test` | **pronto nesta máquina** (34 PASS) | CI nativa opt-in (`RUNNER_BUILDS_ENABLED`) para ARM64/Windows |
-| Roteiro manual (GUI nativa, iPhone, Windows) | pendente | `docs/audit/MANUAL_TEST_SCRIPT.md` |
-| Revisão jurídica (AGPL, comercial, CLA, Dot, marca) | pendente | advogado |
-| Decisão sobre a interface (`claude/od2-ui`) | pendente | já integrada em `integration/v0.2-candidate`; publicar com `INCLUDE_UI=1` ou a partir da integração |
-| Decisão sobre o v0.2 (`claude/od2-v02`) | pendente | publicar só a auditoria, ou a integração com v0.2 + interface |
-| 7 falhas preexistentes do `test:ui` | pendente | não bloqueiam (existem desde a base), mas valem correção |
+| Contato público nos documentos | **resolvido** | preenchido por `fill-contact.sh` em `SECURITY.md`, `COMMERCIAL-LICENSE.md`, `LICENSE-DOT-ASSETS.md`, `TRADEMARK.md` e `CODE_OF_CONDUCT.md`; permitido só nesses cinco (`scripts/lib/pii-allowlist.json`, com teste) |
+| Contato público de produção (`CONTACT_EMAIL`) | **decidido pelo João**: continua o e-mail pessoal | — |
+| `OWNER_GOOGLE_SUB` em produção | **feito pelo João** | — |
+| Backup do Turso | **feito pelo João** | — |
+| `.deploy.local.json` com a origem da instância | **feito pelo João** | — |
+| Migrações `0017` e `0018` na produção | pendente (João) | `npm run deploy` aplica antes do Worker novo (só expansão) |
+| 2FA/chaves de acesso e revisão de sessões | pendente (João) | `docs/audit/SEGURANCA_DO_MANTENEDOR.md` |
+| Rotação de segredos (se houver dúvida) | pendente (João) | idem |
+| Revisão jurídica (comercial, CLA, Dot, marca) | pendente (advogado) | `docs/audit/INVENTARIO_LICENCAS.md` lista textos, campos em aberto e assets com origem PENDENTE |
+| Origem dos ícones do app/Runner e das duas pranchas do Dot | pendente (João) | confirmar autoria/ferramenta (`INVENTARIO_LICENCAS.md`, seção a) |
+| Branch remota `codex/runner-safe-edit-beta` e PR #1 | pendente (João) | ficam públicos ao mudar a visibilidade; o script avisa e não apaga |
+| Roteiro manual (GUI nativa, iPhone, Windows) | pendente (João) | `docs/audit/MANUAL_TEST_SCRIPT.md` |
+| Login do Claude Code (se quiser validar o driver) | pendente (João) | `claude` → `/login` |
+| Decisão de publicar | pendente (João) | `scripts/release/PUBLISH.md` |
+| `test:ui` | 83/84 | a falha restante (altura do 1º cartão em 390 px na demonstração) é decisão de design, registrada em `V02_REPORT.md` |
+| `cargo test --locked` | pronto nesta máquina | CI nativa opt-in (`RUNNER_BUILDS_ENABLED`) para ARM64/Windows |
+| PRs de terceiros | pronto | bem-vindos para análise; merge só com revisão, CI verde e caixa do CLA; CI de PR sem segredos nem escrita (teste em `tests/workflow-policy.test.ts`) |
 | CODEOWNERS | pronto | `@jaoguedes` |
 | Varredura de segredos/dados pessoais | pronto | limpa na árvore |
 
 ## Comandos de publicação (NÃO executados)
 
-Plano (não altera nada):
+Plano (não altera nada; aborta se algo falhar):
 
 ```bash
-REPO=jaoguedes/open-dot scripts/release/publish.sh
+git switch release/v0.2
+REPO=jaoguedes/open-dot EXPECTED_SHA=$(git rev-parse release/v0.2) scripts/release/publish.sh
 ```
 
-Execução, quando decidir (exige digitar o nome do repositório; envia só a `main`):
+Execução, quando decidir (pede que você digite o nome do repositório; envia só a `main` em avanço rápido e a tag `v0.2.0-beta`):
 
 ```bash
-REPO=jaoguedes/open-dot EXPECTED_SHA=$(git rev-parse claude/od2-audit) scripts/release/publish.sh --execute
+REPO=jaoguedes/open-dot EXPECTED_SHA=<sha revisado> scripts/release/publish.sh --execute
 ```
 
-Observação: o script integra `claude/od2-audit` (e, com `INCLUDE_UI=1`, `claude/od2-ui`). Para publicar o v0.2 com a interface, ajuste o script para integrar `integration/v0.2-candidate` no lugar da auditoria, ou faça o merge local dessa branch na `main` antes, revisando o diff. Histórico não foi reescrito; não é preciso recriar o repositório remoto.
+Histórico não foi reescrito; não é preciso recriar o repositório remoto.

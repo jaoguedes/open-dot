@@ -1,3 +1,16 @@
+# Estado vigente — fechamento do v0.2 (21/10/2026)
+
+Branch `release/v0.2` (base `integration/v0.2-candidate` = `df67198`). Nada publicado; sem merge na `main`. Relatório: `docs/audit/V02_REPORT.md` (seção “Rodada de fechamento”); checklist: `docs/audit/PUBLISH_READINESS.md`.
+
+- **Testado:** `npm run check` (392 Node, 7 Python, eval, typecheck, build), `check:without-dot` (371 testes, 369 passam, 0 falhas), `cargo test --locked` (34 + 8 ignorados), `test:ui` 83/84 com banco limpo, varredura limpa, `npm audit` 0; plano de `publish.sh` (dry-run).
+- **Corrigido nesta rodada:** contato público com allowlist testada; script de publicação para `release/v0.2`; erros 401 no boot e ⌘K; heurística de risco (golden 15/16); PRs bem-vindos com caixa do CLA; aviso de modelo sem revisão nos textos jurídicos.
+- **Sem teste real:** Claude Code no pipeline (login expirado), Codex como implementador neste ciclo.
+- **Simulado:** pipeline de ponta a ponta, avaliação golden.
+- **Planejado:** catálogo automático, Cursor, paralelismo, testes em sandbox.
+- **Bloqueado (João):** publicar, migrações 0017/0018 em produção, revisão jurídica, origem de alguns ícones, login do Claude Code.
+
+---
+
 # Estado vigente — orquestrador v0.2 (21/10/2026)
 
 Branch `claude/od2-v02` (base `d9fe92d`); integração local `integration/v0.2-candidate` (com a interface de `claude/od2-ui`). Nada publicado. Relatório: `docs/audit/V02_REPORT.md`.

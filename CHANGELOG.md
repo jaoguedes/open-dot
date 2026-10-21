@@ -4,6 +4,7 @@ Feito a partir dos commits (`git log`). Datas em 2026. O efeito para quem usa ve
 
 ## v0.2 (não publicado) — motor de orquestração (21/10/2026)
 
+- Fechamento: contato público nos documentos de segurança/licença; heurística de risco não trata mais qualquer menção a “arquivo” como risco e reconhece automação; Gemini com cotas gratuitas publicadas (fonte e data); visitantes sem erros 401 no boot e ⌘K abre na hora; PRs bem-vindos para análise (merge só com revisão, CI verde e aceite do CLA); textos jurídicos marcados como modelo sem revisão.
 - Catálogo de ferramentas com fonte e data por fato; detector no Runner (só comandos públicos dos CLIs, sem ler credenciais); snapshot sem credenciais no Worker (migração 0018).
 - Biblioteca de agentes como dados, com carregador que recusa permissões e injeção; cinco especialistas densos com rubricas, esquemas e avaliações.
 - Seletor explicável: restrições duras, pontuação neutra, revisor diferente do implementador, modo uma ferramenta, troca manual, estimativa de chamadas; cota diária com limite aprendido por erro.

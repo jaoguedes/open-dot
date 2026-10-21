@@ -1,5 +1,17 @@
 # Handoff v0.2 — motor de orquestração
 
+## Rodada de fechamento (21/10/2026) — vigente
+
+Branch `release/v0.2` (base `df67198`). Itens 1–10 concluídos; detalhes e SHAs em `docs/audit/V02_REPORT.md` (“Rodada de fechamento”). Último commit de código conhecido: `4ae3ce9`; confira o HEAD com `git rev-parse release/v0.2`. Nada publicado, sem merge na `main`, push do `origin` `DISABLED`.
+
+Retomar: `git switch release/v0.2 && npm ci && npm run check`. Publicar é decisão do João: `scripts/release/PUBLISH.md`. Pendências dele: `docs/audit/PUBLISH_READINESS.md`.
+
+Nota: o modelo de PR foi renomeado de `pull_request_template.md` para `PULL_REQUEST_TEMPLATE.md`; em disco sem diferença de maiúsculas, um checkout antigo pode precisar apagar o arquivo minúsculo antes de trocar de commit.
+
+---
+
+## Rodada do motor (histórico)
+
 Branch `claude/od2-v02` (base `d9fe92d` de `claude/od2-audit`). Push do `origin` desativado. Nada publicado.
 
 ## Estado
