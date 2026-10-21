@@ -27,6 +27,9 @@ const About = lazy(() => import("./views/About.tsx").then((m) => ({ default: m.A
 const Privacy = lazy(() => import("./views/Privacy.tsx").then((m) => ({ default: m.Privacy })));
 const Mascot = lazy(() => import("./views/Mascot.tsx").then((m) => ({ default: m.Mascot })));
 const Team = lazy(() => import("./views/Team.tsx").then((m) => ({ default: m.Team })));
+const Memory = lazy(() => import("./views/Memory.tsx").then((m) => ({ default: m.Memory })));
+const Settings = lazy(() => import("./views/Settings.tsx").then((m) => ({ default: m.Settings })));
+const More = lazy(() => import("./views/More.tsx").then((m) => ({ default: m.More })));
 import { DotTrouble, type TroubleInfo } from "./components/DotTrouble.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
 import { agentConnected, agentPresence, dominantVisual, islandLine, islandReason, runProgress, sortAgents } from "./presence.ts";
@@ -94,7 +97,9 @@ const NAV: NavDef[] = [
   { path: "/equipe", label: "Equipe", icon: "chat" },
   { path: "/rotinas", label: "Rotinas", icon: "clock" },
   { path: "/conexoes", label: "Conexões", icon: "plug" },
+  { path: "/memoria", label: "Memória", icon: "file" },
   { path: "/mascote", label: "Mascote", icon: "sparkle" },
+  { path: "/configuracoes", label: "Configurações", icon: "panel" },
 ];
 
 export function App() {
@@ -230,6 +235,15 @@ export function App() {
       break;
     case "/equipe":
       view = <Team />;
+      break;
+    case "/memoria":
+      view = <Memory />;
+      break;
+    case "/configuracoes":
+      view = <Settings />;
+      break;
+    case "/mais":
+      view = <More />;
       break;
     case "approval": {
       let approvalId = "";
@@ -594,8 +608,8 @@ function Dock({ go, current, onAsk }: { go: (p: string) => void; current: string
       <a href="/conexoes" className="dock-icon" aria-label="Conexões" aria-current={current === "/conexoes" ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/conexoes"))}>
         <Icon name="plug" />
       </a>
-      <a href="/mascote" className="dock-icon" aria-label="Mascote" aria-current={current === "/mascote" ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/mascote"))}>
-        <Icon name="sparkle" />
+      <a href="/mais" className="dock-icon" aria-label="Mais: Memória, Mascote, Configurações" aria-current={current === "/mais" ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/mais"))}>
+        <Icon name="menu" />
       </a>
     </nav>
   );

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { RunnerWorkspace } from "../components/RunnerWorkspace.tsx";
+import { WorkspaceSummary } from "../components/WorkspaceSummary.tsx";
 import { useState } from "react";
 import { AGENTS, agentsInPlace, approvalQueue, type AgentId } from "@open-dot/core";
 import { useApp } from "../store.tsx";
@@ -9,6 +10,7 @@ import { AnswerView } from "../components/AnswerView.tsx";
 import { fmtDateTime, RUN_LABEL } from "../format.ts";
 import { readWorkspace, saveWorkspace, type WorkspaceNotes } from "../workspace-notes.ts";
 import "../workspace.css";
+import "../screens.css";
 
 export function AgentWorkspace() {
   const app = useApp();
@@ -78,6 +80,7 @@ export function AgentWorkspace() {
               )}
             </div>
           </div>
+          <WorkspaceSummary demo={app.mode === "demo"} approvals={queue.total} navigate={app.navigate} />
           <RunnerWorkspace demo={app.mode === "demo"} />
           <div className="ws-messages" role="log" aria-label="Conversa com o Dot" aria-live="polite">
             {!messages.length && <p className="meta">O que pede sua atenção hoje? A conversa consulta o Open Dot; não executa comandos no computador. O histórico fica só nesta tela.</p>}
