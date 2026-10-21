@@ -1,0 +1,110 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* Telas Memória, Configurações e Mais. Reaproveita card/btn/chip do tema; sem cores novas além dos estados. */
+.screen {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 120px;
+  display: grid;
+  gap: 16px;
+}
+.screen-narrow {
+  max-width: 720px;
+}
+.screen-head h1 {
+  margin: 4px 0 6px;
+}
+.screen-section {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin: 12px 0 0;
+}
+.screen-project {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.screen-project h2 {
+  margin: 0;
+}
+.screen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+}
+.screen-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.screen-list li {
+  min-height: 44px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.status-pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.status-pill.ok {
+  color: var(--ok, #79c9a5);
+}
+.status-pill.warn {
+  color: var(--warn, #e8b04a);
+}
+.status-pill.off {
+  color: var(--text-2);
+}
+.more-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.more-tile {
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+.more-tile:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.screen input,
+.screen select {
+  min-height: 44px;
+}
+.ws-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.ws-summary-card {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.ws-summary-card h3 {
+  margin: 4px 0 0;
+  font-size: 15px;
+}
+.ws-summary-card .btn {
+  justify-self: start;
+  min-height: 44px;
+}
+.row-contents {
+  display: contents;
+}

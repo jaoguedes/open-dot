@@ -5,6 +5,7 @@ import { useApp } from "../store.tsx";
 import { api, ApiError, type Routine } from "../api.ts";
 import { Icon } from "../components/Icons.tsx";
 import { fmtDateTime, fmtTime, RUN_LABEL } from "../format.ts";
+import "../screens.css";
 
 const DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex"];
 
@@ -53,13 +54,16 @@ export function Routines() {
       ) : tab === "semana" ? (
         <div className="table-scroll" style={{ marginTop: 24 }}>
           <div className="week" role="table" aria-label="Agenda da semana">
-            <div className="h" role="columnheader" />
-            {dates.map((d, i) => (
-              <div key={i} className="h" role="columnheader">
-                {DAYS[i]}
-                <b>{d.getDate()}</b>
-              </div>
-            ))}
+            {/* Linhas com display: contents: a grade CSS continua igual e a tabela fica válida para leitores de tela. */}
+            <div role="row" className="row-contents">
+              <div className="h" role="columnheader" aria-label="Horário" />
+              {dates.map((d, i) => (
+                <div key={i} className="h" role="columnheader">
+                  {DAYS[i]}
+                  <b>{d.getDate()}</b>
+                </div>
+              ))}
+            </div>
             {times.map((t) => (
               <Row key={t} time={t} routines={routines} dates={dates} />
             ))}
@@ -119,7 +123,7 @@ export function Routines() {
 
 function Row({ time, routines, dates }: { time: string; routines: Routine[]; dates: Date[] }) {
   return (
-    <>
+    <div role="row" className="row-contents">
       <div role="rowheader" className="tiny">
         {time}
       </div>
@@ -136,7 +140,7 @@ function Row({ time, routines, dates }: { time: string; routines: Routine[]; dat
           </div>
         );
       })}
-    </>
+    </div>
   );
 }
 
