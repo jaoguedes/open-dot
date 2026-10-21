@@ -255,7 +255,7 @@ route("PATCH", "/api/profile", { auth: true }, async (ctx, req, _p, ownerId) => 
 
 // ---------------------------------------------------------------- OAuth Google (login e Gmail)
 
-async function beginGoogle(ctx: Ctx, purpose: "login" | "gmail" | "gsc", ownerId: string | null, loginHint?: string): Promise<string> {
+async function beginGoogle(ctx: Ctx, purpose: "login" | "gmail" | "gsc", ownerId: string | null): Promise<string> {
   if (!ctx.env.GOOGLE_CLIENT_ID) throw new ConnectorError("not_supported", "Google OAuth não configurado.");
   const state = randomToken();
   const verifier = randomToken(48);
@@ -270,13 +270,13 @@ async function beginGoogle(ctx: Ctx, purpose: "login" | "gmail" | "gsc", ownerId
     codeChallenge: await pkceChallenge(verifier),
     nonce,
     offline: purpose !== "login",
-    ...(loginHint ? { loginHint } : {}),
   });
 }
 
 route("GET", "/api/auth/google/start", { auth: false }, async (ctx) => {
   if (!configured(ctx.env).google || !configured(ctx.env).owner) return redirect("/?erro=login_nao_configurado");
-  return redirect(await beginGoogle(ctx, "login", null, ctx.env.OWNER_EMAIL));
+  // Sem login_hint: esta rota é pública e o redirecionamento revelaria o e-mail do dono.
+  return redirect(await beginGoogle(ctx, "login", null));
 });
 
 route("POST", "/api/connections/gmail/start", { auth: true }, async (ctx, _req, _p, ownerId) => {

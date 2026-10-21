@@ -30,6 +30,7 @@ export class FakeGoogle {
   history: Array<{ historyId: number; ids: string[] }> = [];
   idEmail = "joao@example.com";
   idSub = "sub-joao";
+  idEmailVerified = true;
   calls: string[] = [];
   accessExpiresIn = 3600;
 
@@ -47,7 +48,7 @@ export class FakeGoogle {
         aud: "cid.apps.googleusercontent.com",
         sub: this.idSub,
         email: this.idEmail,
-        email_verified: true,
+        email_verified: this.idEmailVerified,
         exp: 4_000_000_000,
         nonce: this.nextNonce,
       };
