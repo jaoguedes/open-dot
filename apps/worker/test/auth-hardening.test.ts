@@ -51,3 +51,17 @@ test("OWNER_GOOGLE_SUB tem precedência sobre o e-mail", async () => {
   assert.equal((await login(c, google, { sub: "sub-errado", email: "dono@example.com" })).location, "/?erro=conta_nao_autorizada");
   assert.equal((await login(c, google, { sub: "sub-certo", email: "outro@example.com" })).location, "/");
 });
+
+test("modo só OWNER_EMAIL fixa a primeira identidade e recusa outro sub com o mesmo e-mail (OD2-CLAUDE-05)", async () => {
+  const google = new FakeGoogle();
+  const ctx = await makeCtx({ fetch: google.fetch, env: { OWNER_EMAIL: "dono@example.com" } });
+  const c = client(ctx);
+  assert.equal((await login(c, google, { sub: "sub-original", email: "dono@example.com" })).location, "/");
+  await c.call("POST", "/api/logout");
+  const other = client(ctx);
+  assert.equal((await login(other, google, { sub: "sub-reatribuido", email: "dono@example.com" })).location, "/?erro=conta_nao_autorizada");
+  assert.equal((await other.call("GET", "/api/session")).json.authenticated, false);
+  const owners = await ctx.db.query<{ n: number }>("SELECT COUNT(*) AS n FROM od_owners");
+  assert.equal(owners[0]!.n, 1);
+  assert.equal((await login(other, google, { sub: "sub-original", email: "dono@example.com" })).location, "/");
+});

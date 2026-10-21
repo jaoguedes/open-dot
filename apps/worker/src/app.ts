@@ -326,7 +326,11 @@ const oauthCallback: Handler = async (ctx, req, _p, sessionOwnerId) => {
   if (st.purpose === "login") {
     const allowedSub = ctx.env.OWNER_GOOGLE_SUB;
     const allowedEmail = ctx.env.OWNER_EMAIL?.toLowerCase();
-    const allowed = allowedSub ? claims.sub === allowedSub : Boolean(allowedEmail && claims.emailVerified && claims.email === allowedEmail);
+    // Sem OWNER_GOOGLE_SUB, o primeiro sub aceito fica fixado: e-mail reatribuído não abre outra conta.
+    const pinnedSub = allowedSub ? null : await repo.googleOwnerSub(ctx.db);
+    const allowed = allowedSub
+      ? claims.sub === allowedSub
+      : Boolean(allowedEmail && claims.emailVerified && claims.email === allowedEmail && (pinnedSub === null || pinnedSub === claims.sub));
     if (!allowed) {
       await repo.audit(ctx.db, { ownerId: null, actor: "user", action: "login", outcome: "denied", now: ctx.now() });
       return redirect("/?erro=conta_nao_autorizada");

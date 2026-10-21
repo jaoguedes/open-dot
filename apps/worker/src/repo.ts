@@ -20,6 +20,12 @@ export async function upsertOwner(db: Db, p: { sub: string; email: string; name:
   return id;
 }
 
+/** Sub do dono já registrado pelo Google (o dono de desenvolvimento local não conta). */
+export async function googleOwnerSub(db: Db): Promise<string | null> {
+  const r = await db.query<{ google_sub: string }>("SELECT google_sub FROM od_owners WHERE google_sub <> 'dev-local' ORDER BY created_at, id LIMIT 1");
+  return r[0]?.google_sub ?? null;
+}
+
 export async function getOwner(db: Db, ownerId: string) {
   const r = await db.query<{ id: string; email: string; display_name: string | null; name_custom: number; time_zone: string }>(
     "SELECT id, email, display_name, name_custom, time_zone FROM od_owners WHERE id = ?",
