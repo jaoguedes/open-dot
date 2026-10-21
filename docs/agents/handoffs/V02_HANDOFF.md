@@ -6,7 +6,10 @@ Branch `claude/od2-v02` (base `d9fe92d` de `claude/od2-audit`). Push do `origin`
 
 - Fase 0: concluída. Rust 1.99.1 instalado via rustup no usuário; `cargo test` do Runner: 31 → 33 testes passando; recuperação integrada passando.
 - Fase 1: concluída (catálogo, parsers TS, snapshot no Worker, migração 0018, detector Rust). Tela de ferramentas vai na Fase 5.
-- Próxima: Fase 2 (agentes).
+- Fase 2: concluída (formato, carregador, 5 especialistas, lock).
+- Fase 3: concluída (perfil, cota, pesos, seletor, rotas de equipe/configurações/cota).
+- Fase 4: concluída (respond nos drivers, pipeline sequencial no Worker, 2 chamadas reais ao Codex aprovadas no esquema; Claude sem login = sem teste real).
+- Próxima: Fase 6 (avaliação golden), depois Fase 5 (tela Equipe) e Fase 7.
 
 ## Retomar
 
