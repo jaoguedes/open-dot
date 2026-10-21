@@ -103,7 +103,7 @@ R14 registrado por inspeção: falta negociação de versão/capacidade Web–Ru
 
 ## Validação final do HEAD sincronizado — feae70d
 
-[CI 39436042987](https://github.com/jaoguedes/open-dot/actions/runs/39436042987) **SUCCESS**. [Runner CI 39436042716](https://github.com/jaoguedes/open-dot/actions/runs/39436042716) **SUCCESS**: verify e três builds (Mac Intel, Mac ARM64, Windows x64). Onze testes Rust passaram em cada plataforma; testes nativos reais permanecem separados dos helpers ignorados. Sete cenários UI do verify usam API/IPC simulados.
+[CI 39436042987](https://github.com/<OWNER>/open-dot/actions/runs/39436042987) **SUCCESS**. [Runner CI 39436042716](https://github.com/<OWNER>/open-dot/actions/runs/39436042716) **SUCCESS**: verify e três builds (Mac Intel, Mac ARM64, Windows x64). Onze testes Rust passaram em cada plataforma; testes nativos reais permanecem separados dos helpers ignorados. Sete cenários UI do verify usam API/IPC simulados.
 
 Três instaladores e três checksums conferidos localmente, em diretório ignorado `apps/runner/installers/actions-39436042716/`. Ambos DMGs íntegros, montagem somente leitura/arquiteturas verificadas e desmontagem concluída. Intel iniciou por dez segundos com HOME/CODEX_HOME isolados. Windows MZ/PE conferidos; ARM64/Windows não executados nativamente. Build não substitui GUI E2E. Sem assinatura/notarização, release, tag ou deploy. Versão interna continua 0.1.0; diferenciar builds pelo SHA/checksum. Retenção Actions de um dia, não distribuição permanente.
 

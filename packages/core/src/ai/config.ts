@@ -49,7 +49,7 @@ export const DEFAULT_OWNER_LIMITS: OwnerLimits = {
  * Allowlist inicial. Valores conferidos em console.groq.com/docs/rate-limits em 13/10/2026
  * (tabela Free: 30 RPM, 1K RPD, 8K TPM, 200K TPD para gpt-oss-20b/120b).
  * Dados privados só são liberados depois que João ativar Zero Data Retention
- * na conta Groq e definir GROQ_ZDR_CONFIRMED=true (ver docs/ACOES_DO_JOAO.md).
+ * na conta Groq e definir GROQ_ZDR_CONFIRMED=true (ver docs/SETUP.md).
  */
 export function defaultProviders(env: Record<string, string | undefined>): ProviderConfig[] {
   const zdr = env.GROQ_ZDR_CONFIRMED === "true";

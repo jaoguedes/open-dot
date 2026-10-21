@@ -104,7 +104,7 @@ export function Connections() {
               )}
             </>
           )}
-          {!demo && !cfg?.google && <span className="tiny">Falta configurar o cliente OAuth do Google (docs/ACOES_DO_JOAO.md).</span>}
+          {!demo && !cfg?.google && <span className="tiny">Falta configurar o cliente OAuth do Google (docs/SETUP.md).</span>}
           {demo && <span className="tiny">Indisponível na demonstração.</span>}
         </div>
       </section>
@@ -117,7 +117,7 @@ export function Connections() {
           <span className={`chip ${cfg?.github ? "info" : ""}`}>{cfg?.github ? "Webhook configurado no servidor" : "Não configurado"}</span>
         </div>
         <h3 id="c-gh">GitHub App privada, só repositórios escolhidos</h3>
-        <p>Leitura de PRs, issues, workflows e checks. Sem merge, push ou alteração de configurações. Configuração no GitHub feita por você (docs/ACOES_DO_JOAO.md).</p>
+        <p>Leitura de PRs, issues, workflows e checks. Sem merge, push ou alteração de configurações. Configuração no GitHub feita por você (docs/SETUP.md).</p>
       </section>
 
       <section className="card mt-16" aria-labelledby="c-vc">
@@ -473,7 +473,7 @@ function Providers({ demo }: { demo: boolean }) {
             </div>
             {cred === p.id && (
               <p className="meta mt-8">
-                A chave não é digitada no app nem exibida. No terminal: <code>npm run setup:cloud</code> (docs/ACOES_DO_JOAO.md, grupo F).
+                A chave não é digitada no app nem exibida. No terminal: <code>npm run setup:cloud</code> (docs/SETUP.md, grupo F).
               </p>
             )}
             {msg?.id === p.id && (
@@ -815,7 +815,7 @@ function PublicContact({ demo }: { demo: boolean }) {
           </p>
           {info?.isLoginEmail && <p className="banner err">Este é o seu e-mail de login. Prefira um alias ou um link de issues.</p>}
           <label htmlFor="contact-input">E-mail ou link https</label>
-          <input id="contact-input" type="text" value={draft} placeholder="contato@seudominio.com ou https://github.com/…/issues" onChange={(e) => setDraft(e.target.value)} autoComplete="off" />
+          <input id="contact-input" type="text" value={draft} placeholder="contato@seu-dominio.example ou https://github.com/…/issues" onChange={(e) => setDraft(e.target.value)} autoComplete="off" />
           <div className="row-actions">
             <button className="btn" type="button" disabled={busy} onClick={() => void save()}>
               Salvar contato

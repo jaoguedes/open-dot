@@ -21,7 +21,7 @@ Comece por: `docs/CONTINUIDADE.md` (handoff e Git atual), `docs/STATUS.md` (esta
 6. Dot: motor em código (SVG, D-014), padrão `DOT_RENDERER=engine`. Sem boca e sem sobrancelhas. Tracinho só na absorção. Mãos só no “oi”, sem balão. Acessórios pela geometria do corpo. Corpo original branco/lilás em todos os estados; erro vermelho só na interface com texto. Paleta de mecanismos: Codex #8878EE, Claude Code #E99A69, Cursor #69A9DE; verde reservado ao futuro WhatsApp. Nenhuma cor de mecanismo na pele do Dot. O GLB/three.js fica atrás da chave `glb` e não é apagado.
 7. TypeScript, SQL, Python (Blender), Rust só no Tauri.
 8. Ao terminar: atualize `docs/STATUS.md`; diferencie testado / sem teste real / simulado / planejado / bloqueado.
-9. Nunca apague arquivos do João nem altere bancos/serviços de outros projetos (SafeWear, Mascot Desk etc.).
+9. Nunca apague arquivos do João nem altere bancos/serviços de outros projetos (outros projetos do mantenedor).
 
 ## Versionamento e continuidade (decisão do João, 20/10/2026)
 

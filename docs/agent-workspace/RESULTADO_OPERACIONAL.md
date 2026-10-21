@@ -31,7 +31,7 @@ Check completo PASS: 279 testes Node, avaliação sintética Correio, sete teste
 
 ## Builds confirmados no GitHub
 
-[Runner CI 39425600153](https://github.com/jaoguedes/open-dot/actions/runs/39425600153) SUCCESS: verify, DMG Intel, DMG ARM64 e NSIS EXE Windows x64. [CI geral](https://github.com/jaoguedes/open-dot/actions/runs/39425600235) SUCCESS. Fonte `504c00d`. Dez unitários Rust passaram em cada plataforma; dois testes reais ignorados por padrão. Sete cenários UI passaram no verify, com API/IPC simulados explicitamente.
+[Runner CI 39425600153](https://github.com/<OWNER>/open-dot/actions/runs/39425600153) SUCCESS: verify, DMG Intel, DMG ARM64 e NSIS EXE Windows x64. [CI geral](https://github.com/<OWNER>/open-dot/actions/runs/39425600235) SUCCESS. Fonte `504c00d`. Dez unitários Rust passaram em cada plataforma; dois testes reais ignorados por padrão. Sete cenários UI passaram no verify, com API/IPC simulados explicitamente.
 
 Os três instaladores foram baixados; conjunto exato de seis arquivos/checksums validado. DMGs: hdiutil VALID, conteúdo/versão/arquiteturas conferidos. DMG Intel do Actions: binário ativo por dez segundos em diretórios isolados, sem credenciais. Windows: assinatura estrutural PE conferida; não executado nativamente. ARM64 também sem execução nativa. Instalação, tray e E2E gráfico completo continuam pendentes. Hashes e caminhos no [guia de instaladores](../open-dot-runner-release.md).
 

@@ -739,7 +739,7 @@ function Setup() {
         <h2>Configuração incompleta</h2>
         <p>O servidor está rodando, mas faltam variáveis privadas. Nenhum valor é mostrado aqui, só os nomes:</p>
         <code>{app.setupMissing.join(", ") || "—"}</code>
-        <p className="meta">Siga docs/ACOES_DO_JOAO.md. Enquanto isso, você pode ver a demonstração.</p>
+        <p className="meta">Siga docs/SETUP.md. Enquanto isso, você pode ver a demonstração.</p>
         <button className="btn" onClick={() => app.enterDemo("Servidor sem configuração completa.")}>
           Ver demonstração
         </button>

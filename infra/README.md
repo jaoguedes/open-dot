@@ -12,7 +12,7 @@
 
 ## Passo a passo
 
-1. Siga os grupos B, C e D de `docs/ACOES_DO_JOAO.md`.
+1. Siga as seções 2 a 4 de `docs/SETUP.md`.
 2. Rode `npm run setup:cloud`. Ele grava os segredos, migra o banco e pergunta antes de publicar.
 3. Faça o smoke test: `curl https://open-dot.SEU-SUBDOMINIO.workers.dev/api/health` deve trazer `"ok": true` e `"schema": "0001"`.
 4. Primeira revisão: entre no app, conecte o Gmail e use **Rotinas → Rodar agora**. Em até 5 minutos aparece no feed.

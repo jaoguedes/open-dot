@@ -61,13 +61,13 @@ DMG Intel debug atualizado (12,11 MiB), sem assinatura/notarização, gerado sem
 
 ## Actions e inicialização — checkpoint 20/10/2026
 
-[Runner CI 39425600153](https://github.com/jaoguedes/open-dot/actions/runs/39425600153): verify PASS, ARM64 PASS, Intel/Windows ainda em empacotamento na última consulta. [CI geral](https://github.com/jaoguedes/open-dot/actions/runs/39425600235) PASS. ARM64 baixado, hdiutil VALID, versão 0.1.0 / com.opendot.runner / arm64 conferidos somente leitura. SHA-256 `89384bd4715995a91c52512b26419ceeb921ffd8798fa1884054f8524500c549` (7.402.065 bytes). Não executado nativamente.
+[Runner CI 39425600153](https://github.com/<OWNER>/open-dot/actions/runs/39425600153): verify PASS, ARM64 PASS, Intel/Windows ainda em empacotamento na última consulta. [CI geral](https://github.com/<OWNER>/open-dot/actions/runs/39425600235) PASS. ARM64 baixado, hdiutil VALID, versão 0.1.0 / com.opendot.runner / arm64 conferidos somente leitura. SHA-256 `89384bd4715995a91c52512b26419ceeb921ffd8798fa1884054f8524500c549` (7.402.065 bytes). Não executado nativamente.
 
 O DMG Intel debug local teve inicialização básica PASS: binário da imagem ativo por dez segundos com HOME/CODEX_HOME isolados, sem conta ou pareamento. Processo próprio encerrado e imagem desmontada. Não comprova cliques/tray/instalação completa. Nenhuma release/tag criada.
 
 ## Conjunto final confirmado — Actions 20/10/2026
 
-[Runner CI 39425600153](https://github.com/jaoguedes/open-dot/actions/runs/39425600153) **SUCCESS** (verify + três plataformas), fonte `504c00d`. CI geral SUCCESS. Dez unitários Rust por plataforma; sete cenários UI no verify. Não foi criado release, tag ou deploy. Repositório privado; checkpoints documentais posteriores são locais.
+[Runner CI 39425600153](https://github.com/<OWNER>/open-dot/actions/runs/39425600153) **SUCCESS** (verify + três plataformas), fonte `504c00d`. CI geral SUCCESS. Dez unitários Rust por plataforma; sete cenários UI no verify. Não foi criado release, tag ou deploy. Repositório privado; checkpoints documentais posteriores são locais.
 
 | Artefato | Bytes | SHA-256 |
 |---|---:|---|
@@ -81,7 +81,7 @@ Ambos DMGs: hdiutil VALID, montagem somente leitura, versão 0.1.0 / com.opendot
 
 ## Validação final do HEAD sincronizado — feae70d
 
-[CI 39436042987](https://github.com/jaoguedes/open-dot/actions/runs/39436042987) **SUCCESS**. [Runner CI 39436042716](https://github.com/jaoguedes/open-dot/actions/runs/39436042716) **SUCCESS**: verify e três builds (Mac Intel, Mac ARM64, Windows x64). Onze testes Rust passaram em cada plataforma; testes nativos reais permanecem separados dos helpers ignorados. Sete cenários UI do verify usam API/IPC simulados.
+[CI 39436042987](https://github.com/<OWNER>/open-dot/actions/runs/39436042987) **SUCCESS**. [Runner CI 39436042716](https://github.com/<OWNER>/open-dot/actions/runs/39436042716) **SUCCESS**: verify e três builds (Mac Intel, Mac ARM64, Windows x64). Onze testes Rust passaram em cada plataforma; testes nativos reais permanecem separados dos helpers ignorados. Sete cenários UI do verify usam API/IPC simulados.
 
 Três instaladores e três checksums conferidos localmente, em diretório ignorado `apps/runner/installers/actions-39436042716/`. Ambos DMGs íntegros, montagem somente leitura/arquiteturas verificadas e desmontagem concluída. Intel iniciou por dez segundos com HOME/CODEX_HOME isolados. Windows MZ/PE conferidos; ARM64/Windows não executados nativamente. Build não substitui GUI E2E. Sem assinatura/notarização, release, tag ou deploy. Versão interna continua 0.1.0; diferenciar builds pelo SHA/checksum. Retenção Actions de um dia, não distribuição permanente.
 

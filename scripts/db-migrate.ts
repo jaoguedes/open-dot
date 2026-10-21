@@ -28,7 +28,7 @@ async function main() {
     const foreign = tables.map((t) => t.name).filter((n) => !n.startsWith("od_"));
     if (foreign.length && !allowShared) {
       console.error(`Este banco já tem tabelas de outro projeto (${foreign.slice(0, 8).join(", ")}${foreign.length > 8 ? "…" : ""}).`);
-      console.error("Crie um banco separado para o Open Dot (docs/ACOES_DO_JOAO.md). Nada foi alterado.");
+      console.error("Crie um banco separado para o Open Dot (docs/SETUP.md). Nada foi alterado.");
       process.exit(2);
     }
     console.log(`Banco remoto: presente (${tables.length} tabelas existentes)`);

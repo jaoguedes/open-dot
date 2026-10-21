@@ -4,7 +4,7 @@
 
 **Inventário**
 - Mac Intel (x64) com Blender 4.5.14, Cursor, VS Code e Claude instalados.
-- Projetos existentes: SafeWear, OpenMascot e Mascot Desk. Nenhum foi alterado.
+- Outros projetos do mantenedor já existiam no Mac. Nenhum foi alterado.
 - A memória RAM do Mac não pôde ser lida: o shell remoto é uma VM Linux.
 - Rede de pacotes bloqueada na sessão.
 

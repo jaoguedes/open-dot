@@ -23,7 +23,7 @@
 - Migração remota `0006` aplicada (`Aplicadas: 0006`).
 - `test:workerd`: `{"ok":true,"schema":"0006"}` com o código ainda expondo o schema.
 - `ui:mobile` ok.
-- Worker publicado: `4d1dbc6e-b55d-475f-8e27-ec36659eb036`. App `75ea1683146c`. Rollback: `da21bebf-d11a-4fdc-abad-c87022130c56` (o script tinha gravado o id errado `b914aa87`; a lista do Wrangler mostra `da21bebf` imediatamente antes).
+- Worker publicado: `[ID de versão REDIGIDO]`. App `75ea1683146c`. Rollback: `[ID de versão REDIGIDO]` (o script tinha gravado o id errado `b914aa87`; a lista do Wrangler mostra `da21bebf` imediatamente antes).
 - A fumaça do script falhou na hora porque o health ainda era o Worker anterior (`ok:false` com schema 0006). Segundos depois: `ok:true`, `schema:0006`, hash do `app.js` igual, `/sw.js` contém o hash, `/assets/inexistente` é 404 texto. Flags `GROQ_ZDR_CONFIRMED` e `PACOTEVICIO_TERMS_CONFIRMED` seguem `false`.
 - Os MP3 em `public/sounds/` subiram como arquivo estático neste deploy. O player da fase E ainda não existe.
 
@@ -63,7 +63,7 @@ Também: o 503 de configuração incompleta não lista mais os nomes das variáv
 
 - Primeira tentativa de `npm run deploy` parou antes de publicar: o passo “erro de render” do `ui:mobile` usa `?forcar=render`, que a B4 tirou do build de produção. Nada foi ao ar. Correção (`scripts/ui-mobile.mjs`): o passo só roda quando o bundle servido tem o gancho; caso contrário diz “pulado”.
 - Achado: `npm run dev` observa o código e escreve no mesmo `apps/web/dist`. `scripts/deploy.mjs` agora guarda o hash depois do check, recusa dist com gancho de teste e aborta se o hash mudar antes do `wrangler deploy`.
-- Publicado: Worker `509e4b64-2ff9-44a1-8a24-9dfcc0b8c84d`, app `bcfc3da9a745` (commit `a6fe017`), rollback `4d1dbc6e-b55d-475f-8e27-ec36659eb036`. Fumaça do script ok. `/api/health` público = `{"ok":true}`. CSP com `media-src 'self'`.
+- Publicado: Worker `[ID de versão REDIGIDO]`, app `bcfc3da9a745` (commit `a6fe017`), rollback `[ID de versão REDIGIDO]`. Fumaça do script ok. `/api/health` público = `{"ok":true}`. CSP com `media-src 'self'`.
 - `/api/legal` devolve um contato porque o segredo `CONTACT_EMAIL` existe em produção com o mesmo Gmail do login. É configuração (a B1 permite); se o João não quiser publicar esse endereço, basta `wrangler secret delete CONTACT_EMAIL` ou trocar.
 
 ## Fase C (15/10/2026)
@@ -81,7 +81,7 @@ Achado para a fase D: a ilha mostrou “Correio com erro · not_connected” (c�
 
 ## Publicação da fase C (15/10/2026)
 
-- Worker `4c19544f-eb50-47a9-9961-7d77e75989a1`, app `a2534331ca01` (build do commit `5ee300b`), rollback `509e4b64-2ff9-44a1-8a24-9dfcc0b8c84d`. Fumaça do script ok.
+- Worker `[ID de versão REDIGIDO]`, app `a2534331ca01` (build do commit `5ee300b`), rollback `[ID de versão REDIGIDO]`. Fumaça do script ok.
 - Conferido no ar: `/api/health` `{"ok":true}`; `app.js` `max-age=0, must-revalidate`; chunk `immutable` 1 ano; `/sounds/dot-tap.mp3` `max-age=86400`; `/fonts/nao-existe.woff2` GET → 404 `text/plain` `no-store`; `/api/snapshot` sem sessão → 401.
 - Nos primeiros segundos um chunk novo respondeu 404 a um HEAD; segundos depois 200 em GET e HEAD (propagação). O app já trata chunk ausente recarregando uma vez.
 
@@ -184,7 +184,7 @@ Base conferida: `65c05bb`, árvore limpa, `npm run check` verde (249 testes), li
 
 - 1ª tentativa: o `test:workerd` deu `{"ok":false}` antes de publicar. Causa: ele usa o banco remoto (ainda 0006) e o código novo exige 0007; o deploy só migrava depois do workerd. Correção (`d3d3846`): migração (só aditiva) depois das checagens de celular e antes do workerd. Nada foi alterado em produção.
 - 2ª tentativa: o axe do `ui:fase-d` acusou `link-in-text-block` no link “/privacidade” do cartão Contato público. Links dentro de texto passaram a ser sublinhados (`e86f77e`). Nada foi alterado em produção.
-- 3ª: publicado. `Aplicadas: 0007`. Worker `69ebaf7d-85b0-4cf7-9996-77899d97e1bd`, app `48b491adb418`, rollback `4c19544f-eb50-47a9-9961-7d77e75989a1`. `/api/health` `{"ok":true}`.
+- 3ª: publicado. `Aplicadas: 0007`. Worker `[ID de versão REDIGIDO]`, app `48b491adb418`, rollback `[ID de versão REDIGIDO]`. `/api/health` `{"ok":true}`.
 - Reprodução do hash: worktree limpo em `e86f77e` com `npm ci` → `48b491adb418` (igual). Com `node_modules` em link simbólico o hash muda (só os nomes dos chunks), porque o esbuild usa o caminho dos módulos no hash; a reprodução precisa de `node_modules` próprio.
 
 ## Parte 2 — remoção das referências ao projeto removido (15/10/2026)
@@ -194,4 +194,4 @@ Base conferida: `65c05bb`, árvore limpa, `npm run check` verde (249 testes), li
 - Reescrito de forma neutra: NOTICE e LICENCAS (só dependências reais), CHANGELOG (fase E: “Registro de agentes, fila de aprovações e sons”), DECISOES (D-014), prompts da rodada 3 e do visual, `dot_motor.html` (sem a tabela de comparação nem comentários de origem), `physics.ts`, README dos sons, `.cursor/rules/10-visual.mdc`.
 - Teste novo: `tests/sem-projeto-removido.test.ts` (o nome é montado por partes; exclui `package-lock.json`). Falhava antes (restava `physics.ts`) → passa.
 - Histórico do git não foi reescrito (decisão adiada para antes do open source). O app publicado muda (valores do motor), então vai no próximo deploy.
-- Publicado (parte 2): Worker `06234ec1-e640-4084-b501-51c8b478e0f7`, app `8fda6e7a44bd` (build de `ff86bb1`; worktree limpo com `npm ci` → `8fda6e7a44bd`), rollback `69ebaf7d-85b0-4cf7-9996-77899d97e1bd`, schema 0007.
+- Publicado (parte 2): Worker `[ID de versão REDIGIDO]`, app `8fda6e7a44bd` (build de `ff86bb1`; worktree limpo com `npm ci` → `8fda6e7a44bd`), rollback `[ID de versão REDIGIDO]`, schema 0007.

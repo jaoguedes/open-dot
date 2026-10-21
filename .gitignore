@@ -51,3 +51,6 @@ apps/runner/installers/
 # Local cooperative shared-state write protocol (never commit transient locks)
 docs/audit/ENGINEERING_STATE.json.lock
 docs/audit/.agent-state-*.tmp
+
+# Anotações pessoais do mantenedor (contas, produção). Ficam só na máquina.
+docs/privado/

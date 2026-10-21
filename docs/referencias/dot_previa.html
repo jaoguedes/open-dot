@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
 /* Layout: coluna de 1120px; palco da tela de carregamento, interação, anatomia, estados, absorção, agentes e comparação.
-   Tokens do app Open Dot; palco azul-noite como o 3D do Mascot Desk. */
+   Tokens do app Open Dot; palco azul-noite como o 3D de referência. */
 :root {
   --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --bg: #FAF9F7; --surface: #F1F0ED; --surface-2: #E9E7E3; --text: #27262A; --text-2: #69666E; --border: #D8D5D0;
@@ -322,8 +322,8 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--
 <div class="wrap">
   <header>
     <span class="eyebrow">Open Dot · prévia para aprovação</span>
-    <h1>Dot: gordinho e fofo, com a luz do Mascot Desk</h1>
-    <p class="lead">A forma é a das pranchas do Open Dot: um mochi gordinho, sem tracinho na cabeça. As cores, os olhos e o jeito de reagir vêm do Dot 3D do Mascot Desk: branco que vai para lilás e azul na base, aro de luz azul, olhos ovais altos e bochechas rosadas. Só quando absorve um arquivo ele fica mais quadrado e abre o tracinho.</p>
+    <h1>Dot: gordinho e fofo, com luz suave</h1>
+    <p class="lead">A forma é a das pranchas do Open Dot: um mochi gordinho, sem tracinho na cabeça. As cores, os olhos e o jeito de reagir vêm do Dot 3D de referência: branco que vai para lilás e azul na base, aro de luz azul, olhos ovais altos e bochechas rosadas. Só quando absorve um arquivo ele fica mais quadrado e abre o tracinho.</p>
   </header>
 
   <section aria-labelledby="h-load">
@@ -353,7 +353,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--
   <section aria-labelledby="h-play">
     <div class="sec-head">
       <h2 id="h-play">Mexa com ele</h2>
-      <p>As mesmas interações do Mascot Desk. Passe o mouse ou o dedo pelo quadro: os olhos seguem você. Toque nele: ele amassa e pula. Três toques rápidos: fica tonto. O botão faz carinho.</p>
+      <p>Interações: Passe o mouse ou o dedo pelo quadro: os olhos seguem você. Toque nele: ele amassa e pula. Três toques rápidos: fica tonto. O botão faz carinho.</p>
     </div>
     <div class="two">
       <div style="display:grid;gap:10px">
@@ -372,13 +372,13 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--
   <section aria-labelledby="h-anat">
     <div class="sec-head">
       <h2 id="h-anat">Como ele é</h2>
-      <p>Forma das pranchas 3D do Open Dot. Material, cores e rosto do Dot 3D do Mascot Desk (renders do Blender e comparação SVG × 3D).</p>
+      <p>Forma das pranchas 3D do Open Dot. Material, cores e rosto do Dot 3D de referência (renders do Blender e comparação SVG × 3D).</p>
     </div>
     <div class="two">
       <div class="mini-stage" id="anat-dot"></div>
       <ol class="traits">
         <li><span class="n">1</span><div><b>Corpo gordinho</b><p>Mochi de cerca de 1,4 de largura para 1 de altura. Topo em cúpula, laterais que estufam embaixo, base reta apoiada no chão. Sem quinas e sem tracinho.</p></div></li>
-        <li><span class="n">2</span><div><b>Cores do Mascot Desk</b><p>Branco puro no topo, rosado-lilás no meio e azul-lavanda na base, com aro de luz azul embaixo. Acabamento macio e levemente brilhante, sem contorno.</p></div></li>
+        <li><span class="n">2</span><div><b>Cores</b><p>Branco puro no topo, rosado-lilás no meio e azul-lavanda na base, com aro de luz azul embaixo. Acabamento macio e levemente brilhante, sem contorno.</p></div></li>
         <li><span class="n">3</span><div><b>Luz da base</b><p>Brilho colorido embaixo e no chão. Azul é o Dot; cada agente e cada estado tem a sua cor.</p></div></li>
         <li><span class="n">4</span><div><b>Olhos</b><p>Ovais pretos altos, sem brilho e sem íris, a 60% da altura do corpo. Viram arcos (feliz), setinhas (esforço), piscadinha ou bolinhas (surpresa).</p></div></li>
         <li><span class="n">5</span><div><b>Bochechas</b><p>Manchas rosadas grandes e desfocadas, por fora e um pouco abaixo dos olhos.</p></div></li>
@@ -459,7 +459,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--
     </div>
     <div class="note">
       <h3>No 3D (Blender 4.5)</h3>
-      <p>O corpo parte de uma esfera, não de um cubo. Ela é achatada, alargada embaixo e tem a base aplainada. O material copia o do Mascot Desk: degradê vertical branco → rosado → lavanda → azul, superfície macia com brilho leve e aro azul de luz embaixo. Olhos e bochechas são peças na frente. A forma “quadrada” da absorção é um shape key do corpo, e o tracinho é uma peça que só aparece nesse momento. A luz colorida da base vem do app, tingida pela cor do agente ou do estado.</p>
+      <p>O corpo parte de uma esfera, não de um cubo. Ela é achatada, alargada embaixo e tem a base aplainada. O material: degradê vertical branco → rosado → lavanda → azul, superfície macia com brilho leve e aro azul de luz embaixo. Olhos e bochechas são peças na frente. A forma “quadrada” da absorção é um shape key do corpo, e o tracinho é uma peça que só aparece nesse momento. A luz colorida da base vem do app, tingida pela cor do agente ou do estado.</p>
     </div>
   </section>
 </div>
@@ -476,7 +476,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--
   var uid = 0;
   function f(n) { return Math.round(n * 100) / 100; }
 
-  /* ---------- Pincel: traço cheio no meio e fino nas pontas (como os olhos do Mascot Desk) ---------- */
+  /* ---------- Pincel: traço cheio no meio e fino nas pontas ---------- */
   function brush(pts, W, taper) {
     taper = taper == null ? .4 : taper;
     var n = pts.length, Ls = [], Rs = [];

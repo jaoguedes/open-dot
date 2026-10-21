@@ -12,7 +12,7 @@ Decisões do João (não reabrir): acento amarelo do ícone (#FFBC03), fundo esc
 
 | Item | Mudança | Teste (antes → depois) |
 |---|---|---|
-| 3.1 Ícones | Conjunto de `/Users/joaoguedes/dot-icones-set/` copiado sem alteração para `apps/web/public/icons/` (apple 180, 192, 512, maskable 512, favicon 16/32/256); mestre em `assets/icones/dot-icone-1024.png`; `favicon.ico` (16/32/256, PNG embutido) por `scripts/icons/make-ico.mjs`; `favicon.svg` antigo removido; `index.html` e manifest com `?v=4`; o service worker usa cache com o hash do build e apaga os antigos ao ativar, e o shell agora pré-carrega `favicon-32.png?v=4`. theme-color e background_color seguem #050608. O gerador antigo (`make-icons.mjs`) saiu. | manifest (tamanhos, maskable, theme-color) ✖ → ✔; `apps/web/test/icons.test.ts` reescrito (tamanhos, sem transparência, ICO, mestre) |
+| 3.1 Ícones | Conjunto de `~/dot-icones-set/` copiado sem alteração para `apps/web/public/icons/` (apple 180, 192, 512, maskable 512, favicon 16/32/256); mestre em `assets/icones/dot-icone-1024.png`; `favicon.ico` (16/32/256, PNG embutido) por `scripts/icons/make-ico.mjs`; `favicon.svg` antigo removido; `index.html` e manifest com `?v=4`; o service worker usa cache com o hash do build e apaga os antigos ao ativar, e o shell agora pré-carrega `favicon-32.png?v=4`. theme-color e background_color seguem #050608. O gerador antigo (`make-icons.mjs`) saiu. | manifest (tamanhos, maskable, theme-color) ✖ → ✔; `apps/web/test/icons.test.ts` reescrito (tamanhos, sem transparência, ICO, mestre) |
 | 3.2 Tokens | Escuro e claro conforme a decisão; `--info` passou ao amarelo do link (era o azul antigo); `--glow-need` em laranja; `--wordmark-dot` em amarelo. `summary` e o contorno da opção ativa da busca deixaram de usar o amarelo como texto/contorno no claro. No claro, preenchido amarelo tem contorno 1px `--link` (o amarelo tem 1,55:1 sobre o fundo claro). | contraste dos tokens: ✔ → ✔ (text/bg, text-2/surface, on-accent/accent, link/surface, link/bg, warn/surface, text/surface-2, focus/bg, focus/surface) |
 | 3.3 Azul solto | Ver contagem abaixo. | “sem azul antigo” ✖ → ✔ |
 | 3.4 Seleção e foco | `::selection` #FFBC03/#1A1400; `accent-color: var(--accent)`; `--focus` = acento no escuro, `--link` no claro. | regex no teste do vidro ✖ → ✔ |
@@ -35,6 +35,6 @@ Também arte, fora do padrão pedido e sem mudança: brilho de repouso do Dot `#
 
 ## Publicação
 
-- Worker `bbb21323-cacb-4b48-abc2-739e843ea29a`, app `046d7bc64f45`, rollback `06234ec1-e640-4084-b501-51c8b478e0f7`, schema `0007`. Todas as checagens do deploy verdes (check, `ui:mobile`, fases A/D/E/F/G, `ui:rodada4`, workerd, fumaça).
+- Worker `[ID de versão REDIGIDO]`, app `046d7bc64f45`, rollback `[ID de versão REDIGIDO]`, schema `0007`. Todas as checagens do deploy verdes (check, `ui:mobile`, fases A/D/E/F/G, `ui:rodada4`, workerd, fumaça).
 - Commit de origem `f69bc9f`; worktree limpo com `npm ci` → `046d7bc64f45` (igual).
 - No ar: `/icons/icon-512.png?v=4` tem o mesmo sha-256 do arquivo do João; `/favicon.ico` e o manifest respondem 200.

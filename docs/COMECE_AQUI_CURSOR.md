@@ -50,7 +50,7 @@ Nunca cole tokens ou senhas no chat do Cursor, em prints ou em commits.
 
 ## 6. Como validar uma conexão (Gmail)
 
-Depois de seguir `docs/ACOES_DO_JOAO.md` (grupo Google):
+Depois de seguir `docs/SETUP.md` (seção 2, Google):
 
 1. Com `npm run dev` rodando, vá em **Conexões → Conectar Gmail** e autorize **só leitura**.
 2. Em **Rotinas → Rodar agora**, depois rode no terminal:

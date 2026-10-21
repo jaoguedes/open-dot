@@ -32,7 +32,7 @@ Após aprovação explícita: push fast-forward normal para a branch revisada; n
 
 Em 20/10/2026 o mantenedor respondeu “Autorizar push privado deste HEAD” para feae70d. Push fast-forward normal concluído de 504c00d a feae70d. Sem merge, tag, release, deploy, mudança de visibilidade ou orçamento. Scanner final: 470 arquivos/zero padrões; histórico local de 14 commits/68 versões de arquivos/zero padrões. Não equivale a DLP ou auditoria independente.
 
-CI deste SHA: [CI 39436042987](https://github.com/jaoguedes/open-dot/actions/runs/39436042987) e [Runner CI 39436042716](https://github.com/jaoguedes/open-dot/actions/runs/39436042716), inicialmente em execução. Receber autorização para feae70d não autoriza enviar o presente recibo documental ou commits posteriores. Nenhum novo push automático. As instruções de preparação acima registram as condições anteriores ao envio.
+CI deste SHA: [CI 39436042987](https://github.com/<OWNER>/open-dot/actions/runs/39436042987) e [Runner CI 39436042716](https://github.com/<OWNER>/open-dot/actions/runs/39436042716), inicialmente em execução. Receber autorização para feae70d não autoriza enviar o presente recibo documental ou commits posteriores. Nenhum novo push automático. As instruções de preparação acima registram as condições anteriores ao envio.
 
 ## Resultado final
 

@@ -106,7 +106,7 @@ Não testado nesta sessão: OAuth/contas reais, Cloudflare/workerd, GPU/Blender 
 
 Próxima ação: revisar o diff e os instaladores locais disponíveis; configurar proteção do environment runner-release e franquia gratuita antes de habilitar os jobs nativos. Aprovação separada para push/tag/draft/publicação. Não habilitar cobrança/overage. Pairing/driver futuro deve seguir o contrato de segurança documentado.
 
-_Atualizado em 15/10/2026, rodada 3 concluída (sem as auditorias) e rodada 4 (amarelo, vidro, ícones). Produção `ok:true`, schema `0007`, Worker `bbb21323-cacb-4b48-abc2-739e843ea29a`, app `046d7bc64f45` (build de `f69bc9f`, reproduzido em worktree limpo com `npm ci`). Rollback: `06234ec1-e640-4084-b501-51c8b478e0f7`. `GROQ_ZDR_CONFIRMED` e `PACOTEVICIO_TERMS_CONFIRMED` seguem `false`. Auditorias 1–3 ficam para outra sessão._
+_Atualizado em 15/10/2026, rodada 3 concluída (sem as auditorias) e rodada 4 (amarelo, vidro, ícones). Produção `ok:true`, schema `0007`, Worker `[ID de versão REDIGIDO]`, app `046d7bc64f45` (build de `f69bc9f`, reproduzido em worktree limpo com `npm ci`). Rollback: `[ID de versão REDIGIDO]`. `GROQ_ZDR_CONFIRMED` e `PACOTEVICIO_TERMS_CONFIRMED` seguem `false`. Auditorias 1–3 ficam para outra sessão._
 
 ## Rodada 3 (15/10/2026)
 
@@ -181,8 +181,8 @@ Prova de cada item (antes → depois) em `docs/RODADA3_LOG.md`.
 | Repositório, regras e docs | ✅ | `.cursor/rules/*.mdc` no formato atual, `CLAUDE.md`, `AGENTS.md`, `.env.example`, decisões, licenças, guia do Cursor |
 | Núcleo (`packages/core`) | ✅ | Estados de execução, resolvedor visual com prioridade e revisão, corações independentes, absorção (selecionado → enviado → recebido → organizado), agenda por fuso IANA, aprovações por hash e CAS, supervisor de ferramentas, triagem por regras, resumo com cobertura, monitor anti-SSRF, roteador de IA |
 | Persistência | ✅ SQLite · ✅ Turso (Worker) | Migrações `0001`–`0005` com prefixo `od_`. `0004` acrescenta encomendas. `0005` acrescenta `od_email_messages.rfc822_id` (aditiva; aplicada no Turso em 15/10/2026). `HranaDb` não guarda o `fetch` global cru. |
-| API / Worker | ✅ local (workerd) · ✅ Cloudflare | https://open-dot.jpguedesbarbieri.workers.dev (Workers Free), versão `da21bebf-d11a-4fdc-abad-c87022130c56`. `/api/health`: `ok:true`, `schema:"0005"`, `schemaError:null`, `configured.tracking:false`, `trackingState:"desligado"`. A versão imediatamente anterior, para `wrangler rollback`, é `e065a2e9-70dc-479d-9fd7-f44bf2e6cc4d` (100% em 15/10/2026 14:27 UTC). `npm run dev` não reproduz o workerd; use `npm run test:workerd`. |
-| Login | ✅ start em produção · 🟡 OAuth real | `GET /api/auth/google/start` em produção redireciona para `accounts.google.com`. `redirect_uri` = `https://open-dot.jpguedesbarbieri.workers.dev/api/oauth/google/callback`. Escopos do login: `openid email` (sem `profile`). Um segundo e-mail é recusado no teste (comparação com `OWNER_EMAIL`). Nome de exibição inicial “João”, editável em Configurações da barra (`PATCH /api/profile`). Gmail `gmail.readonly` continua na conexão à parte. Entrada de desenvolvimento só em localhost. |
+| API / Worker | ✅ local (workerd) · ✅ Cloudflare | https://open-dot.<SEU-SUBDOMINIO>.workers.dev (Workers Free), versão `[ID de versão REDIGIDO]`. `/api/health`: `ok:true`, `schema:"0005"`, `schemaError:null`, `configured.tracking:false`, `trackingState:"desligado"`. A versão imediatamente anterior, para `wrangler rollback`, é `[ID de versão REDIGIDO]` (100% em 15/10/2026 14:27 UTC). `npm run dev` não reproduz o workerd; use `npm run test:workerd`. |
+| Login | ✅ start em produção · 🟡 OAuth real | `GET /api/auth/google/start` em produção redireciona para `accounts.google.com`. `redirect_uri` = `https://open-dot.<SEU-SUBDOMINIO>.workers.dev/api/oauth/google/callback`. Escopos do login: `openid email` (sem `profile`). Um segundo e-mail é recusado no teste (comparação com `OWNER_EMAIL`). Nome de exibição inicial “João”, editável em Configurações da barra (`PATCH /api/profile`). Gmail `gmail.readonly` continua na conexão à parte. Entrada de desenvolvimento só em localhost. |
 | Gmail (somente leitura) | 🧪 testado com Google simulado · 🟡 real | OAuth com `gmail.readonly`, sync incremental (`historyId` como texto), dedupe, ressincronização após 404, lotes dentro do limite de subrequisições, renovação de token com lease, reconexão única quando revogado, resumo das 08h/17h com links para o Gmail |
 | Rotinas 08h/17h | ✅ | Chave única por slot; cron repetido não duplica; após dias offline gera um único resumo “atrasado”; mudar o horário cancela execuções futuras |
 | IA | ✅ lógica + eval falso · ⛔ chave | Allowlist Groq; ZDR para privado; 402 desliga; `max_completion_tokens`. Tela de provedores. Avaliação `scripts/eval-ai.ts` no provedor falso. Sem chave, resumo por regras |
@@ -191,10 +191,10 @@ Prova de cada item (antes → depois) em `docs/RODADA3_LOG.md`.
 | Notícias | ✅ unidade · 🟡 RSS reais | Allowlist RSS/Atom (BBC, NPR, Folha). Dedupe, política ≥ 2 veículos, “O mundo hoje” às 08h (máx. 3/tema). Sem scraping de paywall |
 | Mercado | ✅ unidade · 🟡 APIs reais | CoinGecko + Frankfurter sem chave; Finnhub Free opcional (`setup:cloud`). Alerta no limite. Sem corretora/ordem |
 | Marketing | ✅ unidade · 🟡 GSC/Vercel reais | Search Console só leitura; ideias de post = rascunho; redes sociais 📋. Não publica |
-| Sites (Sentinela) | ✅ | Até 3 URLs HTTPS; bloqueio de IP interno e de redirecionamento; incidente após 3 falhas e encerramento após 2 sucessos; correlação com deploy dita como “sinal, não causa”. Atalho “Vigiar o próprio Open Dot” registra `https://open-dot.jpguedesbarbieri.workers.dev/api/health` (idempotente; respeita o limite de 3). O anel do mini-Dot da Sentinela fica visível. |
+| Sites (Sentinela) | ✅ | Até 3 URLs HTTPS; bloqueio de IP interno e de redirecionamento; incidente após 3 falhas e encerramento após 2 sucessos; correlação com deploy dita como “sinal, não causa”. Atalho “Vigiar o próprio Open Dot” registra `https://open-dot.<SEU-SUBDOMINIO>.workers.dev/api/health` (idempotente; respeita o limite de 3). O anel do mini-Dot da Sentinela fica visível. |
 | Interface web | ✅ desktop · 🟡 arte móvel (tela 02 no núcleo) | Tema escuro (D-015). Agentes na barra: Não conectado (esmaecido, animação disconnected, ação Conectar), Em repouso, ou “N pedem você” no topo. Entregas fica Não conectado sem encomenda e sem provedor. Correio: “Revisar agora” sincroniza e revisa na hora; a ilha mostra “está lendo…” e “concluído” só depois. Notificação push do navegador não foi ampliada: o aviso de mudança de encomenda vai para o feed. |
 | Dot 2D (fallback) | ✅ | Sem boca, sem sobrancelhas, **tracinho de absorção preservado**, blush, acessórios removíveis, tinta por estado, carinho suprimido em erro/aprovação, movimento reduzido. Rotulado como “2D” |
-| Dot 3D (Blender) | ✅ técnico · 🟡 arte | `npm run blender:build` roda no Mac (Blender 4.5.14 LTS) e passa na validação: GLB base 164 KB, 3.500 triângulos, 19 clipes, 10 morphs dos olhos; 5 peças de 3–12 KB. Posters em `assets/dot/poster-*.png` (Cycles na CPU). **Aprovação artística pendente** (`ACOES_DO_JOAO.md`, grupo A). Validador Khronos não executado |
+| Dot 3D (Blender) | ✅ técnico · 🟡 arte | `npm run blender:build` roda no Mac (Blender 4.5.14 LTS) e passa na validação: GLB base 164 KB, 3.500 triângulos, 19 clipes, 10 morphs dos olhos; 5 peças de 3–12 KB. Posters em `assets/dot/poster-*.png` (Cycles na CPU). **Aprovação artística pendente** (`docs/SETUP.md`, grupo A). Validador Khronos não executado |
 | Dot 3D no app | ✅ Chromium/SwiftShader · 🟡 GPU real | `Dot3D.tsx` + `dot3d/DotScene.ts`: um único canvas, clipes `body_*`/`face_*` em camadas, olhar limitado (8°/5°), tom do agente/estado pelo resolvedor, acessório no socket, corações do `HeartEmitter`, crossfade de 200 ms, ≤ 30 fps, render sob demanda em repouso, pausa com a janela oculta, fallback 2D sem WebGL, com perda de contexto e com movimento reduzido. three.js num chunk carregado só quando o 3D aparece (página Mascote) |
 | Absorção de arquivos | ✅ local · 🟡 Cloudflare | Painel na conversa do Dot: arrastar ou “Escolher arquivo” (PDF com texto, TXT, MD, até 5 MB). Texto extraído **no navegador** num Web Worker (pdf.js 6, carregado só para PDF); o arquivo original não sai da máquina. Servidor confere tamanho, tipo/extensão, SHA-256 do texto, texto vazio/escaneado/longo, duplicata por dono e 30/dia; grava nome e texto cifrados (AES-GCM) e o run `file_organize` na mesma transação. “Recebido” só após o 201; “Organizado” só após o run concluir (pedido do app ou cron, com CAS — dois processamentos simultâneos = um efeito). Organização **por regras, sem IA** (título, seções, termos, tempo de leitura). Animação de entrada pelo tracinho no Dot 2D (folha descendo + brilho; com movimento reduzido só o brilho). Apagar remove texto, resultado e aviso do feed. Sem OCR: PDF escaneado é recusado com mensagem. Indisponível na demonstração |
 | Desktop (Tauri) | 📋 | Fase 11 |
@@ -214,7 +214,7 @@ Ambiente: workspace Linux na nuvem, Node 22.22, TypeScript 6.0.3, esbuild 0.28.2
 | `npm run test:ui` | ✅ 83/83 no Chromium (login, demo rotulada, Meu dia, 320/390, dock, aprovação sem envio, carinho, upload, PWA) |
 | `npm run test:workerd` | ✅ `ok:true`, `schema:"0005"`, `schemaError:null` (15/10/2026, workerd local no Turso já migrado) |
 | `npm run ui:mobile` | ✅ 390×844: páginas, busca, erro de render, reason, chunk e aviso de versão |
-| `https://open-dot.jpguedesbarbieri.workers.dev/api/health` | ✅ `ok:true`, `schema:"0005"`, `schemaError:null`, `tracking:false` (15/10/2026, versão `da21bebf-d11a-4fdc-abad-c87022130c56`). `/api/version` bate com o app local `6b4e0f771bdb`. `/assets/inexistente` devolve 404 `text/plain`. |
+| `https://open-dot.<SEU-SUBDOMINIO>.workers.dev/api/health` | ✅ `ok:true`, `schema:"0005"`, `schemaError:null`, `tracking:false` (15/10/2026, versão `[ID de versão REDIGIDO]`). `/api/version` bate com o app local `6b4e0f771bdb`. `/assets/inexistente` devolve 404 `text/plain`. |
 
 Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveitado, escopo negado, acesso revogado (uma única notificação), webhook com assinatura inválida, entrega duplicada, evento fora de ordem, 429 do Gmail, falha parcial de sincronização, cursor expirado, cron repetido, lease disputado, aprovações concorrentes, orçamento concorrente (memória e SQL), 429 em provedor privado sem envio a outro, timeout e circuit breaker, cancelamento, injeção de prompt, ID de evidência inventado, prioridade visual de erro, cancelamento independente de efeitos, movimento reduzido, segredos ausentes do banco e do health.
 
@@ -224,7 +224,7 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 1. Rodar `npm run blender:build` no Mac, revisar os posters e iterar a forma e os clipes até o validador passar (relatório em `blender/out/*/build-report.json`).
 2. Runtime 3D no app: three.js + `GLTFLoader`, um único canvas, fallback para o 2D sem WebGL, pausa com a janela oculta e medição de memória/CPU.
-3. Contas reais (grupos B, C e D em `ACOES_DO_JOAO.md`), primeiro deploy, medição da CPU do cron e teste real do Gmail por 7 dias.
+3. Contas reais (seções 2 a 4 de `docs/SETUP.md`), primeiro deploy, medição da CPU do cron e teste real do Gmail por 7 dias.
 4. ~~Upload e absorção de arquivos~~ feito na sessão de 13→14/10 (testado localmente; falta rodar no Cloudflare e medir a CPU do `POST /api/uploads` com texto de 200 mil caracteres). O 3D (`body_absorb_receive`) ainda não é usado no painel, que fica fora da página Mascote (um canvas só, D-012).
 5. Rascunho de resposta (`gmail.compose`) com aprovação do conteúdo exato.
 6. GitHub App e token da Vercel (fase 7).
@@ -232,15 +232,15 @@ Riscos cobertos por teste: isolamento por dono, CSRF, state de OAuth reaproveita
 
 ## Bloqueios
 
-- ⛔ **Contas:** Google OAuth, Cloudflare e Turso dependem de você (`docs/ACOES_DO_JOAO.md`).
+- ⛔ **Contas:** Google OAuth, Cloudflare e Turso dependem de você (`docs/SETUP.md`).
 - ⛔ **Rede de pacotes nesta sessão:** npm e PyPI estavam bloqueados. Não deu para instalar o Vite, o Wrangler, o three.js nem o validador da Khronos aqui. O projeto usa o que estava disponível; o `npm install` no seu Mac baixa o resto normalmente.
 - ⛔ **Blender:** a VM ligada ao Mac é Linux e não executa o Blender.app. O build precisa rodar no Terminal do macOS (um comando).
 
-Versão do Worker antes deste deploy (rollback com `wrangler rollback`): `06234ec1-e640-4084-b501-51c8b478e0f7`.
+Versão do Worker antes deste deploy (rollback com `wrangler rollback`): `[ID de versão REDIGIDO]`.
 
 ## Próxima ação exata
 
-Conferir no iPhone o botão “Abrir no app do Gmail” (abre a caixa de entrada, não a mensagem). Ligar PacoteVício e Groq só se você quiser, pelos passos I e F de `docs/ACOES_DO_JOAO.md`. As flags em produção continuam `"false"`.
+Conferir no iPhone o botão “Abrir no app do Gmail” (abre a caixa de entrada, não a mensagem). Ligar PacoteVício e Groq só se você quiser, pelos passos I e F de `docs/SETUP.md`. As flags em produção continuam `"false"`.
 
 ## Como retomar em outra sessão
 

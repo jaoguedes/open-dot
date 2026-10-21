@@ -42,8 +42,8 @@ Formato: contexto → decisão → consequência. Novas decisões entram no fim.
 - **Decisão:** `body_*` anima o rig e `face_*` anima os morphs de uma única malha `Eyes`. Os estados combinam as duas camadas pelo `STATE_MAP` do manifesto.
 - **Consequência:** evita conflito de nomes de Action e de slots no Blender 4.4+ e permite corpo e rosto simultâneos sem disputa no `AnimationMixer`.
 
-### D-010 · Projeto em `~/open-dot`, separado de Mascot Desk e OpenMascot (13/10/2026)
-- **Decisão:** o Open Dot começa do zero, porque a base “v0.2” citada no PDF não existe no Mac. O “Dot” do Mascot Desk, com mãos e indicador flutuante, é outro personagem e não foi reaproveitado.
+### D-010 · Projeto em `~/open-dot`, separado de outros projetos do mantenedor (13/10/2026)
+- **Decisão:** o Open Dot começa do zero, porque a base “v0.2” citada no PDF não existe no Mac. Um personagem de um projeto anterior, com mãos e indicador flutuante, é outro e não foi reaproveitado.
 - **Consequência:** nenhum arquivo dos outros projetos foi alterado.
 
 ### D-011 · Posters do Dot com Cycles na CPU (13/10/2026)
@@ -93,7 +93,7 @@ Formato: contexto → decisão → consequência. Novas decisões entram no fim.
 ### D-020 · Schema compatível, item do feed e Folha (15/10/2026)
 - **Contexto:** aplicar a migração `0005` com o Worker antigo ainda no ar fez o health ficar `ok:false` e parou o cron, porque o código exigia `version === REQUIRED_SCHEMA`. O feed da Folha (`rss091.xml`) devolve o artigo atrás de `redir.folha.com.br/.../*https://…`. A Finnhub gratuita não cobre PETR4.
 - **Decisão:** o health e o tique aceitam schema igual ou mais novo (`version >= REQUIRED_SCHEMA`, textos com zeros à esquerda). A ordem é expandir a tabela, publicar o código, e só muito depois apertar o contrato. `0006` acrescenta `state`, `resolved_at` e `snooze_until` em `od_feed_items`. Um `stale_run` com mais de 30 minutos deixa de pintar o agente de erro. O link da Folha usa o endereço depois de `*http`. PETR4 não é consultada e não conta como falha (`b3_fora_do_plano`); brapi não entra enquanto os termos não forem confirmados. Cotações seguem no máximo a cada 15 minutos.
-- **Consequência:** rollback para um Worker antigo depois de uma migração nova não derruba o cron, desde que o schema remoto seja mais novo que o código. O id de rollback desta publicação é `da21bebf-d11a-4fdc-abad-c87022130c56`. O Worker no ar é `4d1dbc6e-b55d-475f-8e27-ec36659eb036`, app `75ea1683146c`.
+- **Consequência:** rollback para um Worker antigo depois de uma migração nova não derruba o cron, desde que o schema remoto seja mais novo que o código. O id de rollback desta publicação é `[ID de versão REDIGIDO]`. O Worker no ar é `[ID de versão REDIGIDO]`, app `75ea1683146c`.
 
 
 
