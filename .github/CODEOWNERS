@@ -1,0 +1,9 @@
+# Revisão obrigatória do mantenedor (ative com proteção da branch main).
+# Antes de publicar, troque <OWNER> pelo usuário ou time do GitHub do mantenedor
+# (scripts/release/publish.sh lembra este passo).
+# * @<OWNER>
+# /apps/runner/ @<OWNER>
+# /apps/worker/src/runner/ @<OWNER>
+# /.github/ @<OWNER>
+# /LICENSE* @<OWNER>
+# /apps/web/src/dot/ @<OWNER>

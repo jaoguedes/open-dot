@@ -14,8 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           cache: npm
@@ -27,7 +29,8 @@ jobs:
       - run: npm run ui:runner
   native:
     # Opt-in explícito: não habilita cobrança nem consome minutos macOS sem configuração.
-    if: vars.RUNNER_BUILDS_ENABLED == 'true'
+    # Nunca em PR de fork: código de terceiros não roda nos runners nativos do projeto.
+    if: vars.RUNNER_BUILDS_ENABLED == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     needs: verify
     strategy:
       fail-fast: false
@@ -48,12 +51,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
-          cache: npm
-      - uses: dtolnay/rust-toolchain@stable
+          # Sem cache de dependências no job que gera instaladores.
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable em 20/10/2026
         with:
           targets: ${{ matrix.target }}
       - run: npm ci
@@ -64,9 +69,21 @@ jobs:
         run: npm run runner:desktop -- build --target ${{ matrix.target }} --bundles ${{ matrix.bundle }} --ci --no-sign -- --locked
       - name: Padronizar nome e checksum
         run: node scripts/package-runner.mjs ${{ matrix.target }} ${{ matrix.artifact }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: OpenDot-Runner-${{ matrix.artifact }}
           path: apps/runner/installers/*
           if-no-files-found: error
           retention-days: 1
+  rust-audit:
+    # Opt-in: auditoria de vulnerabilidades das crates do Runner (RustSec). Não roda em PR de fork.
+    if: vars.RUNNER_BUILDS_ENABLED == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable em 20/10/2026
+      - run: cargo install cargo-audit --locked
+      - run: cargo audit --file apps/runner/src-tauri/Cargo.lock

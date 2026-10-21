@@ -1,11 +1,27 @@
-# Segurança e limites atuais
+# Política de segurança
 
-Open Dot está em desenvolvimento privado. Não habilitar execução sobre projetos sensíveis ou publicar uma beta pública sem os gates documentados em docs/audit/REMEDIATION_REPORT.md. Este arquivo não anuncia um programa público de suporte ou auditoria concluída.
+O Open Dot é uma **beta**. Leia o que está habilitado e o que continua desligado no `README.md` antes de usar com dados reais.
 
-Relate suspeitas por um canal privado previamente combinado com o mantenedor. Não publique tokens, dumps, conteúdo de conta, caminhos pessoais ou reproduções com dados reais em issues/logs. Use fixtures e descreva versão/SHA, fronteira afetada, comportamento observado e teste mínimo. Nenhum envio externo é feito automaticamente pelo aplicativo de teste.
+## Como relatar uma vulnerabilidade
 
-O Runner usa canal de saída autenticado, cofre nativo e aprovação vinculada ao conteúdo. Revogação/lease não provam que um processo offline parou: estado uncertain preserva essa distinção. Worktree não equivale a sandbox; comandos/testes de projeto e executor Windows permanecem bloqueados. Não copie credenciais entre fornecedores ou exponha bearer ao frontend.
+- **Não abra issue pública** para vulnerabilidades.
+- Use o relatório privado do GitHub (**Security → Report a vulnerability**) neste repositório, ou escreva para **[CONTATO_A_DEFINIR]**.
+- Inclua versão ou SHA, a fronteira afetada (Worker, Runner, memória, CI), o comportamento observado e um teste mínimo com **dados fictícios**.
+- Nunca envie tokens, dumps de banco, conteúdo de e-mail, caminhos pessoais ou dados de terceiros. Se um segredo vazou, diga só onde e de que tipo; nós pedimos a rotação.
 
-Memória exige sessão, CSRF para mutações, consentimento por projeto, retenção e CAS. Passport é dados, não autorização de execução. Remover snapshot é exclusão lógica; não promete eliminar cópias de WAL/backups. Proveniência user-provided não é decisão humana aprovada.
+Responderemos assim que possível. Não há programa de recompensa nem prazo garantido nesta fase.
 
-Scanner de padrões não é DLP nem auditoria integral de histórico. Revisão independente, inventário de dependências/assets/licenças, isolamento por SO, instalação e revisão de privacidade são gates anteriores a qualquer publicação. Não reescrever história compartilhada, rodar testes ofensivos externos ou contratar serviços para investigar um achado sem autorização aplicável.
+## Escopo e limites conhecidos
+
+- **Instância de cada pessoa:** cada instalação tem dono único (`OWNER_GOOGLE_SUB` recomendado), banco e chaves próprios. Um e-mail ou nome conhecido não dá acesso a nada.
+- **Runner:** só gera propostas; o dono aprova o conteúdo exato e o host aplica num worktree isolado. Shell, testes de projeto, paralelismo, merge, commit ou push automáticos estão **desligados**. Worktree não é sandbox. O executor no Windows está desligado.
+- **Revogação e lease** não provam que um processo offline parou; o estado `uncertain` preserva essa distinção e nunca é repetido automaticamente.
+- **Memória e Passport** são dados, não autorização. Excluir é exclusão lógica; cópias de backup do provedor do banco não são apagadas pelo app.
+- **Varredura de segredos e dados pessoais** (`npm run scan:secrets`, `scan:history`) é heurística, não DLP.
+- **Instaladores** não são assinados nem notarizados.
+
+## Para quem mantém uma instância
+
+Veja `docs/audit/SEGURANCA_DO_MANTENEDOR.md` (2FA, rotação de segredos, proteções do repositório) e `docs/SETUP.md`.
+
+Não rode testes ofensivos contra instâncias de outras pessoas.
