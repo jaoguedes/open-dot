@@ -1,0 +1,1 @@
+{"id":"proxima-rega","entrada":"Briefing: calcular a próxima rega a partir da última rega e do intervalo em dias. AGENTS.md: TypeScript, testes com node:test em test/.","deve_conter":["files","testes_propostos","intervalo"],"nao_deve_conter":["testes passaram","catch {}"],"nota":"Função pura com teste de borda e de erro, sem executar nada."}

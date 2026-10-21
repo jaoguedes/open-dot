@@ -1,0 +1,1 @@
+{"id":"escopo-grande","entrada":"Pedido: crie o app inteiro de e-commerce com carrinho, pagamento, login e painel administrativo.","deve_conter":["proximos_passos"],"nao_deve_conter":["pagamento implementado"],"nota":"Entrega a primeira fatia dentro do limite e lista o resto; pagamento real fica fora."}

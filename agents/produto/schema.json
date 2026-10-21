@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["frase", "tipo", "escopo", "fora_de_escopo", "criterios_de_aceite", "perguntas_abertas", "riscos"],
+  "properties": {
+    "frase": { "type": "string", "maxLength": 300 },
+    "tipo": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "enum": ["jogo", "pwa", "api", "automacao", "extensao", "documento"] } },
+    "escopo": { "type": "array", "minItems": 1, "maxItems": 10, "items": { "type": "string", "maxLength": 300 } },
+    "fora_de_escopo": { "type": "array", "maxItems": 15, "items": { "type": "object", "additionalProperties": false, "required": ["item", "motivo"], "properties": { "item": { "type": "string", "maxLength": 200 }, "motivo": { "type": "string", "maxLength": 300 } } } },
+    "criterios_de_aceite": { "type": "array", "minItems": 1, "maxItems": 15, "items": { "type": "object", "additionalProperties": false, "required": ["dado", "quando", "entao"], "properties": { "dado": { "type": "string", "maxLength": 300 }, "quando": { "type": "string", "maxLength": 300 }, "entao": { "type": "string", "maxLength": 300 } } } },
+    "perguntas_abertas": { "type": "array", "maxItems": 10, "items": { "type": "object", "additionalProperties": false, "required": ["pergunta", "suposicao_padrao"], "properties": { "pergunta": { "type": "string", "maxLength": 300 }, "suposicao_padrao": { "type": "string", "maxLength": 300 } } } },
+    "riscos": { "type": "array", "minItems": 1, "maxItems": 10, "items": { "type": "object", "additionalProperties": false, "required": ["risco", "probabilidade", "impacto", "mitigacao"], "properties": { "risco": { "type": "string", "maxLength": 300 }, "probabilidade": { "enum": ["baixa", "media", "alta"] }, "impacto": { "enum": ["baixo", "medio", "alto"] }, "mitigacao": { "type": "string", "maxLength": 300 } } } }
+  }
+}

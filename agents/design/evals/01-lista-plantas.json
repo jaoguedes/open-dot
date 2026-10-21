@@ -1,0 +1,1 @@
+{"id":"lista-plantas","entrada":"Briefing: lista de plantas com próxima rega e botão marcar como regada. DESIGN.md: inexistente.","deve_conter":["vazio","carregando","erro","44"],"nao_deve_conter":["só cor"],"nota":"Cria DESIGN.md do zero com tokens e especifica os quatro estados."}

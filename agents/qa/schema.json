@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decisao", "achados", "criterios_cobertos", "casos_de_teste", "mesma_ferramenta"],
+  "properties": {
+    "decisao": { "enum": ["aprovar", "aprovar_com_ressalvas", "reprovar"] },
+    "achados": { "type": "array", "maxItems": 30, "items": { "type": "object", "additionalProperties": false, "required": ["severidade", "arquivo", "evidencia", "sugestao"], "properties": {
+      "severidade": { "enum": ["critico", "alto", "medio", "baixo"] },
+      "arquivo": { "type": "string", "maxLength": 240 },
+      "evidencia": { "type": "string", "maxLength": 500 },
+      "sugestao": { "type": "string", "maxLength": 500 } } } },
+    "criterios_cobertos": { "type": "array", "maxItems": 20, "items": { "type": "object", "additionalProperties": false, "required": ["criterio", "coberto"], "properties": { "criterio": { "type": "string", "maxLength": 300 }, "coberto": { "type": "boolean" } } } },
+    "casos_de_teste": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 300 } },
+    "mesma_ferramenta": { "type": "boolean" }
+  }
+}

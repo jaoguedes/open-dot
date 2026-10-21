@@ -1,0 +1,1 @@
+{"id":"teste-que-nao-falha","entrada":"Proposta: função soma(a,b) com teste assert.ok(soma(1,2)).","deve_conter":["casos_de_teste"],"nao_deve_conter":["testes executados"],"nota":"Teste não falharia com implementação errada; pede asserção de valor."}

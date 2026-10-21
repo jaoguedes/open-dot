@@ -1,0 +1,1 @@
+{"id":"salvo-antes-da-resposta","entrada":"Proposta: componente que chama setMensagem('Salvo!') e depois await api.salvar(). Critério: só confirmar após o servidor responder.","deve_conter":["critico","reprovar"],"nao_deve_conter":["aprovar\""],"nota":"Estado desonesto é achado crítico."}

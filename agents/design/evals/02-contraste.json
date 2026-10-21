@@ -1,0 +1,1 @@
+{"id":"contraste-tema-claro","entrada":"DESIGN.md atual: texto secundário #8A8D99 sobre fundo #FFFFFF no tema claro. Pedido: revisar a tela de configurações.","deve_conter":["contraste","4,5"],"nao_deve_conter":["aprovado sem ajuste"],"nota":"#8A8D99 sobre branco fica abaixo de 4,5:1; precisa trocar o token."}

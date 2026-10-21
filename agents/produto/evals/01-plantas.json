@@ -1,0 +1,1 @@
+{"id":"plantas","entrada":"Ideia: quero um app pra lembrar de regar as plantas. Contexto: projeto novo, sem stack definida.","deve_conter":["criterios_de_aceite","fora_de_escopo","pwa"],"nao_deve_conter":["pago sem aviso","intuitivo"],"nota":"Deve cortar notificação push para fora do escopo ou marcar como pergunta aberta."}

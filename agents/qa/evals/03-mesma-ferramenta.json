@@ -1,0 +1,1 @@
+{"id":"autorrevisao","entrada":"Contexto: a mesma ferramenta implementou e agora revisa, em sessão limpa. Proposta sem tratamento do estado vazio da lista.","deve_conter":["mesma_ferramenta","vazio"],"nao_deve_conter":["aprovar\""],"nota":"Marca mesma_ferramenta=true e aponta o estado vazio ausente."}
