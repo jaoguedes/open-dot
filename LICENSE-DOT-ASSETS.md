@@ -1,3 +1,5 @@
+> **Modelo ainda sem revisão jurídica; pode mudar antes de qualquer contrato ou contribuição ser aceita.**
+
 # Licença do Dot — só visualização (todos os direitos reservados)
 
 > **Rascunho sem revisão jurídica.**

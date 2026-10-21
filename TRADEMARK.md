@@ -1,3 +1,5 @@
+> **Modelo ainda sem revisão jurídica; pode mudar antes de qualquer contrato ou contribuição ser aceita.**
+
 # Política de marca — “Open Dot” e “Dot”
 
 > **Rascunho sem revisão jurídica.** Não há registro de marca concluído; esta política descreve como o mantenedor quer que os nomes sejam usados.

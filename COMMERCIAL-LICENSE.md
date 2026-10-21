@@ -1,3 +1,5 @@
+> **Modelo ainda sem revisão jurídica; pode mudar antes de qualquer contrato ou contribuição ser aceita.**
+
 # Licenciamento duplo do Open Dot
 
 > **Rascunho sem revisão jurídica.** Este texto descreve a intenção do mantenedor e precisa ser revisado por um advogado antes de valer como oferta comercial.

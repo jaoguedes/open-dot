@@ -1,3 +1,5 @@
+> **Modelo ainda sem revisão jurídica; pode mudar antes de qualquer contrato ou contribuição ser aceita.**
+
 # Contrato de Licença de Contribuidor (CLA) — Open Dot
 
 > **Rascunho sem revisão jurídica.** A coleta automática do aceite (bot no PR) **ainda não existe**; até lá, o aceite é feito por escrito no PR, como descrito no fim.
