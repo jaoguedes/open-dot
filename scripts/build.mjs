@@ -9,6 +9,8 @@ import { copyDotAssets } from "./lib/dot-assets.mjs";
 import { stampBuild } from "./lib/stamp-build.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
+// OPEN_DOT_MASCOT=placeholder compila com o Marcador (AGPL) no lugar do Dot (licença própria).
+const tsconfig = join(root, process.env.OPEN_DOT_MASCOT === "placeholder" ? "tsconfig.placeholder.json" : "tsconfig.json");
 const web = join(root, "apps/web");
 const dist = join(web, "dist");
 
@@ -29,7 +31,7 @@ await build({
   target: ["es2022", "safari16"],
   jsx: "automatic",
   external: ["/fonts/*"],
-  tsconfig: join(root, "tsconfig.json"),
+  tsconfig,
   define: { "process.env.NODE_ENV": '"production"', "import.meta.env.DEV": "false" },
   logLevel: "warning",
   legalComments: "external",
@@ -53,7 +55,7 @@ const worker = await build({
   target: "es2022",
   minify: true,
   write: false,
-  tsconfig: join(root, "tsconfig.json"),
+  tsconfig,
   logLevel: "warning",
 });
 const workerCode = worker.outputFiles[0].text;

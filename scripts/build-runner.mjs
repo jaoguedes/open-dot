@@ -15,7 +15,7 @@ await build({
   jsx: "automatic",
   target: ["es2022", "safari16"],
   external: ["/fonts/*"],
-  tsconfig: "tsconfig.json",
+  tsconfig: process.env.OPEN_DOT_MASCOT === "placeholder" ? "tsconfig.placeholder.json" : "tsconfig.json",
   define: { "process.env.NODE_ENV": '"production"' },
 });
 console.log("Runner UI compilada (sem API, service worker ou dados fictícios).");

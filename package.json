@@ -36,6 +36,7 @@
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "scan:history": "node scripts/scan-secrets.mjs --history",
     "hooks:install": "node scripts/install-hooks.mjs",
+    "check:without-dot": "node scripts/check-without-dot.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
