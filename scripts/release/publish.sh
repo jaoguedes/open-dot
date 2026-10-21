@@ -77,7 +77,7 @@ run gh api -X PUT "repos/$REPO/private-vulnerability-reporting"
 run gh api -X PUT "repos/$REPO/actions/permissions/workflow" -f default_workflow_permissions=read -F can_approve_pull_request_reviews=false
 run gh api -X PUT "repos/$REPO/actions/permissions/fork-pr-contributor-approval" -f approval_policy=all_external_contributors
 run gh api -X PUT "repos/$REPO/branches/main/protection" --input scripts/release/branch-protection.json
-echo "  Troque <OWNER> em .github/CODEOWNERS pelo seu usuário (commit separado) e confira o environment runner-release."
+echo "  CODEOWNERS já aponta para @jaoguedes. Confira o environment runner-release (revisor obrigatório)."
 
 say "5. Limpar execuções e artefatos antigos do Actions (logs sem segredos, mas antigos)"
 run bash -c "gh api 'repos/$REPO/actions/artifacts?per_page=100' --jq '.artifacts[].id' | xargs -I{} gh api -X DELETE 'repos/$REPO/actions/artifacts/{}'"

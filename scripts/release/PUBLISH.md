@@ -6,7 +6,7 @@ O agente que preparou isto **não publicou nada**. Publicar é decisão sua, dep
 
 1. Faça o que está em `docs/audit/SEGURANCA_DO_MANTENEDOR.md` (2FA, rotação se houver dúvida, `OWNER_GOOGLE_SUB`, contato público).
 2. Rode o roteiro manual que importa para você (`docs/audit/MANUAL_TEST_SCRIPT.md`), no mínimo a seção 0 (`cargo test`).
-3. Preencha `[CONTATO_A_DEFINIR]` em `SECURITY.md`, `COMMERCIAL-LICENSE.md`, `LICENSE-DOT-ASSETS.md`, `TRADEMARK.md`, `CODE_OF_CONDUCT.md`, e decida se a revisão jurídica vem antes.
+3. Preencha `[CONTATO_A_DEFINIR]` com `scripts/release/fill-contact.sh --dry-run <contato>` (depois sem `--dry-run`) em `SECURITY.md`, `COMMERCIAL-LICENSE.md`, `LICENSE-DOT-ASSETS.md`, `TRADEMARK.md`, `CODE_OF_CONDUCT.md`, e decida se a revisão jurídica vem antes.
 4. Decida se a interface nova (`claude/od2-ui`) entra agora (`INCLUDE_UI=1`) ou depois.
 
 ## Plano (não altera nada)
