@@ -335,3 +335,23 @@ export function demoAsk(question: string, snap: Snapshot): AskAnswer {
       }
     : { answer: "Não encontrei nada sobre isso nos dados de exemplo.", sources: [], aiUsed: false, note: "Demonstração: busca local, sem IA." };
 }
+
+/**
+ * DEMONSTRAÇÃO da tela Equipe: dados fictícios, sempre rotulados na interface.
+ * Nada aqui foi detectado em um computador real.
+ */
+export const DEMO_EQUIPE = {
+  ferramentas: [
+    { id: "codex", nome: "Codex CLI", instalada: true, logada: true, metodo: "chatgpt", possivelmentePago: false, executavel: true, estado: "suportado", versao: "0.0.0-demo" },
+    { id: "claude-code", nome: "Claude Code", instalada: true, logada: false, metodo: "none", possivelmentePago: false, executavel: false, estado: "experimental", versao: "0.0.0-demo" },
+    { id: "gemini", nome: "Gemini CLI", instalada: false, logada: null, metodo: null, possivelmentePago: false, executavel: false, estado: "indisponivel", versao: null },
+    { id: "cursor", nome: "Cursor Agent CLI", instalada: false, logada: null, metodo: null, possivelmentePago: false, executavel: false, estado: "indisponivel", versao: null },
+  ],
+  passos: [
+    { agente: "produto", papel: "planejador", ferramenta: "codex", motivo: "única ferramenta que passa nas restrições (exemplo)" },
+    { agente: "design", papel: "planejador", ferramenta: "codex", motivo: "única ferramenta que passa nas restrições (exemplo)" },
+    { agente: "desenvolvedor", papel: "implementador", ferramenta: "codex", motivo: "única ferramenta que passa nas restrições (exemplo)" },
+    { agente: "qa", papel: "revisor", ferramenta: "codex", motivo: "mesma ferramenta do implementador: revisão em sessão limpa (exemplo)" },
+  ],
+  avisos: ["Exemplo: modo uma ferramenta. A revisão não é independente."],
+} as const;

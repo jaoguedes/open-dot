@@ -26,6 +26,7 @@ const Approval = lazy(() => import("./views/Approval.tsx").then((m) => ({ defaul
 const About = lazy(() => import("./views/About.tsx").then((m) => ({ default: m.About })));
 const Privacy = lazy(() => import("./views/Privacy.tsx").then((m) => ({ default: m.Privacy })));
 const Mascot = lazy(() => import("./views/Mascot.tsx").then((m) => ({ default: m.Mascot })));
+const Team = lazy(() => import("./views/Team.tsx").then((m) => ({ default: m.Team })));
 import { DotTrouble, type TroubleInfo } from "./components/DotTrouble.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
 import { agentConnected, agentPresence, dominantVisual, islandLine, islandReason, runProgress, sortAgents } from "./presence.ts";
@@ -90,6 +91,7 @@ const NAV: NavDef[] = [
   { path: "/meu-dia", label: "Meu dia", icon: "home" },
   { path: "/workspace", label: "Workspace", icon: "layers" },
   { path: "/runner", label: "Runner", icon: "code" },
+  { path: "/equipe", label: "Equipe", icon: "chat" },
   { path: "/rotinas", label: "Rotinas", icon: "clock" },
   { path: "/conexoes", label: "Conexões", icon: "plug" },
   { path: "/mascote", label: "Mascote", icon: "sparkle" },
@@ -225,6 +227,9 @@ export function App() {
       break;
     case "/mascote":
       view = <Mascot />;
+      break;
+    case "/equipe":
+      view = <Team />;
       break;
     case "approval": {
       let approvalId = "";
