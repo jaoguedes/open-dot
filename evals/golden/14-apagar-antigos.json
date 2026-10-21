@@ -1,0 +1,10 @@
+{
+  "id": "apagar-antigos",
+  "ideia": "script que apaga arquivos antigos da pasta de downloads",
+  "esperado": {
+    "tipos_incluem": "automacao",
+    "risco": "alto",
+    "precisa_design": false,
+    "precisa_pesquisa": false
+  }
+}

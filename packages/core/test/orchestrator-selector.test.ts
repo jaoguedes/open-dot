@@ -114,3 +114,19 @@ test("cota: aprende limite pelo erro, renova no dia seguinte e sobe com plano me
   assert.equal(raiseLearned(q).limiteDia, 12);
   assert.equal(slack(freshQuota(NOW), NOW, 0.2), 1);
 });
+
+test("risco: arquivo local sozinho é baixo; arquivo de outras pessoas, upload, apagar ou envio elevam", () => {
+  assert.equal(profileFromIdea("script que renomeia arquivos de fotos pela data no terminal").risco, "baixo");
+  assert.equal(profileFromIdea("script que lê arquivos de log locais").risco, "baixo");
+  assert.equal(profileFromIdea("app que faz upload de documentos dos clientes").risco, "medio");
+  assert.equal(profileFromIdea("organizar os arquivos dos pacientes da clínica").risco, "medio");
+  assert.equal(profileFromIdea("script que apaga arquivos antigos").risco, "alto");
+  assert.equal(profileFromIdea("script que sobrescreve arquivos de configuração").risco, "alto");
+  assert.equal(profileFromIdea("juntar arquivos e enviar e-mail para a equipe").risco, "alto");
+  assert.equal(profileFromIdea("compartilhar arquivos com a família").risco, "medio");
+});
+
+test("tipo: “automação” (normalizado “automacao”) é reconhecido", () => {
+  assert.equal(profileFromIdea("automação que junta arquivos e envia por e-mail para a equipe").tipos[0], "automacao");
+  assert.equal(profileFromIdea("quero automatizar a planilha").tipos[0], "automacao");
+});

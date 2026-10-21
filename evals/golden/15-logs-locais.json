@@ -1,0 +1,10 @@
+{
+  "id": "logs-locais",
+  "ideia": "script que lê arquivos de log locais e conta erros no terminal",
+  "esperado": {
+    "tipos_incluem": "automacao",
+    "risco": "baixo",
+    "precisa_design": false,
+    "precisa_pesquisa": false
+  }
+}

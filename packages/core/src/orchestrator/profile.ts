@@ -21,12 +21,14 @@ const TYPE_WORDS: Array<[ProjectType, RegExp]> = [
   ["jogo", /\b(jogo|game|fase|personagem|pontuacao|placar)\b/],
   ["pwa", /\b(app|aplicativo|site|pagina|pwa|tela|portfolio|dashboard|painel|landing)\b/],
   ["api", /\b(api|endpoint|servidor|backend|webhook|rest|graphql)\b/],
-  ["automacao", /\b(automat|script|bot|rotina|agendar|cron|planilha|lembrete)\w*/],
+  ["automacao", /\b(automa[ct]|script|bot|rotina|agendar|cron|planilha|lembrete)\w*/],
   ["extensao", /\b(estender|extensao|adicionar ao|no projeto existente|melhorar o|corrigir|bug)\b/],
   ["documento", /\b(documento|relatorio|guia|manual|readme|artigo)\b/],
 ];
-const RISK_HIGH = /\b(pagamento|cobra|cartao|pix|banco|senha|saude|medic|crianca|dados pessoais|cpf|whatsapp|enviar e-?mail|apagar|deletar)\w*/;
-const RISK_MED = /\b(login|conta|usuario|cadastro|upload|arquivo|integracao|api externa|notificacao)\w*/;
+const RISK_HIGH = /\b(pagamento|cobra|cartao|pix|banco|senha|saude|medic|remedio|crianca|dados pessoais|cpf|whatsapp|envi\w* (por |um |o |os )?e-?mails?|e-?mails? para|apag|delet|exclu|sobrescrev)\w*/;
+// “arquivo” sozinho não eleva o risco (renomear ou ler arquivos locais é comum); arquivo de outra
+// pessoa, upload, anexo ou compartilhamento eleva. Na dúvida, o lado seguro é médio.
+const RISK_MED = /\b(login|conta|usuario|cadastro|upload|anexo|compartilh|integracao|api externa|notificacao|clientes?|documentos? (de|dos|das) (clientes?|usuarios?|alunos?|pacientes?)|arquivos? (de|dos|das) (clientes?|usuarios?|alunos?|pacientes?|outras? pessoas?))\w*/;
 
 export function profileFromIdea(idea: string, stack: string[] = []): ProjectProfile {
   const t = norm(idea);

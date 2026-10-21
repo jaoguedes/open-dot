@@ -1,0 +1,10 @@
+{
+  "id": "enviar-relatorio",
+  "ideia": "automação que junta arquivos e envia por e-mail para a equipe",
+  "esperado": {
+    "tipos_incluem": "automacao",
+    "risco": "alto",
+    "precisa_design": false,
+    "precisa_pesquisa": false
+  }
+}

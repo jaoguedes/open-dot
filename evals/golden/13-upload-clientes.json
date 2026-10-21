@@ -1,0 +1,10 @@
+{
+  "id": "upload-clientes",
+  "ideia": "app que faz upload de documentos dos clientes",
+  "esperado": {
+    "tipos_incluem": "pwa",
+    "risco": "medio",
+    "precisa_design": true,
+    "precisa_pesquisa": false
+  }
+}
