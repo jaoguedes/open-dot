@@ -5,6 +5,7 @@ import { registerRunnerRoutes } from "./runner/routes.ts";
 import { registerOrchestratorRoutes, registerTeamRoutes } from "./orchestrator/routes.ts";
 import { registerPipelineRoutes } from "./orchestrator/pipeline.ts";
 import { registerV03Routes } from "./orchestrator/v03.ts";
+import { registerCorreioRead } from "./correio-read.ts";
 import { z } from "zod";
 import {
   AGENTS,
@@ -81,6 +82,7 @@ registerOrchestratorRoutes(route);
 registerTeamRoutes(route);
 registerPipelineRoutes(route);
 registerV03Routes(route);
+registerCorreioRead(route);
 
 export async function handleApi(ctx: Ctx, req: Request): Promise<Response> {
   const url = new URL(req.url);

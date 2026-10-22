@@ -427,3 +427,32 @@ button.chip-v3[aria-pressed="true"] {
 .is-soon {
   border-style: dashed;
 }
+.banner-ro {
+  margin: 8px 0 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+}
+.mail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mail-item .row-v3 {
+  border-bottom: 0;
+  align-items: flex-start;
+}
+.stack-10 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.notes {
+  white-space: pre-wrap;
+}

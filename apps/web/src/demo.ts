@@ -419,3 +419,11 @@ export const DEMO_RECIPES = [
   { id: "revisar-proposta", nome: "Revisar uma proposta" },
   { id: "planejar-ideia", nome: "Planejar uma ideia" },
 ] as const;
+
+/** DEMONSTRAÇÃO do Correio e Notícias (v0.3): mensagens fictícias, rotuladas na tela. */
+export const DEMO_MAIL = [
+  { id: "demo-m1", threadId: "t1", from: "Clínica Exemplo <contato@clinica.example>", subject: "Confirmação da consulta de quinta", snippet: "Responda SIM para confirmar o horário das 14h (exemplo fictício).", receivedAt: "2026-10-22T08:40:00Z", labels: ["UNREAD", "IMPORTANT", "INBOX"], listUnsubscribe: false, bulk: false, category: "important", href: null },
+  { id: "demo-m2", threadId: "t2", from: "Boletim Tech <boletim@news.example>", subject: "As notícias da semana em 5 minutos", snippet: "Novidades em ferramentas de desenvolvimento (exemplo fictício).", receivedAt: "2026-10-22T07:10:00Z", labels: ["INBOX", "CATEGORY_UPDATES"], listUnsubscribe: true, bulk: false, category: "low", href: null },
+  { id: "demo-m3", threadId: "t3", from: "Ana Exemplo <ana@pessoal.example>", subject: "Fotos do fim de semana", snippet: "Mandei o link do álbum (exemplo fictício).", receivedAt: "2026-10-21T21:30:00Z", labels: ["UNREAD", "INBOX"], listUnsubscribe: false, bulk: false, category: "review", href: null },
+  { id: "demo-m4", threadId: "t4", from: "Loja Exemplo <ofertas@loja.example>", subject: "Só hoje: 20% de desconto", snippet: "Promoção fictícia para a demonstração.", receivedAt: "2026-10-21T15:00:00Z", labels: ["INBOX", "CATEGORY_PROMOTIONS"], listUnsubscribe: true, bulk: true, category: "low", href: null },
+] as const;

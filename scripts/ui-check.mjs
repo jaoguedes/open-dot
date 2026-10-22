@@ -4,6 +4,7 @@
 // Checa: login local, estados vazios, demo rotulada, 320 px sem rolagem horizontal,
 // zoom 200%, teclado/foco, tema claro/escuro, movimento reduzido e erros de console.
 import { chromium } from "playwright";
+import AxeBuilder from "@axe-core/playwright";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -232,6 +233,25 @@ if (!ONLY) {
     const labels = await rail.locator("a.rail-item").evaluateAll((els) => els.map((e) => [e.getAttribute("aria-label"), e.getAttribute("title")]));
     check("cada item do trilho tem nome acessível", labels.every(([a]) => a && a.length > 1), JSON.stringify(labels).slice(0, 200));
     check("cada item recolhido tem dica (title)", labels.every(([, t]) => t && t.length > 1));
+    await ctx.close();
+  }
+
+  // 4c) Correio e Notícias (v0.3): só leitura, aviso fixo, nenhuma ação de escrita, axe limpo
+  {
+    const { p, ctx, errors } = await page({ colorScheme: "dark", viewport: { width: 390, height: 844 } });
+    await p.goto(BASE + "/correio?demo=1");
+    await ready(p);
+    await p.getByRole("heading", { name: "Correio e Notícias" }).waitFor();
+    check("Correio: aviso fixo de só leitura", (await p.getByText("Acesso só de leitura: o Dot vê remetente, assunto e um trecho. Ele não responde nem encaminha e-mails.").count()) === 1);
+    check("Correio: nenhum botão de responder, encaminhar, arquivar ou apagar", (await p.getByRole("button", { name: /responder|encaminhar|arquivar|apagar|excluir/i }).count()) === 0);
+    await p.getByRole("tab", { name: /Newsletters/ }).click();
+    check("Correio: filtro Newsletters mostra só newsletters", (await p.locator(".mail-item").count()) === 2, String(await p.locator(".mail-item").count()));
+    const links = await p.locator('.mail-item a[href^="https://"]').evaluateAll((els) => els.map((a) => a.getAttribute("rel")));
+    check("Correio: links externos com noopener noreferrer", links.every((r) => /noopener/.test(r ?? "") && /noreferrer/.test(r ?? "")));
+    const v = (await new AxeBuilder({ page: p }).analyze()).violations.filter((x) => ["serious", "critical"].includes(x.impact));
+    check("Correio: axe sem achados sérios", v.length === 0, v.map((x) => x.id).join(","));
+    check("Correio: sem rolagem horizontal a 390 px", await noHScroll(p));
+    check("Correio: sem erros de console", errors.length === 0, errors.join(" | ").slice(0, 200));
     await ctx.close();
   }
 

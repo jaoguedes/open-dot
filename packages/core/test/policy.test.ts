@@ -13,7 +13,8 @@ test("supervisor: Correio não tem ferramenta de GitHub; envio exige aprovação
   assert.equal(authorizeTool({ ...base, agentId: "correio", tool: "github.read" }).allow, false);
   assert.equal(authorizeTool({ ...base, agentId: "correio", tool: "gmail.read" }).allow, true);
   assert.equal(authorizeTool({ ...base, agentId: "correio", tool: "gmail.draft" }).allow, false);
-  assert.equal(authorizeTool({ ...base, agentId: "correio", tool: "gmail.draft", approvalValid: true }).allow, true);
+  // v0.3: Correio só lê; nem rascunho com aprovação passa.
+  assert.equal(authorizeTool({ ...base, agentId: "correio", tool: "gmail.draft", approvalValid: true }).allow, false);
   // gmail.send nem está no perfil do piloto
   assert.equal(authorizeTool({ ...base, agentId: "correio", tool: "gmail.send", approvalValid: true }).allow, false);
   assert.equal(authorizeTool({ ...base, agentId: "entregas", tool: "tracking.read" }).allow, true);
