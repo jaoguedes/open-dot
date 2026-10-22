@@ -1,0 +1,29 @@
+{
+  "versao": 1,
+  "hostsPermitidos": ["developers.openai.com", "raw.githubusercontent.com", "code.claude.com"],
+  "fontes": [
+    {
+      "ferramenta": "codex",
+      "url": "https://developers.openai.com/codex/noninteractive",
+      "extratores": [
+        { "campo": "modos.somenteLeitura", "tipo": "presente", "padrao": "read-only sandbox|--sandbox read-only|sandbox[^.]{0,40}read-only" },
+        { "campo": "modos.jsonComEsquema", "tipo": "presente", "padrao": "--output-schema" }
+      ]
+    },
+    {
+      "ferramenta": "gemini",
+      "url": "https://raw.githubusercontent.com/google-gemini/gemini-cli/main/docs/cli/cli-reference.md",
+      "extratores": [{ "campo": "modos.jsonComEsquema", "tipo": "presente", "padrao": "--output-format[^.]{0,80}json" }]
+    },
+    {
+      "ferramenta": "gemini",
+      "url": "https://raw.githubusercontent.com/google-gemini/gemini-cli/main/docs/resources/quota-and-pricing.md",
+      "extratores": [{ "campo": "limitesPublicados", "tipo": "texto", "padrao": "(\\d[\\d,.]* (?:model )?requests? per (?:user per )?day)" }]
+    },
+    {
+      "ferramenta": "claude-code",
+      "url": "https://code.claude.com/docs/en/cli-reference",
+      "extratores": [{ "campo": "modos.jsonComEsquema", "tipo": "presente", "padrao": "--json-schema" }]
+    }
+  ]
+}
