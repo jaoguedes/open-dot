@@ -25,6 +25,16 @@ const ContextPanel = lazy(() => import("./components/ContextPanel.tsx").then((m)
 let paletteModule: typeof import("./components/CommandPalette.tsx") | null = null;
 const paletteImport = () => import("./components/CommandPalette.tsx").then((m) => (paletteModule = m));
 const CommandPalette = lazy(() => paletteImport().then((m) => ({ default: m.CommandPalette })));
+/** Escolhe o componente da paleta UMA vez por abertura: trocar do lazy para o módulo já carregado
+ *  no meio da abertura remontava a paleta e apagava o que a pessoa tinha digitado. */
+function PaletteHost(props: { onClose: () => void; go: (p: string) => void; destinations: Array<{ label: string; path: string }>; agents: AgentId[] }) {
+  const Palette = useRef(paletteModule ? paletteModule.CommandPalette : CommandPalette).current;
+  return (
+    <Suspense fallback={null}>
+      <Palette {...props} />
+    </Suspense>
+  );
+}
 const Approval = lazy(() => import("./views/Approval.tsx").then((m) => ({ default: m.Approval })));
 const About = lazy(() => import("./views/About.tsx").then((m) => ({ default: m.About })));
 const Privacy = lazy(() => import("./views/Privacy.tsx").then((m) => ({ default: m.Privacy })));
@@ -373,14 +383,7 @@ export function App() {
         </div>
       </div>
       {!hideDock && <BottomBar go={go} current={app.path} />}
-      {palette &&
-        (paletteModule ? (
-          <paletteModule.CommandPalette onClose={() => setPalette(false)} go={go} destinations={PALETTE_DESTINATIONS} agents={LIST_AGENTS} />
-        ) : (
-          <Suspense fallback={null}>
-            <CommandPalette onClose={() => setPalette(false)} go={go} destinations={PALETTE_DESTINATIONS} agents={LIST_AGENTS} />
-          </Suspense>
-        ))}
+      {palette && <PaletteHost onClose={() => setPalette(false)} go={go} destinations={PALETTE_DESTINATIONS} agents={LIST_AGENTS} />}
       <div className="sr-only" aria-live="polite">
         {app.announcement}
       </div>
