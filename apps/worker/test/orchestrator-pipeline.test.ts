@@ -241,3 +241,28 @@ test("v0.3: sugestão de skill exige consentimento, usa só decisões e só ativ
   assert.equal((await s.ctx.db.query("SELECT * FROM od_skill_proposals WHERE state='pendente'")).length, 0);
   s.ctx.db.raw.close();
 });
+
+test("v0.3: pacote importado entra desligado; servidor revalida; ligar exige o hash", async () => {
+  const s = await setup();
+  const { readFileSync, readdirSync } = await import("node:fs");
+  const base = new URL("../../../agents/qa/", import.meta.url);
+  const files = {
+    agentMd: readFileSync(new URL("AGENT.md", base), "utf8").replace("id: qa", "id: revisor-comunidade").replace("nivel: nucleo", "nivel: experimental"),
+    rubrica: readFileSync(new URL("rubrica.md", base), "utf8"),
+    schema: readFileSync(new URL("schema.json", base), "utf8"),
+    evals: readdirSync(new URL("evals/", base)).sort().map((f: string) => readFileSync(new URL(`evals/${f}`, base), "utf8")),
+  };
+  const bad = await s.web.call("POST", "/api/orchestrator/agents/import", { files: { ...files, agentMd: files.agentMd.replace("descricao:", "ferramentas: [Bash]\ndescricao:") }, licenca: null });
+  assert.equal(bad.status, 422, "permissão no pacote: recusado mesmo vindo do navegador");
+  const ok = await s.web.call("POST", "/api/orchestrator/agents/import", { files, licenca: "AGPL-3.0-only" });
+  assert.equal(ok.status, 201);
+  assert.equal(ok.json.ativo, false);
+  const list = await s.web.call("GET", "/api/orchestrator/agents");
+  const row = list.json.agentes.find((a: { id: string }) => a.id === "revisor-comunidade");
+  assert.equal(row.origem, "importado");
+  assert.equal(row.ativo, false);
+  assert.equal((await s.web.call("PUT", "/api/orchestrator/agents/revisor-comunidade/ativo", { ativo: true, hash: "0".repeat(64) })).status, 409);
+  assert.equal((await s.web.call("PUT", "/api/orchestrator/agents/revisor-comunidade/ativo", { ativo: true, hash: ok.json.hash })).json.ativo, true);
+  assert.equal((await s.web.call("POST", "/api/orchestrator/agents/import", { files, licenca: null })).status, 422, "id repetido");
+  s.ctx.db.raw.close();
+});

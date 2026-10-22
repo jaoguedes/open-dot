@@ -6,6 +6,8 @@
  */
 import { useEffect, useState } from "react";
 import { Chip, MonoLabel } from "./ui.tsx";
+import { PackageImportError, filesFromEntries, readZip, safePath, type RawEntry } from "@open-dot/core/orchestrator/package-import.ts";
+import { loadAgentPackage, type AgentFiles, type AgentPackage } from "@open-dot/core/orchestrator/agents.ts";
 import { DEMO_RECIPES } from "../demo.ts";
 
 async function call<T>(path: string, method = "GET", body?: unknown): Promise<T> {
@@ -192,9 +194,14 @@ export function EngineSettings({ demo }: { demo: boolean }) {
                 <input
                   type="checkbox"
                   checked={a.ativo}
-                  disabled={a.obrigatorio || a.origem === "importado" || !prefs}
+                  disabled={a.obrigatorio || !prefs}
                   aria-label={`${AGENT_LABEL[a.id] ?? a.id} ${a.ativo ? "ligado" : "desligado"}`}
-                  onChange={(e) => prefs && void save({ agentesDesligados: e.target.checked ? prefs.agentesDesligados.filter((x) => x !== a.id) : [...prefs.agentesDesligados, a.id] })}
+                  onChange={(e) => {
+                    if (a.origem === "importado") {
+                      if (e.target.checked && !window.confirm(`Ligar o pacote importado “${a.id}” (hash ${a.hash.slice(0, 16)}…)? Ele é experimental e só traz instruções e critérios; não concede ferramenta nem permissão.`)) return;
+                      void call(`/api/orchestrator/agents/${encodeURIComponent(a.id)}/ativo`, "PUT", { ativo: e.target.checked, hash: a.hash }).then(() => setRev((v) => v + 1), (err) => setMsg(err instanceof Error ? err.message : "Não consegui mudar."));
+                    } else if (prefs) void save({ agentesDesligados: e.target.checked ? prefs.agentesDesligados.filter((x) => x !== a.id) : [...prefs.agentesDesligados, a.id] });
+                  }}
                 />
                 <span className="tiny">{a.obrigatorio ? "sempre ligado" : a.ativo ? "ligado" : "desligado"}</span>
               </label>
@@ -202,6 +209,8 @@ export function EngineSettings({ demo }: { demo: boolean }) {
           ))}
         </ul>
       </section>
+
+      <ImportPackage demo={demo} onDone={() => setRev((v) => v + 1)} />
 
       <section className="card stack-10" aria-labelledby="motor-title">
         <h2 id="motor-title" className="m-0">
@@ -301,5 +310,100 @@ export function EngineSettings({ demo }: { demo: boolean }) {
         </section>
       )}
     </>
+  );
+}
+
+/**
+ * Importar pacote (4.4): o navegador lê a pasta ou o .zip escolhido, mostra o que o pacote declara,
+ * o hash e a licença; o servidor revalida tudo e guarda DESLIGADO.
+ */
+function ImportPackage({ demo, onDone }: { demo: boolean; onDone: () => void }) {
+  const [preview, setPreview] = useState<{ pkg: AgentPackage; files: AgentFiles; licenca: string | null; ignorados: string[] } | null>(null);
+  const [msg, setMsg] = useState("");
+  async function read(entries: RawEntry[]) {
+    setPreview(null);
+    setMsg("");
+    try {
+      const { files, licenca, ignorados } = filesFromEntries(entries);
+      const pkg = await loadAgentPackage(files);
+      setPreview({ pkg, files, licenca, ignorados });
+    } catch (e) {
+      setMsg(e instanceof PackageImportError || e instanceof Error ? `Pacote recusado: ${e.message.slice(0, 240)}` : "Pacote recusado.");
+    }
+  }
+  async function fromZip(f: File | undefined) {
+    if (!f) return;
+    try {
+      await read(await readZip(new Uint8Array(await f.arrayBuffer())));
+    } catch (e) {
+      setMsg(e instanceof Error ? `Pacote recusado: ${e.message}` : "Pacote recusado.");
+    }
+  }
+  async function fromFolder(list: FileList | null) {
+    if (!list?.length) return;
+    try {
+      if (list.length > 24) throw new PackageImportError("Pasta com arquivos demais.");
+      const entries: RawEntry[] = [];
+      for (const f of Array.from(list)) entries.push({ path: safePath((f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name), bytes: new Uint8Array(await f.arrayBuffer()) });
+      await read(entries);
+    } catch (e) {
+      setMsg(e instanceof Error ? `Pacote recusado: ${e.message}` : "Pacote recusado.");
+    }
+  }
+  async function send() {
+    if (!preview) return;
+    try {
+      await call("/api/orchestrator/agents/import", "POST", { files: preview.files, licenca: preview.licenca });
+      setMsg(`Importado e desligado: ${preview.pkg.meta.id}. Ligue em Especialistas quando quiser.`);
+      setPreview(null);
+      onDone();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Não consegui importar.");
+    }
+  }
+  return (
+    <section className="card stack-10" aria-labelledby="imp-title">
+      <h2 id="imp-title" className="m-0">
+        Importar pacote de agente
+      </h2>
+      <p className="meta m-0">De uma pasta ou .zip no seu computador. Só dados (instruções, critérios, esquema, avaliações); sem download, sem registro online. Entra como experimental e desligado.</p>
+      <label className="tiny">
+        Arquivo .zip <input type="file" accept=".zip,application/zip" disabled={demo} onChange={(e) => void fromZip(e.target.files?.[0])} />
+      </label>
+      <label className="tiny">
+        Pasta <input type="file" disabled={demo} {...({ webkitdirectory: "", directory: "" } as Record<string, string>)} onChange={(e) => void fromFolder(e.target.files)} />
+      </label>
+      {msg && (
+        <p role="status" className="chip m-0">
+          {msg}
+        </p>
+      )}
+      {preview && (
+        <article className="card-v3 stack-10" aria-label="O que o pacote declara">
+          <b>
+            {preview.pkg.meta.id} · {preview.pkg.meta.papel} · {preview.pkg.meta.nivel} · v{preview.pkg.meta.versao}
+          </b>
+          <span className="sub">{preview.pkg.meta.descricao}</span>
+          <span className="sub">
+            Capacidades que a ferramenta precisa ter: {preview.pkg.meta.capacidades_exigidas.join(", ")}. Licença declarada: {preview.pkg.meta.licenca}.
+          </span>
+          <span className="sub">
+            Hash <span className="hash">{preview.pkg.hash}</span>
+          </span>
+          {preview.licenca ? (
+            <details>
+              <summary>Texto de licença do pacote</summary>
+              <pre className="diff-v3 notes">{preview.licenca.slice(0, 4000)}</pre>
+            </details>
+          ) : (
+            <span className="sub">O pacote não trouxe arquivo de licença.</span>
+          )}
+          {!!preview.ignorados.length && <span className="sub">Ignorados (não fazem parte de um agente): {preview.ignorados.join(", ")}</span>}
+          <button className="btn primary v3" type="button" onClick={() => void send()}>
+            Importar (fica desligado)
+          </button>
+        </article>
+      )}
+    </section>
   );
 }
