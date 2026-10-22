@@ -456,3 +456,44 @@ button.chip-v3[aria-pressed="true"] {
 .notes {
   white-space: pre-wrap;
 }
+.legal.landing {
+  max-width: 920px;
+}
+.landing-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.landing-hero > div {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.landing-state {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.landing-state > div {
+  display: grid;
+  grid-template-columns: minmax(110px, 140px) minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.landing-state dt {
+  font-weight: 700;
+}
+.landing-state dd {
+  margin: 0;
+  color: var(--text-2);
+}
+@media (max-width: 480px) {
+  .landing-state > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
