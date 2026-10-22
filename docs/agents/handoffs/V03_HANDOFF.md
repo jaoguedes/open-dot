@@ -16,7 +16,10 @@ Ver a tabela “Progresso” abaixo; o SHA vigente sai de `git log -1 --format=%
 | 2 Casca do app | feita: trilho 84 px, barra inferior, topo |
 | 4 Telas | feita: Workspace, Central do Runner, Aprovações (hash real), Conexões, Equipe; mobile 1º cartão 663 px |
 | 4B Runner companheiro | feita: central com abas, bandeja+painel, saúde/proteção, processos próprios, perfis/recuo, atualização (sem chave real), docs de release; pareamento por código mantido (já era código de uso único); notificações só para aprovação pendente |
-| 5, 6, 7, 8 | pendentes |
+| 5 Correio e Notícias | feita |
+| 6 Agentes e motor (2) | feita: H, pacotes, sandbox (bloqueado), paralelismo (desligado) |
+| 7 Site e mobile | feita |
+| 8 Avaliação, docs, relatório | feita; gate completo registrado |
 
 ## Comandos para retomar
 
@@ -41,8 +44,16 @@ node scripts/perf/measure-runner.mjs --seconds 60   # depois de cargo build --re
 12. **Endpoint de atualização:** release-canal `runner-canal-beta` (não rascunho, não pré-lançamento), porque `latest` ignora pré-lançamentos.
 13. **Tetos de quadros:** Leve 10, Equilibrado 24, Máximo 60 (a referência citava 30 no Leve); medido que 15 qps ainda custava 53% de CPU nesta máquina.
 14. **Pareamento:** o fluxo atual já é por código de uso único com validade; a troca por código de 6 dígitos mudaria a autenticação, então ficou como proposta (`docs/open-dot-runner-security.md` intacto).
+15. **Trailer de commit:** usei `Task: v0.3 fase N` até perceber, no gate, que a política exige `Task: OD2-…`; a partir de `4328528` uso `Task: OD2-V03`. Não reescrevi o histórico.
+16. **Correio:** a ferramenta `gmail.draft` saiu do perfil do Correio (nunca foi implementada e contraria “o Dot nunca responde”).
+17. **Busca no celular:** botão de ícone no topo, porque a barra inferior de 4 itens não tem busca.
 7. **Fontes:** Plus Jakarta Sans em 3 pesos (400, 600, 800) para conter o tamanho; 500 e 700 caem nos vizinhos.
 
 ## Bloqueios
 
-- Nenhum até aqui.
+- Publicação, migrações e chave do updater dependem do João (ver `docs/audit/V03_PUBLISH_READINESS.md`).
+- `613b607` contém o ID de rollback do Worker (desfazer foi negado pelo ambiente).
+
+## Próximo passo
+
+O João revisa `docs/audit/V03_REPORT.md`. Para continuar o trabalho: ligar notificações restantes, análise de e-mail pelo Codex em modo leitura fora de projeto, e medir calibração/ciclo com chamadas reais.

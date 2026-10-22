@@ -1,3 +1,15 @@
+# Estado vigente — v0.3 (22/10/2026)
+
+Objetivo: v0.3 (agentes e motor, redesign, Runner companheiro, desempenho, receitas e aprendizado supervisionado), sem publicar. Branch `claude/od2-v03`, criada de `release/v0.2` em `69c5769226319a33f79c7f3e6419bc98afd92611`. Último SHA conhecido antes deste checkpoint documental: `6ac36a0`; confira com `git log -1 -- docs/CONTINUIDADE.md`.
+
+- Decisões: D-027 (cor do agente no Dot e tokens v0.3) e D-028 (reações a estado real), autorizadas pelo João; demais escolhas em `docs/agents/handoffs/V03_HANDOFF.md`.
+- Concluído: fases 0–8 (ver `docs/audit/V03_REPORT.md`).
+- Testes: ver `docs/STATUS.md` (bloco v0.3).
+- Pendente (João): publicar, migrações `0017`–`0019`, chave do updater, decisão sobre `613b607`, validação manual do Runner 0.3.0.
+- Próximo passo: o João revisa `V03_REPORT.md` e decide.
+
+---
+
 # Estado vigente — fechamento do v0.2 (21/10/2026)
 
 Objetivo: fechar o v0.2 para uma futura publicação de `v0.2.0-beta`, sem publicar. Branch `release/v0.2`, criada de `integration/v0.2-candidate` = `df67198`. Último SHA conhecido antes deste checkpoint documental: `4ae3ce9`; confira com `git log -1 -- docs/CONTINUIDADE.md`.
