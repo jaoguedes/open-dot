@@ -1,3 +1,16 @@
+# Estado vigente — v0.3 (22/10/2026)
+
+Branch `claude/od2-v03` (base `release/v0.2` = `69c5769`). Nada publicado; sem merge, tag, deploy ou migração remota. Relatório: `docs/audit/V03_REPORT.md`; checklist: `docs/audit/V03_PUBLISH_READINESS.md`; handoff: `docs/agents/handoffs/V03_HANDOFF.md`.
+
+- **Testado:** `npm run check` (442 Node, 7 Python, eval, typecheck, build 365,0 KB), `check:without-dot` (414 testes, 0 falhas), `cargo test --locked` (53 + 8 ignorados), `test:ui` 107/107 com banco limpo, `ui:runner` 14/14, `ui:fase-*`/`ui:rodada4` verdes, `ui:widths` 360–1440 px, `perf:check`, `npm audit` 0, varredura da árvore limpa, SPDX; Correio só leitura; Runner no Mac Intel (oculto 0,1 % CPU; central Leve ~37 %); 4 chamadas reais (Codex e Claude Code) aos especialistas novos.
+- **Sem teste real:** atualização automática ponta a ponta (sem chave), Runner no Windows/ARM64, clique real no ícone da bandeja, Claude Code no pipeline do Runner.
+- **Simulado:** calibração, ciclo Corretor, paralelismo só leitura, comparação motor × padrão simples.
+- **Planejado:** análise de e-mail pelo Codex, Gemini/Cursor, RSS próprio, pareamento por código curto, notificações além de “aprovação pendente”.
+- **Bloqueado:** testes do projeto em cópia isolada; publicação e migrações `0017`–`0019` (decisão do João); chave de assinatura do updater (João).
+- **Atenção:** o commit local `613b607` tem o ID de rollback do Worker sem redação (nunca enviado). Commits da rodada até `4328528` usam trailer `Task:` fora do formato da política.
+
+---
+
 # Estado vigente — fechamento do v0.2 (21/10/2026)
 
 Branch `release/v0.2` (base `integration/v0.2-candidate` = `df67198`). Nada publicado; sem merge na `main`. Relatório: `docs/audit/V02_REPORT.md` (seção “Rodada de fechamento”); checklist: `docs/audit/PUBLISH_READINESS.md`.

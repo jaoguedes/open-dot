@@ -1,3 +1,7 @@
+# v0.3 (22/10/2026) — Claude Code, branch `claude/od2-v03`
+
+Base `69c5769`. Relatório `docs/audit/V03_REPORT.md`, handoff `docs/agents/handoffs/V03_HANDOFF.md`. Nada publicado. O bloco abaixo (Codex, 20/10) é histórico para a worktree dele.
+
 # Estado operacional compartilhado — 20/10/2026
 
 Escritor Codex; auditoria independente pendente. Branch `codex/od2-runner-remediation`, worktree `open-dot-od2-remediation` (resolver por Git). Base 940b06c60138af8ebdf8a0291732f36cd21ea6de; último código 48e3a15b549ed09662f97c876cc5049b735cad95. HEAD documental final por `git rev-parse HEAD`.
