@@ -1,3 +1,16 @@
+# Estado vigente — v0.3.0-beta publicado (22/10/2026)
+
+PR [#13](https://github.com/jaoguedes/open-dot/pull/13) integrado na `main` por rebase (histórico linear exigido) em `7deffba`; tag `v0.3.0-beta` nesse SHA; release **rascunho + pré-lançamento** sem anexos. Branch `claude/od2-v03` preservada.
+
+- **Testado (real):** migração `0019` aplicada no Turso de produção (backup antes, em `docs/privado/`; `0017`/`0018` já estavam lá); deploy do Worker pelo `npm run deploy` (gate interno + fumaça: health ok e hash do app `e13989387b95` publicado); `/api/health` = `{"ok":true}` (o `ok` já é schema compatível com `0019`; schema detalhado só para o dono logado); Equipe, Aprovações, Correio e Runner carregam em produção sem erro em 1280 e 390 px; as APIs dessas telas respondem 401 sem sessão (não 500). Gate local: `check` 442, `check:without-dot` 414/0 falhas, `cargo test --locked` 53 + 8 ignorados, `npm audit` 0, `test:ui` 107/107, `ui:mobile` em 360/390/430 (16 cada), `ui:widths`, `ui:runner` 14/14, `ui:clearance` (15 rotas × 3 larguras), `ui:fase-d` 11/11. CI obrigatória (`check`, `without-dot`) verde.
+- **Corrigido na publicação:** topo do celular quebrava em duas linhas e cobria “Copiar detalhes” (o `ui:mobile` não tinha rodado antes); paleta remontava e apagava a pergunta quando o módulo terminava de carregar (D1 intermitente, já em `b4ffe60`); `rustls-webpki` 0.103.16 e `tokio` 1.54.1 (RustSec novos).
+- **Sem teste real:** telas de produção **logado** (Equipe, Aprovações, Correio só leitura) — a fumaça foi sem sessão; atualização automática do Runner; Runner no Windows/ARM64; clique real na bandeja; Claude Code no pipeline do Runner.
+- **Simulado:** calibração, ciclo Corretor, paralelismo só leitura, comparação motor × padrão simples.
+- **Planejado:** análise de e-mail pelo Codex, Gemini/Cursor, RSS próprio, pareamento por código curto, notificações além de “aprovação pendente”.
+- **Bloqueado / do João:** publicar o rascunho do release; chave de assinatura do updater e secret do Runner; publicar e testar o `.dmg`; atualização real entre duas versões. `rust-audit` (não obrigatório) segue vermelho: `zip` 4.6.1 (RUSTSEC-2026-0367/0368/0369) via `tauri-plugin-updater` 2.14.0, sem versão estável corrigida — decidir antes de publicar o Runner. Testes em cópia isolada continuam bloqueados.
+
+---
+
 # Estado vigente — v0.3 (22/10/2026)
 
 Branch `claude/od2-v03` (base `release/v0.2` = `69c5769`). Nada publicado; sem merge, tag, deploy ou migração remota. Relatório: `docs/audit/V03_REPORT.md`; checklist: `docs/audit/V03_PUBLISH_READINESS.md`; handoff: `docs/agents/handoffs/V03_HANDOFF.md`.
@@ -6,7 +19,7 @@ Branch `claude/od2-v03` (base `release/v0.2` = `69c5769`). Nada publicado; sem m
 - **Sem teste real:** atualização automática ponta a ponta (sem chave), Runner no Windows/ARM64, clique real no ícone da bandeja, Claude Code no pipeline do Runner.
 - **Simulado:** calibração, ciclo Corretor, paralelismo só leitura, comparação motor × padrão simples.
 - **Planejado:** análise de e-mail pelo Codex, Gemini/Cursor, RSS próprio, pareamento por código curto, notificações além de “aprovação pendente”.
-- **Bloqueado:** testes do projeto em cópia isolada; publicação e migrações `0017`–`0019` (decisão do João); chave de assinatura do updater (João).
+- **Bloqueado:** testes do projeto em cópia isolada; chave de assinatura do updater (João). Publicação e migrações: feitas em 22/10 (ver acima).
 - **Histórico reescrito (autorizado pelo João, só a branch local, antes de qualquer push):** o commit `613b607` (ID de rollback do Worker sem redação) saiu do histórico; o valor não aparece mais em nenhum commit da branch. Cópia de segurança local `backup/od2-v03-antes-da-reescrita` (contém o valor: **nunca enviar**). SHA de código antes dos docs de publicação: `8127a6a`; o SHA anterior `f68bdea` deixou de existir. Commits da rodada até `4328528` usam trailer `Task:` fora do formato da política.
 
 ---
