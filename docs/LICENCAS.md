@@ -18,3 +18,16 @@
 | Sons do Dot (`apps/web/public/sounds/*.mp3`) | — | Originais, sintetizados por `scripts/sounds/make_dot_sounds.py` | Sons opcionais (desligados por padrão) | Nenhum áudio de terceiros |
 
 Inventário completo das dependências transitivas e SBOM CycloneDX: `docs/licencas/` (npm e Cargo).
+
+## Runner v0.3 — crates novas (verificadas no Cargo.lock em 22/10/2026)
+
+| Crate | Versão | Licença | Uso |
+|---|---|---|---|
+| sysinfo | 0.39.6 | MIT | Saúde do computador (CPU, memória, disco, componentes) |
+| tauri-plugin-updater | 2.14.0 | MIT ou Apache-2.0 | Atualização assinada (opt-in) |
+| tauri-plugin-autostart | 2.7.0 | MIT ou Apache-2.0 | Iniciar com o sistema (desligado por padrão) |
+| tauri-plugin-notification | 2.7.0 | MIT ou Apache-2.0 | Notificações nativas (opt-in) |
+| minisign-verify | 0.3.0 | MIT | Conferência de assinatura das atualizações |
+| base64 | 0.22 | MIT ou Apache-2.0 | Decodificar chave e assinatura do updater |
+| semver | 1 | MIT ou Apache-2.0 | Recusa de downgrade |
+| minisign (só testes) | 0.7 | MIT | Gera chave efêmera na memória dos testes de assinatura |

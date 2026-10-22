@@ -2,6 +2,16 @@
 
 Feito a partir dos commits (`git log`). Datas em 2026. O efeito para quem usa vem primeiro.
 
+## v0.3.0-beta (não publicado) — equipe, redesign e Runner companheiro (22/10/2026)
+
+- **Equipe:** especialistas Arquitetura, Segurança e Documentação (experimentais); seis receitas só de dados; ligar/desligar especialistas; importação local de pacotes (desligados até você ligar pelo hash).
+- **Motor:** calibração adaptativa conservadora, ciclo revisar → corrigir limitado, sugestão de skill pelas suas decisões e paralelismo só leitura — **todos desligados por padrão** (a avaliação simulada não mostrou ganho real). Proposta de atualização do catálogo só para o mantenedor. Testes em cópia isolada: **bloqueado**.
+- **App:** trilho recolhido e barra inferior; Workspace, Central do Runner, Aprovações com hash real, Conexões, Equipe e Correio e Notícias (só leitura) no visual novo; página pública honesta; 1º cartão do celular de 1.748 para 663 px.
+- **Dot:** cor do agente e reações a estado real (olhar, rubor, suor, pânico), com motivo em texto; sem elas, o desenho é byte a byte o anterior.
+- **Runner 0.3.0:** central com abas, bandeja com painel, saúde do computador com proteção do trabalho, processos próprios, perfis de desempenho, prioridade baixa, atualização assinada com consentimento (**sem teste real**: falta a chave do mantenedor). Oculto na bandeja: 0,0–0,1 % de CPU (antes: 120,7 % com a janela aberta).
+- **Segurança:** Correio deixou de declarar a ferramenta de rascunho; teste garante que não há escrita nem escopo de escrita do Gmail.
+- Migração `0019` (só tabelas novas; não aplicada em produção).
+
 ## v0.2 (não publicado) — motor de orquestração (21/10/2026)
 
 - Fechamento: contato público nos documentos de segurança/licença; heurística de risco não trata mais qualquer menção a “arquivo” como risco e reconhece automação; Gemini com cotas gratuitas publicadas (fonte e data); visitantes sem erros 401 no boot e ⌘K abre na hora; PRs bem-vindos para análise (merge só com revisão, CI verde e aceite do CLA); textos jurídicos marcados como modelo sem revisão.
