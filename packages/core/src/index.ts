@@ -26,3 +26,4 @@ export * from "./tracking.ts";
 export * from "./errors-pt.ts";
 export * from "./correio.ts";
 export * from "./registry.ts";
+export * from "./mechanisms.ts";

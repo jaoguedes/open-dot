@@ -82,7 +82,8 @@ test("acento amarelo, fundo escuro e laranja de alerta como decidido", () => {
   assert.equal(dark.accent!.toLowerCase(), "#ffbc03");
   assert.equal(light.accent!.toLowerCase(), "#ffbc03");
   assert.equal(dark["on-accent"]!.toLowerCase(), "#1a1400");
-  assert.equal(dark.bg!.toLowerCase(), "#050608");
+  // v0.3 (DESIGN.md, D-027): fundo #07080C; o acento amarelo do D-023 continua.
+  assert.equal(dark.bg!.toLowerCase(), "#07080c");
   assert.notEqual(dark.warn!.toLowerCase(), dark.accent!.toLowerCase());
   assert.notEqual(light.warn!.toLowerCase(), light.accent!.toLowerCase());
 });
