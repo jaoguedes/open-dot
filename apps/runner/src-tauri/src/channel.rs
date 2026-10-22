@@ -476,6 +476,10 @@ pub fn live(c: &SharedChannel, device: &str, task: &str) -> bool {
         })
         .unwrap_or(false)
 }
+/// Origem HTTPS do Open Dot pareado (para abrir a tela de revisão no navegador). Sem token.
+pub fn linked_origin(c: &SharedChannel) -> Option<String> {
+    c.lock().ok()?.link.as_ref().map(|l| l.origin.clone()).filter(|o| origin(o).is_ok())
+}
 pub fn identity(c: &SharedChannel) -> Option<String> {
     c.lock().ok()?.status.device_id.clone()
 }

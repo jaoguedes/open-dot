@@ -18,23 +18,59 @@
         "height": 820,
         "minWidth": 360,
         "minHeight": 600
+      },
+      {
+        "label": "panel",
+        "title": "Open Dot Runner · painel",
+        "url": "index.html#painel",
+        "width": 440,
+        "height": 620,
+        "resizable": false,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "focus": true
       }
     ],
     "security": {
       "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src ipc: http://ipc.localhost; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'",
-      "capabilities": ["main"]
+      "capabilities": [
+        "main"
+      ]
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["dmg", "nsis"],
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+    "targets": [
+      "dmg",
+      "nsis"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
     "macOS": {
       "minimumSystemVersion": "11.0"
     },
     "windows": {
       "nsis": {
         "installMode": "currentUser"
+      }
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "[CHAVE_PUBLICA_A_DEFINIR]",
+      "endpoints": [
+        "https://github.com/jaoguedes/open-dot/releases/download/runner-canal-beta/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
       }
     }
   }
