@@ -1,0 +1,1 @@
+Free tier: 2,000 requests per day for individuals.

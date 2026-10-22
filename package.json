@@ -48,7 +48,8 @@
     "runner:desktop": "cd apps/runner && tauri",
     "ui:runner": "node scripts/ui-runner.mjs",
     "ui:widths": "node scripts/ui-widths.mjs",
-    "perf:check": "node scripts/perf/check.mjs"
+    "perf:check": "node scripts/perf/check.mjs",
+    "catalog:propose": "tsx scripts/orchestrator/catalog-propose.ts"
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",
