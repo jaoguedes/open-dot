@@ -1,0 +1,208 @@
+/* SPDX-License-Identifier: AGPL-3.0-only */
+/* Casca do v0.3 (docs/DESIGN.md): trilho de 84 px (≥ 1024 px) e barra inferior (< 1024 px). */
+:root .app {
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+}
+:root[data-rail="pinned"] .app {
+  grid-template-columns: var(--rail-open) minmax(0, 1fr);
+}
+.app > .rail-slot {
+  position: relative;
+  min-width: 0;
+}
+.rail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 40;
+  width: var(--rail);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 14px 18px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  overflow: hidden auto;
+  transition: width 160ms ease, box-shadow 160ms ease;
+}
+.rail.open {
+  width: var(--rail-open);
+  box-shadow: 18px 0 40px rgba(0, 0, 0, 0.45);
+}
+.rail.pinned {
+  box-shadow: none;
+}
+.rail-logo,
+.rail-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  border-radius: 14px;
+  color: var(--text-3);
+  text-decoration: none !important;
+  white-space: nowrap;
+}
+.rail-logo {
+  margin-bottom: 4px;
+  color: var(--text);
+}
+.rail-item {
+  padding: 0 12px;
+}
+.rail-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+.rail-item[aria-current="page"] {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+.rail-item svg {
+  flex: none;
+}
+.rail-label {
+  opacity: 0;
+  pointer-events: none;
+  font-weight: 600;
+  font-size: 14.5px;
+  transition: opacity 120ms ease;
+}
+.rail.open .rail-label {
+  opacity: 1;
+  pointer-events: auto;
+}
+.rail-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rail-toggle {
+  align-self: flex-start;
+  width: 48px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-2);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+}
+.rail-sep {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 6px 0;
+}
+.rail-agent {
+  min-height: 44px;
+  padding: 0 10px;
+}
+.rail-disc {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #0b0c10;
+}
+.rail-disc.avatar {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+.rail-grow {
+  flex: 1;
+}
+.rail-pin {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 12px;
+  color: var(--text-3);
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rail-pin input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--approve);
+  flex: none;
+}
+.rail:not(.open) .rail-pin svg {
+  display: none;
+}
+.bottombar {
+  display: none;
+}
+.demo-chip-top {
+  white-space: nowrap;
+}
+.mobile-dot {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --bottom-bar: calc(68px + env(safe-area-inset-bottom, 0px));
+    --dock: var(--bottom-bar);
+  }
+  :root .app,
+  :root[data-rail="pinned"] .app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app > .rail-slot {
+    display: none;
+  }
+  :root .content {
+    padding-bottom: calc(var(--ask-bar) + var(--bottom-bar));
+  }
+  .mobile-dot {
+    display: inline-flex;
+  }
+  .bottombar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+  }
+  .bottom-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 52px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+    text-decoration: none !important;
+  }
+  .bottom-item.on {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rail,
+  .rail-label {
+    transition: none;
+  }
+}
+:root[data-motion="reduced"] .rail,
+:root[data-motion="reduced"] .rail-label {
+  transition: none;
+}

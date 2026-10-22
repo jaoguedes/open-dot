@@ -109,10 +109,10 @@ test("vidro com fallback sólido sem backdrop-filter e com transparência reduzi
   assert.match(css, /::selection\s*\{[^}]*background:\s*#ffbc03;[^}]*color:\s*#1a1400/i);
 });
 
-test("manifest: ícones existem, tamanhos certos, maskable presente, theme-color e fundo #050608", () => {
+test("manifest: ícones existem, tamanhos certos, maskable presente, theme-color e fundo #07080C (v0.3)", () => {
   const m = JSON.parse(readFileSync(new URL("../apps/web/public/manifest.webmanifest", import.meta.url), "utf8")) as { theme_color: string; background_color: string; icons: Array<{ src: string; sizes: string; purpose?: string }> };
-  assert.equal(m.theme_color.toLowerCase(), "#050608");
-  assert.equal(m.background_color.toLowerCase(), "#050608");
+  assert.equal(m.theme_color.toLowerCase(), "#07080c");
+  assert.equal(m.background_color.toLowerCase(), "#07080c");
   assert.ok(m.icons.some((i) => i.purpose === "maskable"));
   for (const i of m.icons) {
     const buf = readFileSync(new URL(`../apps/web/public${i.src.split("?")[0]}`, import.meta.url));
@@ -120,7 +120,7 @@ test("manifest: ícones existem, tamanhos certos, maskable presente, theme-color
     assert.equal(`${w}x${h}`, i.sizes, i.src);
   }
   const html = readFileSync(new URL("../apps/web/index.html", import.meta.url), "utf8");
-  assert.match(html, /<meta name="theme-color" content="#050608"/i);
+  assert.match(html, /<meta name="theme-color" content="#07080c"/i);
   assert.match(html, /rel="icon"[^>]*favicon-32\.png/);
   assert.match(html, /rel="apple-touch-icon"[^>]*apple-touch-icon\.png/);
 });
