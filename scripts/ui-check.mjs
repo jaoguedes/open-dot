@@ -121,11 +121,11 @@ if (!ONLY) {
     const currentNav = await p.locator('nav[aria-label="Navegação principal"] a[aria-current="page"]').first().innerText();
     check(`/?demo=1 marca Meu dia (${scheme})`, /Meu dia/.test(currentNav), currentNav);
     const font = await p.evaluate(() => getComputedStyle(document.body).fontFamily);
-    const interLoaded = await p.evaluate(async () => {
+    const jakartaLoaded = await p.evaluate(async () => {
       await document.fonts.ready;
-      return [...document.fonts].some((f) => f.family.replace(/"/g, "") === "Inter" && f.status === "loaded");
+      return [...document.fonts].some((f) => f.family.replace(/"/g, "") === "Plus Jakarta Sans" && f.status === "loaded");
     });
-    check(`Inter local carregada (${scheme})`, font.includes("Inter") && interLoaded, font);
+    check(`Plus Jakarta Sans local carregada (${scheme})`, font.includes("Plus Jakarta Sans") && jakartaLoaded, font);
     await shot(p, { path: `${OUT}/demo-home-${scheme}.png` });
     for (const [path, name] of [
       ["/meu-dia", "meu-dia"],
@@ -157,10 +157,13 @@ if (!ONLY) {
     await p.goto(BASE + "/?demo=1");
     await ready(p);
     await shot(p, { path: `${OUT}/demo-home-${label}.png`, fullPage: true });
-    // navegação móvel: pílula flutuante (tela 02)
+    // navegação móvel (v0.3): barra inferior com 4 itens
     if (w < 760) {
-      await p.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Rotinas" }).click();
-      check(`${label}: navegação pelo dock funciona`, p.url().includes("/rotinas"));
+      const items = await p.getByRole("navigation", { name: "Principal" }).getByRole("link").allInnerTexts();
+      check(`${label}: barra inferior com Workspace, Runner, Correio e Mais`, items.join("|") === "Workspace|Runner|Correio|Mais", items.join("|"));
+      check(`${label}: sem trilho lateral no celular`, !(await p.locator(".rail").isVisible()));
+      await p.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Runner" }).click();
+      check(`${label}: navegação pela barra inferior funciona`, p.url().includes("/runner"));
       await p.goto(BASE + "/aprovacao/demo-ap1?demo=1");
       await ready(p);
       check(`${label}: tela de aprovação`, await p.getByRole("heading", { name: "Posso enviar esta resposta?" }).isVisible());
@@ -192,6 +195,43 @@ if (!ONLY) {
     await p.keyboard.type("rot");
     await p.keyboard.press("Enter");
     check("navegação por teclado no 'Ir para'", p.url().includes("/rotinas"));
+    await ctx.close();
+  }
+
+  // 4b) Trilho recolhido (v0.3): 84 px, abre por hover, foco e botão sobre o conteúdo, fecha com Esc
+  {
+    const { p, ctx } = await page({ colorScheme: "dark", viewport: { width: 1440, height: 900 } });
+    await p.goto(BASE + "/workspace?demo=1");
+    await ready(p);
+    const rail = p.locator("nav.rail");
+    const width = () => rail.evaluate((el) => el.getBoundingClientRect().width);
+    // Chromium headless com renderização por software atrasa a transição de 160 ms: espera o estado final.
+    const settle = (open) => p.waitForFunction((o) => { const w = document.querySelector("nav.rail").getBoundingClientRect().width; return o ? w > 240 : w < 90; }, open, { timeout: 5000 }).catch(() => {});
+    const contentLeft = () => p.locator("#conteudo").evaluate((el) => el.getBoundingClientRect().left);
+    check("trilho recolhido com 84 px", Math.round(await width()) === 84, String(await width()));
+    const left0 = await contentLeft();
+    await rail.hover();
+    await settle(true);
+    check("trilho abre ao passar o mouse", (await width()) > 200, String(await width()));
+    check("trilho abre sobre o conteúdo (não empurra)", Math.abs((await contentLeft()) - left0) < 1);
+    await p.mouse.move(900, 500);
+    await settle(false);
+    check("trilho fecha ao tirar o mouse", Math.round(await width()) === 84, String(await width()));
+    await rail.getByRole("link", { name: "Workspace" }).focus();
+    await settle(true);
+    check("trilho abre no foco do teclado", (await width()) > 200, String(await width()));
+    await p.keyboard.press("Escape");
+    await settle(false);
+    check("Esc fecha o trilho", Math.round(await width()) === 84, String(await width()));
+    await p.getByRole("button", { name: "Expandir menu" }).click();
+    await settle(true);
+    check("botão abre o trilho", (await width()) > 200);
+    await p.mouse.click(1200, 600);
+    await settle(false);
+    check("clique fora fecha o trilho", Math.round(await width()) === 84, String(await width()));
+    const labels = await rail.locator("a.rail-item").evaluateAll((els) => els.map((e) => [e.getAttribute("aria-label"), e.getAttribute("title")]));
+    check("cada item do trilho tem nome acessível", labels.every(([a]) => a && a.length > 1), JSON.stringify(labels).slice(0, 200));
+    check("cada item recolhido tem dica (title)", labels.every(([, t]) => t && t.length > 1));
     await ctx.close();
   }
 
@@ -491,8 +531,8 @@ if (!ONLY || ONLY === "absorb") {
     return { ok: r.ok, name: j.name, short: j.short_name, display: j.display, theme: j.theme_color, icons: (j.icons ?? []).map((i) => i.purpose).join(",") };
   });
   check(
-    "manifest: Open Dot / opendot / standalone / #050608",
-    man.ok && man.name === "Open Dot" && man.short === "opendot" && man.display === "standalone" && man.theme === "#050608" && /maskable/.test(man.icons),
+    "manifest: Open Dot / opendot / standalone / #07080C",
+    man.ok && man.name === "Open Dot" && man.short === "opendot" && man.display === "standalone" && man.theme.toLowerCase() === "#07080c" && /maskable/.test(man.icons),
     JSON.stringify(man),
   );
   await p.waitForTimeout(500);
@@ -532,16 +572,13 @@ if (!ONLY || ONLY === "absorb") {
   await ready(p);
   const greet = await p.locator(".hero h1").evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
   check("tela 02 390: saudação 20 px", greet === 20, `${greet}px`);
-  check("tela 02: dock visível", await p.getByRole("navigation", { name: "Principal" }).isVisible());
-  const fold = await p.evaluate(() => {
+  check("tela 02: barra inferior visível", await p.getByRole("navigation", { name: "Principal" }).isVisible());
+  // v0.3 (5.6): o 1º cartão da demonstração media 1.748 px no celular; limite de 900 px a 390 px.
+  const first = await p.evaluate(() => {
     const card = document.querySelector(".feed-card");
-    const dock = document.querySelector(".dock");
-    if (!card || !dock) return { ok: false, reason: "faltou cartão ou dock" };
-    const c = card.getBoundingClientRect();
-    const d = dock.getBoundingClientRect();
-    return { ok: c.bottom < d.top, cardBottom: Math.round(c.bottom), dockTop: Math.round(d.top) };
+    return card ? Math.round(card.getBoundingClientRect().height) : null;
   });
-  check("tela 02: 1º cartão acima do dock", fold.ok, JSON.stringify(fold));
+  check("tela 02: 1º cartão com no máximo 900 px de altura a 390 px", first !== null && first <= 900, `${first}px`);
   await shot(p, { path: `${OUT}/compare-02-app-390.png` });
   await p.goto(`file://${join(ROOT, "docs/referencias/design/02-pwa-inicio.html")}`);
   await p.waitForTimeout(400);

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { markSplashSeen, readSplashSeen, splashPlan } from "./splash-policy.ts";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AGENTS, agentsInPlace, toVisual, versionChanged, type AgentId } from "@open-dot/core";
+import { AGENTS, agentsInPlace, versionChanged, type AgentId } from "@open-dot/core";
 import { useApp } from "./store.tsx";
-import { Icon, type IconName } from "./components/Icons.tsx";
+import { Icon } from "./components/Icons.tsx";
 import { AgentDot } from "@open-dot/mascot";
 import { SplashScreen } from "@open-dot/mascot";
 import { api } from "./api.ts";
@@ -11,7 +11,6 @@ import { Home } from "./views/Home.tsx";
 
 import { MyDay } from "./views/MyDay.tsx";
 import { NotificationBell } from "./components/NotificationCenter.tsx";
-import { useDialog } from "./components/useDialog.ts";
 import { sound } from "./sound.ts";
 
 // Telas menos visitadas carregam sob demanda (C5): a primeira tela baixa menos.
@@ -33,10 +32,13 @@ const Mascot = lazy(() => import("./views/Mascot.tsx").then((m) => ({ default: m
 const Team = lazy(() => import("./views/Team.tsx").then((m) => ({ default: m.Team })));
 const Memory = lazy(() => import("./views/Memory.tsx").then((m) => ({ default: m.Memory })));
 const Settings = lazy(() => import("./views/Settings.tsx").then((m) => ({ default: m.Settings })));
+const Correio = lazy(() => import("./views/Correio.tsx").then((m) => ({ default: m.Correio })));
 const More = lazy(() => import("./views/More.tsx").then((m) => ({ default: m.More })));
 import { DotTrouble, type TroubleInfo } from "./components/DotTrouble.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
-import { agentConnected, agentPresence, dominantVisual, islandLine, islandReason, runProgress, sortAgents } from "./presence.ts";
+import { dominantVisual, islandLine, islandReason, runProgress } from "./presence.ts";
+import { BottomBar, Rail } from "./components/Shell.tsx";
+import { DemoChip } from "./components/ui.tsx";
 
 function isMyDayPath(path: string): boolean {
   return path === "/" || path === "/meu-dia";
@@ -80,35 +82,20 @@ function useSplash(loading: boolean, reduced: boolean): { show: boolean; fading:
 const SIDEBAR_AGENTS: AgentId[] = agentsInPlace("presence");
 const LIST_AGENTS: AgentId[] = agentsInPlace("list");
 
-interface NavDef {
-  path: string;
-  label: string;
-  icon: IconName;
-}
 const PALETTE_DESTINATIONS = [
   { label: "Conversa com o Dot", path: "/agente/dot" },
   { label: "Meu dia", path: "/meu-dia" },
   { label: "Agent Workspace", path: "/workspace" },
   { label: "Runner desktop", path: "/runner" },
+  { label: "Correio e Notícias", path: "/correio" },
+  { label: "Equipe", path: "/equipe" },
   { label: "Rotinas", path: "/rotinas" },
   { label: "Conexões", path: "/conexoes" },
   { label: "Mascote e aparência", path: "/mascote" },
 ];
-const NAV: NavDef[] = [
-  { path: "/meu-dia", label: "Meu dia", icon: "home" },
-  { path: "/workspace", label: "Workspace", icon: "layers" },
-  { path: "/runner", label: "Runner", icon: "code" },
-  { path: "/equipe", label: "Equipe", icon: "chat" },
-  { path: "/rotinas", label: "Rotinas", icon: "clock" },
-  { path: "/conexoes", label: "Conexões", icon: "plug" },
-  { path: "/memoria", label: "Memória", icon: "file" },
-  { path: "/mascote", label: "Mascote", icon: "sparkle" },
-  { path: "/configuracoes", label: "Configurações", icon: "panel" },
-];
 
 export function App() {
   const app = useApp();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [ctxOpen, setCtxOpen] = useState(false);
   const [palette, setPalette] = useState(false);
   const [update, setUpdate] = useState(false);
@@ -152,7 +139,6 @@ export function App() {
         setPalette(true);
       }
       if (e.key === "Escape") {
-        setMenuOpen(false);
         setCtxOpen(false);
         setPalette(false);
       }
@@ -211,10 +197,7 @@ export function App() {
     );
   }
 
-  const go = (p: string) => {
-    app.navigate(p);
-    setMenuOpen(false);
-  };
+  const go = (p: string) => app.navigate(p);
   const agentMatch = /^\/agente\/(\w+)$/.exec(app.path);
   const agentId = (agentMatch?.[1] && agentMatch[1] in AGENTS ? agentMatch[1] : null) as AgentId | null;
   const apprMatch = /^\/aprovacao\/([^/]+)$/.exec(app.path);
@@ -251,6 +234,9 @@ export function App() {
     case "/configuracoes":
       view = <Settings />;
       break;
+    case "/correio":
+      view = <Correio />;
+      break;
     case "/mais":
       view = <More />;
       break;
@@ -280,9 +266,9 @@ export function App() {
       </a>
       <ForcedBoom />
       <div className="app">
-        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- tocar fora fecha; no teclado, Esc fecha (useDialog) */}
-        {menuOpen && <div className="scrim" onClick={() => setMenuOpen(false)} />}
-        <Sidebar open={menuOpen} go={go} current={app.path} onClose={() => setMenuOpen(false)} />
+        <div className="rail-slot">
+          <Rail go={go} current={app.path} />
+        </div>
         <div className="main">
           <div>
             {app.mode === "demo" && (
@@ -327,9 +313,10 @@ export function App() {
               </div>
             )}
             <header className="topbar">
-              <button className="icon-btn menu-btn" aria-label="Abrir menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}>
-                <Icon name="menu" />
-              </button>
+              <a className="mobile-dot" href="/meu-dia" aria-label="Open Dot, Meu dia" onClick={(e) => (e.preventDefault(), go("/meu-dia"))}>
+                <AgentDot visual={app.visualFor("dot")} accessory="none" size={44} animate={false} reducedMotion={app.reducedMotion} label="Open Dot" />
+              </a>
+              {app.mode === "demo" && <DemoChip />}
               <time className="top-date hide-sm" dateTime={new Date().toISOString()}>
                 {fmtHeaderStamp()}
               </time>
@@ -380,7 +367,7 @@ export function App() {
           </div>
         </div>
       </div>
-      {!hideDock && <Dock go={go} current={app.path} onAsk={() => setPalette(true)} />}
+      {!hideDock && <BottomBar go={go} current={app.path} />}
       {palette &&
         (paletteModule ? (
           <paletteModule.CommandPalette onClose={() => setPalette(false)} go={go} destinations={PALETTE_DESTINATIONS} agents={LIST_AGENTS} />
@@ -430,200 +417,6 @@ function AgentRail({ current, go }: { current: AgentId; go: (p: string) => void 
         </button>
       ))}
     </div>
-  );
-}
-
-function Sidebar({ open, go, current, onClose }: { open: boolean; go: (p: string) => void; current: string; onClose: () => void }) {
-  const app = useApp();
-  const navRef = useRef<HTMLElement>(null);
-  // No celular a barra vira gaveta: modal enquanto aberta (D4).
-  useDialog(open, navRef, onClose);
-  const pending = app.snap?.feed.filter((f) => f.kind !== "notice" && f.kind !== "file_organized").length ?? 0;
-  const usage = app.snap?.usage;
-  const pct = usage ? Math.min(100, Math.round((usage.calls / Math.max(1, usage.limits.calls)) * 100)) : 0;
-  const facts = factsFrom(app.snap, app.mode === "demo");
-  const waiting = app.snap?.shipments.shipments.filter((s) => s.needsCarrier).length ?? 0;
-  const presenceOf = (a: AgentId) => agentPresence(a, app.visualFor(a), app.snap?.feed ?? [], app.snap?.monitors ?? [], { connected: agentConnected(a, facts), pendingShipments: waiting });
-  const ordered = sortAgents(LIST_AGENTS, presenceOf);
-  return (
-    <nav ref={navRef} className={`sidebar ${open ? "open" : ""}`} aria-label="Navegação principal" aria-modal={open ? true : undefined} role={open ? "dialog" : undefined}>
-      <a className="brand" href="/meu-dia" onClick={(e) => (e.preventDefault(), go("/meu-dia"))}>
-        <AgentDot visual={app.visualFor("dot")} accessory="none" size={30} animate={false} reducedMotion={app.reducedMotion} label="Open Dot" />
-        <span className="od-wordmark">
-          <span>open</span>
-          <b>dot</b>
-          <span className="od-wordmark-dot" />
-        </span>
-      </a>
-      <div className="nav">
-        {NAV.map((n) => (
-          <a
-            key={n.path}
-            href={n.path}
-            className="nav-item"
-            aria-current={(n.path === "/meu-dia" ? isMyDayPath(current) : current === n.path) ? "page" : undefined}
-            onClick={(e) => (e.preventDefault(), go(n.path))}
-          >
-            <Icon name={n.icon} /> {n.label}
-            {n.path === "/meu-dia" && pending > 0 && (
-              <span className="count" aria-label={`${pending} itens`}>
-                {pending}
-              </span>
-            )}
-          </a>
-        ))}
-      </div>
-      <div className="nav">
-        <div className="nav-label">Seus agentes</div>
-        {ordered.map((a) => {
-          const path = `/agente/${a}`;
-          const connected = agentConnected(a, facts);
-          const v = connected ? app.visualFor(a) : toVisual(a, "disconnected");
-          const p = presenceOf(a);
-          return (
-            <a key={a} href={path} className={`nav-item agent-item ${connected ? "" : "is-off"}`} aria-current={current === path ? "page" : undefined} onClick={(e) => (e.preventDefault(), go(path))}>
-              <AgentDot
-                visual={v}
-                accessory={app.accessoryFor(a)}
-                size={44}
-                animate={false}
-                reducedMotion={app.reducedMotion}
-                antennaPulse={a === "noticias" && (app.snap?.feed.some((f) => f.agentId === "noticias" && f.kind === "news_digest" && f.freshness === "fresh") ?? false)}
-              />
-              <span className="lines">
-                <span>{AGENTS[a].name}</span>
-                <span>{p.label}</span>
-              </span>
-              {connected ? <span className={`agent-dot-status ${p.dotClass}`} aria-hidden="true" /> : <span className="tiny">Conectar</span>}
-            </a>
-          );
-        })}
-      </div>
-      <div className="sidebar-foot">
-        <div>
-          <div className="tiny row-between">
-            <span>IA hoje{app.mode === "demo" ? " · exemplo" : ""}</span>
-            <span className="mono">{usage ? `${usage.calls} / ${usage.limits.calls}` : "—"}</span>
-          </div>
-          <div className="meter" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Chamadas de IA usadas hoje">
-            <i style={{ width: `${pct}%` }} />
-          </div>
-          <div className="tiny mt-6">Custo R$ 0. {usage && !usage.aiConfigured ? "Resumos por regras." : "Sem cobrança extra."}</div>
-        </div>
-        <NameLine />
-      </div>
-    </nav>
-  );
-}
-
-function factsFrom(snap: ReturnType<typeof useApp>["snap"], demo: boolean) {
-  const conns = snap?.connections ?? [];
-  const disabled: Partial<Record<AgentId, boolean>> = {};
-  for (const a of snap?.agents ?? []) if (!a.enabled) disabled[a.id] = true;
-  return {
-    demo,
-    gmail: conns.some((c) => c.provider === "gmail" && c.status === "connected"),
-    github: Boolean(snap?.configured.github || snap?.configured.githubApp) || conns.some((c) => c.provider === "github" && c.status === "connected"),
-    vercel: Boolean(snap?.configured.vercel),
-    gsc: conns.some((c) => c.provider === "gsc" && c.status === "connected"),
-    monitors: snap?.monitors.length ?? 0,
-    shipments: snap?.shipments.shipments.length ?? 0,
-    tracking: Boolean(snap?.configured.tracking || snap?.shipments.tracking.enabled),
-    disabled,
-  };
-}
-
-function NameLine() {
-  const app = useApp();
-  const shown = app.snap?.owner?.name || "Seu nome";
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(shown);
-  const [error, setError] = useState<string | null>(null);
-  const nameInput = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (editing) nameInput.current?.focus();
-  }, [editing]);
-  if (app.mode !== "live") {
-    return (
-      <div className="tiny">
-        <div className="text-strong">{shown}</div>
-        Demonstração
-      </div>
-    );
-  }
-  if (!editing) {
-    return (
-      <div className="row-center-8">
-        <div className="tiny grow-min0">
-          <div className="text-strong">{shown}</div>
-          Espaço pessoal
-        </div>
-        <button className="btn ghost" type="button" onClick={() => (setValue(shown), setError(null), setEditing(true))}>
-          Nome
-        </button>
-        <button className="btn ghost" onClick={() => void api.logout().then(() => location.assign("/"))}>
-          Sair
-        </button>
-      </div>
-    );
-  }
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        setError(null);
-        void api.updateName(value.trim()).then(
-          async (r) => {
-            setEditing(false);
-            app.announce(`Nome salvo: ${r.name}`);
-            await app.refresh();
-          },
-          (err: unknown) => setError(err instanceof Error ? "Use letras, espaço ou hífen." : "Não consegui salvar o nome."),
-        );
-      }}
-    >
-      <label className="tiny" htmlFor="display-name">
-        Nome de exibição
-      </label>
-      <input id="display-name" ref={nameInput} value={value} maxLength={40} onChange={(e) => setValue(e.target.value)} />
-      {error && (
-        <p className="tiny" role="alert">
-          {error}
-        </p>
-      )}
-      <div className="row-actions">
-        <button className="btn primary" type="submit">
-          Salvar
-        </button>
-        <button className="btn ghost" type="button" onClick={() => setEditing(false)}>
-          Cancelar
-        </button>
-      </div>
-    </form>
-  );
-}
-
-function Dock({ go, current, onAsk }: { go: (p: string) => void; current: string; onAsk: () => void }) {
-  const my = isMyDayPath(current);
-  return (
-    <nav className="dock" aria-label="Principal">
-      <a href="/meu-dia" className={`dock-item ${my ? "on" : ""}`} aria-label="Meu dia" aria-current={my ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/meu-dia"))}>
-        <Icon name="home" />
-        <span>Meu dia</span>
-      </a>
-      <a href="/rotinas" className="dock-icon" aria-label="Rotinas" aria-current={current === "/rotinas" ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/rotinas"))}>
-        <Icon name="clock" />
-      </a>
-      <button type="button" className="dock-icon" aria-label="Perguntar ao Dot" onClick={onAsk}>
-        <Icon name="search" />
-      </button>
-      <a href="/conexoes" className="dock-icon" aria-label="Conexões" aria-current={current === "/conexoes" ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/conexoes"))}>
-        <Icon name="plug" />
-      </a>
-      <a href="/mais" className="dock-icon" aria-label="Mais: Memória, Mascote, Configurações" aria-current={current === "/mais" ? "page" : undefined} onClick={(e) => (e.preventDefault(), go("/mais"))}>
-        <Icon name="menu" />
-      </a>
-    </nav>
   );
 }
 

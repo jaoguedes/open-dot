@@ -77,9 +77,17 @@ export function Settings() {
       </article>
       <h2 className="screen-section">Segurança e dados</h2>
       <article className="card stack-10">
+        {app.mode === "live" && (
+          <button className="btn" type="button" onClick={() => void api.logout().then(() => location.assign("/"))}>
+            Sair deste aparelho
+          </button>
+        )}
         <button className="btn" type="button" onClick={() => void logoutAll()}>
           Sair de todos os aparelhos
         </button>
+        <p className="tiny">
+          IA hoje{app.mode === "demo" ? " (exemplo)" : ""}: {app.snap?.usage ? `${app.snap.usage.calls} de ${app.snap.usage.limits.calls} chamadas` : "—"}. Custo R$ 0, sem cobrança extra.
+        </p>
         <button className="btn ghost" type="button" onClick={() => app.navigate("/conexoes")}>
           Exportar ou apagar meus dados (em Conexões)
         </button>

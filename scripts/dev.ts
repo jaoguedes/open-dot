@@ -101,7 +101,8 @@ async function main() {
     const parsed = parseEnv(vars);
     if (!parsed.ok) throw new Error(`.dev.vars incompleto: ${parsed.missing.join(", ")}`);
     mkdirSync(join(root, ".data"), { recursive: true });
-    const db = new SqliteDb(join(root, ".data/dev.sqlite"));
+    // OPEN_DOT_DEV_DB: banco descartável para testes de interface (padrão: .data/dev.sqlite).
+    const db = new SqliteDb(process.env.OPEN_DOT_DEV_DB || join(root, ".data/dev.sqlite"));
     const r = await applyMigrations(db, loadMigrations());
     if (r.applied.length) console.log(`• Migrações aplicadas no SQLite local: ${r.applied.join(", ")}`);
     const ctx = { env: parsed.env, db, keys: await loadKeyring(parsed.env.TOKEN_KEYS), fetch: globalThis.fetch.bind(globalThis), now: () => Date.now() };
