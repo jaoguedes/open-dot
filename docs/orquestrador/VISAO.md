@@ -1,6 +1,8 @@
 # Visão do orquestrador
 
-O Dot recebe uma ideia, vê quais ferramentas de IA de programação você já tem instaladas e logadas no seu computador, diz o que funciona e como configurar o resto, e divide o trabalho entre elas com **especialistas** (perfis densos: Produto, Pesquisa, Design, Desenvolvedor, QA).
+> O resultado depende menos do modelo e mais da equipe e da configuração: o Dot monta a equipe certa com as ferramentas que você já tem, na sua máquina.
+
+O Dot recebe uma ideia, vê quais ferramentas de IA de programação você já tem instaladas e logadas no seu computador, diz o que funciona e como configurar o resto, e divide o trabalho entre elas com **especialistas** (perfis densos: Produto, Pesquisa, Design, Desenvolvedor, QA e, desde o v0.3, Arquitetura, Segurança e Documentação) e **receitas** prontas.
 
 Princípios:
 
@@ -10,3 +12,4 @@ Princípios:
 - **Evidência acima de opinião.** Fatos do fabricante com fonte e data; resultados medidos na sua máquina; nada de “ferramenta X é melhor” embutido.
 - **Honesto.** O que não foi verificado fica indisponível. O que não foi medido não vira promessa.
 - **R$ 0.** Nada pago por padrão; login por chave de API é tratado como possivelmente pago e não é usado.
+- **Aprender com cuidado.** Ajustes automáticos (calibração, ciclo de correção, sugestão de skill) só com dados do próprio dono, explicáveis, reversíveis e desligados até mostrarem ganho medido.

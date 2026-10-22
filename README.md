@@ -16,27 +16,45 @@ Assistente pessoal com agentes, rotinas remotas e o mascote **Dot**. Revisa o se
 | Runner (desktop) + Codex | Proposta → aprovação do conteúdo exato → aplicação num worktree isolado. Validado no macOS Intel |
 | Commit local de arquivos aprovados | Só com confirmação nativa separada; nunca push ou merge |
 
-## Orquestrador v0.2 (novo, em teste)
+## Novo no v0.3 (beta, não publicado)
 
-A tela **Equipe** mostra as ferramentas de IA de programação que o Runner detectou no seu computador (instalada, logada, método, cota), explica como configurar o resto e propõe uma equipe de especialistas (Produto, Pesquisa, Design, Desenvolvedor, QA) com o motivo de cada escolha. Os passos rodam em sequência; arquivos só mudam depois da sua aprovação.
+O resultado depende menos do modelo e mais da equipe e da configuração: o Dot monta a equipe certa com as ferramentas que você já tem, na sua máquina.
 
-- **Testado de verdade:** detecção local (Codex logado, Claude Code sem login nesta máquina de desenvolvimento); Codex respondendo nos papéis de planejador e revisor (2 chamadas reais, saída válida no esquema).
-- **Simulado:** pipeline completo de ponta a ponta e a comparação com o padrão simples (`docs/orquestrador/AVALIACAO.md`): o motor cobre os papéis certos e evita login pago, ao custo de cerca de 2× chamadas; **qualidade não foi medida**.
-- **Sem teste real:** Claude Code no pipeline (login expirado). **Indisponível:** Gemini CLI e Cursor.
-- Detalhes: `docs/orquestrador/`.
+- **Equipe e receitas:** oito especialistas (Produto, Pesquisa, Design, Desenvolvedor, QA, Arquitetura, Segurança, Documentação) e seis receitas prontas, só dados, fixadas por hash. A tela mostra a equipe sugerida, o motivo de cada escolha e a estimativa de chamadas antes de você confirmar.
+- **Aprovações:** diff, arquivos alterados, linha do tempo e o **hash real** do conteúdo mostrado; Aprovar só habilita quando o hash confere.
+- **Correio e Notícias:** só leitura (remetente, assunto, trecho); resumo do dia por contagem, sem modelo; newsletters da sua própria caixa.
+- **Runner companheiro:** central com abas, ícone na barra de menus com painel, saúde do computador, processos que o Runner abriu, perfis Leve/Equilibrado/Máximo e atualização assinada com consentimento. Fechado na bandeja, fica parado (0,0–0,1 % de CPU medido no Mac Intel).
+- **Dot:** cor do agente ativo e reações a estado real (olhar, rubor, suor, pânico), sempre com o motivo em texto.
+
+| Estado | O quê |
+|---|---|
+| **Testado** | App web e Worker (testes automáticos e de interface), Correio só leitura, Runner no Mac Intel (medido), 4 chamadas reais aos especialistas novos (Codex e Claude Code, `docs/orquestrador/AVALIACAO_REAL.md`) |
+| **Sem teste real** | Claude Code no pipeline do Runner, atualização automática de ponta a ponta, Runner no Apple Silicon e no Windows |
+| **Simulado** | Comparação motor × padrão simples, calibração adaptativa, ciclo revisar → corrigir, paralelismo só leitura (`docs/orquestrador/AVALIACAO.md`). Nenhum demonstrou ganho real; os três ficam **desligados** |
+| **Planejado** | Análise de e-mail pelo Codex, Gemini CLI e Cursor, RSS próprio, instaladores assinados |
+| **Bloqueado** | Testes do projeto em cópia isolada (sem contenção comprovada sem custo) |
+
+A quantidade de agentes e receitas é informação, não medida de qualidade; a prova de valor são as avaliações.
+
+## Instalar o Runner em dois passos
+
+1. **Instale** o instalador do release e confira o hash publicado ao lado. No macOS 15 ou mais novo o instalador não é assinado pela Apple: na primeira abertura use Ajustes do Sistema → Privacidade e Segurança → **Abrir mesmo assim** (uma vez).
+2. **Conecte:** o Runner mostra um código de uso único que vale por poucos minutos; confirme o código e o nome do computador na tela Runner do seu Open Dot.
+
+Plataformas: macOS Intel **testado**; macOS Apple Silicon e Windows **sem teste real**; Linux fora do escopo. Detalhes: [`docs/release/runner-instalacao.md`](docs/release/runner-instalacao.md).
 
 ## Experimental ou desligado
 
-- **Claude Code no Runner:** driver implementado no modo somente-proposta, **não validado com o CLI real**; desligado salvo opt-in (`OPEN_DOT_EXPERIMENTAL_DRIVERS=claude-code`).
-- **Cursor no Runner:** indisponível (o CLI não permite desligar ferramentas de escrita e shell de forma verificável).
-- **Desligados nesta beta:** shell e testes de projeto pelo Runner, paralelismo entre agentes, merge, commit ou push automáticos, envio de e-mail, Web Push, executor no Windows.
+- **Claude Code no Runner:** opt-in, desligado por padrão (`OPEN_DOT_EXPERIMENTAL_DRIVERS=claude-code` + ligar em Equipe).
+- **Cursor e Gemini CLI:** indisponíveis até haver modo só leitura verificável no CLI instalado.
+- **Desligados por padrão:** calibração, ciclo Corretor, paralelismo só leitura, sugestão de skill, pacotes importados, início com o sistema, notificações, limpeza automática, avisos de versão.
+- **Nunca nesta versão:** shell e testes de projeto pelo Runner, merge/commit/push automáticos, envio, resposta ou arquivamento de e-mail.
 - **IA (Groq):** opcional; e-mails privados só vão para a IA com retenção zero confirmada.
 
 ## Limitações por plataforma
 
 - **Web/Worker:** Cloudflare Workers Free + Turso Free.
-- **Runner:** macOS Intel testado; macOS ARM64 e Windows só compilados em CI, sem validação nativa recente. Executor desligado no Windows.
-- **Instaladores não são assinados nem notarizados.** O sistema vai avisar; confira o checksum publicado junto com o instalador.
+- **Instaladores não são assinados nem notarizados.** A chave de assinatura das atualizações ainda não existe (é do mantenedor); até lá, novas versões são baixadas pelo release.
 
 ## Rodar
 
@@ -44,6 +62,8 @@ A tela **Equipe** mostra as ferramentas de IA de programação que o Runner dete
 npm install          # Node 22.13 ou mais novo
 npm run dev          # http://localhost:8787  (app + API + agendador, SQLite local)
 npm run check        # varredura de segredos + typecheck + testes + build
+npm run test:ui      # navegador, com npm run dev rodando
+npm run perf:check   # orçamento de desempenho (docs/performance)
 ```
 
 Só a interface, com dados de demonstração rotulados: `npm run demo`. Para a sua instância na nuvem: [`docs/SETUP.md`](docs/SETUP.md).

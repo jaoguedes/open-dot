@@ -10,14 +10,20 @@ Prioridades depois da `v0.1.0-beta`. Nada aqui é promessa de data. Detalhes té
 4. **Instaladores assinados e notarizados**, com checksums e procedência.
 5. **Revisão jurídica** das licenças (AGPL, comercial, CLA, Dot) e automação do aceite do CLA.
 
-## v0.3 do orquestrador
+## v0.3 (feito nesta rodada, não publicado)
 
-- **H. Atualização do catálogo:** ler fontes públicas e **propor** mudanças com fonte e data, aprovadas por humano.
-- Mais especialistas: Arquitetura, Segurança, Documentação.
-- Calibração adaptativa: ligar o peso da evidência medida com amostras suficientes.
-- Pacotes de agentes da comunidade (dados, com revisão e hash).
-- Gemini como planejador/revisor em cópia descartável, após verificar flags num CLI instalado; Cursor via ACP.
-- Validar o driver do Claude Code com login oficial.
+Agentes Arquitetura, Segurança e Documentação; receitas; calibração (desligada); ciclo Corretor (desligado); proposta de catálogo (H); pacotes locais; paralelismo só leitura (desligado, simulado); redesign; Runner companheiro. Estado detalhado em `docs/STATUS.md` e `docs/audit/V03_REPORT.md`.
+
+## v0.4
+
+- **RSS próprio** como fonte de Notícias (hoje Notícias = newsletters da sua caixa).
+- **Gemini CLI e Cursor**, só se as flags de modo só leitura forem verificadas no CLI instalado.
+- **Instaladores assinados** e chave de assinatura das atualizações (mantenedor); atualização real de ponta a ponta testada com duas versões.
+- **Windows e macOS ARM64** testados em máquina real (Runner, bandeja, saúde, processos).
+- Análise de e-mail pelo Codex num modo de leitura fora de projeto, com aprovação do conteúdo exato.
+- Pareamento por código curto (6 dígitos/QR) só se não enfraquecer a autenticação atual.
+- Canais de mensagem (incluindo WhatsApp) **só por API oficial**, com aprovação do conteúdo exato, nunca por gateway não oficial.
+- Medir calibração e ciclo Corretor com chamadas reais antes de ligar por padrão.
 
 ## Depois (cada item com auditoria própria)
 
