@@ -122,7 +122,15 @@ test("resultados registrados ficam visíveis ao dono, sem ajuste automático de 
 test("v0.3: preferências começam desligadas; calibração liga, explica e zera", async () => {
   const s = await setup();
   const prefs = await s.web.call("GET", "/api/orchestrator/prefs");
-  assert.deepEqual(prefs.json.prefs, { calibracao: false, cicloCorretor: { ativo: false, rodadas: 2 }, paraleloSomenteLeitura: false, sugestaoDeSkill: false });
+  assert.deepEqual(prefs.json.prefs, { calibracao: false, cicloCorretor: { ativo: false, rodadas: 2 }, paraleloSomenteLeitura: false, sugestaoDeSkill: false, agentesDesligados: [] });
+  assert.equal((await s.web.call("PUT", "/api/orchestrator/prefs", { agentesDesligados: ["qa"] })).status, 400, "QA não pode ser desligado");
+  assert.equal((await s.web.call("PUT", "/api/orchestrator/prefs", { agentesDesligados: ["design"] })).status, 200);
+  const ag = await s.web.call("GET", "/api/orchestrator/agents");
+  assert.equal(ag.json.agentes.length, 8);
+  assert.equal(ag.json.agentes.find((a: { id: string }) => a.id === "design").ativo, false);
+  const noDesign = await s.web.call("POST", "/api/orchestrator/team", { ideia: "um app para lembrar de regar as plantas", deviceId: s.deviceId });
+  assert.ok(!noDesign.json.team.passos.some((p: { agente: string }) => p.agente === "design"), "especialista desligado fica fora da equipe");
+  await s.web.call("PUT", "/api/orchestrator/prefs", { agentesDesligados: [] });
   assert.equal((await s.web.call("PUT", "/api/orchestrator/prefs", { cicloCorretor: { ativo: true, rodadas: 9 } })).status, 400, "rodadas acima do teto");
   assert.equal((await s.web.call("PUT", "/api/orchestrator/prefs", { shell: true })).status, 400, "campo desconhecido recusado");
   const off = await s.web.call("GET", "/api/orchestrator/calibration");

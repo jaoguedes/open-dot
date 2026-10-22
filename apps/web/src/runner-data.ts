@@ -153,3 +153,14 @@ export async function decide(taskId: string, hash: string, decision: "approve" |
 export function projectLabel(devices: RunnerDevice[], projectId: string): string {
   return devices.flatMap((d) => d.projects).find((p) => p.id === projectId)?.label ?? "Projeto autorizado";
 }
+
+/** Estado de cada ferramenta pelo diagnóstico real do Runner; sem Runner, diz isso. */
+export function toolState(devices: RunnerDevice[], id: MechanismId): { texto: string; pronto: boolean } {
+  if (id === "cursor") return { texto: "Indisponível nesta versão", pronto: false };
+  const d = devices.flatMap((x) => (x.revoked ? [] : x.drivers)).filter((x) => x.id === id);
+  if (!devices.length) return { texto: "Sem computador pareado", pronto: false };
+  if (d.some((x) => x.installed && x.authenticated && x.executable)) return { texto: "Pronto", pronto: true };
+  if (id === "claude-code" && d.some((x) => x.installed)) return { texto: "Desligado (ative quando quiser)", pronto: false };
+  if (d.some((x) => x.installed && !x.authenticated)) return { texto: "Sem login confirmado", pronto: false };
+  return { texto: "Não instalado", pronto: false };
+}

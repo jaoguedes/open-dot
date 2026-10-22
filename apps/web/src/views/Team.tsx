@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useApp } from "../store.tsx";
 import { DEMO_EQUIPE } from "../demo.ts";
 import { toolStatus, type ToolSnap } from "../team-status.ts";
+import { AGENT_LABEL, EngineSettings, RecipePicker, type Recipe } from "../components/TeamV03.tsx";
+import { DemoChip, MonoLabel } from "../components/ui.tsx";
 import "../team.css";
 
 interface CatalogTool {
@@ -51,6 +53,7 @@ interface Pipeline {
   reason: string | null;
   ideia: string;
   passos: Array<{ agente: string; papel: string; ferramenta: string; estado: string; erros: string[] }>;
+  equipe?: { ciclo?: string[] };
 }
 
 async function call<T>(path: string, method = "GET", body?: unknown): Promise<T> {
@@ -66,7 +69,7 @@ async function call<T>(path: string, method = "GET", body?: unknown): Promise<T>
   return data as T;
 }
 
-const AGENT_NAMES: Record<string, string> = { produto: "Produto", pesquisa: "Pesquisa", design: "Design", desenvolvedor: "Desenvolvedor", qa: "QA" };
+const AGENT_NAMES: Record<string, string> = AGENT_LABEL;
 const ROLE_NAMES: Record<string, string> = { planejador: "planeja (só lê)", implementador: "propõe arquivos (você aprova)", revisor: "revisa (só lê)" };
 
 /** Equipe: o que o Dot detectou, como configurar o resto e quem faria cada papel, com o motivo. */
@@ -88,6 +91,8 @@ export function Team() {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [recipe, setRecipe] = useState(() => new URLSearchParams(location.search).get("receita") ?? "");
+  const [recipeInfo, setRecipeInfo] = useState<Recipe | null>(null);
 
   useEffect(() => {
     if (demo) return;
@@ -133,7 +138,7 @@ export function Team() {
     setBusy(true);
     setMsg("");
     try {
-      const r = await call<{ team: Team }>("/api/orchestrator/team", "POST", { ideia: idea, deviceId, ...(Object.keys(nextOverrides).length ? { overrides: nextOverrides } : {}) });
+      const r = await call<{ team: Team }>("/api/orchestrator/team", "POST", { ideia: idea, deviceId, ...(recipe ? { receita: recipe } : {}), ...(Object.keys(nextOverrides).length ? { overrides: nextOverrides } : {}) });
       setTeam(r.team);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Não consegui montar a equipe.");
@@ -152,9 +157,10 @@ export function Team() {
         projectId,
         worktreeConsent: true,
         confirmacao: "rodar-equipe-em-sequencia",
+        ...(recipe ? { receita: recipe } : {}),
         ...(Object.keys(overrides).length ? { overrides } : {}),
       });
-      setMsg(`Equipe enfileirada: ${r.executa}. Propostas de arquivos ainda esperam a sua aprovação no Workspace.`);
+      setMsg(`Equipe enfileirada: ${r.executa}. Propostas de arquivos esperam a sua aprovação em Aprovações.`);
       setConfirm(false);
       setRefresh((v) => v + 1);
     } catch (e) {
@@ -183,7 +189,10 @@ export function Team() {
   return (
     <section className="team" aria-labelledby="team-title">
       <header>
-        <p className="ws-eyebrow">ORQUESTRADOR v0.2</p>
+        <div className="screen-head-v3">
+          <MonoLabel>ORQUESTRADOR</MonoLabel>
+          {demo && <DemoChip />}
+        </div>
         <h1 id="team-title">Equipe</h1>
         <p className="meta">
           O Dot usa as ferramentas de IA que você já instalou e entrou, no seu computador. Nunca lê nem guarda login delas. Cada passo roda em sequência e arquivos só mudam depois da sua aprovação.
@@ -241,11 +250,27 @@ export function Team() {
         </p>
       </article>
 
+      <RecipePicker
+        demo={demo}
+        value={recipe}
+        onChange={(id, r) => {
+          setRecipe(id);
+          setRecipeInfo(r);
+          setTeam(null);
+        }}
+      />
+
       <article className="card stack-10" aria-labelledby="assemble-title">
         <h2 id="assemble-title" className="m-0">
           Montar equipe
         </h2>
-        <label htmlFor="team-idea">Sua ideia</label>
+        {recipeInfo && (
+          <p className="tiny m-0">
+            Receita: <b>{recipeInfo.nome}</b>
+            {recipeInfo.agentes ? ` · ${recipeInfo.agentes.map((a) => AGENT_NAMES[a] ?? a).join(" → ")}` : ""}
+          </p>
+        )}
+        <label htmlFor="team-idea">{recipeInfo ? "O que você precisa" : "Sua ideia"}</label>
         <textarea id="team-idea" rows={3} maxLength={2000} value={idea} onChange={(e) => setIdea(e.target.value)} placeholder="Ex.: um app para lembrar de regar as plantas" />
         {!demo && (
           <>
@@ -358,6 +383,8 @@ export function Team() {
         </article>
       )}
 
+      <EngineSettings demo={demo} />
+
       {!demo && pipelines.length > 0 && (
         <article className="card stack-10" aria-labelledby="pipelines-title">
           <h2 id="pipelines-title" className="m-0">
@@ -369,9 +396,14 @@ export function Team() {
                 {p.ideia.slice(0, 60)} · {p.state}
               </summary>
               {p.reason && <p className="tiny">{p.reason}</p>}
+              {p.equipe?.ciclo?.map((c) => (
+                <p key={c} className="tiny">
+                  Ciclo Corretor: {c}
+                </p>
+              ))}
               <ul>
-                {p.passos.map((s) => (
-                  <li key={s.agente}>
+                {p.passos.map((s, i) => (
+                  <li key={`${s.agente}-${i}`}>
                     {AGENT_NAMES[s.agente] ?? s.agente} ({s.ferramenta}): {s.estado}
                     {s.erros.length ? ` — ${s.erros.join("; ")}` : ""}
                   </li>
