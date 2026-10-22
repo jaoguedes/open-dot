@@ -257,6 +257,12 @@ export function EngineSettings({ demo }: { demo: boolean }) {
         </label>
         <p className="tiny m-0">A avaliação simulada não mostrou ganho real do ciclo nem da calibração; por isso começam desligados (docs/orquestrador/AVALIACAO.md).</p>
         <label className="row-between">
+          <span>Paralelismo só leitura (até 2 revisões ou pesquisas ao mesmo tempo; nunca quem escreve)</span>
+          <input type="checkbox" checked={prefs?.paraleloSomenteLeitura ?? false} disabled={!prefs} onChange={(e) => void save({ paraleloSomenteLeitura: e.target.checked })} />
+        </label>
+        <p className="tiny m-0">Simulado nesta versão: o Runner executa uma tarefa por vez. A preferência só vale junto com a chave ORCH_PARALLEL_READONLY do servidor.</p>
+        <p className="tiny m-0">Testes do projeto em cópia isolada: bloqueado (contenção de rede e de escrita não comprovada sem custo no macOS e no Windows).</p>
+        <label className="row-between">
           <span>Sugerir skills a partir das minhas decisões (aprovou, rejeitou, receita)</span>
           <input
             type="checkbox"

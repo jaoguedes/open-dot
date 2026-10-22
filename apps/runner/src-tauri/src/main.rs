@@ -15,6 +15,7 @@ mod updater;
 mod project_context;
 mod policy;
 mod process;
+mod sandbox;
 mod tools;
 #[cfg(test)]
 mod recovery_tests;
