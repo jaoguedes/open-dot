@@ -7,7 +7,7 @@ Checklist antes de publicar `claude/od2-v03`. **Nada aqui foi executado pelo age
 | Item | Estado | Como |
 |---|---|---|
 | Revisão do `V03_REPORT.md` pelo Claude orquestrador / João | pendente | conferir estado honesto, desvios e gate |
-| Commit local `613b607` com o ID de rollback do Worker | **decidir antes de qualquer push** | o commit nunca foi compartilhado; se quiser tirar do histórico, reescreva só esta branch local antes de enviar (o valor está em `docs/privado/`) |
+| Commit com o ID de rollback do Worker | **resolvido** | removido do histórico local por rebase autorizado; verificado por busca no histórico; backup local `backup/od2-v03-antes-da-reescrita` **nunca deve ser enviado** |
 | Trailer `Task:` fora do formato em 28 commits | aceitar ou reescrever (só local) | `npx tsx scripts/check-continuity.ts --base 69c5769226319a33f79c7f3e6419bc98afd92611` |
 
 ## 2. Migrações de produção (ordem)

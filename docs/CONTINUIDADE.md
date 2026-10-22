@@ -5,7 +5,7 @@ Objetivo: v0.3 (agentes e motor, redesign, Runner companheiro, desempenho, recei
 - Decisões: D-027 (cor do agente no Dot e tokens v0.3) e D-028 (reações a estado real), autorizadas pelo João; demais escolhas em `docs/agents/handoffs/V03_HANDOFF.md`.
 - Concluído: fases 0–8 (ver `docs/audit/V03_REPORT.md`).
 - Testes: ver `docs/STATUS.md` (bloco v0.3).
-- Pendente (João): publicar, migrações `0017`–`0019`, chave do updater, decisão sobre `613b607`, validação manual do Runner 0.3.0.
+- Pendente (João): publicar, migrações `0017`–`0019`, chave do updater, validação manual do Runner 0.3.0.
 - Próximo passo: o João revisa `V03_REPORT.md` e decide.
 
 ---
