@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// Celular 390×844. Requer npm run dev em http://localhost:8787.
+// Celular 390×844 (UI_WIDTH=360|430 para as outras larguras). Requer npm run dev em http://localhost:8787.
 import { chromium } from "playwright";
 
 const BASE = process.env.UI_BASE ?? "http://localhost:8787";
 const launch = process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {};
 const browser = await chromium.launch({ ...launch, args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"] });
-const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+const ctx = await browser.newContext({ viewport: { width: Number(process.env.UI_WIDTH ?? 390), height: 844 } });
 const page = await ctx.newPage();
 const errors = [];
 page.on("console", (m) => {
@@ -91,7 +91,8 @@ await dialog.waitFor({ timeout: 5_000 });
 const box = await dialog.boundingBox();
 if (!box || box.width < 40 || box.height < 40) fail("busca: diálogo invisível");
 else console.log("ok   Busca");
-if (box && (box.width < 380 || box.height < 800)) fail("busca: no celular deveria ocupar a tela");
+const vp = page.viewportSize();
+if (box && (box.width < vp.width - 10 || box.height < vp.height - 44)) fail("busca: no celular deveria ocupar a tela");
 await dialog.getByRole("button", { name: "Fechar" }).click();
 await dialog.waitFor({ state: "hidden", timeout: 3_000 }).catch(() => fail("busca: não fechou no Fechar"));
 

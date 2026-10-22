@@ -166,9 +166,35 @@
   .mobile-dot {
     display: inline-flex;
   }
+  /* Topo numa linha só abaixo de 1024 px: antes quebrava em duas (109 px) e empurrava o conteúdo
+     para baixo da caixa de perguntas. O chip de demonstração encolhe, nunca quebra. */
+  :root .topbar {
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: var(--s2) var(--s3);
+    min-height: 60px;
+  }
+  .topbar .mono-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Sem isto o topo numa linha alarga a coluna da grade em 360 px (rolagem horizontal). */
+  .main > * {
+    min-width: 0;
+  }
+  .topbar .top-actions {
+    gap: 0;
+  }
+  /* Espaço reservado no fim do conteúdo = caixa de perguntas (--ask-bar) + barra inferior
+     (--bottom-bar, que também é o --dock da caixa). Uma regra só, sem somar duas vezes. */
   /* Topo abaixo de 1024 px: sem ilha nem data (o Dot de 44 px e a barra inferior bastam). */
-  .topbar .island,
-  .topbar .top-date {
+  :root .topbar .island,
+  :root .topbar .top-date,
+  :root .topbar .top-date.hide-sm {
     display: none;
   }
   .topbar .search kbd {
