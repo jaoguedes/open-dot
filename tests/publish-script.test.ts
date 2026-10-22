@@ -54,7 +54,7 @@ test("proteções toleram falha, são reaplicadas na ordem depois de tornar púb
   assert.match(calls[7]!, /automated-security-fixes/);
   assert.match(calls[8]!, /branches\/main\/protection/);
   assert.match(after, /aplicadas: secret scanning e push protection; relatório privado de vulnerabilidades; permissões do Actions; aprovação para PRs de fork; alertas e correções do Dependabot; proteção da main;/);
-  assert.match(after, /falharam:  \n/);
+  assert.match(after, /falharam: {2}\n/);
   rmSync(dir, { recursive: true, force: true });
 });
 
