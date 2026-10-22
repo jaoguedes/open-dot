@@ -29,3 +29,4 @@ export * from "./registry.ts";
 export * from "./mechanisms.ts";
 export * from "./approval-view.ts";
 export * from "./health.ts";
+export * from "./correio-view.ts";

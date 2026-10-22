@@ -74,8 +74,8 @@ export const AGENTS: Record<AgentId, AgentProfile> = {
   correio: {
     id: "correio",
     name: "Correio",
-    description: "Revisa e-mails às 08h e 17h, separa o que precisa de você e prepara rascunhos.",
-    tools: ["gmail.read", "feed.publish", "gmail.draft"],
+    description: "Revisa e-mails às 08h e 17h e separa o que precisa de você. Só lê: não responde, encaminha, apaga nem arquiva.",
+    tools: ["gmail.read", "feed.publish"],
     dataClass: "private_email",
     maxModelStepsPerJob: 3,
     maxToolCallsPerStep: 5,
