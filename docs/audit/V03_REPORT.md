@@ -70,6 +70,7 @@ Nada publicado: sem push, merge na `main`, tag, release, deploy, migração remo
 | `npm run ui:widths` | **PASS** — sem rolagem horizontal em 360/390/430/768/1024/1440 nas 13 rotas; 1º cartão 663 px a 390 px |
 | axe | sem achados sérios nas telas novas e antigas, claro e escuro, 390/768/1440 (scripts acima) |
 | `npm run perf:check` | **PASS** — oculto 0,1 % CPU / 196 MB; central Leve 36,9 % / 225 MB; JS do Runner 301 KB |
+| `cargo audit` (CI `rust-audit`, não obrigatório) | **FALHA residual**: avisos RustSec publicados entre 09 e 21/10/2026. `rustls-webpki` 0.103.16 e `tokio` 1.54.1 corrigidos no lockfile. Restam `zip` 4.6.1 (RUSTSEC-2026-0367/0369: extração com permissões/SUID), puxado só pelo `tauri-plugin-updater` 2.14.0 — o estável mais novo; a correção (`zip` ≥ 9) só existe na 3.0 alfa — e `proc-macro-error` (Linux/GTK). Mitigação: o updater só extrai pacote com assinatura válida e está inerte enquanto a chave pública for provisória. Não silenciado no audit |
 | `npm audit` | 0 vulnerabilidades |
 | Varredura de segredos (árvore) | limpa (843 arquivos) |
 | Varredura de histórico (`scan:history`) | o ID de rollback saiu do histórico da branch (reescrita autorizada); demais achados vêm de commits anteriores à rodada |
