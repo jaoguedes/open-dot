@@ -2,7 +2,13 @@
 
 Regra: o motor só monta comandos com flags desta tabela marcadas como **verificadas localmente** (`--help` do CLI instalado). Flag só documentada, sem CLI local, deixa o driver **indisponível** (falha fechada).
 
-Data da verificação: 21/10/2026.
+Data da verificação: 21/10/2026; reverificado em 22/10/2026 (v0.3) com as versões novas abaixo.
+
+## Reverificação de 22/10/2026 (v0.3)
+
+- **Claude Code 2.1.306** (`claude --version`), `claude auth status` → `loggedIn: true`, `authMethod: claude.ai` (assinatura). `claude --help` confirma `-p`, `--output-format`, `--json-schema`, `--tools`, `--strict-mcp-config`, `--setting-sources`, `--safe-mode`, `--disable-slash-commands`, `--no-session-persistence`, `--permission-mode`, `--append-system-prompt`; `--bare` continua existindo e continua **proibido**. Usado em 2 chamadas reais de avaliação (`AVALIACAO_REAL.md`).
+- **Codex CLI 0.163.0-alpha.11** (`codex --version`), `codex login status` → `Logged in using ChatGPT`. `codex exec --help` confirma `-s/--sandbox`, `--skip-git-repo-check`, `--ephemeral`, `--output-schema`, `--json`, `-o/--output-last-message`, `-C/--cd` e as novas `--ignore-user-config` e `--ignore-rules` (usadas na avaliação real para não carregar configuração do usuário). Usado em 2 chamadas reais.
+- Gemini CLI e Cursor: continuam **não instalados** nesta máquina → indisponíveis.
 
 ## Claude Code — verificado localmente
 
