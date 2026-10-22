@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Runner · Atualizações</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+body{margin:0;background:#07080C}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font-family:inherit;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#F3F4F8;display:inline-flex;align-items:center;justify-content:center;padding:0 16px;height:44px;border-radius:12px;font-size:14px;font-weight:600;gap:8px}
+.btn.pri{background:#fff;color:#0B0C10;border:0}
+.card{background:#0E1017;border:1px solid rgba(255,255,255,.07);border-radius:18px}
+.mono{font-family:'JetBrains Mono',monospace;letter-spacing:.18em;font-size:10.5px;color:#8E93A6}
+.ni{position:relative;width:48px;height:48px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;color:#8E93A6;text-decoration:none}
+.ni.on{background:rgba(255,255,255,.1);color:#fff}
+.ni:hover{background:rgba(255,255,255,.06);color:#fff}
+.st{display:flex;align-items:center;gap:12px;padding:10px 0}
+.dot{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none;font-size:12px;font-weight:800}
+</style>
+</helmet>
+<div style="width:1080px;height:860px;box-sizing:border-box;display:flex;flex-direction:column;background:#07080C;color:#F3F4F8;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.4;overflow:hidden;border-radius:12px;border:1px solid rgba(255,255,255,.1)">
+  <div style="height:40px;flex:none;display:flex;align-items:center;padding:0 16px;background:#0A0C11;border-bottom:1px solid rgba(255,255,255,.07)">
+    <span style="display:flex;gap:8px"><i style="width:12px;height:12px;border-radius:50%;background:#F0626E"></i><i style="width:12px;height:12px;border-radius:50%;background:#F5B342"></i><i style="width:12px;height:12px;border-radius:50%;background:#34D17B"></i></span>
+    <span style="flex:1;text-align:center;font-size:13px;color:#8E93A6">Open Dot Runner</span>
+    <span style="width:52px"></span>
+  </div>
+  <div style="flex:1;min-height:0;display:flex">
+    <nav aria-label="Principal" style="width:84px;flex:none;box-sizing:border-box;padding:16px 0;display:flex;flex-direction:column;align-items:center;gap:6px;background:#0A0C11;border-right:1px solid rgba(255,255,255,.07)">
+      <img src="dot-default.svg" alt="Open Dot" style="width:52px;height:auto;margin-bottom:10px">
+      <a class="ni" href="Main.dc.html" aria-label="Hoje" title="Hoje"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg></a>
+      <a class="ni" href="#" aria-label="Tarefas" title="Tarefas"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10"/><rect x="3.5" y="4.5" width="3" height="3" rx=".8"/><rect x="3.5" y="10.5" width="3" height="3" rx=".8"/><rect x="3.5" y="16.5" width="3" height="3" rx=".8"/></svg></a>
+      <a class="ni" href="#" aria-label="Aprovações, 2 pendentes" title="Aprovações"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg><span style="position:absolute;top:5px;right:5px;min-width:17px;height:17px;border-radius:9px;background:#34D17B;color:#0B0C10;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">2</span></a>
+      <a class="ni" href="#" aria-label="Ferramentas" title="Ferramentas"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M7 10l3 2.5L7 15M12.5 15H17"/></svg></a>
+      <a class="ni" href="Saude.dc.html" aria-label="Saúde" title="Saúde"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg></a>
+      <a class="ni" href="Processos.dc.html" aria-label="Processos" title="Processos"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9.5 9.5h5v5h-5zM9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></svg></a>
+      <a class="ni on" href="Atualizacoes.dc.html" aria-label="Atualizações" aria-current="page" title="Atualizações"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 19.5h14"/></svg></a>
+      <span style="flex:1"></span>
+      <a class="ni" href="Pareamento.dc.html" aria-label="Ajustes" title="Ajustes"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></a>
+    </nav>
+
+    <main style="flex:1;min-width:0;padding:24px 28px;display:flex;flex-direction:column;gap:14px;background:radial-gradient(520px 280px at 82% 8%,rgba(110,120,255,.12),transparent 70%)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="mono" style="flex:1">ATUALIZAÇÕES</span>
+        <span class="mono" style="color:#F5B342;letter-spacing:.14em">DADOS DE EXEMPLO</span>
+      </div>
+
+      <section class="card" style="display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 28px">
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+          <h1 style="margin:0;font-size:32px;line-height:1.1;font-weight:800;letter-spacing:-.03em">Há uma versão nova: 0.3.1</h1>
+          <p style="margin:0;font-size:14.5px;color:#A3A8BA;max-width:480px">Você está na 0.3.0. A atualização é conferida pela assinatura antes de instalar e não apaga suas pastas, ajustes nem consentimentos.</p>
+          <div style="display:flex;gap:10px;margin-top:6px"><button class="btn pri">Atualizar agora</button><button class="btn">O que mudou</button><button class="btn">Depois</button></div>
+        </div>
+        <img src="dot-default.svg" alt="Dot" style="width:140px;height:auto;flex:none">
+      </section>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px">
+        <section class="card" style="padding:16px 20px">
+          <h2 style="margin:0 0 4px;font-size:17px">Como a atualização acontece</h2>
+          <div class="st"><span class="dot" style="background:#34D17B;color:#0B0C10">✓</span><div style="flex:1"><div style="font-weight:600;font-size:14.5px">Verificando</div><div style="font-size:12.5px;color:#A3A8BA">Lançamentos públicos no GitHub</div></div></div>
+          <div class="st"><span class="dot" style="background:#34D17B;color:#0B0C10">✓</span><div style="flex:1"><div style="font-weight:600;font-size:14.5px">Nova versão encontrada</div><div style="font-size:12.5px;color:#A3A8BA">0.3.1 · notas lidas como texto simples</div></div></div>
+          <div class="st"><span class="dot" style="border:2px solid #5B8CFF;color:#5B8CFF">3</span><div style="flex:1"><div style="font-weight:600;font-size:14.5px;color:#fff">Verificando a assinatura</div><div style="font-size:12.5px;color:#A3A8BA">Se estiver inválida, nada é instalado</div></div></div>
+          <div class="st"><span class="dot" style="border:2px solid rgba(255,255,255,.2);color:#8E93A6">4</span><div style="flex:1"><div style="font-weight:600;font-size:14.5px;color:#A3A8BA">Baixando</div></div></div>
+          <div class="st"><span class="dot" style="border:2px solid rgba(255,255,255,.2);color:#8E93A6">5</span><div style="flex:1"><div style="font-weight:600;font-size:14.5px;color:#A3A8BA">Reiniciando o Runner</div><div style="font-size:12.5px;color:#8E93A6">Espera a tarefa em andamento terminar</div></div></div>
+        </section>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <section class="card" style="padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+            <h2 style="margin:0;font-size:17px">Avisos de versão nova</h2>
+            <p style="margin:0;font-size:13.5px;color:#C9CCDA">Quer ser avisado de novas versões? O Runner consulta os lançamentos públicos no GitHub algumas vezes por dia. <b>Nenhum dado seu é enviado.</b></p>
+            <div style="display:flex;gap:10px"><button class="btn" style="background:#1F8F55;border:0;color:#fff;height:40px">Sim, avisar</button><button class="btn" style="height:40px">Agora não</button></div>
+            <div style="font-size:12px;color:#8E93A6">Sem resposta, o Runner não faz nenhuma consulta pela internet.</div>
+          </section>
+          <section class="card" style="padding:16px 20px;display:flex;flex-direction:column;gap:8px">
+            <h2 style="margin:0;font-size:17px">Notas desta versão</h2>
+            <ul style="margin:0;padding-left:18px;font-size:13.5px;color:#C9CCDA;display:flex;flex-direction:column;gap:4px"><li>Painel na bandeja com o estado real</li><li>Saúde do computador e proteção do trabalho</li><li>Correção na lista de processos do Runner</li></ul>
+            <div style="font-size:12px;color:#8E93A6">Texto de exemplo. As notas reais vêm do lançamento e aparecem sem links automáticos.</div>
+          </section>
+        </div>
+      </div>
+
+      <section class="card" style="padding:14px 20px;display:flex;align-items:flex-start;gap:12px;background:rgba(245,179,66,.07);border-color:rgba(245,179,66,.3)">
+        <svg class="ic" style="color:#F5B342;margin-top:2px" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17.2v.1"/></svg>
+        <div style="font-size:13.5px;color:#E6D9B8;flex:1"><b>Primeiro uso no Mac:</b> o instalador ainda não é assinado pela Apple, então o macOS pode pedir para você abrir em Ajustes do Sistema → Privacidade e Segurança → “Abrir mesmo assim”. Isso acontece uma vez. A assinatura das atualizações é outra: é a que o Runner confere.</div>
+      </section>
+      <div style="font-size:12px;color:#8E93A6">Atualização real de ponta a ponta: sem teste real até existirem duas versões publicadas.</div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1080,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

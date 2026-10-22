@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Runner · Primeiro uso e pareamento</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+body{margin:0;background:#07080C}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font-family:inherit;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#F3F4F8;display:inline-flex;align-items:center;justify-content:center;padding:0 16px;height:44px;border-radius:12px;font-size:14px;font-weight:600;gap:8px}
+.btn.pri{background:#fff;color:#0B0C10;border:0}
+.card{background:#0E1017;border:1px solid rgba(255,255,255,.07);border-radius:18px}
+.mono{font-family:'JetBrains Mono',monospace;letter-spacing:.18em;font-size:10.5px;color:#8E93A6}
+.stp{display:flex;align-items:center;gap:8px;font-size:13px;color:#8E93A6}
+.stp i{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:800}
+.stp.ok{color:#C9CCDA}.stp.ok i{background:#34D17B;border-color:#34D17B;color:#0B0C10}
+.stp.on{color:#fff;font-weight:700}.stp.on i{border-color:#5B8CFF;color:#5B8CFF}
+.cd{width:62px;height:78px;border-radius:14px;background:#141722;border:1px solid rgba(255,255,255,.1);display:inline-flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:500;color:#fff}
+</style>
+</helmet>
+<div style="width:1080px;height:860px;box-sizing:border-box;display:flex;flex-direction:column;background:#07080C;color:#F3F4F8;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.4;overflow:hidden;border-radius:12px;border:1px solid rgba(255,255,255,.1)">
+  <div style="height:40px;flex:none;display:flex;align-items:center;padding:0 16px;background:#0A0C11;border-bottom:1px solid rgba(255,255,255,.07)">
+    <span style="display:flex;gap:8px"><i style="width:12px;height:12px;border-radius:50%;background:#F0626E"></i><i style="width:12px;height:12px;border-radius:50%;background:#F5B342"></i><i style="width:12px;height:12px;border-radius:50%;background:#34D17B"></i></span>
+    <span style="flex:1;text-align:center;font-size:13px;color:#8E93A6">Open Dot Runner</span>
+    <span style="width:52px"></span>
+  </div>
+  <main style="flex:1;min-height:0;padding:28px 48px 28px;display:flex;flex-direction:column;gap:20px;background:radial-gradient(620px 320px at 78% 22%,rgba(110,120,255,.14),transparent 70%)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="mono" style="flex:1">PRIMEIRO USO · ETAPA 3 DE 5</span>
+      <span class="mono" style="color:#F5B342;letter-spacing:.14em">DADOS DE EXEMPLO</span>
+    </div>
+    <nav aria-label="Etapas de configuração" style="display:flex;gap:26px;flex-wrap:wrap">
+      <span class="stp ok"><i>✓</i>Boas-vindas</span>
+      <span class="stp ok"><i>✓</i>Ambiente</span>
+      <span class="stp on" aria-current="step"><i>3</i>Conexão</span>
+      <span class="stp"><i>4</i>Pastas</span>
+      <span class="stp"><i>5</i>Pronto</span>
+    </nav>
+
+    <div style="display:flex;gap:28px;align-items:stretch;flex:1;min-height:0">
+      <section class="card" style="flex:1.25;min-width:0;padding:28px 32px;display:flex;flex-direction:column;gap:16px">
+        <h1 style="margin:0;font-size:36px;line-height:1.08;font-weight:800;letter-spacing:-.03em">Conecte este computador.</h1>
+        <p style="margin:0;font-size:15px;color:#A3A8BA;max-width:520px">No app do Open Dot, abra <b style="color:#F3F4F8">Runner → Adicionar computador</b> e digite o código abaixo. Ele vale por poucos minutos e só funciona uma vez.</p>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px" aria-label="Código de pareamento 4 8 2 9 1 5">
+          <span class="cd">4</span><span class="cd">8</span><span class="cd">2</span>
+          <span style="width:14px;height:3px;border-radius:2px;background:#8E93A6"></span>
+          <span class="cd">9</span><span class="cd">1</span><span class="cd">5</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#F5B342"><span style="width:8px;height:8px;border-radius:50%;background:#F5B342"></span>Aguardando você confirmar no app · expira em 09:42</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;max-width:420px">
+          <label for="nome" style="font-size:13px;color:#A3A8BA">Nome deste computador</label>
+          <input id="nome" value="Meu Mac" style="height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:#0A0C11;color:#F3F4F8;padding:0 14px;font:inherit;font-size:15px">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:auto">
+          <button class="btn">Gerar novo código</button>
+          <button class="btn">Voltar</button>
+          <span style="flex:1"></span>
+          <button class="btn" style="opacity:.55" disabled>Continuar</button>
+        </div>
+        <div style="font-size:12.5px;color:#8E93A6">Prefere o jeito antigo? <u>Usar endereço manual</u>. Só mostramos “Conectado” depois que o Open Dot confirmar de verdade.</div>
+      </section>
+
+      <aside style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;justify-content:center;padding-top:4px"><img src="dot-default.svg" alt="Dot" style="width:200px;height:auto"></div>
+        <section class="card" style="padding:16px 20px;display:flex;flex-direction:column;gap:8px">
+          <h2 style="margin:0;font-size:16px">O que muda depois de conectar</h2>
+          <div style="display:flex;gap:10px;font-size:13.5px;color:#C9CCDA"><svg class="ic" style="width:18px;height:18px;color:#34D17B" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>O Runner só abre as ferramentas que você já instalou, com os seus logins.</div>
+          <div style="display:flex;gap:10px;font-size:13.5px;color:#C9CCDA"><svg class="ic" style="width:18px;height:18px;color:#34D17B" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Nenhum login nem senha de IA vai para a nuvem.</div>
+          <div style="display:flex;gap:10px;font-size:13.5px;color:#C9CCDA"><svg class="ic" style="width:18px;height:18px;color:#34D17B" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Mudanças em arquivos só entram depois da sua aprovação.</div>
+        </section>
+        <section class="card" style="padding:14px 20px;display:flex;flex-direction:column;gap:8px">
+          <h2 style="margin:0;font-size:16px">Ajustes opcionais, tudo desligado</h2>
+          <div style="display:flex;justify-content:space-between;font-size:13.5px;color:#C9CCDA"><span>Avisar de novas versões</span><span style="color:#8E93A6">pergunta depois</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13.5px;color:#C9CCDA"><span>Iniciar com o computador</span><span style="color:#8E93A6">desligado</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13.5px;color:#C9CCDA"><span>Mostrar no Dock</span><span style="color:#8E93A6">ligado</span></div>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1080,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

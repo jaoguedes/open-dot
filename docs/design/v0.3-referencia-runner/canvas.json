@@ -1,0 +1,18 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-21T17:10:00Z" },
+  "title": "Runner companheiro v0.3",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1080, "h": 860, "title": "Runner · Hoje" },
+    "Bandeja.dc.html": { "x": 1160, "y": 0, "w": 460, "h": 640, "title": "Painel da bandeja" },
+    "Saude.dc.html": { "x": 0, "y": 980, "w": 1080, "h": 860, "title": "Runner · Saúde do computador" },
+    "Processos.dc.html": { "x": 1160, "y": 980, "w": 1080, "h": 860, "title": "Runner · Processos do Runner" },
+    "Atualizacoes.dc.html": { "x": 0, "y": 1960, "w": 1080, "h": 860, "title": "Runner · Atualizações" },
+    "Pareamento.dc.html": { "x": 1160, "y": 1960, "w": 1080, "h": 860, "title": "Runner · Primeiro uso e pareamento" }
+  },
+  "order": ["Main.dc.html", "Bandeja.dc.html", "Saude.dc.html", "Processos.dc.html", "Atualizacoes.dc.html", "Pareamento.dc.html"],
+  "notes": {},
+  "designSystems": []
+}
