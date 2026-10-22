@@ -16,6 +16,7 @@ import { DetectionSnapshotSchema, type DetectionSnapshot } from "@open-dot/core/
 import type { Handler } from "../app.ts";
 import { json, problem } from "../http.ts";
 import { device, read } from "../runner/routes.ts";
+import { calibrationFor } from "./v03.ts";
 
 type Registrar = (method: string, path: string, opts: { auth: boolean; csrf?: boolean }, handler: Handler) => void;
 export const CATALOG = parseCatalog(catalogJson);
@@ -104,6 +105,7 @@ export function registerTeamRoutes(route: Registrar) {
       optIn: { claudeCode: (await settingsFor(ctx, owner!)).claudeCode },
       ...(data.overrides ? { overrides: data.overrides } : {}),
       ...(data.permitirPossivelmentePago ? { permitirPossivelmentePago: data.permitirPossivelmentePago } : {}),
+      calibration: await calibrationFor(ctx, owner!),
       now: ctx.now(),
     });
     return json({ team, snapshotDisponivel: snapshot !== null, executa: false, nota: "Proposta de equipe. Nada roda sem a sua confirmação." });

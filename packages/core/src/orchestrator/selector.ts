@@ -8,6 +8,7 @@ import type { DetectionSnapshot, ToolSnapshot } from "./detection.ts";
 import type { AgentMeta, Role } from "./agents.ts";
 import { profileFromIdea, type ProjectProfile } from "./profile.ts";
 import { isExhausted, slack, type QuotaState } from "./quota.ts";
+import { calibrationFactor, type CalibrationState } from "./calibration.ts";
 
 export interface Weights {
   pontuacaoInicial: number;
@@ -46,6 +47,8 @@ export interface TeamInput {
   optIn: { claudeCode: boolean };
   overrides?: Record<string, ToolId>;
   permitirPossivelmentePago?: ToolId[];
+  /** Calibração adaptativa (G). Só é passada quando o dono a ligou; ausente = neutro. */
+  calibration?: CalibrationState | null;
   now: number;
 }
 
@@ -91,7 +94,7 @@ export function exclusion(entry: ToolEntry, snap: ToolSnapshot | undefined, agen
   return null;
 }
 
-function score(entry: ToolEntry, agent: AgentMeta, input: TeamInput): { valor: number; fatores: string[] } {
+function score(entry: ToolEntry, agent: AgentMeta, input: TeamInput, tipo?: ProjectProfile["tipos"][number]): { valor: number; fatores: string[] } {
   const w = input.weights;
   const fatores = [`base ${w.pontuacaoInicial}`];
   let v = w.pontuacaoInicial;
@@ -109,6 +112,11 @@ function score(entry: ToolEntry, agent: AgentMeta, input: TeamInput): { valor: n
   const s = q ? slack(q, input.now, w.folgaMinima) : 1;
   v *= s;
   fatores.push(q && q.limiteDia !== null ? `folga de cota ×${s.toFixed(2)} (${q.usadasHoje}/${q.limiteDia} hoje)` : "cota desconhecida (neutro)");
+  if (input.calibration) {
+    const c = calibrationFactor(input.calibration, agent.papel, entry.id, tipo);
+    v *= c.fator;
+    fatores.push(c.chave ? `calibração ×${c.fator} (${c.chave})` : "calibração ligada, sem ajuste para esta ferramenta (neutro)");
+  }
   const custo = w.custoRelativo[entry.id] ?? 1;
   v /= custo;
   if (custo !== 1) fatores.push(`custo relativo ÷${custo}`);
@@ -121,11 +129,11 @@ function pipelineFor(perfil: ProjectProfile, agents: AgentMeta[]): AgentMeta[] {
   return ids.map(by).filter((a): a is AgentMeta => Boolean(a));
 }
 
-function pick(agent: AgentMeta, input: TeamInput, avoid: ToolId | null): Step {
+function pick(agent: AgentMeta, input: TeamInput, avoid: ToolId | null, tipo?: ProjectProfile["tipos"][number]): Step {
   const candidatas: Candidate[] = input.catalog.ferramentas.map((entry) => {
     const ex = exclusion(entry, toolSnap(input.snapshot, entry.id), agent, input);
     if (ex) return { tool: entry.id, pontuacao: null, excluida: ex, fatores: [] };
-    const s = score(entry, agent, input);
+    const s = score(entry, agent, input, tipo);
     return { tool: entry.id, pontuacao: s.valor, excluida: null, fatores: s.fatores };
   });
   const order = input.catalog.ferramentas.map((f) => f.id);
@@ -151,8 +159,9 @@ export function assembleTeam(input: TeamInput): Team {
   const agents = pipelineFor(perfil, input.agents);
   const avisos: string[] = [];
   const implAgent = agents.find((a) => a.papel === "implementador");
-  const impl = implAgent ? pick(implAgent, input, null) : null;
-  const passos = agents.map((a) => (a === implAgent ? impl! : pick(a, input, a.papel === "revisor" ? (impl?.ferramenta ?? null) : null)));
+  const tipo = perfil.tipos[0];
+  const impl = implAgent ? pick(implAgent, input, null, tipo) : null;
+  const passos = agents.map((a) => (a === implAgent ? impl! : pick(a, input, a.papel === "revisor" ? (impl?.ferramenta ?? null) : null, tipo)));
   for (const p of passos.filter((s) => s.papel === "revisor" && s.ferramenta && s.ferramenta === impl?.ferramenta)) {
     p.motivo = `${p.motivo}; mesma ferramenta do implementador: revisão em sessão limpa, sem o histórico`;
   }
