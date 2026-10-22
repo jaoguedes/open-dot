@@ -5,7 +5,7 @@
  * vale quando está desligada. "Zerar" apaga o estado.
  */
 import { z } from "zod";
-import { DEFAULT_PREFS, PrefsSchema, parsePrefs, type OrchestratorPrefs } from "@open-dot/core/orchestrator/prefs.ts";
+import { DEFAULT_PREFS, PrefsSchema, REQUIRED_AGENTS, parsePrefs, type OrchestratorPrefs } from "@open-dot/core/orchestrator/prefs.ts";
 import { EMPTY_CALIBRATION, calibrate, explainKey, type CalibrationState, type MeasuredOutcome, type OutcomeKind } from "@open-dot/core/orchestrator/calibration.ts";
 import type { Role } from "@open-dot/core/orchestrator/agents.ts";
 import type { ToolId } from "@open-dot/core/orchestrator/catalog.ts";
@@ -21,6 +21,12 @@ import { read } from "../runner/routes.ts";
 type Registrar = (method: string, path: string, opts: { auth: boolean; csrf?: boolean }, handler: Handler) => void;
 type Ctx = Parameters<Handler>[0];
 const DAY = 86_400_000;
+
+/** Metadados dos especialistas que podem entrar numa equipe deste dono (desligados ficam de fora). */
+export async function activeAgentMetas(ctx: Ctx, owner: string) {
+  const off = new Set((await prefsFor(ctx, owner)).agentesDesligados);
+  return (await agentPackages()).filter((a) => !off.has(a.meta.id)).map((a) => a.meta);
+}
 
 export async function prefsFor(ctx: Ctx, owner: string): Promise<OrchestratorPrefs> {
   const row = (await ctx.db.query<{ prefs_json: string }>("SELECT prefs_json FROM od_orchestrator_prefs WHERE owner_id=?", [owner]))[0];
@@ -132,6 +138,34 @@ export function registerV03Routes(route: Registrar) {
     // Desligar a sugestão de skill apaga as propostas pendentes (parte 3, item 3).
     if (patch.sugestaoDeSkill === false) await ctx.db.run("DELETE FROM od_skill_proposals WHERE owner_id=? AND state='pendente'", [owner!]);
     return json({ prefs: next });
+  });
+
+  route("GET", "/api/orchestrator/agents", { auth: true }, async (ctx, _r, _p, owner) => {
+    const prefs = await prefsFor(ctx, owner!);
+    const off = new Set(prefs.agentesDesligados);
+    const repo = (await agentPackages()).map((a) => ({
+      id: a.meta.id,
+      descricao: a.meta.descricao,
+      nivel: a.meta.nivel,
+      versao: a.meta.versao,
+      papel: a.meta.papel,
+      hash: a.hash,
+      tamanho: new TextEncoder().encode(a.body).length,
+      origem: "repositorio" as const,
+      ativo: !off.has(a.meta.id),
+      obrigatorio: REQUIRED_AGENTS.includes(a.meta.id),
+    }));
+    const imported = await ctx.db.query<{ agent_id: string; hash: string; files_json: string; enabled: number }>("SELECT agent_id,hash,files_json,enabled FROM od_agent_imports WHERE owner_id=? ORDER BY created_at", [owner!]);
+    const extra = [];
+    for (const r of imported) {
+      try {
+        const pkg = await loadAgentPackage(JSON.parse(r.files_json) as AgentFiles, r.hash);
+        extra.push({ id: pkg.meta.id, descricao: pkg.meta.descricao, nivel: pkg.meta.nivel, versao: pkg.meta.versao, papel: pkg.meta.papel, hash: pkg.hash, tamanho: new TextEncoder().encode(pkg.body).length, origem: "importado" as const, ativo: r.enabled === 1, obrigatorio: false });
+      } catch {
+        extra.push({ id: r.agent_id, descricao: "Pacote importado não passa mais no carregador: desligado.", nivel: "experimental" as const, versao: "?", papel: "planejador" as const, hash: r.hash, tamanho: 0, origem: "importado" as const, ativo: false, obrigatorio: false });
+      }
+    }
+    return json({ agentes: [...repo, ...extra], nota: "Agentes são dados: não concedem ferramenta nem permissão. Quantidade não é medida de qualidade." });
   });
 
   route("GET", "/api/orchestrator/skills", { auth: true }, async (ctx, _r, _p, owner) => {

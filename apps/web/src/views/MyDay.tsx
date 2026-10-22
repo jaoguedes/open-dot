@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { MailSummary } from "../components/MailSummary.tsx";
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { AGENTS, agentsInPlace, approvalQueue } from "@open-dot/core";
 import { useApp } from "../store.tsx";
 import { AgentDot } from "@open-dot/mascot";
@@ -198,6 +198,25 @@ export function MyDay() {
   );
 }
 
+/**
+ * v0.3 (5.6): o 1º cartão do celular passava de 1.700 px com todos os e-mails abertos. Mostra o
+ * primeiro e um botão para ver o resto; nada some sem aviso.
+ */
+function CollapsedList({ count, children }: { count: number; children: ReactNode[] }) {
+  const [all, setAll] = useState(false);
+  const shown = all ? children : children.slice(0, 1);
+  return (
+    <>
+      {shown}
+      {count > 1 && (
+        <button type="button" className="btn ghost v3" aria-expanded={all} onClick={() => setAll((v) => !v)}>
+          {all ? "Mostrar menos" : `Ver mais ${count - 1} ${count - 1 === 1 ? "e-mail" : "e-mails"}`}
+        </button>
+      )}
+    </>
+  );
+}
+
 function FeedCardBody({ item }: { item: FeedEntry }) {
   const app = useApp();
   if (item.kind === "email_digest" && item.body.itens?.length) {
@@ -205,7 +224,7 @@ function FeedCardBody({ item }: { item: FeedEntry }) {
     const hidden = item.body.itens.length - open.length;
     return (
       <>
-        {open.map((it) => <MailSummary key={it.origem} item={it} />)}
+        <CollapsedList count={open.length}>{open.map((it) => <MailSummary key={it.origem} item={it} />)}</CollapsedList>
         {hidden > 0 && <p className="tiny mt-8">{hidden === 1 ? "1 item fora da lista" : `${hidden} itens fora da lista`} (feito, adiado, silenciado ou “Não importa”).</p>}
       </>
     );

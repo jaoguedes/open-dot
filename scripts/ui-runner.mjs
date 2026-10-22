@@ -9,17 +9,22 @@ await scenario("W1", "Workspace usa dados, preserva tarefas e navega pelos agent
   await page.setViewportSize({ width: 1440, height: 1000 });
   await open("/workspace");
   await page.getByRole("heading", { name: "Agent Workspace" }).waitFor(T);
+  await page.getByText("Notas e tarefas deste navegador").click();
   await page.getByLabel("Contexto do projeto").fill("Meu projeto local");
   await page.getByLabel("Próxima tarefa").fill("Revisar arquitetura");
   await page.getByRole("button", { name: "Adicionar tarefa local" }).click();
   await page.getByLabel("Revisar arquitetura", { exact: true }).check();
   await page.reload();
   await page.getByRole("heading", { name: "Agent Workspace" }).waitFor(T);
+  await page.getByText("Notas e tarefas deste navegador").click();
   expect(await page.getByLabel("Revisar arquitetura", { exact: true }).isChecked(), "tarefa não persistiu");
   expect((await page.getByLabel("Contexto do projeto").inputValue()) === "Meu projeto local", "contexto não persistiu");
   await page.screenshot({ path: "test-results/runner/workspace-desktop.png", fullPage: true });
-  await page.getByLabel("Contexto do Dot").selectOption("correio");
-  await page.getByRole("button", { name: "Abrir Correio", exact: true }).waitFor(T);
+  // v0.3: escolher um agente só muda a cor do Dot do hero (tint), com o nome no rótulo.
+  await page.getByRole("button", { name: /^Codex:/ }).click();
+  await page.waitForFunction(() => document.querySelector('.hero-v3 linearGradient[id$="-eBody"] stop:last-child')?.getAttribute("stop-color") === "#a48bff", null, T);
+  const stops = await page.locator('.hero-v3 linearGradient[id$="-eBody"] stop').evaluateAll((els) => els.map((e) => e.getAttribute("stop-color")));
+  expect(stops.at(-1) === "#a48bff", `tint do Codex ausente: ${stops.join(",")}`);
 });
 await scenario("W2", "Workspace móvel e claro: sem overflow, permissões verdadeiras", async ({ page, open }) => {
   await page.addInitScript(() => localStorage.setItem("open-dot:prefs", JSON.stringify({ theme: "light" })));
@@ -32,10 +37,8 @@ await scenario("W2", "Workspace móvel e claro: sem overflow, permissões verdad
   const violations = (await new AxeBuilder({ page }).analyze()).violations.filter((v) => ["serious", "critical"].includes(v.impact));
   expect(!violations.length, `axe Workspace: ${violations.map((v) => v.id).join(", ")}`);
   await page.screenshot({ path: "test-results/runner/workspace-mobile.png", fullPage: true });
-  await page.getByRole("button", { name: "Gerenciar Runner" }).click();
-  await page.getByRole("button", { name: "Parear no Workspace" }).waitFor(T);
-  await page.getByRole("button", { name: "Parear no Workspace" }).click();
-  await page.getByRole("heading", { name: "Agent Workspace" }).waitFor(T);
+  await page.getByRole("button", { name: "Abrir o Runner" }).click();
+  await page.getByText("Parear um computador e enviar uma tarefa").click();
   expect(await page.getByRole("button", { name: "Enviar ao Runner" }).isDisabled(), "execução sem driver habilitada");
   await page.screenshot({ path: "test-results/runner/runner-panel.png", fullPage: true });
 });
@@ -52,12 +55,13 @@ await scenario("W3", "Resumo preserva evidência e mostra fato, motivo e próxim
   expect(!violations.length, `axe Correio: ${violations.map((v) => v.id).join(", ")}`);
   await page.screenshot({ path: "test-results/runner/mail-summary.png", fullPage: true });
 });
-await scenario("W4", "Paleta aprovada fica na UI; Dot preserva gradiente em todos os estados", async ({ page, open }) => {
-  await open("/workspace");
+await scenario("W4", "Paleta v0.3 (D-027) na UI; Dot sem tint preserva gradiente em todos os estados", async ({ page, open }) => {
+  await open("/runner");
+  await page.getByText("Parear um computador e enviar uma tarefa").click();
   for (const [id, color, name] of [
-    ["codex", "rgb(136, 120, 238)", "Codex"],
-    ["claude-code", "rgb(233, 154, 105)", "Claude Code"],
-    ["cursor", "rgb(105, 169, 222)", "Cursor"],
+    ["codex", "rgb(164, 139, 255)", "Codex"],
+    ["claude-code", "rgb(255, 154, 85)", "Claude Code"],
+    ["cursor", "rgb(98, 170, 255)", "Cursor"],
   ]) {
     const card = page.locator(`.mechanism-card[data-mechanism="${id}"]`);
     await card.getByText(name, { exact: true }).waitFor(T);
@@ -90,7 +94,7 @@ await scenario("W5", "Aprovação com API simulada exige conteúdo visível e en
     else if(path.endsWith("/decision")){decision=route.request().postDataJSON();data={ok:true};}
     await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(data)});
   });
-  await open("/workspace");
+  await open("/runner");await page.getByText("Parear um computador e enviar uma tarefa").click();
   await page.getByRole("button",{name:/Codex.*Esperando sua aprovação/}).click();
   await page.getByRole("heading",{name:"result.md · arquivo novo"}).waitFor(T);
   expect(await page.getByText("<script>window.UNSAFE_PROPOSAL=true</script>",{exact:true}).isVisible(),"conteúdo da proposta não está visível");
@@ -113,7 +117,7 @@ await scenario("W6", "Payload divergente ou truncado bloqueia aprovação (API s
     else if(path.endsWith("/decision")){decisions++;data={};}
     await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(data)});
   });
-  await open("/workspace");await page.getByRole("button",{name:/Codex.*Esperando sua aprovação/}).click();
+  await open("/runner");await page.getByText("Parear um computador e enviar uma tarefa").click();await page.getByRole("button",{name:/Codex.*Esperando sua aprovação/}).click();
   await page.getByText("Conteúdo completo ainda não verificado. Aprovação bloqueada.").waitFor(T);
   expect(await page.getByRole("button",{name:"Aprovar estes arquivos no worktree"}).isDisabled(),"payload truncado liberou decisão");
   expect(decisions===0,"decisão invisível enviada");
@@ -125,13 +129,45 @@ await scenario("W7", "Trocar projeto limpa consentimentos de metadados e plano (
     const data=path.endsWith("/devices")?{devices:[{id:device,name:"Scope fixture",online:true,revoked:false,compatible:true,projects:[{id:a,label:"Project A"},{id:b,label:"Project B"}],drivers:[{id:"codex",installed:true,authenticated:true,executable:true,reason:"Fixture only"}]}]}:path.endsWith("/plans")?{plans:[]}:{tasks:[]};
     await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(data)});
   });
-  await open("/workspace");await page.getByRole("combobox",{name:/Computador/}).selectOption(device);await page.getByRole("combobox",{name:/Projeto autorizado/}).selectOption(a);
+  await open("/runner");await page.getByText("Parear um computador e enviar uma tarefa").click();await page.getByRole("combobox",{name:/Computador/}).selectOption(device);await page.getByRole("combobox",{name:/Projeto autorizado/}).selectOption(a);
   const metadata=page.getByLabel(/Autorizo criar um worktree isolado deste projeto/);await metadata.check();
   const plans=page.getByRole("region",{name:"Planos sequenciais"});await plans.getByText("Criar plano de tarefas isoladas",{exact:true}).click();
   const sequence=plans.getByLabel(/Autorizo a sequência descrita/);await sequence.check();
   const remember=plans.getByLabel(/Registrar recibos factuais na memória/);await remember.check();
   await page.getByRole("combobox",{name:/Projeto autorizado/}).selectOption(b);
   expect(!(await metadata.isChecked()),"consentimento de projeto anterior reutilizado");expect(!(await sequence.isChecked()),"consentimento de plano anterior reutilizado");expect(!(await remember.isChecked()),"memória autorizada para projeto anterior");
+});
+await scenario("W8", "Aprovações v0.3: hash exibido é o real; conteúdo adulterado desabilita Aprovar (API simulada)", async ({ page, open }) => {
+  const raw = JSON.stringify({ summary: "Fixture simulada", files: [{ path: "src/a.ts", content: "a\nB\n", beforeHash: "x", beforeContent: "a\nb\n" }] });
+  const hash = createHash("sha256").update(raw).digest("hex");
+  let tamper = false;
+  const decisions = [];
+  await page.route("**/api/runner/**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    let data = {};
+    if (path.endsWith("/devices")) data = { devices: [{ id: "dev", name: "Runner fixture", online: true, revoked: false, compatible: true, projects: [{ id: "p", label: "projeto" }], drivers: [] }] };
+    else if (path.endsWith("/tasks")) data = { tasks: [{ id: "task-ap", deviceId: "dev", projectId: "p", mechanism: "codex", state: "awaiting_approval", cancelRequested: 0, updatedAt: Date.now() }] };
+    else if (path.endsWith("/events")) data = { events: [{ seq: 1, kind: "proposal", text: "x" }], approval: { raw: tamper ? raw.replace("B", "rm -rf /") : raw, hash, decision: "pending", expiresAt: Date.now() + 60000 } };
+    else if (path.endsWith("/decision")) (decisions.push(route.request().postDataJSON()), (data = { ok: true }));
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(data) });
+  });
+  await open("/aprovacoes");
+  const shown = page.getByTestId("approval-hash");
+  await page.waitForFunction((h) => document.querySelector('[data-testid="approval-hash"]')?.textContent === h, hash, T);
+  expect((await shown.innerText()) === hash, "hash exibido diferente do SHA-256 do conteúdo");
+  expect(await page.getByRole("button", { name: "Aprovar estes arquivos" }).isEnabled(), "Aprovar travado com hash certo");
+  const violations = (await new AxeBuilder({ page }).analyze()).violations.filter((v) => ["serious", "critical"].includes(v.impact));
+  expect(!violations.length, `axe Aprovações: ${violations.map((v) => v.id).join(", ")}`);
+  tamper = true;
+  await page.reload();
+  await page.getByText(/não bate com o hash guardado/).waitFor(T);
+  expect(await page.getByRole("button", { name: "Aprovar estes arquivos" }).isDisabled(), "conteúdo adulterado liberou Aprovar");
+  expect((await shown.innerText()) !== hash, "hash exibido não reflete o conteúdo mostrado");
+  expect(await page.getByRole("button", { name: "Rejeitar" }).isEnabled(), "Rejeitar deveria continuar disponível");
+  await page.getByRole("button", { name: "Rejeitar" }).click();
+  await page.getByText(/Recibo: Rejeitada/).waitFor(T);
+  expect(decisions.length === 1 && decisions[0].decision === "reject" && decisions[0].hash === hash, "rejeição sem hash do servidor");
+  await page.screenshot({ path: "test-results/runner/aprovacoes.png", fullPage: true });
 });
 process.exitCode = await finish();
 if (!process.exitCode) {

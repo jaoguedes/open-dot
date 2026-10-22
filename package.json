@@ -46,7 +46,8 @@
     "ui:rodada4": "node scripts/ui-rodada4.mjs",
     "runner:build": "node scripts/build-runner.mjs",
     "runner:desktop": "cd apps/runner && tauri",
-    "ui:runner": "node scripts/ui-runner.mjs"
+    "ui:runner": "node scripts/ui-runner.mjs",
+    "ui:widths": "node scripts/ui-widths.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",

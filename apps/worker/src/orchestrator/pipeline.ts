@@ -20,7 +20,7 @@ import { json, problem } from "../http.ts";
 import { read, reconcileRunnerTasks, safeRunnerText } from "../runner/routes.ts";
 import { RUNNER_PROTOCOL } from "../runner/protocol.ts";
 import { CATALOG, agentPackages, latestSnapshot, quotas, recipeById, WEIGHTS_FOR_PIPELINE, settingsFor } from "./routes.ts";
-import { calibrationFor, prefsFor } from "./v03.ts";
+import { activeAgentMetas, calibrationFor, prefsFor } from "./v03.ts";
 
 type Registrar = (method: string, path: string, opts: { auth: boolean; csrf?: boolean }, handler: Handler) => void;
 /** Papel no pipeline: o Corretor (v0.3) é o implementador em segunda passada. */
@@ -295,7 +295,7 @@ export function registerPipelineRoutes(route: Registrar) {
       catalog: CATALOG,
       snapshot: await latestSnapshot(ctx, owner!, data.deviceId),
       online: dev.seen_at > ctx.now() - 30_000,
-      agents: (await agentPackages()).map((a) => a.meta),
+      agents: await activeAgentMetas(ctx, owner!),
       quotas: await quotas(ctx, owner!),
       weights: WEIGHTS_FOR_PIPELINE,
       optIn: { claudeCode: (await settingsFor(ctx, owner!)).claudeCode },

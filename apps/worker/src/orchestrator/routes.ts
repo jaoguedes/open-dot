@@ -18,7 +18,7 @@ import { DetectionSnapshotSchema, type DetectionSnapshot } from "@open-dot/core/
 import type { Handler } from "../app.ts";
 import { json, problem } from "../http.ts";
 import { device, read } from "../runner/routes.ts";
-import { calibrationFor } from "./v03.ts";
+import { activeAgentMetas, calibrationFor } from "./v03.ts";
 
 type Registrar = (method: string, path: string, opts: { auth: boolean; csrf?: boolean }, handler: Handler) => void;
 export const CATALOG = parseCatalog(catalogJson);
@@ -117,7 +117,7 @@ export function registerTeamRoutes(route: Registrar) {
       catalog: CATALOG,
       snapshot,
       online: dev.seen_at > ctx.now() - 30_000,
-      agents: (await agentPackages()).map((p) => p.meta),
+      agents: await activeAgentMetas(ctx, owner!),
       quotas: await quotas(ctx, owner!),
       evidence: await evidence(ctx, owner!),
       weights: WEIGHTS,

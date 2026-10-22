@@ -157,7 +157,7 @@ function ApprovalDetail({ task, detail, demo, online, label, onDone }: { task: R
       {diffs.map((d) => (
         <details key={d.path} open={diffs.length <= 2}>
           <summary>Diff de {d.path}</summary>
-          <pre className="diff-v3" aria-label={`Diff de ${d.path}`}>
+          <pre className="diff-v3" aria-label={`Diff de ${d.path}`} tabIndex={0}>
             {d.linhas.map((l, i) => (
               <span key={i} className={l.kind === "+" ? "plus" : l.kind === "-" ? "minus" : undefined}>
                 {l.kind} {l.text}
@@ -167,7 +167,11 @@ function ApprovalDetail({ task, detail, demo, online, label, onDone }: { task: R
           </pre>
         </details>
       ))}
-      {!proposal && <pre className="diff-v3">{a.raw}</pre>}
+      {!proposal && (
+        <pre className="diff-v3" tabIndex={0} aria-label="Texto exato da proposta">
+          {a.raw}
+        </pre>
+      )}
       <h3>Linha do tempo</h3>
       <ol className="timeline-v3">
         {detail.events.map((e) => (

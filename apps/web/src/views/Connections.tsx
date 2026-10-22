@@ -5,6 +5,10 @@ import { useApp } from "../store.tsx";
 import { api, ApiError, type Diagnostics, type SessionView } from "../api.ts";
 import { Icon } from "../components/Icons.tsx";
 import { fmtDateTime } from "../format.ts";
+import { toVisual } from "@open-dot/core";
+import { AgentDot } from "@open-dot/mascot";
+import { toolState, useRunner, type MechanismId } from "../runner-data.ts";
+import { DemoChip, MonoLabel, agentColor, agentName } from "../components/ui.tsx";
 
 /** Conexões: estado real de cada integração. Nunca mostra "conectado" sem confirmação do servidor. */
 export function Connections() {
@@ -69,6 +73,7 @@ export function Connections() {
     <>
       <h1>Conexões</h1>
       <p className="meta intro-gap">Cada serviço tem consentimento próprio e permissões mínimas. Escritas exigem sua aprovação do conteúdo exato.</p>
+      <ConnectionsOverview gmailConnected={!demo && gmail?.status === "connected"} github={Boolean(cfg?.github)} vercel={Boolean(cfg?.vercel)} />
       {msg && (
         <p role="status" className={`banner ${msg.ok ? "ok" : "err"} ws-normal wrap-anywhere mb-16`}>
           {msg.text}
@@ -829,6 +834,68 @@ function PublicContact({ demo }: { demo: boolean }) {
           )}
         </>
       )}
+    </section>
+  );
+}
+
+/** Visão geral do v0.3: agentes pelo diagnóstico real do Runner e integrações só leitura. */
+function ConnectionsOverview({ gmailConnected, github, vercel }: { gmailConnected: boolean; github: boolean; vercel: boolean }) {
+  const app = useApp();
+  const demo = app.mode === "demo";
+  const runner = useRunner(demo, { detailFor: 0 });
+  const small = typeof window !== "undefined" && window.matchMedia?.("(max-width: 1023px)").matches;
+  const others: Array<{ id: string; nome: string; icon: "code" | "globe" | "mail"; estado: string }> = [
+    { id: "github", nome: "GitHub", icon: "code", estado: github ? "Configurado no servidor" : "Não configurado" },
+    { id: "vercel", nome: "Vercel", icon: "globe", estado: vercel ? "Configurado no servidor" : "Não configurado" },
+    { id: "gmail", nome: "Gmail", icon: "mail", estado: demo ? "Não conectado (demonstração)" : gmailConnected ? "Conectado" : "Não conectado" },
+  ];
+  return (
+    <section className="conn-overview" aria-label="Visão geral das conexões">
+      <div className="screen-head-v3">
+        <MonoLabel>SEUS AGENTES</MonoLabel>
+        {demo && <DemoChip />}
+      </div>
+      <div className="agent-cards">
+        {(["codex", "claude-code", "cursor"] as MechanismId[]).map((id) => {
+          const st = toolState(runner.devices, id);
+          return (
+            <article key={id} className="card-v3 agent-card">
+              <AgentDot visual={toVisual("dot", st.pronto ? "idle" : "disconnected")} accessory="none" size={small ? 62 : 64} animate={false} reducedMotion={app.reducedMotion} label={`Dot de ${agentName(id)}`} tint={{ color: agentColor(id)!, intensity: 100 }} />
+              <span className="grow">
+                <b>{agentName(id)}</b>
+                <span className="sub">{runner.status === "carregando" ? "Conferindo…" : st.texto}</span>
+              </span>
+            </article>
+          );
+        })}
+      </div>
+      <p className="tiny">Status do diagnóstico do Runner no seu computador. “Pronto” só aparece quando o próprio CLI confirma instalação e login.</p>
+      <div className="screen-head-v3 mt-16">
+        <MonoLabel>OUTRAS INTEGRAÇÕES</MonoLabel>
+      </div>
+      <div className="agent-cards">
+        {others.map((o) => (
+          <article key={o.id} className="card-v3 agent-card">
+            <span className="int-icon" aria-hidden="true">
+              <Icon name={o.icon} size={22} />
+            </span>
+            <span className="grow">
+              <b>{o.nome}</b>
+              <span className="sub">{o.estado}</span>
+              <span className="chip-v3 ro-chip">Somente leitura</span>
+            </span>
+          </article>
+        ))}
+        <article className="card-v3 agent-card is-soon">
+          <span className="int-icon" aria-hidden="true">
+            <Icon name="plus" size={22} />
+          </span>
+          <span className="grow">
+            <b>Mais integrações</b>
+            <span className="sub">Em breve</span>
+          </span>
+        </article>
+      </div>
     </section>
   );
 }

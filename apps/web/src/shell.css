@@ -166,6 +166,14 @@
   .mobile-dot {
     display: inline-flex;
   }
+  /* Topo abaixo de 1024 px: sem ilha nem data (o Dot de 44 px e a barra inferior bastam). */
+  .topbar .island,
+  .topbar .top-date {
+    display: none;
+  }
+  .topbar .search kbd {
+    display: none;
+  }
   .bottombar {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -205,4 +213,12 @@
 :root[data-motion="reduced"] .rail,
 :root[data-motion="reduced"] .rail-label {
   transition: none;
+}
+
+:root[data-theme="light"] .bottom-item.on,
+:root[data-theme="light"] .rail-item[aria-current="page"] {
+  background: var(--surface-2);
+}
+:root[data-theme="light"] .rail-item:hover {
+  background: var(--surface-2);
 }

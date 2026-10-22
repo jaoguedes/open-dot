@@ -161,11 +161,12 @@ function set(el: Element | null, attr: string, v: string | number): void {
   if (el) el.setAttribute(attr, String(v));
 }
 
-function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean, glow = "rgb(63,123,255)"): void {
+function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean, glow = "rgb(63,123,255)", reason?: string): void {
   // Iluminação original de repouso; com cor de agente (D-027), o brilho vira a cor do agente.
   svg.style.setProperty("--g", glow);
   svg.style.setProperty("--t", "#EDE8FC");
-  svg.setAttribute("aria-label", f.ariaLabel);
+  // O motivo real de uma reação (D-028) acompanha o rótulo do estado, sempre em texto.
+  svg.setAttribute("aria-label", reason ? `${f.ariaLabel}. ${reason}` : f.ariaLabel);
   const d = bodyPath(f.m);
   set(q(svg, "body"), "d", d);
   set(q(svg, "clip"), "d", d);
@@ -343,6 +344,8 @@ export function DotView(props: DotViewProps) {
   const palette = props.tint ? bodyPalette(props.tint) : null;
   const glowRef = useRef<string | undefined>(undefined);
   glowRef.current = palette?.glow;
+  const reasonRef = useRef<string | undefined>(undefined);
+  reasonRef.current = props.reason;
   const gazeRef = useRef<[number, number] | null>(null);
   const moodRef = useRef<DotMood | null>(null);
   moodRef.current = moodOn ? { gaze: gazeRef.current, heat: props.heat ?? 0, strain: props.strain ?? 0 } : null;
@@ -360,12 +363,12 @@ export function DotView(props: DotViewProps) {
     lastSem.current = props.visual.semantic;
     if (props.hello) engine.react("oi");
     if (moodRef.current) engine.setMood(moodRef.current);
-    apply(svg, uid, engine.frame(), pulseRef.current, glowRef.current);
+    apply(svg, uid, engine.frame(), pulseRef.current, glowRef.current, reasonRef.current);
 
     const tick = subscribe(
       (dt) => {
         engine.step(dt);
-        apply(svg, uid, engine.frame(), pulseRef.current, glowRef.current);
+        apply(svg, uid, engine.frame(), pulseRef.current, glowRef.current, reasonRef.current);
         if (props.small && !engine.reaction) {
           const f = engine.frame();
           if (Math.abs(f.sx - 1) < 0.01 && Math.abs(f.m) < 0.02) tick.setActive(false);
@@ -403,7 +406,7 @@ export function DotView(props: DotViewProps) {
     tickRef.current?.setVisible(true);
     tickRef.current?.setActive(true);
     const svg = svgRef.current;
-    if (svg) apply(svg, uid, e.frame(), pulseRef.current, glowRef.current);
+    if (svg) apply(svg, uid, e.frame(), pulseRef.current, glowRef.current, reasonRef.current);
   }, [props.visual.semantic, props.accessory, props.ring, uid]);
 
   useEffect(() => {
@@ -420,7 +423,7 @@ export function DotView(props: DotViewProps) {
       tickRef.current?.setActive(true);
       e.step(0.3);
       const svg = svgRef.current;
-      if (svg) apply(svg, uid, e.frame(), pulseRef.current, glowRef.current);
+      if (svg) apply(svg, uid, e.frame(), pulseRef.current, glowRef.current, reasonRef.current);
     }
     props.onAffection?.(r === "ok" ? "ok" : r === "cooldown" ? "cooldown" : "suppressed");
   }, [props.affectionSignal, props.visual.allowCosmetic, props.onAffection, uid]);
@@ -530,7 +533,7 @@ export function DotView(props: DotViewProps) {
     tickRef.current?.setActive(true);
     e.step(1 / 60);
     const svg = svgRef.current;
-    if (svg) apply(svg, uid, e.frame(), pulseRef.current, glowRef.current);
+    if (svg) apply(svg, uid, e.frame(), pulseRef.current, glowRef.current, reasonRef.current);
   };
 
   const label = props.reason ? `${props.label ?? props.visual.label}. ${props.reason}` : (props.label ?? `${props.visual.label}`);

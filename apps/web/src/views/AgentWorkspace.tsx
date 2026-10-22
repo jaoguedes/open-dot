@@ -7,7 +7,7 @@ import { useApp } from "../store.tsx";
 import { askDot, type SavedAnswer } from "../ask.ts";
 import { AnswerView } from "../components/AnswerView.tsx";
 import { readWorkspace, saveWorkspace, type WorkspaceNotes } from "../workspace-notes.ts";
-import { projectLabel, STATE_LABEL, useRunner, type RunnerDevice, type MechanismId } from "../runner-data.ts";
+import { projectLabel, STATE_LABEL, toolState, useRunner, type MechanismId } from "../runner-data.ts";
 import { Chip, DemoChip, MonoLabel, agentColor, agentName } from "../components/ui.tsx";
 import { DEMO_RECIPES } from "../demo.ts";
 import "../workspace.css";
@@ -16,17 +16,6 @@ import "../screens.css";
 interface RecipeChip {
   id: string;
   nome: string;
-}
-
-/** Estado de cada ferramenta pelo diagnóstico real do Runner; sem Runner, diz isso. */
-export function toolState(devices: RunnerDevice[], id: MechanismId): { texto: string; pronto: boolean } {
-  if (id === "cursor") return { texto: "Indisponível nesta versão", pronto: false };
-  const d = devices.flatMap((x) => (x.revoked ? [] : x.drivers)).filter((x) => x.id === id);
-  if (!devices.length) return { texto: "Sem computador pareado", pronto: false };
-  if (d.some((x) => x.installed && x.authenticated && x.executable)) return { texto: "Pronto", pronto: true };
-  if (id === "claude-code" && d.some((x) => x.installed)) return { texto: "Desligado (ative quando quiser)", pronto: false };
-  if (d.some((x) => x.installed && !x.authenticated)) return { texto: "Sem login confirmado", pronto: false };
-  return { texto: "Não instalado", pronto: false };
 }
 
 export function AgentWorkspace() {
@@ -126,7 +115,7 @@ export function AgentWorkspace() {
           const st = toolState(runner.devices, id);
           const color = agentColor(id)!;
           return (
-            <button key={id} type="button" className="card-v3 agent-card" aria-pressed={selected === id} onClick={() => setSelected((s) => (s === id ? null : id))}>
+            <button key={id} type="button" className="card-v3 agent-card" aria-pressed={selected === id} aria-label={`${agentName(id)}: ${runner.status === "carregando" ? "conferindo" : st.texto}`} onClick={() => setSelected((s) => (s === id ? null : id))}>
               <AgentDot visual={toVisual("dot", st.pronto ? "idle" : "disconnected")} accessory="none" size={64} animate={false} reducedMotion={app.reducedMotion} label={`Dot de ${agentName(id)}`} tint={{ color, intensity: 100 }} />
               <span className="grow">
                 <b>{agentName(id)}</b>

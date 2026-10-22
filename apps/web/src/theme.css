@@ -161,5 +161,10 @@
   --btn-primary-bg: #12141a;
   --btn-primary-fg: #f3f4f7;
   --need-border: #e8d7a8;
+  /* v0.3 no claro: painel, borda forte, âmbar e azul com contraste AA sobre fundo claro. */
+  --panel: #ffffff;
+  --border-strong: #c3c8d4;
+  --amber: #8a5300;
+  --blue: #2f5bd8;
   color-scheme: light;
 }
