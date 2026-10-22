@@ -36,7 +36,7 @@ const bom = {
   bomFormat: "CycloneDX",
   specVersion: "1.5",
   version: 1,
-  metadata: { component: { type: "application", name: "open-dot-runner", version: "0.1.0", licenses: [{ license: { id: "AGPL-3.0-only" } }] } },
+  metadata: { component: { type: "application", name: "open-dot-runner", version: "0.3.0", licenses: [{ license: { id: "AGPL-3.0-only" } }] } },
   components: out
     .filter((p) => p.registry)
     .map((p) => ({ type: "library", name: p.name, version: p.version, purl: `pkg:cargo/${p.name}@${p.version}`, licenses: [{ expression: p.license }] })),

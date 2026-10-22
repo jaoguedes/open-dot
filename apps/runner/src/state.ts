@@ -85,6 +85,11 @@ export function useRunnerData(): RunnerData {
     if (companion) setMaxFps(companion.knobs.uiFps);
   }, [companion]);
 
+  // Janela aberta já oculta (--oculto): a página nasce pausada até o primeiro foco.
+  useEffect(() => {
+    if (document.visibilityState === "hidden") setPaused(true);
+  }, []);
+
   useEffect(() => {
     const s = health?.sample;
     if (!s) return;

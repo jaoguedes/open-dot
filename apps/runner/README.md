@@ -1,4 +1,4 @@
-# Open Dot Runner 0.1.0
+# Open Dot Runner 0.3.0
 
 Base desktop independente. Compartilha o motor original do Dot e os tokens visuais, sem incluir o app autenticado, service worker, banco ou cron remotos.
 

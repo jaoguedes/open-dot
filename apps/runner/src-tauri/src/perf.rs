@@ -38,8 +38,8 @@ pub struct Knobs {
 
 pub fn knobs(p: Profile) -> Knobs {
     match p {
-        Profile::Leve => Knobs { concurrency: 1, poll_min_ms: 5_000, poll_max_ms: 60_000, ui_fps: 15, parallel_allowed: false },
-        Profile::Equilibrado => Knobs { concurrency: 1, poll_min_ms: 3_000, poll_max_ms: 30_000, ui_fps: 30, parallel_allowed: false },
+        Profile::Leve => Knobs { concurrency: 1, poll_min_ms: 5_000, poll_max_ms: 60_000, ui_fps: 10, parallel_allowed: false },
+        Profile::Equilibrado => Knobs { concurrency: 1, poll_min_ms: 3_000, poll_max_ms: 30_000, ui_fps: 24, parallel_allowed: false },
         Profile::Maximo => Knobs { concurrency: 1, poll_min_ms: 2_000, poll_max_ms: 20_000, ui_fps: 60, parallel_allowed: true },
     }
 }

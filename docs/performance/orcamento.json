@@ -1,0 +1,9 @@
+{
+  "medidoEm": "Mac Intel i7-1060NG7, 8 núcleos lógicos, 16 GB, macOS 15.8.1 (máquina do João), 22/10/2026",
+  "web": { "primeiraTelaKB": { "teto": 400, "meta": 350 } },
+  "runnerUiKB": { "teto": 420 },
+  "runner": {
+    "oculto": { "cpuMediaPct": 3, "memoriaMb": 260 },
+    "centralLeve": { "cpuMediaPct": 45, "memoriaMb": 280 }
+  }
+}
