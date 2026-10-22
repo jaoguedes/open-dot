@@ -26,6 +26,7 @@ export const DOT_PATHS = [
   "docs/capturas/",
   "docs/design/v0.3-referencia-runner/",
   "apps/web/test/dot-art.test.ts",
+  "apps/web/test/dot-v03.test.ts",
   "apps/web/test/icons.test.ts",
   "apps/web/test/dot3d.test.ts",
   "apps/web/test/ring.test.ts",

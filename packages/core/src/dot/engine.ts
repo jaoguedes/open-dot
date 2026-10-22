@@ -4,9 +4,13 @@ import { CX, RX, onSphere } from "./geometry.ts";
 import { clamp, easeIO, hexRgb, lerp, mulberry32, smooth, spring } from "./physics.ts";
 import { BLOCK_PLAY, STATES, type DotStateKey, type EyePair, type IndKind } from "./states.ts";
 import { STILL, TL } from "./reactions.ts";
-import type { AccessoryKind, DotFrame, EmitOpts, EngineMut, EyeFrame, EyeShape, HandFrame, ParticleKind, ReactResult, ReactionName } from "./types.ts";
+import type { AccessoryKind, DotFrame, DotMood, EmitOpts, EngineMut, EyeFrame, EyeShape, HandFrame, ParticleKind, ReactResult, ReactionName } from "./types.ts";
 
 const STEP = 1 / 120;
+/** Deslocamento máximo do olhar, em unidades do desenho (≈ poucos pixels na tela). */
+export const GAZE_MAX: [number, number] = [5.2, 3];
+export const PANIC_AT = 0.7;
+export const SWEAT_AT = 0.6;
 const BLINKABLE: Record<string, 1> = { open: 1, focused: 1, attentive: 1, big: 1, serious: 1 };
 const EXPR: Record<EyePair, [EyeShape, EyeShape]> = {
   open: ["open", "open"],
@@ -129,6 +133,9 @@ export class DotEngine implements EngineMut {
   forceLook: [number, number] | null = null;
   sway: { a: number; w: number; t0: number; dur: number } | null = null;
   lastDizzy = -99;
+  /** Reações de carga/olhar (D-028). null = motor idêntico ao de sempre. */
+  mood: { gaze: [number, number] | null; heat: number; strain: number } | null = null;
+  gazeC: [number, number] = [0, 0];
   private pid = 1;
   private eyes: [Eye, Eye] = [
     { shape: "open", next: null, p: 1 },
@@ -182,6 +189,22 @@ export class DotEngine implements EngineMut {
 
   setAccessory(a: AccessoryKind): void {
     this.acc = a;
+  }
+
+  /** Liga, atualiza ou desliga (null) as reações de olhar e carga. Valores fora da faixa são limitados. */
+  setMood(m: DotMood | null): void {
+    if (!m) {
+      this.mood = null;
+      this.gazeC = [0, 0];
+      return;
+    }
+    const n = (v: number | undefined) => clamp(Number.isFinite(v) ? (v as number) : 0, 0, 1);
+    const g = m.gaze && Number.isFinite(m.gaze[0]) && Number.isFinite(m.gaze[1]) ? ([clamp(m.gaze[0], -1, 1), clamp(m.gaze[1], -1, 1)] as [number, number]) : null;
+    const next = { gaze: this.rm ? null : g, heat: n(m.heat), strain: n(m.strain) };
+    const before = this.mood?.strain ?? 0;
+    this.mood = next;
+    // Tremor curto só ao entrar no pânico, nunca contínuo; desligado com movimento reduzido.
+    if (!this.rm && before < PANIC_AT && next.strain >= PANIC_AT) this.shake(0.45);
   }
 
   look(x: number, y: number): void {
@@ -393,6 +416,12 @@ export class DotEngine implements EngineMut {
     if (E.nextBlink <= 0 && E.blinkT < 0) {
       E.blinkT = 0;
       E.nextBlink = E.rng() < 0.15 ? 0.28 : 2.5 + E.rng() * 3.5;
+      if (E.mood && E.mood.strain >= PANIC_AT) E.nextBlink = Math.min(E.nextBlink, 1.1);
+    }
+    if (E.mood) {
+      const gt = E.mood.gaze ?? [0, 0];
+      const kg = smooth(0.002, h);
+      E.gazeC = [E.gazeC[0] + (gt[0] - E.gazeC[0]) * kg, E.gazeC[1] + (gt[1] - E.gazeC[1]) * kg];
     }
     if (E.blinkT >= 0) {
       E.blinkT += h;
@@ -486,6 +515,31 @@ export class DotEngine implements EngineMut {
       const ck = onSphere(side * 0.62 + yaw, -0.2 + pitch);
       return { x: ck.x, y: ck.y, rx: 13 * Math.max(0.05, ck.fx), opacity: E.cheekA * ck.vis };
     }) as DotFrame["cheeks"];
+    let sweat: DotFrame["sweat"];
+    if (E.mood) {
+      const md = E.mood;
+      const panic = md.strain >= PANIC_AT;
+      const grow = 1 + 0.22 * clamp((md.strain - 0.5) / 0.5, 0, 1);
+      for (const eye of eyes) {
+        eye.x += E.gazeC[0] * GAZE_MAX[0];
+        eye.y += E.gazeC[1] * GAZE_MAX[1];
+        eye.grow = grow;
+        eye.glint = panic ? 0.85 : 0;
+      }
+      const hot = Math.max(md.heat, panic ? 1 : 0);
+      for (const ck of cheeks) {
+        ck.rx *= 1 + 0.32 * hot;
+        ck.ry = 8 * (1 + 0.25 * hot);
+        ck.opacity = clamp(ck.opacity * (1 + 0.25 * hot), 0, 1);
+      }
+      // A gota escorre devagar (ciclo de 2 s) e some no fim; parada com movimento reduzido.
+      const ph = E.rm ? 0 : (E.t * 0.5) % 1;
+      const slide = ph * 5;
+      const fade = 1 - clamp(ph - 0.6, 0, 0.4) * 2.5;
+      sweat = [];
+      if (Math.max(md.heat, md.strain) >= SWEAT_AT) sweat.push({ x: 196 + E.gazeC[0] * 2, y: 82 + slide, s: 1, opacity: fade });
+      if (panic) sweat.push({ x: 60 + E.gazeC[0] * 2, y: 92 + slide * 0.8, s: 0.8, opacity: fade });
+    }
     const gs = clamp(1 - lift / 110, 0.55, 1.05);
     let ix = 82,
       iy = 50 - lift + Math.sin(E.t * 2.2) * 2.5,
@@ -649,6 +703,7 @@ export class DotEngine implements EngineMut {
       accSpinTx: E.spinYaw ? CX + Math.sin(E.spinYaw) * 34 : 0,
       accSpinSc: sc,
       accSpinOp: E.acc === "glasses" ? clamp(sc * 4, 0, 1) : 1,
+      ...(sweat ? { sweat } : {}),
     };
   }
 }

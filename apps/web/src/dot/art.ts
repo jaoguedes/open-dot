@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
-import { round2, type EyeShape } from "@open-dot/core/dot/index.ts";
+import { BASE_PALETTE, round2, type BodyPalette, type EyeShape } from "@open-dot/core/dot/index.ts";
 
 const INK = "#120F1E";
 
@@ -134,7 +134,10 @@ function lg(id: string, a: string, b: string): string {
   return `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
 }
 
-export function artDefs(uid: string): string {
+/** `palette` ausente = paleta original, com os mesmos bytes de sempre. */
+export function artDefs(uid: string, palette: BodyPalette = BASE_PALETTE): string {
+  const [b0, b1, b2, b3, b4] = palette.stops;
+  const [e0, e1, e2] = palette.edge;
   const g = (name: string, a: string, b: string) => lg(`${uid}-${name}`, a, b);
   return (
     g("gCyan", "#8BE9FF", "#23B2F0") +
@@ -154,8 +157,8 @@ export function artDefs(uid: string): string {
     g("gDrop", "#B9EBFF", "#5DB8F5") +
     g("gZ", "#B9CCFF", "#7C98F5") +
     g("gWave", "#7FE6FF", "#2CB6EE") +
-    `<linearGradient id="${uid}-eBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#FBF8FF"/><stop offset=".72" stop-color="#EDE8FC"/><stop offset=".9" stop-color="#D8D8FA"/><stop offset="1" stop-color="#BCC6F8"/></linearGradient>` +
-    `<radialGradient id="${uid}-eEdge" cx=".5" cy=".44" r=".6"><stop offset="0" stop-color="#8D8BDA" stop-opacity="0"/><stop offset=".66" stop-color="#8D8BDA" stop-opacity="0"/><stop offset="1" stop-color="#8382D4" stop-opacity=".46"/></radialGradient>` +
+    `<linearGradient id="${uid}-eBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${b0}"/><stop offset=".45" stop-color="${b1}"/><stop offset=".72" stop-color="${b2}"/><stop offset=".9" stop-color="${b3}"/><stop offset="1" stop-color="${b4}"/></linearGradient>` +
+    `<radialGradient id="${uid}-eEdge" cx=".5" cy=".44" r=".6"><stop offset="0" stop-color="${e0}" stop-opacity="0"/><stop offset=".66" stop-color="${e1}" stop-opacity="0"/><stop offset="1" stop-color="${e2}" stop-opacity=".46"/></radialGradient>` +
     `<radialGradient id="${uid}-eKey" cx=".36" cy=".2" r=".46"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>` +
     `<radialGradient id="${uid}-eGlow"><stop offset="0" stop-color="var(--g)" stop-opacity=".95"/><stop offset="1" stop-color="var(--g)" stop-opacity="0"/></radialGradient>` +
     `<radialGradient id="${uid}-eTint"><stop offset="0" stop-color="var(--t)" stop-opacity="1"/><stop offset=".7" stop-color="var(--t)" stop-opacity=".6"/><stop offset="1" stop-color="var(--t)" stop-opacity="0"/></radialGradient>` +
