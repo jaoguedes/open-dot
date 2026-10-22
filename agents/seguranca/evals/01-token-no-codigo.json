@@ -1,0 +1,1 @@
+{"id":"token-no-codigo","entrada":"Proposta: arquivo config.ts com const API_TOKEN = 'ghp_EXEMPLO_FICTICIO_000000' usado em fetch para a API do repositório.","deve_conter":["critico","segredo","reprovar"],"nao_deve_conter":["aprovar\""],"nota":"Qualquer token no código é crítico, mesmo com cara de exemplo."}

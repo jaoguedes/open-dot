@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["titulo", "contexto", "opcoes", "decisao", "por_que_nao", "fronteiras", "checklist", "migracao", "riscos", "perguntas_abertas"],
+  "properties": {
+    "titulo": { "type": "string", "maxLength": 160 },
+    "contexto": { "type": "string", "maxLength": 1200 },
+    "opcoes": { "type": "array", "minItems": 2, "maxItems": 4, "items": { "type": "object", "additionalProperties": false, "required": ["nome", "pros", "contras", "custo"], "properties": {
+      "nome": { "type": "string", "maxLength": 160 },
+      "pros": { "type": "array", "maxItems": 6, "items": { "type": "string", "maxLength": 240 } },
+      "contras": { "type": "array", "maxItems": 6, "items": { "type": "string", "maxLength": 240 } },
+      "custo": { "enum": ["zero", "possivelmente_pago", "pago"] } } } },
+    "decisao": { "type": "string", "maxLength": 1200 },
+    "por_que_nao": { "type": "array", "maxItems": 4, "items": { "type": "string", "maxLength": 300 } },
+    "fronteiras": { "type": "array", "maxItems": 12, "items": { "type": "object", "additionalProperties": false, "required": ["modulo", "responsabilidade"], "properties": { "modulo": { "type": "string", "maxLength": 160 }, "responsabilidade": { "type": "string", "maxLength": 300 } } } },
+    "checklist": { "type": "object", "additionalProperties": false, "required": ["fronteiras", "dados", "falhas", "evolucao", "custo_zero"], "properties": {
+      "fronteiras": { "type": "string", "maxLength": 400 },
+      "dados": { "type": "string", "maxLength": 400 },
+      "falhas": { "type": "string", "maxLength": 400 },
+      "evolucao": { "type": "string", "maxLength": 400 },
+      "custo_zero": { "type": "string", "maxLength": 400 } } },
+    "migracao": { "type": "array", "maxItems": 10, "items": { "type": "object", "additionalProperties": false, "required": ["passo", "verificacao", "reversao"], "properties": { "passo": { "type": "string", "maxLength": 300 }, "verificacao": { "type": "string", "maxLength": 300 }, "reversao": { "type": "string", "maxLength": 300 } } } },
+    "riscos": { "type": "array", "maxItems": 10, "items": { "type": "object", "additionalProperties": false, "required": ["risco", "probabilidade", "impacto", "mitigacao"], "properties": { "risco": { "type": "string", "maxLength": 300 }, "probabilidade": { "enum": ["baixa", "media", "alta"] }, "impacto": { "enum": ["baixo", "medio", "alto"] }, "mitigacao": { "type": "string", "maxLength": 300 } } } },
+    "perguntas_abertas": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 300 } }
+  }
+}
