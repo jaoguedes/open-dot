@@ -52,7 +52,7 @@ node scripts/perf/measure-runner.mjs --seconds 60   # depois de cargo build --re
 ## Bloqueios
 
 - Publicação, migrações e chave do updater dependem do João (ver `docs/audit/V03_PUBLISH_READINESS.md`).
-- `613b607` contém o ID de rollback do Worker (desfazer foi negado pelo ambiente).
+- Resolvido na publicação: `613b607` foi removido do histórico local por rebase autorizado pelo João (backup local `backup/od2-v03-antes-da-reescrita`, nunca enviar).
 
 ## Próximo passo
 

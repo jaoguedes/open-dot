@@ -69,7 +69,7 @@ Nada publicado: sem push, merge na `main`, tag, release, deploy, migração remo
 | `npm run perf:check` | **PASS** — oculto 0,1 % CPU / 196 MB; central Leve 36,9 % / 225 MB; JS do Runner 301 KB |
 | `npm audit` | 0 vulnerabilidades |
 | Varredura de segredos (árvore) | limpa (843 arquivos) |
-| Varredura de histórico (`scan:history`) | 156 achados; **1 desta rodada**: o ID de rollback do Worker em `613b607` (ver desvios); os outros vêm de commits anteriores à rodada |
+| Varredura de histórico (`scan:history`) | o ID de rollback saiu do histórico da branch (reescrita autorizada); demais achados vêm de commits anteriores à rodada |
 | SPDX | PASS |
 | Continuidade (`check-continuity`) | **FALHA de formato**: 28 commits com trailer `Task: v0.3 fase N` em vez de `Task: OD2-…` (2 também com escopo `v0.3`); corrigido a partir de `4328528`. Histórico não reescrito |
 | Lint | 0 erros; 1 aviso preexistente (`DotView`, dependências do efeito) |
@@ -109,7 +109,7 @@ Não declaro “leve em qualquer máquina”: só esta máquina foi medida.
 
 ## O que depende do João
 
-1. Decidir sobre o commit local `613b607` (contém o ID de rollback do Worker sem redação; nunca foi enviado) antes de qualquer push.
+1. ~~Decidir sobre o commit `613b607`~~ resolvido: removido do histórico local, com backup local que não pode ser enviado.
 2. Gerar a chave de assinatura do updater e decidir a exceção de política para o secret no CI (`docs/release/runner-chave-de-assinatura.md`).
 3. Aplicar a migração `0019` em produção antes do código novo (ver checklist).
 4. Validar à mão o Runner 0.3.0 (bandeja, painel, atualização com duas versões) e, se quiser, Windows/ARM64.
@@ -125,7 +125,7 @@ Não declaro “leve em qualquer máquina”: só esta máquina foi medida.
 
 ## Desvios deste prompt
 
-- **ID de rollback:** o prompt mandava comitar a mudança local do `STATUS.md`; ela tirava a redação de um ID que o scanner barra. Comitei (`613b607`) e redigi de novo em seguida (`9ae8406`); desfazer o commit local foi negado pelo ambiente, então o valor segue no histórico local.
+- **ID de rollback:** o prompt mandava comitar a mudança local do `STATUS.md`, o que levou o ID sem redação para o commit `613b607`. Na publicação o João autorizou reescrever só a branch local: o commit saiu do histórico.
 - **Verde de Aprovar** `#1C834E` em vez de `#1F8F55` (AA).
 - **Tetos de quadros** Leve 10 / Equilibrado 24 (a referência dizia 30 no Leve).
 - **CI sem secrets:** o build do CI desliga os artefatos do updater; assinatura no CI fica para decisão do João.

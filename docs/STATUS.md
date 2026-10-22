@@ -7,7 +7,7 @@ Branch `claude/od2-v03` (base `release/v0.2` = `69c5769`). Nada publicado; sem m
 - **Simulado:** calibração, ciclo Corretor, paralelismo só leitura, comparação motor × padrão simples.
 - **Planejado:** análise de e-mail pelo Codex, Gemini/Cursor, RSS próprio, pareamento por código curto, notificações além de “aprovação pendente”.
 - **Bloqueado:** testes do projeto em cópia isolada; publicação e migrações `0017`–`0019` (decisão do João); chave de assinatura do updater (João).
-- **Atenção:** o commit local `613b607` tem o ID de rollback do Worker sem redação (nunca enviado). Commits da rodada até `4328528` usam trailer `Task:` fora do formato da política.
+- **Histórico reescrito (autorizado pelo João, só a branch local, antes de qualquer push):** o commit `613b607` (ID de rollback do Worker sem redação) saiu do histórico; o valor não aparece mais em nenhum commit da branch. Cópia de segurança local `backup/od2-v03-antes-da-reescrita` (contém o valor: **nunca enviar**). SHA de código antes dos docs de publicação: `8127a6a`; o SHA anterior `f68bdea` deixou de existir. Commits da rodada até `4328528` usam trailer `Task:` fora do formato da política.
 
 ---
 
