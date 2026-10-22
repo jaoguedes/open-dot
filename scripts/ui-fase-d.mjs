@@ -47,7 +47,8 @@ await scenario(
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("ArrowUp");
     await page.keyboard.press("Enter");
-    await page.waitForURL(/\/agente\/correio/, T);
+    // v0.3: "corr" encontra primeiro o destino Correio e Notícias (/correio); o agente vem depois.
+    await page.waitForURL(/\/(agente\/)?correio/, T);
   },
   { setup: (s) => (s.extra = askRoute) },
 );

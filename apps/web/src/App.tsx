@@ -329,8 +329,8 @@ export function App() {
               <Island go={go} />
               <div className="spacer" />
               <div className="top-actions">
-                <button className="search" onClick={() => setPalette(true)} aria-label="Pergunte ao Dot">
-                  <Icon name="search" size={16} /> Pergunte ao Dot <kbd>⌘K</kbd>
+                <button className="search" onClick={() => setPalette(true)} aria-label="Perguntar ao Dot">
+                  <Icon name="search" size={16} /> <span className="search-text">Perguntar ao Dot</span> <kbd>⌘K</kbd>
                 </button>
                 {showContext && (
                   <button className="icon-btn" aria-label="Mostrar contexto" aria-expanded={ctxOpen} onClick={() => setCtxOpen((v) => !v)}>

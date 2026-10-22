@@ -49,6 +49,10 @@ function setup(s) {
 }
 
 const line = (page) => page.locator("p.serif").first();
+// v0.3 (5.6): a lista de e-mails do 1º cartão começa recolhida; abre antes de interagir.
+const expand = async (page) => {
+  for (const b of await page.getByRole("button", { name: /^Ver mais \d+ e-mails?$/ }).all()) await b.click();
+};
 
 await scenario(
   "G",
@@ -57,6 +61,7 @@ await scenario(
     await open("/meu-dia");
     await page.waitForFunction(() => /^Três coisas/.test(document.querySelector("p.serif")?.textContent ?? ""), null, T);
     const titles = () => page.locator(".feed-card .feed-title").allInnerTexts();
+    await expand(page);
     await page.locator("article.stack-4", { hasText: "Conta da luz" }).getByRole("button", { name: "Era importante" }).click(T);
     await page.waitForFunction(() => /Conta da luz/.test(document.querySelector(".feed-card .stack-4 .feed-title")?.textContent ?? ""), null, T);
     await page.locator("article.stack-4", { hasText: "Promo 1" }).getByRole("button", { name: "Não importa" }).click(T);
@@ -78,6 +83,7 @@ await scenario(
   async ({ page, open }) => {
     await open("/meu-dia");
     await page.waitForFunction(() => /^Três coisas/.test(document.querySelector("p.serif")?.textContent ?? ""), null, T);
+    await expand(page);
     await page.locator(".feed-card", { hasText: "Conta da luz" }).getByRole("button", { name: "Feito", exact: true }).click(T);
     await page.waitForFunction(() => /Tudo calmo/.test(document.querySelector("p.serif")?.textContent ?? ""), null, T);
   },
