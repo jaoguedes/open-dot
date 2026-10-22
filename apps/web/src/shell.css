@@ -174,6 +174,23 @@
   .topbar .search kbd {
     display: none;
   }
+  /* Busca do topo no celular: ícone de 44 px (a barra inferior não tem busca). */
+  :root .topbar .search {
+    display: inline-flex;
+    flex: none;
+    width: 44px;
+    min-height: 44px;
+    justify-content: center;
+    padding: 0;
+  }
+  .topbar .search .search-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
   .bottombar {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
