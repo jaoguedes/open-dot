@@ -157,16 +157,25 @@ function q(svg: SVGSVGElement, role: string): SVGElement {
   return svg.querySelector(`[data-r="${role}"]`) as SVGElement;
 }
 
+// Desempenho (G2): só escreve o atributo quando o valor muda. O desenho é o mesmo; o navegador
+// deixa de repintar (e de refazer os desfoques) o que não mudou.
+const lastAttr = new WeakMap<Element, Map<string, string>>();
 function set(el: Element | null, attr: string, v: string | number): void {
-  if (el) el.setAttribute(attr, String(v));
+  if (!el) return;
+  const text = String(v);
+  let m = lastAttr.get(el);
+  if (!m) lastAttr.set(el, (m = new Map()));
+  if (m.get(attr) === text && el.getAttribute(attr) === text) return;
+  m.set(attr, text);
+  el.setAttribute(attr, text);
 }
 
 function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean, glow = "rgb(63,123,255)", reason?: string): void {
   // Iluminação original de repouso; com cor de agente (D-027), o brilho vira a cor do agente.
-  svg.style.setProperty("--g", glow);
-  svg.style.setProperty("--t", "#EDE8FC");
+  if (svg.style.getPropertyValue("--g") !== glow) svg.style.setProperty("--g", glow);
+  if (!svg.style.getPropertyValue("--t")) svg.style.setProperty("--t", "#EDE8FC");
   // O motivo real de uma reação (D-028) acompanha o rótulo do estado, sempre em texto.
-  svg.setAttribute("aria-label", reason ? `${f.ariaLabel}. ${reason}` : f.ariaLabel);
+  set(svg, "aria-label", reason ? `${f.ariaLabel}. ${reason}` : f.ariaLabel);
   const d = bodyPath(f.m);
   set(q(svg, "body"), "d", d);
   set(q(svg, "clip"), "d", d);
@@ -183,8 +192,9 @@ function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean, glo
   set(q(svg, "slot"), "opacity", f.slotOpacity);
   set(q(svg, "spec"), "cx", f.specCx);
   set(q(svg, "spec2"), "cx", f.spec2Cx);
-  q(svg, "fig").removeAttribute("filter");
-  q(svg, "fig").setAttribute("opacity", "1");
+  const fig = q(svg, "fig");
+  if (fig.hasAttribute("filter")) fig.removeAttribute("filter");
+  set(fig, "opacity", "1");
 
   f.eyes.forEach((eye, i) => {
     const ga = q(svg, `eyeA${i}`),
@@ -259,7 +269,7 @@ function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean, glo
     set(el, "transform", `translate(${p.x} ${p.y}) rotate(${p.rot}) scale(${p.sc})`);
     set(el, "opacity", p.opacity);
     const use = el.querySelector("use");
-    if (use) use.setAttribute("href", `#${uid}-p-${partId(p.kind, p)}`);
+    if (use) set(use, "href", `#${uid}-p-${partId(p.kind, p)}`);
   });
 
   const acc = accLayout(f);

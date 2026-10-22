@@ -47,7 +47,8 @@
     "runner:build": "node scripts/build-runner.mjs",
     "runner:desktop": "cd apps/runner && tauri",
     "ui:runner": "node scripts/ui-runner.mjs",
-    "ui:widths": "node scripts/ui-widths.mjs"
+    "ui:widths": "node scripts/ui-widths.mjs",
+    "perf:check": "node scripts/perf/check.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",

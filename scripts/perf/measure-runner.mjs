@@ -4,10 +4,12 @@
  * repouso, memória residente e acordadas ociosas por segundo. Roda o binário de release com HOME
  * e CODEX_HOME descartáveis (sem conta, sem pareamento, sem dados do usuário) e encerra só o
  * processo que ele mesmo abriu (e os processos WebKit que nasceram para ele).
- *   node scripts/perf/measure-runner.mjs [--seconds 60] [--json saida.json]
+ *   node scripts/perf/measure-runner.mjs [--seconds 60] [--central] [--json saida.json]
+ * --oculto: inicia como o "iniciar com o sistema" (só bandeja, janela oculta).
+ * --central: grava antes um settings.json com a configuração concluída (abre a central, não o assistente).
  */
 import { spawn, execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir, cpus, totalmem } from "node:os";
 import { join } from "node:path";
 
@@ -21,6 +23,11 @@ if (process.platform !== "darwin") {
 if (!existsSync(bin)) throw new Error("Binário de release ausente: cd apps/runner/src-tauri && cargo build --release --locked");
 const home = mkdtempSync(join(tmpdir(), "od-perf-home-"));
 const dataDir = join(home, "Library/Application Support/com.opendot.runner");
+const central = process.argv.includes("--central");
+if (central) {
+  mkdirSync(dataDir, { recursive: true });
+  writeFileSync(join(dataDir, "settings.json"), JSON.stringify({ folders: [], companion: { setupDone: true, updateConsent: false, ...(process.env.PERF_PROFILE ? { profile: process.env.PERF_PROFILE } : {}) } }));
+}
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const webkitPids = () =>
   new Set(
@@ -36,7 +43,8 @@ const before = (() => {
   }
 })();
 const t0 = performance.now();
-const child = spawn(bin, [], { env: { PATH: process.env.PATH, HOME: home, CODEX_HOME: join(home, ".codex"), TMPDIR: tmpdir() }, stdio: "ignore" });
+const hidden = process.argv.includes("--oculto");
+const child = spawn(bin, hidden ? ["--oculto"] : [], { env: { PATH: process.env.PATH, HOME: home, CODEX_HOME: join(home, ".codex"), TMPDIR: tmpdir() }, stdio: "ignore" });
 let startedMs = null;
 for (let i = 0; i < 600 && startedMs === null; i++) {
   await sleep(50);
@@ -83,7 +91,7 @@ const avg = (k) => samples.reduce((s, x) => s + x[k], 0) / samples.length;
 const result = {
   maquina: `${process.arch} · ${cpus()[0]?.model ?? "?"} · ${cpus().length} núcleos · ${Math.round(totalmem() / 2 ** 30)} GB`,
   sistema: execFileSync("sw_vers", ["-productVersion"], { encoding: "utf8" }).trim(),
-  janela: "visível (abre por padrão; sem pareamento)",
+  janela: hidden ? "oculta (--oculto, só bandeja)" : central ? "visível, central (configuração concluída; sem pareamento)" : "visível, assistente de primeiro uso (sem pareamento)",
   aberturaMs: startedMs,
   cpuMediaPct: Math.round(avg("cpu") * 10) / 10,
   cpuPicoPct: Math.max(...samples.map((s) => s.cpu)),

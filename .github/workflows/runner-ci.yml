@@ -66,7 +66,9 @@ jobs:
       - name: Rust tests
         run: cargo test --locked --manifest-path apps/runner/src-tauri/Cargo.toml --target ${{ matrix.target }}
       - name: Build installer (sem publicação)
-        run: npm run runner:desktop -- build --target ${{ matrix.target }} --bundles ${{ matrix.bundle }} --ci --no-sign -- --locked
+        # Sem chave de assinatura no CI (nenhum secret): pacotes do updater desligados neste build.
+        # Para habilitar, ver docs/release/runner-chave-de-assinatura.md (decisão do João).
+        run: npm run runner:desktop -- build --target ${{ matrix.target }} --bundles ${{ matrix.bundle }} --ci --no-sign --config '{"bundle":{"createUpdaterArtifacts":false}}' -- --locked
       - name: Padronizar nome e checksum
         run: node scripts/package-runner.mjs ${{ matrix.target }} ${{ matrix.artifact }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

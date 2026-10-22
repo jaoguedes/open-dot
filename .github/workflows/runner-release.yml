@@ -31,6 +31,8 @@ jobs:
           pattern: OpenDot-Runner-*
           path: installers
           merge-multiple: true
+      - name: Exigir chave pública do updater (sem ler segredo)
+        run: node scripts/release/check-updater-key.mjs
       - name: Validar conjunto completo
         env:
           RELEASE_TAG: ${{ github.ref_name }}

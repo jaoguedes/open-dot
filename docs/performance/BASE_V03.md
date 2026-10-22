@@ -35,3 +35,18 @@ Comando: `UI_BASE=http://localhost:8794 node scripts/perf/measure-web.mjs`. CPU 
 Primeira tela do build de produção (`npm run build`): **356,0 KB** de JavaScript (meta 350 KB, teto 400 KB; aviso preexistente do v0.2).
 
 Os valores web servem para comparar antes/depois nesta máquina; não são o consumo de um navegador real com GPU.
+
+## Depois do v0.3
+
+Ver `ORCAMENTO.md` (tabela antes/depois). Resumo do Runner: oculto na bandeja 0,0–0,1 % de CPU; central aberta no perfil Leve ≈ 37 % (antes 120,7 % no assistente a 60 qps). App web, mesma medição (servidor `npm run dev`, banco limpo):
+
+| Largura | Rota | Carga (ms) | CPU em repouso | CPU com aba oculta |
+|---|---|---|---|---|
+| 390 | `/` | 502 | 4,3 % | 0,0 % |
+| 390 | `/workspace` | 258 | 10,6 % | 0,0 % |
+| 768 | `/` | 325 | 3,4 % | 0,0 % |
+| 768 | `/workspace` | 230 | 8,5 % | 0,0 % |
+| 1440 | `/` | 368 | 2,5 % | 0,0 % |
+| 1440 | `/workspace` | 295 | 5,2 % | 0,0 % |
+
+O Workspace novo tem o Dot do hero e três Dots de agente, por isso gasta mais em repouso que antes (3,2–7,2 %). Os tempos de carga não são comparáveis aos da linha de base (servidor diferente: `demo` antes, `dev` depois).

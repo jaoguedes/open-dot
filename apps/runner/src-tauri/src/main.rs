@@ -414,7 +414,7 @@ fn main() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec!["--oculto"])))
         .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             diagnostics,
@@ -449,6 +449,11 @@ fn main() {
             }
             app.manage(state);
             app.manage(companion::Runtime::new());
+            // Iniciado com o sistema (ou --oculto): fica só na bandeja, sem janela e sem animação.
+            if std::env::args().any(|a| a == "--oculto") {
+                if let Some(w) = app.get_webview_window("main") { let _ = w.hide(); }
+                app.state::<companion::Runtime>().hidden.store(true, std::sync::atomic::Ordering::Relaxed);
+            }
             // Saúde (C3): amostra no ritmo do perfil; com a janela oculta, três vezes mais devagar.
             let sampler = app.handle().clone();
             std::thread::spawn(move || {
