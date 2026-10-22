@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decisao", "modelo_de_ameaca", "regra_de_dois", "achados", "nao_verificado", "mesma_ferramenta"],
+  "properties": {
+    "decisao": { "enum": ["aprovar", "aprovar_com_ressalvas", "reprovar"] },
+    "modelo_de_ameaca": { "type": "object", "additionalProperties": false, "required": ["ativos", "atores", "entradas", "efeitos", "fronteiras"], "properties": {
+      "ativos": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 200 } },
+      "atores": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 200 } },
+      "entradas": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 200 } },
+      "efeitos": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 200 } },
+      "fronteiras": { "type": "array", "maxItems": 8, "items": { "type": "string", "maxLength": 200 } } } },
+    "regra_de_dois": { "type": "array", "maxItems": 10, "items": { "type": "object", "additionalProperties": false, "required": ["componente", "le_nao_confiavel", "dado_sensivel", "altera_ou_comunica", "violada"], "properties": {
+      "componente": { "type": "string", "maxLength": 160 },
+      "le_nao_confiavel": { "type": "boolean" },
+      "dado_sensivel": { "type": "boolean" },
+      "altera_ou_comunica": { "type": "boolean" },
+      "violada": { "type": "boolean" } } } },
+    "achados": { "type": "array", "maxItems": 30, "items": { "type": "object", "additionalProperties": false, "required": ["severidade", "categoria", "arquivo", "evidencia", "impacto", "correcao_proposta"], "properties": {
+      "severidade": { "enum": ["critico", "alto", "medio", "baixo"] },
+      "categoria": { "enum": ["segredo", "dado_pessoal", "permissao", "entrada_nao_confiavel", "injecao", "dependencia", "atualizacao", "processo", "custo", "outro"] },
+      "arquivo": { "type": "string", "maxLength": 240 },
+      "evidencia": { "type": "string", "maxLength": 500 },
+      "impacto": { "type": "string", "maxLength": 300 },
+      "correcao_proposta": { "type": "string", "maxLength": 500 } } } },
+    "nao_verificado": { "type": "array", "maxItems": 10, "items": { "type": "string", "maxLength": 240 } },
+    "mesma_ferramenta": { "type": "boolean" }
+  }
+}

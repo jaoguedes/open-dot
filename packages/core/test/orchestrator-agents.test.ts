@@ -16,9 +16,9 @@ function files(id: string): AgentFiles {
   };
 }
 const lock = JSON.parse(readFileSync(new URL("agents/agents.lock.json", root), "utf8")) as Record<string, string>;
-const IDS = ["desenvolvedor", "design", "pesquisa", "produto", "qa"];
+const IDS = ["arquitetura", "desenvolvedor", "design", "documentacao", "pesquisa", "produto", "qa", "seguranca"];
 
-test("os cinco especialistas carregam pelo hash fixado, com ≥ 3 evals e papel coerente", async () => {
+test("os oito especialistas carregam pelo hash fixado, com ≥ 3 evals e papel coerente", async () => {
   assert.deepEqual(Object.keys(lock).sort(), IDS);
   for (const id of IDS) {
     const pkg = await loadAgentPackage(files(id), lock[id]);
@@ -29,6 +29,14 @@ test("os cinco especialistas carregam pelo hash fixado, com ≥ 3 evals e papel 
   assert.equal((await loadAgentPackage(files("desenvolvedor"))).meta.papel, "implementador");
   assert.equal((await loadAgentPackage(files("qa"))).meta.papel, "revisor");
   assert.ok(!(await loadAgentPackage(files("pesquisa"))).meta.capacidades_exigidas.includes("proposta_de_arquivos"), "Pesquisa nunca propõe arquivos");
+  // v0.3: os três novos entram como experimentais (nunca núcleo sem eval medido).
+  for (const [id, papel] of [["arquitetura", "planejador"], ["seguranca", "revisor"], ["documentacao", "implementador"]] as const) {
+    const pkg = await loadAgentPackage(files(id));
+    assert.equal(pkg.meta.papel, papel, id);
+    assert.equal(pkg.meta.nivel, "experimental", id);
+    assert.ok(pkg.body.length > 5000, `${id} denso`);
+  }
+  for (const id of ["arquitetura", "seguranca"]) assert.ok(!(await loadAgentPackage(files(id))).meta.capacidades_exigidas.includes("proposta_de_arquivos"), `${id} só lê`);
 });
 
 test("lock e pacote gerado estão em dia com as pastas", () => {
