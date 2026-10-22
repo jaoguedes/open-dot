@@ -3,6 +3,8 @@
  * Um único requestAnimationFrame para todas as instâncias do Dot.
  * Pausa com a aba oculta. Fora da tela o inscrito se marca invisível.
  * Avatares pequenos só recebem dt quando `active` (estado/reação mudou).
+ * v0.3 (G2): teto de quadros por segundo configurável (perfil de desempenho) e pausa explícita
+ * (janela nativa oculta, que nem sempre dispara `visibilitychange`). Padrão: sem teto, sem pausa.
  */
 
 export type TickFn = (dt: number, now: number) => void;
@@ -17,11 +19,15 @@ interface Sub {
 
 const subs = new Set<Sub>();
 let raf = 0;
+let timer: ReturnType<typeof setTimeout> | 0 = 0;
 let hidden = false;
+let paused = false;
+let maxFps = 0;
+let lastRun = 0;
 
 function loop(now: number): void {
   raf = 0;
-  if (typeof document !== "undefined" && document.hidden) {
+  if (paused || (typeof document !== "undefined" && document.hidden)) {
     hidden = true;
     for (const s of subs) s.last = now;
     return;
@@ -42,11 +48,41 @@ function loop(now: number): void {
     s.fn(dt, now);
     need = true;
   }
-  if (need) raf = requestAnimationFrame(loop);
+  lastRun = now;
+  if (need) schedule();
+}
+
+function schedule(): void {
+  if (raf || timer) return;
+  const gap = maxFps > 0 ? 1000 / maxFps - (performance.now() - lastRun) : 0;
+  if (gap > 4) {
+    timer = setTimeout(() => {
+      timer = 0;
+      if (!raf) raf = requestAnimationFrame(loop);
+    }, gap);
+  } else raf = requestAnimationFrame(loop);
 }
 
 function ensure(): void {
-  if (!raf && subs.size) raf = requestAnimationFrame(loop);
+  if (!paused && subs.size) schedule();
+}
+
+/** Teto de quadros por segundo para todas as instâncias (0 = sem teto, a taxa da tela). */
+export function setMaxFps(fps: number): void {
+  maxFps = Number.isFinite(fps) && fps > 0 ? Math.min(120, fps) : 0;
+}
+
+/** Pausa tudo (janela nativa oculta ou minimizada). Retomar recomeça o relógio sem salto. */
+export function setPaused(p: boolean): void {
+  paused = p;
+  const now = performance.now();
+  for (const s of subs) s.last = now;
+  if (p) {
+    if (raf) cancelAnimationFrame(raf);
+    if (timer) clearTimeout(timer);
+    raf = 0;
+    timer = 0;
+  } else ensure();
 }
 
 if (typeof document !== "undefined") {
@@ -55,10 +91,10 @@ if (typeof document !== "undefined") {
     for (const s of subs) s.last = now;
     if (document.hidden) {
       hidden = true;
-      if (raf) {
-        cancelAnimationFrame(raf);
-        raf = 0;
-      }
+      if (raf) cancelAnimationFrame(raf);
+      if (timer) clearTimeout(timer);
+      raf = 0;
+      timer = 0;
       return;
     }
     hidden = false;
@@ -91,9 +127,11 @@ export function subscribe(fn: TickFn, opts: { small?: boolean } = {}): TickerHan
     },
     stop() {
       subs.delete(sub);
-      if (!subs.size && raf) {
-        cancelAnimationFrame(raf);
+      if (!subs.size) {
+        if (raf) cancelAnimationFrame(raf);
+        if (timer) clearTimeout(timer);
         raf = 0;
+        timer = 0;
       }
     },
     framesWhileHidden: () => hidden,
@@ -101,5 +139,5 @@ export function subscribe(fn: TickFn, opts: { small?: boolean } = {}): TickerHan
 }
 
 export function tickerBusy(): boolean {
-  return raf !== 0;
+  return raf !== 0 || timer !== 0;
 }
