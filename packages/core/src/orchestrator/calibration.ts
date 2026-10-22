@@ -75,8 +75,10 @@ export function calibrate(outcomes: MeasuredOutcome[], prev: CalibrationState = 
       const k = calibrationKey(o.role, o.tool, tipo);
       const b = buckets.get(k) ?? { n: 0, good: 0, cota: 0 };
       if (o.outcome === "cota") b.cota++;
-      else if (GOOD.has(o.outcome)) (b.n++, b.good++);
-      else if (BAD.has(o.outcome)) b.n++;
+      else if (GOOD.has(o.outcome)) {
+        b.n++;
+        b.good++;
+      } else if (BAD.has(o.outcome)) b.n++;
       buckets.set(k, b);
     }
   }

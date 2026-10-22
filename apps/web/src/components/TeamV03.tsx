@@ -279,6 +279,7 @@ export function EngineSettings({ demo }: { demo: boolean }) {
                 {Object.entries(s.arquivos).map(([k, v]) => (
                   <div key={k}>
                     <code>{k}</code>
+                    {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- bloco rolável precisa receber foco pelo teclado (axe: scrollable-region-focusable) */}
                     <pre className="diff-v3" tabIndex={0} aria-label={`Conteúdo de ${k}`}>
                       {v}
                     </pre>
