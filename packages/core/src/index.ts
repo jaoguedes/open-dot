@@ -28,3 +28,4 @@ export * from "./correio.ts";
 export * from "./registry.ts";
 export * from "./mechanisms.ts";
 export * from "./approval-view.ts";
+export * from "./health.ts";
