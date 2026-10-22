@@ -7,8 +7,8 @@ alwaysApply: false
 
 - Tema **escuro como padrão**: fundo #050608, superfícies #0E1014, borda #1A1D24, texto #F3F4F7 / #9AA0AE / #6B7181.
 - Estado (rodada 4): acento amarelo #FFBC03 com texto #1A1400 por cima (nunca branco); laranja #FF7A2F (claro #A84300) = precisa do seu OK; erro #FF4D6A; pronto #2BD47F. No claro, links #7A5300. Fundo #050608. Vidro só na caixa de perguntas e no dock.
-- Paleta aprovada (19/10/2026): mecanismo Codex #8878EE, Claude Code #E99A69, Cursor #69A9DE, apenas em UI. Funções não impõem cor. Dot/orquestrador mantém corpo e gradiente originais branco/lilás; não repintar pele, olhos ou blush nem adicionar skins/badges/ícones na cabeça. Verde reservado à futura integração WhatsApp; cores semânticas do sistema continuam separadas.
-- Tipografia local (sem CDN): Inter na interface (títulos 600, tracking negativo); Instrument Serif itálico só na segunda linha da saudação; JetBrains Mono em rótulos, horários e fontes.
+- Paleta v0.3 (D-027, substitui a de 19/10/2026 no visual): agentes Codex #A48BFF, Claude Code #FF9A55, Cursor #62AAFF, Sentinela #4FE3B6, Foco #F28FD0. No Dot, só via `tint` opcional (corpo, contorno interno e brilho); olhos e bochechas originais. Reações D-028 só com estado real e motivo em texto. Verde reservado à futura integração WhatsApp; cores semânticas do sistema continuam separadas. Tokens em docs/DESIGN.md.
+- Tipografia local (sem CDN, v0.3): Plus Jakarta Sans no corpo; JetBrains Mono em rótulos em caixa-alta espaçada, horários e fontes; Instrument Serif itálico só na segunda linha da saudação.
 - Navegação em pílula com o item ativo azul. Botão principal branco em pílula; secundário escuro com borda. Cartões 20–22 px. Brilho radial só nos 3 cartões de resumo. Ilha preta do Dot no topo.
 - Tokens de sistema e mecanismos em theme.css. Nenhuma cor solta nos componentes. Tema claro derivado dos mesmos tokens.
 - Cor nunca é o único sinal: todo estado tem texto. Teste 320/390 px, zoom 200%, teclado e movimento reduzido.

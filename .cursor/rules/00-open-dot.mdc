@@ -40,7 +40,7 @@ Leia antes de mudar arquitetura, arte ou integrações: `docs/CONTINUIDADE.md`, 
 6. Nunca escreva "está tudo pronto" se só houver interface ou mocks.
 
 ## Identidade visual aprovada em 19/10/2026
-Dot base e orquestrador preservam corpo/cores/olhos/expressões originais branco/lilás. Erro vermelho só em UI com texto. Codex #8878EE, Claude Code #E99A69 e Cursor #69A9DE identificam mecanismos exclusivamente na interface; funções não impõem cor. Sem skins/badges/ícones novos na cabeça. Verde reservado ao futuro WhatsApp, sem integração ativa.
+Dot base e orquestrador preservam corpo/olhos/expressões originais branco/lilás. Única mudança no corpo: `tint` opcional com a cor do agente (D-027; Codex #A48BFF, Claude Code #FF9A55, Cursor #62AAFF, Sentinela #4FE3B6, Foco #F28FD0). Reações a estado real (D-028): olhar, rubor, suor, pânico, com motivo em texto; ausentes = Dot idêntico. Erro vermelho só em UI com texto. Sem boca, sobrancelhas, balão, skins/badges/ícones novos na cabeça. Verde reservado ao futuro WhatsApp, sem integração ativa.
 
 ## Versionamento e continuidade (decisão do João, 20/10/2026)
 
