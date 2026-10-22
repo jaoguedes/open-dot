@@ -7,4 +7,5 @@
 export { AgentDot, type AgentDotProps } from "../dot/AgentDot.tsx";
 export { SplashScreen } from "../dot/SplashScreen.tsx";
 export { CROWN_UNLOCKED } from "../dot/accessories.ts";
+export { setMaxFps, setPaused } from "../dot/ticker.ts";
 export const MASCOT = { kind: "dot", name: "Dot" } as const;

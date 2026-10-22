@@ -201,3 +201,159 @@ li button {
 [aria-label="Revisão de commit local"] code, [aria-label="Checkpoints preservados"] code { overflow-wrap: anywhere; }
 
 .runner-shell p[role="status"] { overflow-wrap: anywhere; }
+
+/* ---------- v0.3: central com abas e painel da bandeja (docs/DESIGN.md) ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-weight: 600;
+}
+.btn.primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  border-color: transparent;
+}
+.central {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  min-height: 100vh;
+}
+.central-rail {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 0;
+}
+.central-tab {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text-3);
+  display: inline-grid;
+  place-items: center;
+}
+.central-tab:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.central-tab[aria-current="page"] {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.badge-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+.central-main {
+  min-width: 0;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.central-main h1 {
+  margin: 0 0 6px;
+  font-weight: 800;
+  font-size: clamp(24px, 3.4vw, 34px);
+}
+.central-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.card-v3 h2 {
+  font-size: 17px;
+  margin: 0 0 8px;
+}
+.card-v3.wide {
+  grid-column: 1 / -1;
+}
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+.row-between input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--approve);
+  flex: none;
+}
+.row-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.seg {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.seg [aria-checked="true"] {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.banner-v3 {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(245, 179, 66, 0.35);
+  background: rgba(245, 179, 66, 0.08);
+  color: var(--text);
+}
+.tiny {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.meta {
+  color: var(--text-2);
+}
+.notes {
+  white-space: pre-wrap;
+}
+.panel {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface);
+  min-height: 100vh;
+}
+@media (max-width: 700px) {
+  .central {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .central-rail {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 8px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .central-main {
+    padding: 16px;
+  }
+}

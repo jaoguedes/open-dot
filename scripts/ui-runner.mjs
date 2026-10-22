@@ -244,5 +244,61 @@ if (!process.exitCode) {
     await page.getByText(/Commit local confirmado:/).waitFor(T);
     const calls=await page.evaluate(()=>window.CHECKPOINT_CALLS);expect(calls.length===1&&calls[0].proposalHash==="b".repeat(64)&&calls[0].consent==="commit-exact-reviewed-files-locally","escopo de commit divergente");
   });
+  const fixture = (extra = "") => `
+      window.CALLS=[];
+      const companion={settings:{setupDone:true,updateConsent:null,autostart:false,showInDock:true,profile:null,protection:{pauseHot:false,hotCpu:92,hotSecs:60,pauseBattery:false,batteryMin:20,pauseMemory:false,memoryMax:90},lightOnBattery:true,autoCleanup:false,cleanupHours:8,notifications:false,queuePaused:false},suggested:"leve",suggestedReason:"Mac Intel (fixture)",effective:"leve",knobs:{concurrency:1,pollMinMs:5000,pollMaxMs:60000,uiFps:15,parallelAllowed:false},paused:null,version:"0.3.0",updateKeyReady:false,os:"macos",arch:"x86_64"};
+      ${extra}
+      window.__TAURI__={core:{invoke:async(cmd,args)=>{window.CALLS.push([cmd,args]);
+        if(cmd==="companion_get")return structuredClone(companion);
+        if(cmd==="companion_set"){Object.assign(companion.settings,args.patch);return structuredClone(companion);}
+        if(cmd==="health_get")return {sample:{cpu:95,memory:61,memoryTotalGb:16,diskFreeGb:212,diskTotalGb:500,battery:{percent:82,charging:true,onAc:true},cpuSpeedLimit:null,temperatureC:null,cores:8,atMs:Date.now()},paused:null,rules:companion.settings.protection};
+        if(cmd==="processes_list")return {items:[{pid:4242,label:"Ferramenta de IA oficial",kind:"ferramenta",task:null,uptimeS:120,memoryBytes:52428800,group:"em_uso",why:"Uma tarefa do Runner está usando este processo."}],nota:"Só processos do Runner (fixture)."};
+        if(cmd==="update_check")throw "Avisos de versão desligados: nada foi consultado.";
+        return {os:"fixture",arch:"fixture",version:"0.3.0",folders:["/fixture/projeto"],paired:true,channel:{paired:true,online:true,message:""},drivers:[],activeTask:{id:"f11c1820-5a7c-47e9-90d4-22c78ed0ca21",phase:"awaiting_approval",resumable:false},checkpoints:{items:[],unreadable:0,truncated:false}};
+      }}};`;
+  await nativeUI.scenario("R5", "Central do Runner: abas, consentimento, saúde real, processos próprios, sem aprovar aqui (IPC fixture)", async ({ page, open }) => {
+    await page.setViewportSize({ width: 1100, height: 850 });
+    await page.addInitScript(fixture());
+    await open("/");
+    await page.getByRole("heading", { name: "Conectado e pronto" }).waitFor(T);
+    await page.getByText("Quer ser avisado de novas versões?").first().waitFor(T);
+    expect(!(await page.evaluate(() => window.CALLS.some(([c]) => c === "update_check"))), "consultou atualização sem consentimento");
+    let violations = (await new AxeBuilder({ page }).analyze()).violations.filter((v) => ["serious", "critical"].includes(v.impact));
+    expect(!violations.length, `axe Hoje: ${violations.map((v) => v.id).join(", ")}`);
+    await page.getByRole("button", { name: "Saúde", exact: true }).click();
+    await page.getByText("Processador").first().waitFor(T);
+    expect(await page.getByText("indisponível").first().isVisible(), "temperatura não marcada como indisponível");
+    await page.getByRole("button", { name: "Aprovações", exact: true }).click();
+    expect((await page.getByRole("button", { name: /^Aprovar/ }).count()) === 0, "a central tem botão de aprovar");
+    await page.getByRole("button", { name: "Processos", exact: true }).click();
+    await page.getByText("Protegido").waitFor(T);
+    expect(await page.getByRole("button", { name: "Liberar recursos" }).isDisabled(), "liberar sem processo parado");
+    await page.getByRole("button", { name: "Atualizações", exact: true }).click();
+    expect(await page.getByRole("button", { name: "Verificar atualização" }).isDisabled(), "verificar sem consentimento");
+    await page.getByRole("button", { name: "Sim, avisar" }).click();
+    await page.waitForFunction(() => window.CALLS.some(([c, a]) => c === "companion_set" && a.patch.updateConsent === true), null, T);
+    violations = (await new AxeBuilder({ page }).analyze()).violations.filter((v) => ["serious", "critical"].includes(v.impact));
+    expect(!violations.length, `axe Atualizações: ${violations.map((v) => v.id).join(", ")}`);
+    for (const width of [360, 1440]) {
+      await page.setViewportSize({ width, height: 800 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `overflow ${width}`);
+    }
+    await page.screenshot({ path: "test-results/runner/central.png", fullPage: true });
+  });
+  await nativeUI.scenario("R6", "Painel da bandeja: estado real, revisar abre o navegador, pausar fila (IPC fixture)", async ({ page, open }) => {
+    await page.setViewportSize({ width: 440, height: 620 });
+    await page.addInitScript(fixture());
+    await open("/#painel");
+    await page.getByText("Conectado e pronto").waitFor(T);
+    await page.getByText("Proposta esperando você").waitFor(T);
+    await page.getByRole("button", { name: "Revisar" }).click();
+    await page.getByRole("button", { name: "Pausar fila" }).click();
+    await page.getByRole("button", { name: "Retomar fila" }).waitFor(T);
+    const calls = await page.evaluate(() => window.CALLS.map(([c]) => c));
+    expect(calls.includes("open_review") && calls.includes("companion_set"), `chamadas: ${calls.join(",")}`);
+    const violations = (await new AxeBuilder({ page }).analyze()).violations.filter((v) => ["serious", "critical"].includes(v.impact));
+    expect(!violations.length, `axe painel: ${violations.map((v) => v.id).join(", ")}`);
+    await page.screenshot({ path: "test-results/runner/painel.png" });
+  });
   process.exitCode = await nativeUI.finish();
 }

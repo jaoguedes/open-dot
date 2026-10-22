@@ -21,6 +21,13 @@ export interface AgentDotProps {
   hello?: boolean;
   ring?: boolean;
   antennaPulse?: boolean;
+  /** v0.3: aceitos para manter a mesma fronteira; o Marcador não tem cor de agente nem reações. */
+  tint?: { color: string; intensity: number };
+  heat?: number;
+  strain?: number;
+  followPointer?: boolean;
+  /** O motivo real (ex.: "CPU 92% há 1 min") continua em texto, como no Dot. */
+  reason?: string;
 }
 
 /** Forma do núcleo por estado: o sinal não depende só da cor. */
@@ -38,12 +45,12 @@ const CORE: Record<SemanticState, "dot" | "bar" | "ring" | "cross" | "check" | "
 
 const HEX = "M50 6 L88 28 L88 72 L50 94 L12 72 L12 28 Z";
 
-export function AgentDot({ visual, size, reducedMotion, label, interactive, onAffection, absorbing }: AgentDotProps) {
+export function AgentDot({ visual, size, reducedMotion, label, interactive, onAffection, absorbing, reason }: AgentDotProps) {
   const shape = CORE[visual.semantic] ?? "dot";
   const tint = visual.semantic === "idle" ? "var(--placeholder-core, #8A8D99)" : visual.tint;
   const moving = !reducedMotion && (visual.semantic === "thinking" || visual.semantic === "working" || Boolean(absorbing));
   const name = label ?? "Marcador";
-  const text = `${name}: ${visual.label}`;
+  const text = `${name}: ${visual.label}${reason ? `. ${reason}` : ""}`;
   const onClick = interactive && onAffection ? () => onAffection(visual.allowCosmetic ? "ok" : "suppressed") : undefined;
   return (
     <svg
@@ -78,6 +85,10 @@ export function SplashScreen({ fading, reducedMotion }: { fading: boolean; reduc
     </div>
   );
 }
+
+/** Sem animação contínua, o teto de quadros e a pausa não têm efeito no Marcador. */
+export function setMaxFps(_fps: number): void {}
+export function setPaused(_paused: boolean): void {}
 
 /** O marcador não tem acessórios nem conquistas. */
 export const CROWN_UNLOCKED = false;
