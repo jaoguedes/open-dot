@@ -6,7 +6,8 @@
  */
 import { z } from "zod";
 
-export const AGENT_LIMITS = { agentMd: 48_000, rubrica: 16_000, schema: 8_000, evals: 24_000, evalCount: 12 } as const;
+import { AGENT_LIMITS, packageHash, type AgentFiles } from "./agent-basics.ts";
+export { AGENT_LIMITS, packageHash, type AgentFiles };
 
 /** Capacidades que o papel exige DA FERRAMENTA (não são permissões concedidas pelo pacote). */
 export const CAPABILITIES = ["somente_leitura", "json_com_esquema", "proposta_de_arquivos"] as const;
@@ -35,12 +36,6 @@ export const AgentMetaSchema = z
   .strict();
 export type AgentMeta = z.infer<typeof AgentMetaSchema>;
 
-export interface AgentFiles {
-  agentMd: string;
-  rubrica: string;
-  schema: string;
-  evals: string[];
-}
 export interface AgentPackage {
   meta: AgentMeta;
   body: string;
@@ -95,15 +90,6 @@ export function parseFrontmatter(md: string): { data: Record<string, unknown>; b
   return { data, body: md.slice(end + 5) };
 }
 
-async function sha256(text: string): Promise<string> {
-  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(d), (b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-/** Hash estável do pacote inteiro; o lock fixa cada agente por este valor. */
-export function packageHash(files: AgentFiles): Promise<string> {
-  return sha256(JSON.stringify([files.agentMd, files.rubrica, files.schema, files.evals]));
-}
 
 export async function loadAgentPackage(files: AgentFiles, expectedHash?: string): Promise<AgentPackage> {
   if (files.agentMd.length > AGENT_LIMITS.agentMd) fail("AGENT.md acima do limite.");

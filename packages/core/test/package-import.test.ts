@@ -2,7 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { PackageImportError, filesFromEntries, readZip, safePath, validateImport } from "../src/orchestrator/package-import.ts";
+import { PackageImportError, filesFromEntries, readZip, safePath } from "../src/orchestrator/package-import.ts";
+import { validateImport } from "../src/orchestrator/package-validate.ts";
 
 const root = new URL("../../../", import.meta.url);
 const enc = new TextEncoder();

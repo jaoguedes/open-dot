@@ -12,7 +12,7 @@ import type { ToolId } from "@open-dot/core/orchestrator/catalog.ts";
 import type { ProjectType } from "@open-dot/core/orchestrator/profile.ts";
 import { detectPatterns, draftHash, newProposals, parseSignals, type SkillDraft, type UserSignal } from "@open-dot/core/orchestrator/skill-suggest.ts";
 import { AGENT_LIMITS, loadAgentPackage, type AgentFiles } from "@open-dot/core/orchestrator/agents.ts";
-import { validateImport } from "@open-dot/core/orchestrator/package-import.ts";
+import { validateImport } from "@open-dot/core/orchestrator/package-validate.ts";
 import type { Handler } from "../app.ts";
 import { open } from "../crypto.ts";
 import { json, problem } from "../http.ts";

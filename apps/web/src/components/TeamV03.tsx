@@ -7,7 +7,7 @@
 import { useEffect, useState } from "react";
 import { Chip, MonoLabel } from "./ui.tsx";
 import { PackageImportError, filesFromEntries, readZip, safePath, type RawEntry } from "@open-dot/core/orchestrator/package-import.ts";
-import { loadAgentPackage, type AgentFiles, type AgentPackage } from "@open-dot/core/orchestrator/agents.ts";
+import { declaredMeta, packageHash, type AgentFiles } from "@open-dot/core/orchestrator/agent-basics.ts";
 import { DEMO_RECIPES } from "../demo.ts";
 
 async function call<T>(path: string, method = "GET", body?: unknown): Promise<T> {
@@ -324,15 +324,14 @@ export function EngineSettings({ demo }: { demo: boolean }) {
  * o hash e a licença; o servidor revalida tudo e guarda DESLIGADO.
  */
 function ImportPackage({ demo, onDone }: { demo: boolean; onDone: () => void }) {
-  const [preview, setPreview] = useState<{ pkg: AgentPackage; files: AgentFiles; licenca: string | null; ignorados: string[] } | null>(null);
+  const [preview, setPreview] = useState<{ meta: Record<string, string>; hash: string; files: AgentFiles; licenca: string | null; ignorados: string[] } | null>(null);
   const [msg, setMsg] = useState("");
   async function read(entries: RawEntry[]) {
     setPreview(null);
     setMsg("");
     try {
       const { files, licenca, ignorados } = filesFromEntries(entries);
-      const pkg = await loadAgentPackage(files);
-      setPreview({ pkg, files, licenca, ignorados });
+      setPreview({ meta: declaredMeta(files.agentMd), hash: await packageHash(files), files, licenca, ignorados });
     } catch (e) {
       setMsg(e instanceof PackageImportError || e instanceof Error ? `Pacote recusado: ${e.message.slice(0, 240)}` : "Pacote recusado.");
     }
@@ -360,7 +359,7 @@ function ImportPackage({ demo, onDone }: { demo: boolean; onDone: () => void }) 
     if (!preview) return;
     try {
       await call("/api/orchestrator/agents/import", "POST", { files: preview.files, licenca: preview.licenca });
-      setMsg(`Importado e desligado: ${preview.pkg.meta.id}. Ligue em Especialistas quando quiser.`);
+      setMsg(`Importado e desligado: ${preview.meta.id ?? "pacote"}. Ligue em Especialistas quando quiser.`);
       setPreview(null);
       onDone();
     } catch (e) {
@@ -387,15 +386,16 @@ function ImportPackage({ demo, onDone }: { demo: boolean; onDone: () => void }) 
       {preview && (
         <article className="card-v3 stack-10" aria-label="O que o pacote declara">
           <b>
-            {preview.pkg.meta.id} · {preview.pkg.meta.papel} · {preview.pkg.meta.nivel} · v{preview.pkg.meta.versao}
+            {preview.meta.id ?? "(sem id)"} · {preview.meta.papel ?? "?"} · {preview.meta.nivel ?? "?"} · v{preview.meta.versao ?? "?"}
           </b>
-          <span className="sub">{preview.pkg.meta.descricao}</span>
+          <span className="sub">{preview.meta.descricao}</span>
           <span className="sub">
-            Capacidades que a ferramenta precisa ter: {preview.pkg.meta.capacidades_exigidas.join(", ")}. Licença declarada: {preview.pkg.meta.licenca}.
+            Capacidades que a ferramenta precisa ter: {preview.meta.capacidades_exigidas ?? "—"}. Licença declarada: {preview.meta.licenca ?? "—"}.
           </span>
           <span className="sub">
-            Hash <span className="hash">{preview.pkg.hash}</span>
+            Hash <span className="hash">{preview.hash}</span>
           </span>
+          <span className="tiny">Prévia do que o pacote diz sobre si; o servidor valida tudo ao importar e recusa o que não passar.</span>
           {preview.licenca ? (
             <details>
               <summary>Texto de licença do pacote</summary>

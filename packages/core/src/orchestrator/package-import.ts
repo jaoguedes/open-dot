@@ -6,7 +6,7 @@
  * depois, o mesmo carregador dos agentes do repositório (recusa permissões, hash, tamanho, injeção
  * em metadados). Entra sempre como `experimental` e DESLIGADO.
  */
-import { AGENT_LIMITS, loadAgentPackage, type AgentFiles, type AgentPackage } from "./agents.ts";
+import { AGENT_LIMITS, type AgentFiles } from "./agent-basics.ts";
 
 export class PackageImportError extends Error {}
 const fail = (m: string): never => {
@@ -123,12 +123,4 @@ export function filesFromEntries(entries: RawEntry[]): { files: AgentFiles; lice
     licenca: map.get("LICENSE") ?? map.get("LICENSE.md") ?? map.get("LICENSE.txt") ?? null,
     ignorados,
   };
-}
-
-/** Valida um pacote importado: carregador comum + regras de importação. */
-export async function validateImport(files: AgentFiles, existingIds: string[]): Promise<AgentPackage> {
-  const pkg = await loadAgentPackage(files);
-  if (pkg.meta.nivel !== "experimental") fail("Pacote importado precisa declarar nivel: experimental.");
-  if (existingIds.includes(pkg.meta.id)) fail(`Já existe um agente com o id ${pkg.meta.id}.`);
-  return pkg;
 }
