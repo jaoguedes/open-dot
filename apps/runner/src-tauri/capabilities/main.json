@@ -1,8 +1,13 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
-  "description": "Somente janela local. Sem shell, acesso genérico a arquivos, rede ou conteúdo remoto.",
+  "description": "Janelas locais (principal e painel da bandeja). Sem shell, acesso genérico a arquivos, rede ou conteúdo remoto no frontend.",
   "local": true,
-  "windows": ["main"],
-  "permissions": ["core:default"]
+  "windows": [
+    "main",
+    "panel"
+  ],
+  "permissions": [
+    "core:default"
+  ]
 }
