@@ -11,7 +11,8 @@ import type { Role } from "@open-dot/core/orchestrator/agents.ts";
 import type { ToolId } from "@open-dot/core/orchestrator/catalog.ts";
 import type { ProjectType } from "@open-dot/core/orchestrator/profile.ts";
 import { detectPatterns, draftHash, newProposals, parseSignals, type SkillDraft, type UserSignal } from "@open-dot/core/orchestrator/skill-suggest.ts";
-import { loadAgentPackage, type AgentFiles } from "@open-dot/core/orchestrator/agents.ts";
+import { AGENT_LIMITS, loadAgentPackage, type AgentFiles } from "@open-dot/core/orchestrator/agents.ts";
+import { validateImport } from "@open-dot/core/orchestrator/package-import.ts";
 import type { Handler } from "../app.ts";
 import { open } from "../crypto.ts";
 import { json, problem } from "../http.ts";
@@ -166,6 +167,33 @@ export function registerV03Routes(route: Registrar) {
       }
     }
     return json({ agentes: [...repo, ...extra], nota: "Agentes são dados: não concedem ferramenta nem permissão. Quantidade não é medida de qualidade." });
+  });
+
+  // Pacotes da comunidade (4.4): o navegador lê a pasta/.zip local; o servidor revalida TUDO.
+  route("POST", "/api/orchestrator/agents/import", { auth: true }, async (ctx, req, _p, owner) => {
+    const body = z
+      .object({
+        files: z.object({ agentMd: z.string().max(AGENT_LIMITS.agentMd), rubrica: z.string().max(AGENT_LIMITS.rubrica), schema: z.string().max(AGENT_LIMITS.schema), evals: z.array(z.string().max(AGENT_LIMITS.evals)).max(AGENT_LIMITS.evalCount) }).strict(),
+        licenca: z.string().max(20_000).nullable(),
+      })
+      .strict()
+      .parse(await read(req));
+    const imported = await ctx.db.query<{ agent_id: string }>("SELECT agent_id FROM od_agent_imports WHERE owner_id=?", [owner!]);
+    if (imported.length >= 20) return problem(429, "limit", "Até 20 pacotes importados.");
+    let pkg;
+    try {
+      pkg = await validateImport(body.files, [...(await agentPackages()).map((a) => a.meta.id), ...imported.map((r) => r.agent_id)]);
+    } catch (e) {
+      return problem(422, "pacote_recusado", e instanceof Error ? e.message.slice(0, 300) : "Pacote recusado.");
+    }
+    await ctx.db.run("INSERT INTO od_agent_imports(owner_id,agent_id,hash,files_json,enabled,created_at,updated_at) VALUES(?,?,?,?,0,?,?)", [owner!, pkg.meta.id, pkg.hash, JSON.stringify(body.files), ctx.now(), ctx.now()]);
+    return json({ id: pkg.meta.id, hash: pkg.hash, nivel: pkg.meta.nivel, ativo: false, licencaInformada: body.licenca !== null }, 201);
+  });
+
+  route("PUT", "/api/orchestrator/agents/:id/ativo", { auth: true }, async (ctx, req, p, owner) => {
+    const { ativo, hash } = z.object({ ativo: z.boolean(), hash: z.string().regex(/^[a-f0-9]{64}$/) }).strict().parse(await read(req));
+    const r = await ctx.db.run("UPDATE od_agent_imports SET enabled=?,updated_at=? WHERE owner_id=? AND agent_id=? AND hash=?", [ativo ? 1 : 0, ctx.now(), owner!, p.id!, hash]);
+    return r.changes ? json({ id: p.id, ativo }) : problem(409, "hash_mismatch", "Pacote não encontrado com esse hash. Revise antes de ligar.");
   });
 
   route("GET", "/api/orchestrator/skills", { auth: true }, async (ctx, _r, _p, owner) => {
