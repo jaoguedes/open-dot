@@ -1,4 +1,4 @@
-# Ambiente de desenvolvimento do v0.2
+# Ambiente de desenvolvimento (v0.2, atualizado no v0.3)
 
 Máquina do mantenedor, macOS Intel (x86_64), 21/10/2026.
 
@@ -12,3 +12,15 @@ Máquina do mantenedor, macOS Intel (x86_64), 21/10/2026.
 | Claude Code | 2.1.296 | instalado, **sem login** (`authMethod: none`) |
 
 Exceção de rede usada: só o instalador oficial `rustup` e os registros de pacotes que ele e o `cargo` usam.
+
+## v0.3 (22/10/2026)
+
+| Ferramenta | Versão | Observação |
+|---|---|---|
+| Node / npm | 24.21.0 | sem mudança |
+| Rust (cargo / rustc) | 1.99.1 / 1.99.1 | suficiente para Tauri 2 e os plugins oficiais de atualização, início automático e notificação; nada foi atualizado |
+| Codex CLI | 0.163.0-alpha.11 | logado (ChatGPT) |
+| Claude Code | 2.1.306 | **logado por assinatura (claude.ai)**; driver do Runner segue opt-in e desligado |
+| Gemini CLI, Cursor | — | não instalados |
+
+Crates novas do Runner (licenças em `docs/LICENCAS.md`): `sysinfo` (saúde), `tauri-plugin-updater`, `tauri-plugin-autostart`, `tauri-plugin-notification`, `minisign-verify` (assinatura), `base64`, `semver`; `minisign` só em testes (chave efêmera na memória).
