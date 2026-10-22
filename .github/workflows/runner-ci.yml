@@ -71,7 +71,7 @@ jobs:
         run: npm run runner:desktop -- build --target ${{ matrix.target }} --bundles ${{ matrix.bundle }} --ci --no-sign --config '{"bundle":{"createUpdaterArtifacts":false}}' -- --locked
       - name: Padronizar nome e checksum
         run: node scripts/package-runner.mjs ${{ matrix.target }} ${{ matrix.artifact }}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: OpenDot-Runner-${{ matrix.artifact }}
           path: apps/runner/installers/*
