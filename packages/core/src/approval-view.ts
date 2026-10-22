@@ -62,8 +62,11 @@ export function lineDiff(before: string, after: string): DiffLine[] {
   let i = 0,
     j = 0;
   while (i < n && j < m) {
-    if (a[i] === b[j]) (out.push({ kind: " ", text: a[i]! }), i++, j++);
-    else if (dp[i + 1]![j]! >= dp[i]![j + 1]!) out.push({ kind: "-", text: a[i++]! });
+    if (a[i] === b[j]) {
+      out.push({ kind: " ", text: a[i]! });
+      i++;
+      j++;
+    } else if (dp[i + 1]![j]! >= dp[i]![j + 1]!) out.push({ kind: "-", text: a[i++]! });
     else out.push({ kind: "+", text: b[j++]! });
   }
   while (i < n) out.push({ kind: "-", text: a[i++]! });

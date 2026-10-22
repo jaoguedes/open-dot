@@ -14,7 +14,7 @@ export interface Finding {
 }
 
 const SEV: ReadonlySet<string> = new Set(["critico", "alto", "medio", "baixo"]);
-const clip = (v: unknown, n: number) => (typeof v === "string" ? v.replace(/[\u0000-\u0008\u000b-\u001f]/g, " ").slice(0, n) : "");
+const clip = (v: unknown, n: number) => (typeof v === "string" ? v.replace(/\p{Cc}/gu, (c) => (c === "\n" || c === "\t" ? c : " ")).slice(0, n) : "");
 
 /**
  * Extrai os achados de uma saída de revisor JÁ validada pelo esquema do agente. Aceita o formato do
