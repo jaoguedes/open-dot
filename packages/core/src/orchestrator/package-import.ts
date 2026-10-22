@@ -22,7 +22,7 @@ export interface RawEntry {
 
 /** Caminho relativo seguro dentro do pacote. Qualquer outra forma é recusada. */
 export function safePath(name: string): string {
-  if (!name || name.length > 200 || /[\u0000-\u001f\\]/.test(name)) fail(`Nome de arquivo inválido no pacote: ${JSON.stringify(name.slice(0, 60))}.`);
+  if (!name || name.length > 200 || /[\p{Cc}\\]/u.test(name)) fail(`Nome de arquivo inválido no pacote: ${JSON.stringify(name.slice(0, 60))}.`);
   if (name.startsWith("/") || /^[a-zA-Z]:/.test(name)) fail("Pacote com caminho absoluto: recusado.");
   const parts = name.split("/").filter((p) => p !== "");
   if (parts.some((p) => p === ".." || p === ".")) fail("Pacote tenta escrever fora da própria pasta (zip-slip): recusado.");

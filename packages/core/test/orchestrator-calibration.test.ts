@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULT_CALIBRATION, EMPTY_CALIBRATION, calibrate, calibrationFactor, explainKey, type CalibrationState, type MeasuredOutcome } from "../src/orchestrator/calibration.ts";
-import { mulberry32 } from "../src/dot/physics.ts";
+import { seeded as mulberry32 } from "../src/orchestrator/prng.ts";
 
 function world(p: number, n: number, seed: number, tool: MeasuredOutcome["tool"] = "codex"): MeasuredOutcome[] {
   const r = mulberry32(seed);
