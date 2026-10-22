@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LicenseRef-OpenDot-Mascot-All-Rights-Reserved
 import { useEffect, useId, useRef, type PointerEvent, type KeyboardEvent } from "react";
 import type { Accessory, AgentVisual, SemanticState } from "@open-dot/core";
-import { DotEngine, bodyPath, type AccessoryKind, type DotFrame, type DotStateKey, type ParticleFrame } from "@open-dot/core/dot/index.ts";
+import { DotEngine, bodyPalette, bodyPath, type AccessoryKind, type DotFrame, type DotMood, type DotStateKey, type DotTint, type ParticleFrame } from "@open-dot/core/dot/index.ts";
 import { EYE, INK_COLOR, artDefs, badgeInner, heartPath, star4 } from "./art.ts";
 import { CROWN_UNLOCKED, accLayout } from "./accessories.ts";
 import { subscribe, type TickerHandle } from "./ticker.ts";
@@ -49,7 +49,19 @@ export interface DotViewProps {
   hello?: boolean;
   /** Antena: pisca só quando chega notícia importante. */
   antennaPulse?: boolean;
+  /** Cor interna do agente (D-027). Ausente = Dot original. */
+  tint?: DotTint;
+  /** Calor/esforço medido 0..1 (D-028). Só a partir de estado real. */
+  heat?: number;
+  /** Carga no limite 0..1 (D-028). Só a partir de estado real. */
+  strain?: number;
+  /** Olhos acompanham o ponteiro/foco enquanto a janela está visível e focada (D-028). */
+  followPointer?: boolean;
+  /** Motivo real da reação, mostrado ao passar o mouse ou no foco ("CPU 92% há 1 min"). */
+  reason?: string;
 }
+
+const GAZE_FRAME_MS = 33;
 
 function resolveAcc(a: Accessory | "ring"): AccessoryKind {
   if (a === "crown" && !CROWN_UNLOCKED) return "none";
@@ -149,9 +161,9 @@ function set(el: Element | null, attr: string, v: string | number): void {
   if (el) el.setAttribute(attr, String(v));
 }
 
-function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean): void {
-  // Paleta aprovada: iluminação original de repouso, sem repintar a pele por estado.
-  svg.style.setProperty("--g", "rgb(63,123,255)");
+function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean, glow = "rgb(63,123,255)"): void {
+  // Iluminação original de repouso; com cor de agente (D-027), o brilho vira a cor do agente.
+  svg.style.setProperty("--g", glow);
   svg.style.setProperty("--t", "#EDE8FC");
   svg.setAttribute("aria-label", f.ariaLabel);
   const d = bodyPath(f.m);
@@ -178,22 +190,36 @@ function apply(svg: SVGSVGElement, uid: string, f: DotFrame, pulse: boolean): vo
       gb = q(svg, `eyeB${i}`);
     const pa = q(svg, `eyeAd${i}`),
       pb = q(svg, `eyeBd${i}`);
-    const trA = `translate(${eye.x} ${eye.y}) scale(${eye.fx} ${eye.blink}) rotate(${eye.spinDeg})`;
-    const trB = `translate(${eye.x} ${eye.y}) scale(${eye.fx} 1) rotate(${eye.spinDeg})`;
+    const gr = eye.grow ?? 1;
+    const trA = `translate(${eye.x} ${eye.y}) scale(${eye.fx * gr} ${eye.blink * gr}) rotate(${eye.spinDeg})`;
+    const trB = `translate(${eye.x} ${eye.y}) scale(${eye.fx * gr} ${gr}) rotate(${eye.spinDeg})`;
     set(ga, "transform", trA);
     set(gb, "transform", trB);
     set(ga, "opacity", (eye.next ? 1 - eye.p : 1) * eye.vis);
     set(gb, "opacity", (eye.next ? eye.p : 0) * eye.vis);
     set(pa, "d", EYE[eye.shape]());
     if (eye.next) set(pb, "d", EYE[eye.next]());
+    const glint = svg.querySelector(`[data-r="glint${i}"]`);
+    if (glint) {
+      set(glint, "transform", `translate(${eye.x - 2 * gr} ${eye.y - 5 * gr})`);
+      set(glint, "opacity", (eye.glint ?? 0) * eye.vis * eye.blink);
+    }
   });
   f.cheeks.forEach((c, i) => {
     const el = q(svg, `cheek${i}`);
     set(el, "cx", c.x);
     set(el, "cy", c.y);
     set(el, "rx", c.rx);
+    if (c.ry !== undefined) set(el, "ry", c.ry);
     set(el, "opacity", c.opacity);
   });
+  for (let i = 0; i < 2; i++) {
+    const drop = svg.querySelector(`[data-r="sweat${i}"]`);
+    if (!drop) break;
+    const d = f.sweat?.[i];
+    set(drop, "transform", d ? `translate(${d.x} ${d.y}) scale(${d.s})` : "");
+    set(drop, "opacity", d ? d.opacity : 0);
+  }
 
   const ind = q(svg, "ind");
   set(ind, "transform", `translate(${f.ind.x} ${f.ind.y}) scale(${f.ind.scale}) rotate(${f.ind.rot})`);
@@ -313,6 +339,13 @@ export function DotView(props: DotViewProps) {
   const tickRef = useRef<TickerHandle | null>(null);
   const pulseRef = useRef(!!props.antennaPulse);
   pulseRef.current = !!props.antennaPulse;
+  const moodOn = props.heat !== undefined || props.strain !== undefined || !!props.followPointer;
+  const palette = props.tint ? bodyPalette(props.tint) : null;
+  const glowRef = useRef<string | undefined>(undefined);
+  glowRef.current = palette?.glow;
+  const gazeRef = useRef<[number, number] | null>(null);
+  const moodRef = useRef<DotMood | null>(null);
+  moodRef.current = moodOn ? { gaze: gazeRef.current, heat: props.heat ?? 0, strain: props.strain ?? 0 } : null;
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -326,12 +359,13 @@ export function DotView(props: DotViewProps) {
     else engine.setState(map, true);
     lastSem.current = props.visual.semantic;
     if (props.hello) engine.react("oi");
-    apply(svg, uid, engine.frame(), pulseRef.current);
+    if (moodRef.current) engine.setMood(moodRef.current);
+    apply(svg, uid, engine.frame(), pulseRef.current, glowRef.current);
 
     const tick = subscribe(
       (dt) => {
         engine.step(dt);
-        apply(svg, uid, engine.frame(), pulseRef.current);
+        apply(svg, uid, engine.frame(), pulseRef.current, glowRef.current);
         if (props.small && !engine.reaction) {
           const f = engine.frame();
           if (Math.abs(f.sx - 1) < 0.01 && Math.abs(f.m) < 0.02) tick.setActive(false);
@@ -369,7 +403,7 @@ export function DotView(props: DotViewProps) {
     tickRef.current?.setVisible(true);
     tickRef.current?.setActive(true);
     const svg = svgRef.current;
-    if (svg) apply(svg, uid, e.frame(), pulseRef.current);
+    if (svg) apply(svg, uid, e.frame(), pulseRef.current, glowRef.current);
   }, [props.visual.semantic, props.accessory, props.ring, uid]);
 
   useEffect(() => {
@@ -386,7 +420,7 @@ export function DotView(props: DotViewProps) {
       tickRef.current?.setActive(true);
       e.step(0.3);
       const svg = svgRef.current;
-      if (svg) apply(svg, uid, e.frame(), pulseRef.current);
+      if (svg) apply(svg, uid, e.frame(), pulseRef.current, glowRef.current);
     }
     props.onAffection?.(r === "ok" ? "ok" : r === "cooldown" ? "cooldown" : "suppressed");
   }, [props.affectionSignal, props.visual.allowCosmetic, props.onAffection, uid]);
@@ -400,6 +434,75 @@ export function DotView(props: DotViewProps) {
     }
     lastAbs.current = !!props.absorbing;
   }, [props.absorbing]);
+
+  useEffect(() => {
+    const e = eng.current;
+    if (!e) return;
+    e.setMood(moodRef.current);
+    if (moodRef.current) {
+      tickRef.current?.setVisible(true);
+      tickRef.current?.setActive(true);
+    }
+  }, [moodOn, props.heat, props.strain]);
+
+  // Olhar (D-028): só com a janela visível e focada, no máximo ~30 quadros/s, e nada de listener
+  // com movimento reduzido ou janela oculta. Sair da janela devolve os olhos ao centro.
+  useEffect(() => {
+    if (!props.followPointer || props.reducedMotion) return;
+    let last = 0;
+    let listening = false;
+    const aim = (x: number, y: number) => {
+      const box = wrap.current?.getBoundingClientRect();
+      const e = eng.current;
+      if (!box || !e) return;
+      const dx = (x - (box.left + box.width / 2)) / Math.max(240, box.width * 2);
+      const dy = (y - (box.top + box.height * 0.55)) / Math.max(200, box.height * 2);
+      gazeRef.current = [Math.max(-1, Math.min(1, dx)), Math.max(-1, Math.min(1, dy))];
+      e.setMood({ ...(moodRef.current ?? {}), gaze: gazeRef.current });
+      tickRef.current?.setActive(true);
+    };
+    const center = () => {
+      gazeRef.current = null;
+      eng.current?.setMood({ ...(moodRef.current ?? {}), gaze: null });
+    };
+    const onPointer = (ev: globalThis.PointerEvent) => {
+      const now = performance.now();
+      if (now - last < GAZE_FRAME_MS) return;
+      last = now;
+      aim(ev.clientX, ev.clientY);
+    };
+    const onFocus = (ev: FocusEvent) => {
+      const el = ev.target instanceof Element ? ev.target.getBoundingClientRect() : null;
+      if (el && el.width + el.height > 0) aim(el.left + el.width / 2, el.top + el.height / 2);
+    };
+    const start = () => {
+      if (listening || document.visibilityState !== "visible" || !document.hasFocus()) return;
+      listening = true;
+      window.addEventListener("pointermove", onPointer, { passive: true });
+      document.addEventListener("focusin", onFocus);
+    };
+    const stop = () => {
+      if (listening) {
+        window.removeEventListener("pointermove", onPointer);
+        document.removeEventListener("focusin", onFocus);
+      }
+      listening = false;
+      center();
+    };
+    const onVis = () => (document.visibilityState === "visible" && document.hasFocus() ? start() : stop());
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("focus", start);
+    window.addEventListener("blur", stop);
+    document.documentElement.addEventListener("pointerleave", center);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", start);
+      window.removeEventListener("blur", stop);
+      document.documentElement.removeEventListener("pointerleave", center);
+    };
+  }, [props.followPointer, props.reducedMotion]);
 
   const onMove = (ev: PointerEvent<HTMLDivElement>) => {
     const e = eng.current,
@@ -427,16 +530,17 @@ export function DotView(props: DotViewProps) {
     tickRef.current?.setActive(true);
     e.step(1 / 60);
     const svg = svgRef.current;
-    if (svg) apply(svg, uid, e.frame(), pulseRef.current);
+    if (svg) apply(svg, uid, e.frame(), pulseRef.current, glowRef.current);
   };
 
-  const label = props.label ?? `${props.visual.label}`;
+  const label = props.reason ? `${props.label ?? props.visual.label}. ${props.reason}` : (props.label ?? `${props.visual.label}`);
   return (
     <div
       ref={wrap}
       className="dot-view"
       data-dot-renderer="engine"
       style={{ width: props.size, cursor: props.interactive ? "pointer" : undefined, touchAction: "manipulation" }}
+      title={props.reason}
       onPointerMove={onMove}
       onClick={props.interactive ? onTap : undefined}
       onKeyDown={
@@ -464,7 +568,7 @@ export function DotView(props: DotViewProps) {
         style={{ overflow: "visible", display: "block" }}
       >
         <defs>
-          <g dangerouslySetInnerHTML={{ __html: artDefs(uid) }} />
+          <g dangerouslySetInnerHTML={{ __html: palette ? artDefs(uid, palette) : artDefs(uid) }} />
           <clipPath id={`${uid}-clip`}>
             <path data-r="clip" d={bodyPath(0)} />
           </clipPath>
@@ -570,6 +674,16 @@ export function DotView(props: DotViewProps) {
           <g data-r="eyeB1" opacity="0">
             <path data-r="eyeBd1" fill={INK_COLOR} />
           </g>
+          {moodOn &&
+            [0, 1].map((i) => (
+              <g key={`m${i}`}>
+                <ellipse data-r={`glint${i}`} rx="2.2" ry="3" fill="#FFFFFF" opacity="0" />
+                <g data-r={`sweat${i}`} opacity="0">
+                  <path d="M0 -9C3 -4 6 -1 6 3A6 6 0 0 1 -6 3C-6 -1 -3 -4 0 -9Z" fill="#8FD3FF" stroke="#5FB4F0" strokeWidth="1" />
+                  <ellipse cx="-2" cy="2" rx="1.6" ry="2.4" fill="#FFFFFF" opacity="0.8" />
+                </g>
+              </g>
+            ))}
           <g data-r="accSpin">
             <g data-r="ao">
               <path data-r="cap-bandS" fill="none" stroke="#4E46A8" strokeWidth="9" opacity="0.3" />

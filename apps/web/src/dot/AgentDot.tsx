@@ -20,6 +20,11 @@ export interface AgentDotProps {
   hello?: boolean;
   ring?: boolean;
   antennaPulse?: boolean;
+  tint?: DotViewProps["tint"];
+  heat?: number;
+  strain?: number;
+  followPointer?: boolean;
+  reason?: string;
 }
 
 /** Ligação do app ao motor: semantic, acessório, anel da Sentinela, carinho e absorção. */

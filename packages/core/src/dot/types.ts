@@ -18,6 +18,10 @@ export interface EyeFrame {
   vis: number;
   blink: number;
   spinDeg: number;
+  /** Só com reações de carga (v0.3): olho maior no pânico. Ausente = 1. */
+  grow?: number;
+  /** Só no pânico: opacidade do brilho branco no olho. */
+  glint?: number;
 }
 
 export interface ParticleFrame {
@@ -106,7 +110,9 @@ export interface DotFrame {
   specCx: number;
   spec2Cx: number;
   eyes: [EyeFrame, EyeFrame];
-  cheeks: [{ x: number; y: number; rx: number; opacity: number }, { x: number; y: number; rx: number; opacity: number }];
+  cheeks: [CheekFrame, CheekFrame];
+  /** Só com reações de carga (v0.3): gotas de suor na têmpora. */
+  sweat?: SweatFrame[];
   ind: IndFrame;
   waves: WaveFrame[];
   hands: [HandFrame, HandFrame];
@@ -120,6 +126,35 @@ export interface DotFrame {
   accSpinTx: number;
   accSpinSc: number;
   accSpinOp: number;
+}
+
+export interface CheekFrame {
+  x: number;
+  y: number;
+  rx: number;
+  opacity: number;
+  /** Só com rubor (v0.3). Ausente = 8. */
+  ry?: number;
+}
+
+export interface SweatFrame {
+  x: number;
+  y: number;
+  s: number;
+  opacity: number;
+}
+
+/**
+ * Reações autorizadas pelo João (D-028), todas opcionais. Só disparam a partir de medida real
+ * (saúde da máquina) ou de ponteiro real; ausentes = Dot idêntico ao de sempre.
+ */
+export interface DotMood {
+  /** Direção do ponteiro/foco, cada eixo em −1..1 (x para a direita, y para baixo). */
+  gaze?: [number, number] | null;
+  /** Calor/esforço 0..1: rubor e, a partir de 0,6, uma gota. */
+  heat?: number;
+  /** Carga no limite 0..1: a partir de 0,7, pânico (olhos maiores com brilho, piscar rápido, tremor curto, duas gotas). */
+  strain?: number;
 }
 
 export type EngineEvent = (e: EngineMut) => void;
