@@ -355,3 +355,67 @@ export const DEMO_EQUIPE = {
   ],
   avisos: ["Exemplo: modo uma ferramenta. A revisão não é independente."],
 } as const;
+
+const DEMO_PROPOSAL_1 = JSON.stringify({
+  summary: "Exemplo fictício: valida o token antes de usar e devolve erro claro quando expirou.",
+  files: [
+    { path: "src/auth/token.ts", beforeHash: "exemplo", beforeContent: "export function readToken(raw: string) {\n  return JSON.parse(raw);\n}", content: "export function readToken(raw: string) {\n  if (!raw) throw new Error(\"Sessão expirada. Entre de novo.\");\n  const t = JSON.parse(raw);\n  if (t.exp < Date.now()) throw new Error(\"Sessão expirada. Entre de novo.\");\n  return t;\n}" },
+    { path: "test/token.test.ts", beforeHash: null, content: "import { readToken } from \"../src/auth/token\";\n// caso de token vencido (exemplo fictício)\n" },
+  ],
+});
+const DEMO_PROPOSAL_2 = JSON.stringify({
+  summary: "Exemplo fictício: teste do fluxo de login com senha errada.",
+  files: [{ path: "test/login.test.ts", beforeHash: null, content: "// exemplo fictício\ntest(\"senha errada mostra mensagem\", () => {});\n" }],
+});
+
+/**
+ * DEMONSTRAÇÃO do Runner (v0.3): dispositivos, tarefas e propostas fictícias, rotuladas como
+ * “DADOS DE EXEMPLO” em todas as telas. O hash de cada proposta é recalculado no navegador a
+ * partir do texto mostrado; aqui ele é o SHA-256 real desse texto.
+ */
+export const DEMO_RUNNER = {
+  devices: [
+    {
+      id: "demo-mac",
+      name: "Mac de exemplo",
+      online: true,
+      revoked: false,
+      compatible: true,
+      compatibilityReason: "",
+      projects: [{ id: "demo-proj", label: "app-exemplo" }],
+      drivers: [
+        { id: "codex", installed: true, authenticated: true, executable: true, reason: "Exemplo: pronto." },
+        { id: "claude-code", installed: true, authenticated: false, executable: false, reason: "Exemplo: desligado até você ativar." },
+        { id: "cursor", installed: false, authenticated: false, executable: false, reason: "Indisponível nesta versão." },
+      ],
+    },
+  ],
+  tasks: [
+    { id: "demo-t1", deviceId: "demo-mac", projectId: "demo-proj", mechanism: "codex", state: "awaiting_approval", cancelRequested: 0, updatedAt: Date.parse("2026-10-22T09:12:00Z") },
+    { id: "demo-t2", deviceId: "demo-mac", projectId: "demo-proj", mechanism: "codex", state: "awaiting_approval", cancelRequested: 0, updatedAt: Date.parse("2026-10-22T09:05:00Z") },
+    { id: "demo-t3", deviceId: "demo-mac", projectId: "demo-proj", mechanism: "codex", state: "running", cancelRequested: 0, updatedAt: Date.parse("2026-10-22T09:20:00Z") },
+    { id: "demo-t4", deviceId: "demo-mac", projectId: "demo-proj", mechanism: "codex", state: "completed", cancelRequested: 0, updatedAt: Date.parse("2026-10-21T17:40:00Z") },
+  ],
+  details: {
+    "demo-t1": {
+      events: [
+        { seq: 1, kind: "started", text: "Exemplo: tarefa iniciada no worktree isolado." },
+        { seq: 2, kind: "proposal", text: "Proposta recebida." },
+      ],
+      approval: { raw: DEMO_PROPOSAL_1, hash: "", decision: "pending", expiresAt: Date.parse("2099-01-01T00:00:00Z") },
+    },
+    "demo-t2": { events: [{ seq: 1, kind: "proposal", text: "Proposta recebida." }], approval: { raw: DEMO_PROPOSAL_2, hash: "", decision: "pending", expiresAt: Date.parse("2099-01-01T00:00:00Z") } },
+    "demo-t3": { events: [{ seq: 1, kind: "started", text: "Exemplo: etapa 2 de 4, propondo mudanças." }], approval: null },
+    "demo-t4": { events: [{ seq: 1, kind: "completed", text: "Exemplo: arquivos aplicados no worktree." }], approval: { raw: DEMO_PROPOSAL_2, hash: "", decision: "approve", expiresAt: Date.parse("2026-10-21T18:00:00Z") } },
+  },
+};
+
+/** DEMONSTRAÇÃO: nomes das receitas para os atalhos do Workspace (as reais vêm do servidor). */
+export const DEMO_RECIPES = [
+  { id: "corrigir-bug", nome: "Corrigir um bug" },
+  { id: "nova-tela", nome: "Nova tela" },
+  { id: "revisao-de-seguranca", nome: "Revisão de segurança" },
+  { id: "atualizar-documentacao", nome: "Atualizar a documentação" },
+  { id: "revisar-proposta", nome: "Revisar uma proposta" },
+  { id: "planejar-ideia", nome: "Planejar uma ideia" },
+] as const;

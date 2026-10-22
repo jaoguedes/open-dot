@@ -33,6 +33,7 @@ const Team = lazy(() => import("./views/Team.tsx").then((m) => ({ default: m.Tea
 const Memory = lazy(() => import("./views/Memory.tsx").then((m) => ({ default: m.Memory })));
 const Settings = lazy(() => import("./views/Settings.tsx").then((m) => ({ default: m.Settings })));
 const Correio = lazy(() => import("./views/Correio.tsx").then((m) => ({ default: m.Correio })));
+const Approvals = lazy(() => import("./views/Approvals.tsx").then((m) => ({ default: m.Approvals })));
 const More = lazy(() => import("./views/More.tsx").then((m) => ({ default: m.More })));
 import { DotTrouble, type TroubleInfo } from "./components/DotTrouble.tsx";
 import { fmtHeaderStamp, fmtTime } from "./format.ts";
@@ -89,6 +90,7 @@ const PALETTE_DESTINATIONS = [
   { label: "Runner desktop", path: "/runner" },
   { label: "Correio e Notícias", path: "/correio" },
   { label: "Equipe", path: "/equipe" },
+  { label: "Aprovações do Runner", path: "/aprovacoes" },
   { label: "Rotinas", path: "/rotinas" },
   { label: "Conexões", path: "/conexoes" },
   { label: "Mascote e aparência", path: "/mascote" },
@@ -236,6 +238,9 @@ export function App() {
       break;
     case "/correio":
       view = <Correio />;
+      break;
+    case "/aprovacoes":
+      view = <Approvals />;
       break;
     case "/mais":
       view = <More />;
