@@ -25,5 +25,5 @@ SPDX-License-Identifier = "LicenseRef-OpenDot-Mascot-All-Rights-Reserved"
 [[annotations]]
 path = ["apps/web/public/fonts/**"]
 precedence = "override"
-SPDX-FileCopyrightText = "Autores das fontes Inter, Instrument Serif e JetBrains Mono"
+SPDX-FileCopyrightText = "Autores das fontes Inter, Instrument Serif, JetBrains Mono e Plus Jakarta Sans"
 SPDX-License-Identifier = "OFL-1.1"

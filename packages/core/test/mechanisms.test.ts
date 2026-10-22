@@ -7,9 +7,9 @@ test("identidades aprovadas são mecanismos independentes de funções, sem What
   assert.deepEqual(
     MECHANISMS.map(({ name, color }) => [name, color]),
     [
-      ["Codex", "#8878EE"],
-      ["Claude Code", "#E99A69"],
-      ["Cursor", "#69A9DE"],
+      ["Codex", "#A48BFF"],
+      ["Claude Code", "#FF9A55"],
+      ["Cursor", "#62AAFF"],
     ],
   );
   assert.equal(new Set(MECHANISMS.map((m) => m.id)).size, 3);

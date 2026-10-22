@@ -1,5 +1,26 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
-/* Tokens do sistema visual (tela 05, D-015). Nenhuma cor solta nos componentes. */
+/* Tokens do sistema visual (v0.3: docs/DESIGN.md, D-027). Nenhuma cor solta nos componentes. */
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/PlusJakartaSans-400.woff2") format("woff2");
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/PlusJakartaSans-600.woff2") format("woff2");
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/PlusJakartaSans-800.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
 @font-face {
   font-family: "Inter";
   src: url("/fonts/Inter-Regular.woff") format("woff");
@@ -37,7 +58,7 @@
 }
 
 :root {
-  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: "Instrument Serif", "Times New Roman", serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", menlo, monospace;
   --s1: 4px;
@@ -54,31 +75,42 @@
   --ask-bar: 96px;
   --dock: 0px;
   --sidebar: 260px;
+  --rail: 84px;
+  --rail-open: 248px;
+  --bottom-bar: 0px;
   --context: 280px;
   --reading: 920px;
 
-  --bg: #050608;
-  --surface: #0e1014;
-  --surface-2: #16181e;
-  --text: #f3f4f7;
-  --text-2: #9aa0ae;
-  --text-3: #80869a;
-  --border: #1a1d24;
+  /* v0.3 (DESIGN.md): fundo, painel, cartão, borda e texto. */
+  --bg: #07080c;
+  --panel: #0a0c11;
+  --surface: #0e1017;
+  --surface-2: #141722;
+  --text: #f3f4f8;
+  --text-2: #a3a8ba;
+  --text-3: #8e93a6;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.12);
   /* Rodada 4: acento amarelo do ícone. Texto sobre amarelo é sempre --on-accent. */
   --accent: #ffbc03;
   --accent-soft: rgba(255, 188, 3, 0.14);
   --on-accent: #1a1400;
   --link: #ffd24a;
-  --ok: #2bd47f;
+  --ok: #34d17b;
+  --approve: #1c834e;
+  --amber: #f5b342;
+  --blue: #5b8cff;
   /* "Precisa de você" e alertas: laranja, nunca o amarelo do acento. */
   --warn: #ff7a2f;
-  --err: #ff4d6a;
+  --err: #f0626e;
   --info: #ffd24a;
   --muted: #6b7181;
-  /* Identidade só de mecanismos. Funções legadas usam tom neutro. */
-  --mechanism-codex: #8878EE;
-  --mechanism-claude-code: #E99A69;
-  --mechanism-cursor: #69A9DE;
+  /* Identidade de agentes (D-027). Também é a cor interna do Dot via tint. */
+  --mechanism-codex: #a48bff;
+  --mechanism-claude-code: #ff9a55;
+  --mechanism-cursor: #62aaff;
+  --agent-sentinela-id: #4fe3b6;
+  --agent-foco-id: #f28fd0;
   --agent-correio: var(--text-2);
   --agent-codigo: var(--text-2);
   --agent-sentinela: var(--text-2);
