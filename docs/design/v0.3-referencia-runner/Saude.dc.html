@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Runner · Saúde do computador</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+body{margin:0;background:#07080C}
+.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font-family:inherit;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#F3F4F8;display:inline-flex;align-items:center;justify-content:center;padding:0 16px;height:44px;border-radius:12px;font-size:14px;font-weight:600;gap:8px}
+.card{background:#0E1017;border:1px solid rgba(255,255,255,.07);border-radius:18px}
+.mono{font-family:'JetBrains Mono',monospace;letter-spacing:.18em;font-size:10.5px;color:#8E93A6}
+.ni{position:relative;width:48px;height:48px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;color:#8E93A6;text-decoration:none}
+.ni.on{background:rgba(255,255,255,.1);color:#fff}
+.ni:hover{background:rgba(255,255,255,.06);color:#fff}
+.chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:15px;border:1px solid rgba(255,255,255,.1);font-size:12.5px;color:#A3A8BA}
+.seg{display:flex;border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden}
+.seg span{flex:1;text-align:center;padding:10px 8px;font-size:13.5px;color:#A3A8BA}
+.seg span.on{background:rgba(255,255,255,.12);color:#fff;font-weight:700}
+.tg{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.sw{width:42px;height:24px;border-radius:12px;background:rgba(255,255,255,.14);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#C9CCDA}
+.sw.on{background:#1F8F55}
+.sw.on::after{left:21px;background:#fff}
+</style>
+</helmet>
+<div style="width:1080px;height:860px;box-sizing:border-box;display:flex;flex-direction:column;background:#07080C;color:#F3F4F8;font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.4;overflow:hidden;border-radius:12px;border:1px solid rgba(255,255,255,.1)">
+  <div style="height:40px;flex:none;display:flex;align-items:center;padding:0 16px;background:#0A0C11;border-bottom:1px solid rgba(255,255,255,.07)">
+    <span style="display:flex;gap:8px"><i style="width:12px;height:12px;border-radius:50%;background:#F0626E"></i><i style="width:12px;height:12px;border-radius:50%;background:#F5B342"></i><i style="width:12px;height:12px;border-radius:50%;background:#34D17B"></i></span>
+    <span style="flex:1;text-align:center;font-size:13px;color:#8E93A6">Open Dot Runner</span>
+    <span style="width:52px"></span>
+  </div>
+  <div style="flex:1;min-height:0;display:flex">
+    <nav aria-label="Principal" style="width:84px;flex:none;box-sizing:border-box;padding:16px 0;display:flex;flex-direction:column;align-items:center;gap:6px;background:#0A0C11;border-right:1px solid rgba(255,255,255,.07)">
+      <img src="dot-default.svg" alt="Open Dot" style="width:52px;height:auto;margin-bottom:10px">
+      <a class="ni" href="Main.dc.html" aria-label="Hoje" title="Hoje"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg></a>
+      <a class="ni" href="#" aria-label="Tarefas" title="Tarefas"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10"/><rect x="3.5" y="4.5" width="3" height="3" rx=".8"/><rect x="3.5" y="10.5" width="3" height="3" rx=".8"/><rect x="3.5" y="16.5" width="3" height="3" rx=".8"/></svg></a>
+      <a class="ni" href="#" aria-label="Aprovações, 2 pendentes" title="Aprovações"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg><span style="position:absolute;top:5px;right:5px;min-width:17px;height:17px;border-radius:9px;background:#34D17B;color:#0B0C10;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">2</span></a>
+      <a class="ni" href="#" aria-label="Ferramentas" title="Ferramentas"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M7 10l3 2.5L7 15M12.5 15H17"/></svg></a>
+      <a class="ni on" href="Saude.dc.html" aria-label="Saúde" aria-current="page" title="Saúde"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg></a>
+      <a class="ni" href="Processos.dc.html" aria-label="Processos" title="Processos"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9.5 9.5h5v5h-5zM9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></svg></a>
+      <a class="ni" href="Atualizacoes.dc.html" aria-label="Atualizações" title="Atualizações"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 19.5h14"/></svg></a>
+      <span style="flex:1"></span>
+      <a class="ni" href="Pareamento.dc.html" aria-label="Ajustes" title="Ajustes"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></a>
+    </nav>
+
+    <main style="flex:1;min-width:0;padding:24px 28px;display:flex;flex-direction:column;gap:16px;background:radial-gradient(520px 280px at 82% 8%,rgba(245,179,66,.08),transparent 70%)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="mono" style="flex:1">SAÚDE DO COMPUTADOR</span>
+        <span class="mono" style="color:#F5B342;letter-spacing:.14em">DADOS DE EXEMPLO</span>
+      </div>
+
+      <section class="card" style="display:flex;align-items:center;gap:24px;padding:18px 28px">
+        <img src="dot-calor.svg" alt="Dot com as bochechas coradas e uma gota de suor" style="width:150px;height:auto;flex:none">
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+          <h1 style="margin:0;font-size:30px;line-height:1.1;font-weight:800;letter-spacing:-.03em">Está esquentando por aqui.</h1>
+          <p style="margin:0;font-size:14.5px;color:#C9CCDA">Processador a 84% há 2 minutos, rodando o build do projeto. O Dot reage ao que a máquina está sentindo de verdade.</p>
+          <div style="font-size:13px;color:#F5B342">Se passar de 92%, o Runner pausa a fila sozinho (regra ligada por você).</div>
+        </div>
+      </section>
+
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+        <div class="card" style="padding:14px 16px"><div style="font-size:13px;color:#A3A8BA">Processador</div><div style="font-size:30px;font-weight:800;color:#F5B342;letter-spacing:-.02em">84%</div><div style="height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:6px"><div style="width:84%;height:100%;background:#F5B342"></div></div></div>
+        <div class="card" style="padding:14px 16px"><div style="font-size:13px;color:#A3A8BA">Memória</div><div style="font-size:30px;font-weight:800;letter-spacing:-.02em">61%</div><div style="height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:6px"><div style="width:61%;height:100%;background:#5B8CFF"></div></div></div>
+        <div class="card" style="padding:14px 16px"><div style="font-size:13px;color:#A3A8BA">Disco livre</div><div style="font-size:30px;font-weight:800;letter-spacing:-.02em">212 GB</div><div style="height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:6px"><div style="width:46%;height:100%;background:#5B8CFF"></div></div></div>
+        <div class="card" style="padding:14px 16px"><div style="font-size:13px;color:#A3A8BA">Bateria</div><div style="font-size:30px;font-weight:800;letter-spacing:-.02em">82%</div><div style="font-size:12.5px;color:#34D17B;margin-top:6px">Carregando</div></div>
+      </div>
+      <div style="font-size:12px;color:#8E93A6;margin-top:-6px">Temperatura e pressão térmica aparecem só quando o sistema informa; senão, “indisponível”.</div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:12px">
+        <section class="card" style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+          <h2 style="margin:0;font-size:17px">Perfil de desempenho</h2>
+          <div class="seg"><span class="on">Leve</span><span>Equilibrado</span><span>Máximo</span></div>
+          <p style="margin:0;font-size:13.5px;color:#A3A8BA">Sugerido para este Mac (processador Intel, 8 GB). Leve = uma tarefa por vez, consulta calma, animações econômicas.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip">1 tarefa por vez</span><span class="chip">Prioridade baixa</span><span class="chip">Dot a 30 qps</span></div>
+        </section>
+        <section class="card" style="padding:6px 18px 8px;display:flex;flex-direction:column">
+          <h2 style="margin:10px 0 0;font-size:17px">Proteção do trabalho</h2>
+          <div class="tg"><div style="flex:1"><div style="font-weight:600;font-size:14.5px">Pausar a fila se esquentar</div><div style="font-size:12.5px;color:#A3A8BA">Acima de 92% por 1 min. Não encerra programas.</div></div><span class="sw on" role="img" aria-label="Ligado"></span></div>
+          <div class="tg"><div style="flex:1"><div style="font-weight:600;font-size:14.5px">Pausar com bateria baixa</div><div style="font-size:12.5px;color:#A3A8BA">Abaixo de 20% sem carregador.</div></div><span class="sw on" role="img" aria-label="Ligado"></span></div>
+          <div class="tg" style="border-bottom:0"><div style="flex:1"><div style="font-weight:600;font-size:14.5px">Perfil Leve na bateria</div><div style="font-size:12.5px;color:#A3A8BA">Volta ao seu perfil quando conectar na tomada.</div></div><span class="sw" role="img" aria-label="Desligado"></span></div>
+        </section>
+      </div>
+
+      <section class="card" style="padding:14px 18px;display:flex;align-items:center;gap:20px">
+        <div style="font-size:13px;font-weight:700;color:#C9CCDA;width:120px;flex:none">Reações do Dot</div>
+        <div style="display:flex;align-items:center;gap:22px;flex:1;justify-content:space-around">
+          <figure style="margin:0;text-align:center"><img src="dot-olhar.svg" alt="Dot olhando para a direita" style="width:64px;height:auto"><figcaption style="font-size:12px;color:#A3A8BA">Olha o mouse</figcaption></figure>
+          <figure style="margin:0;text-align:center"><img src="dot-calor.svg" alt="Dot com rubor e suor" style="width:64px;height:auto"><figcaption style="font-size:12px;color:#A3A8BA">Esquentou</figcaption></figure>
+          <figure style="margin:0;text-align:center"><img src="dot-panico.svg" alt="Dot em pânico com duas gotas" style="width:64px;height:auto"><figcaption style="font-size:12px;color:#A3A8BA">No limite</figcaption></figure>
+          <figure style="margin:0;text-align:center"><img src="dot-default.svg" alt="Dot tranquilo" style="width:64px;height:auto"><figcaption style="font-size:12px;color:#A3A8BA">Tranquilo</figcaption></figure>
+        </div>
+        <div style="font-size:12px;color:#8E93A6;width:210px;flex:none">Só reage a medidas reais. Passe o mouse no Dot para ver o motivo.</div>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1080,"height":860}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

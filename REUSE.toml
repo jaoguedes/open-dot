@@ -14,7 +14,7 @@ path = [
   "apps/web/src/dot/**", "apps/web/src/dot3d/**", "apps/web/src/components/Dot2D.tsx", "apps/web/src/components/Dot3D.tsx",
   "apps/web/src/mascot/dot.ts", "packages/core/src/dot/**", "assets/dot/**", "assets/icones/**", "blender/**",
   "apps/web/public/icons/**", "apps/web/public/favicon.ico", "apps/web/public/sounds/**", "apps/runner/src-tauri/icons/**",
-  "scripts/sounds/**", "docs/capturas/**", "docs/referencias/dot_*",
+  "scripts/sounds/**", "docs/capturas/**", "docs/referencias/dot_*", "docs/design/v0.3-referencia-runner/**",
   "apps/web/test/dot-art.test.ts", "apps/web/test/dot3d.test.ts", "apps/web/test/ring.test.ts", "apps/web/test/ticker.test.ts",
   "apps/web/test/icons.test.ts", "packages/core/test/dot.test.ts",
 ]
