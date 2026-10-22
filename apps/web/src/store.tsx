@@ -336,12 +336,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, [mode, refreshFor]);
 
-  const navigate = useCallback((p: string) => {
-    if (p === location.pathname) {
+  const navigate = useCallback((to: string) => {
+    // v0.3: aceita consulta (ex.: /aprovacoes?tarefa=…) e preserva a demonstração.
+    const [p, query = ""] = to.split("?") as [string, string?];
+    const params = new URLSearchParams(query);
+    if (new URLSearchParams(location.search).has("demo")) params.set("demo", "1");
+    const search = params.toString() ? `?${params}` : "";
+    if (p === location.pathname && search === location.search) {
       document.getElementById("conteudo")?.scrollTo({ top: 0 });
       return;
     }
-    history.pushState(null, "", p + (new URLSearchParams(location.search).has("demo") ? "?demo=1" : ""));
+    history.pushState(null, "", p + search);
     setNavDepth((d) => d + 1);
     setPath(p);
     requestAnimationFrame(() => document.getElementById("conteudo")?.focus());
