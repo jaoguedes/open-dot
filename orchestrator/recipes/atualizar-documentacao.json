@@ -1,0 +1,14 @@
+{
+  "id": "atualizar-documentacao",
+  "versao": "1.0.0",
+  "nome": "Atualizar a documentação",
+  "descricao": "Documentação propõe README, guia ou CHANGELOG fiéis ao estado real, em pt-BR e en quando pedido, e o QA confere cada afirmação contra a fonte.",
+  "papeis": ["implementador", "revisor"],
+  "agentes": ["documentacao", "qa"],
+  "entradas": [
+    { "nome": "o_que_mudou", "descricao": "O que mudou no projeto e onde está a evidência (arquivo, teste, decisão)." },
+    { "nome": "idiomas", "descricao": "pt-BR, en ou os dois." }
+  ],
+  "estimativa_de_chamadas": 2,
+  "modo": "propoe-mudancas"
+}

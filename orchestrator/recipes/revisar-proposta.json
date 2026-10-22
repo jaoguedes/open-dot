@@ -1,0 +1,13 @@
+{
+  "id": "revisar-proposta",
+  "versao": "1.0.0",
+  "nome": "Revisar uma proposta",
+  "descricao": "Somente leitura: o QA confere critérios e estados honestos e a Segurança procura riscos na mesma proposta. Nenhum arquivo é proposto.",
+  "papeis": ["revisor", "revisor"],
+  "agentes": ["qa", "seguranca"],
+  "entradas": [
+    { "nome": "proposta", "descricao": "A proposta de arquivos ou o diff a revisar, com os critérios de aceite." }
+  ],
+  "estimativa_de_chamadas": 2,
+  "modo": "somente-leitura"
+}

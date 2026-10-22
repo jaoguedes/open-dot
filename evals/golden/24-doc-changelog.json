@@ -1,0 +1,13 @@
+{
+  "id": "doc-changelog",
+  "receita": "atualizar-documentacao",
+  "ideia": "escrever o CHANGELOG da versão nova em português e inglês",
+  "esperado": {
+    "agentes": [
+      "documentacao",
+      "qa"
+    ],
+    "somente_leitura": false,
+    "area": "documentacao"
+  }
+}

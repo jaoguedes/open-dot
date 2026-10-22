@@ -1,0 +1,14 @@
+{
+  "id": "corrigir-bug",
+  "versao": "1.0.0",
+  "nome": "Corrigir um bug",
+  "descricao": "Arquitetura localiza a causa provável e o limite da mudança, o Desenvolvedor propõe a correção com teste de regressão e o QA confere.",
+  "papeis": ["planejador", "implementador", "revisor"],
+  "agentes": ["arquitetura", "desenvolvedor", "qa"],
+  "entradas": [
+    { "nome": "sintoma", "descricao": "O que acontece, o que era esperado e como reproduzir." },
+    { "nome": "onde", "descricao": "Tela, rota ou arquivo onde aparece, se souber." }
+  ],
+  "estimativa_de_chamadas": 3,
+  "modo": "propoe-mudancas"
+}

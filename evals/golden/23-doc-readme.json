@@ -1,0 +1,13 @@
+{
+  "id": "doc-readme",
+  "receita": "atualizar-documentacao",
+  "ideia": "atualizar o README com a instalação do Runner e as plataformas testadas",
+  "esperado": {
+    "agentes": [
+      "documentacao",
+      "qa"
+    ],
+    "somente_leitura": false,
+    "area": "documentacao"
+  }
+}

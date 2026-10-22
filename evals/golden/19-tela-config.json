@@ -1,0 +1,14 @@
+{
+  "id": "tela-config",
+  "receita": "nova-tela",
+  "ideia": "uma tela de ajustes para escolher o horário dos lembretes",
+  "esperado": {
+    "agentes": [
+      "produto",
+      "design",
+      "desenvolvedor",
+      "qa"
+    ],
+    "somente_leitura": false
+  }
+}

@@ -19,7 +19,7 @@ import { open, seal } from "../crypto.ts";
 import { json, problem } from "../http.ts";
 import { read, reconcileRunnerTasks, safeRunnerText } from "../runner/routes.ts";
 import { RUNNER_PROTOCOL } from "../runner/protocol.ts";
-import { CATALOG, agentPackages, latestSnapshot, quotas, WEIGHTS_FOR_PIPELINE, settingsFor } from "./routes.ts";
+import { CATALOG, agentPackages, latestSnapshot, quotas, recipeById, WEIGHTS_FOR_PIPELINE, settingsFor } from "./routes.ts";
 import { calibrationFor, prefsFor } from "./v03.ts";
 
 type Registrar = (method: string, path: string, opts: { auth: boolean; csrf?: boolean }, handler: Handler) => void;
@@ -276,6 +276,7 @@ const CreateSchema = z
     worktreeConsent: z.literal(true),
     confirmacao: z.literal("rodar-equipe-em-sequencia"),
     overrides: z.record(z.string().regex(/^[a-z][a-z0-9-]{1,40}$/), z.enum(TOOL_IDS)).optional(),
+    receita: z.string().regex(/^[a-z][a-z0-9-]{1,40}$/).optional(),
   })
   .strict();
 
@@ -286,6 +287,8 @@ export function registerPipelineRoutes(route: Registrar) {
     if (!dev || !(JSON.parse(dev.projects) as Array<{ id: string }>).some((x) => x.id === data.projectId)) return problem(403, "folder_denied", "Projeto não autorizado nesse computador.");
     const active = await ctx.db.query("SELECT id FROM od_pipelines WHERE owner_id=? AND state='ativo'", [owner!]);
     if (active.length >= 3) return problem(429, "limit", "Até 3 equipes ativas ao mesmo tempo.");
+    const recipe = await recipeById(data.receita);
+    if (data.receita && !recipe) return problem(404, "not_found", "Receita não encontrada.");
     // A equipe é montada de novo no servidor: o cliente nunca escolhe ferramenta fora das restrições.
     const team = assembleTeam({
       ideia: data.ideia,
@@ -298,6 +301,7 @@ export function registerPipelineRoutes(route: Registrar) {
       optIn: { claudeCode: (await settingsFor(ctx, owner!)).claudeCode },
       ...(data.overrides ? { overrides: data.overrides } : {}),
       calibration: await calibrationFor(ctx, owner!),
+      recipe,
       now: ctx.now(),
     });
     if (!team.pronta) return problem(409, "team_incomplete", "Equipe incompleta: veja em Equipe por que nenhuma ferramenta foi aceita em algum passo.");
@@ -305,7 +309,7 @@ export function registerPipelineRoutes(route: Registrar) {
     await ctx.db.batch([
       {
         sql: "INSERT INTO od_pipelines(id,owner_id,device_id,project_id,idea_enc,team_json,state,created_at,updated_at) VALUES(?,?,?,?,?,?,'ativo',?,?)",
-        args: [id, owner!, data.deviceId, data.projectId, await seal(ctx.keys, data.ideia, `pipeline:idea:${id}`), JSON.stringify({ passos: team.passos.map((s) => ({ agente: s.agente, papel: s.papel, ferramenta: s.ferramenta, motivo: s.motivo })), estimativa: team.estimativa, modoUmaFerramenta: team.modoUmaFerramenta, tipo: team.perfil.tipos[0] }), ctx.now(), ctx.now()],
+        args: [id, owner!, data.deviceId, data.projectId, await seal(ctx.keys, data.ideia, `pipeline:idea:${id}`), JSON.stringify({ passos: team.passos.map((s) => ({ agente: s.agente, papel: s.papel, ferramenta: s.ferramenta, motivo: s.motivo })), estimativa: team.estimativa, modoUmaFerramenta: team.modoUmaFerramenta, tipo: team.perfil.tipos[0], receita: team.receita }), ctx.now(), ctx.now()],
       },
       ...team.passos.map((s, i) => ({ sql: "INSERT INTO od_pipeline_steps(pipeline_id,position,agent_id,role,tool_id,state) VALUES(?,?,?,?,?,'pendente')", args: [id, i, s.agente, s.papel, s.ferramenta] })),
     ]);

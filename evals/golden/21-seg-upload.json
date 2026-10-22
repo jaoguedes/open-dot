@@ -1,0 +1,12 @@
+{
+  "id": "seg-upload",
+  "receita": "revisao-de-seguranca",
+  "ideia": "revisar a rota que recebe anexos de clientes e salva no disco",
+  "esperado": {
+    "agentes": [
+      "seguranca"
+    ],
+    "somente_leitura": true,
+    "area": "seguranca"
+  }
+}

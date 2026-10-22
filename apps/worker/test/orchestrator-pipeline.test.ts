@@ -187,3 +187,18 @@ test("v0.3: ciclo corretor roda em sequência, vê só achados e proposta, e par
   assert.match(p.equipe.ciclo.join(" | "), /rodada 1 de 2.*não reduziu/);
   s.ctx.db.raw.close();
 });
+
+test("v0.3: receitas listadas com hash; equipe pela receita; receita desconhecida recusada", async () => {
+  const s = await setup();
+  const list = await s.web.call("GET", "/api/orchestrator/recipes");
+  assert.equal(list.json.receitas.length, 6);
+  assert.ok(list.json.receitas.every((r: { hash: string }) => /^[a-f0-9]{64}$/.test(r.hash)));
+  const t = await s.web.call("POST", "/api/orchestrator/team", { ideia: "revisar a rota de anexos", deviceId: s.deviceId, receita: "revisao-de-seguranca" });
+  assert.deepEqual(t.json.team.passos.map((p: { agente: string }) => p.agente), ["seguranca"]);
+  assert.equal(t.json.team.receita, "revisao-de-seguranca");
+  assert.equal((await s.web.call("POST", "/api/orchestrator/team", { ideia: "x y z", deviceId: s.deviceId, receita: "nao-existe" })).status, 404);
+  const p = await s.web.call("POST", "/api/orchestrator/pipelines", { ideia: "atualizar o README", deviceId: s.deviceId, projectId: s.projectId, worktreeConsent: true, confirmacao: "rodar-equipe-em-sequencia", receita: "atualizar-documentacao" });
+  assert.equal(p.status, 201);
+  assert.deepEqual(p.json.estimativa, { codex: 2 });
+  s.ctx.db.raw.close();
+});

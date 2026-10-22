@@ -1,0 +1,13 @@
+{
+  "id": "rev-script",
+  "receita": "revisar-proposta",
+  "ideia": "revisar o script que limpa arquivos temporários antigos",
+  "esperado": {
+    "agentes": [
+      "qa",
+      "seguranca"
+    ],
+    "somente_leitura": true,
+    "area": "seguranca"
+  }
+}
