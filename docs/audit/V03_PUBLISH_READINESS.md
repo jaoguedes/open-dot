@@ -9,6 +9,7 @@ Checklist antes de publicar `claude/od2-v03`. **Nada aqui foi executado pelo age
 | Revisão do `V03_REPORT.md` pelo Claude orquestrador / João | pendente | conferir estado honesto, desvios e gate |
 | Commit com o ID de rollback do Worker | **resolvido** | removido do histórico local por rebase autorizado; verificado por busca no histórico; backup local `backup/od2-v03-antes-da-reescrita` **nunca deve ser enviado** |
 | Trailer `Task:` fora do formato em 28 commits | aceitar ou reescrever (só local) | `npx tsx scripts/check-continuity.ts --base 69c5769226319a33f79c7f3e6419bc98afd92611` |
+| `ui:mobile` (360/390/430) e `ui:clearance` | **verde** | `UI_WIDTH=360 npm run ui:mobile` (e 390, 430); `npm run ui:clearance`. O `ui:mobile` **não tinha rodado** antes da primeira tentativa de deploy, que parou nele; corrigido sem afrouxar o teste |
 
 ## 2. Migrações de produção (ordem)
 

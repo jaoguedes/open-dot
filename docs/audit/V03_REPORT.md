@@ -64,6 +64,8 @@ Nada publicado: sem push, merge na `main`, tag, release, deploy, migração remo
 | `npm run test:ui` (`npm run dev`, banco descartável limpo) | **107/107** |
 | `npm run ui:runner` | **14/14** (8 web + 6 Runner, inclui axe) |
 | `ui:fase-a/d/e/f/g`, `ui:rodada4` | **PASS** (12, 11, 5, 2, 4, 2) depois de adaptar 3 roteiros à casca nova |
+| `npm run ui:mobile` (360, 390 e 430 px) | **PASS** — 16 verificações em cada largura. **Não tinha rodado antes do primeiro deploy** (só o `test:ui`): o deploy parou nele com "Copiar detalhes" coberto pela caixa de perguntas em Código e Sentinela. Causa: o topo quebrava em duas linhas (a data seguia visível por especificidade), empurrando o conteúdo 45 px para baixo da caixa. Corrigido em `shell.css` (topo numa linha, data oculta, coluna da grade com `min-width: 0`); o teste não foi afrouxado — só ganhou `UI_WIDTH` e o tamanho da busca passou a ser relativo à largura da tela (idêntico em 390) |
+| `npm run ui:clearance` (novo) | **PASS** — em 360/390/430 px, nas 15 rotas (Código, Sentinela, Correio, Notícias, Equipe, Aprovações, Correio, Runner, Conexões e demais), o último controle e "Copiar detalhes" ficam acima da barra inferior e da caixa de perguntas depois de rolar até o fim |
 | `npm run ui:widths` | **PASS** — sem rolagem horizontal em 360/390/430/768/1024/1440 nas 13 rotas; 1º cartão 663 px a 390 px |
 | axe | sem achados sérios nas telas novas e antigas, claro e escuro, 390/768/1440 (scripts acima) |
 | `npm run perf:check` | **PASS** — oculto 0,1 % CPU / 196 MB; central Leve 36,9 % / 225 MB; JS do Runner 301 KB |
