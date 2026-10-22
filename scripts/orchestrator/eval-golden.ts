@@ -15,7 +15,7 @@ import { loadRecipe, type Recipe } from "../../packages/core/src/orchestrator/re
 import { assembleTeam, type Weights } from "../../packages/core/src/orchestrator/selector.ts";
 import { EMPTY_CALIBRATION, calibrate, type CalibrationState, type MeasuredOutcome } from "../../packages/core/src/orchestrator/calibration.ts";
 import { nextRound } from "../../packages/core/src/orchestrator/review-loop.ts";
-import { mulberry32 } from "../../packages/core/src/dot/physics.ts";
+import { seeded as mulberry32 } from "../../packages/core/src/orchestrator/prng.ts";
 import type { ToolSnapshot } from "../../packages/core/src/orchestrator/detection.ts";
 
 const root = new URL("../../", import.meta.url).pathname;
