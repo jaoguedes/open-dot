@@ -1,0 +1,13 @@
+{
+  "id": "revisao-de-seguranca",
+  "versao": "1.0.0",
+  "nome": "Revisão de segurança",
+  "descricao": "Somente leitura: o especialista de Segurança monta o modelo de ameaça, aplica a Regra de Dois e devolve achados com correção proposta. Nada é alterado.",
+  "papeis": ["revisor"],
+  "agentes": ["seguranca"],
+  "entradas": [
+    { "nome": "alvo", "descricao": "Proposta, módulo ou mudança que deve ser revisada." }
+  ],
+  "estimativa_de_chamadas": 1,
+  "modo": "somente-leitura"
+}

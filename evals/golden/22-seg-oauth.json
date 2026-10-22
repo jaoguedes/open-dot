@@ -1,0 +1,12 @@
+{
+  "id": "seg-oauth",
+  "receita": "revisao-de-seguranca",
+  "ideia": "revisar se o pedido de permissão do Google pede só leitura",
+  "esperado": {
+    "agentes": [
+      "seguranca"
+    ],
+    "somente_leitura": true,
+    "area": "seguranca"
+  }
+}

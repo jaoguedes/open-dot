@@ -1,0 +1,14 @@
+{
+  "id": "bug-data",
+  "receita": "corrigir-bug",
+  "ideia": "a data da próxima rega aparece um dia antes para quem mora em outro fuso",
+  "esperado": {
+    "agentes": [
+      "arquitetura",
+      "desenvolvedor",
+      "qa"
+    ],
+    "somente_leitura": false,
+    "area": "arquitetura"
+  }
+}

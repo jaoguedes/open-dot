@@ -1,0 +1,13 @@
+{
+  "id": "plano-offline",
+  "receita": "planejar-ideia",
+  "ideia": "planejar o modo offline do app de tarefas",
+  "esperado": {
+    "agentes": [
+      "produto",
+      "arquitetura"
+    ],
+    "somente_leitura": true,
+    "area": "arquitetura"
+  }
+}

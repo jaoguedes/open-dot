@@ -7,6 +7,8 @@ import { z } from "zod";
 import catalogJson from "../../../../orchestrator/catalog/ferramentas.json";
 import weightsJson from "../../../../orchestrator/config/pesos.json";
 import agentsJson from "../../../../orchestrator/generated/agents.json";
+import recipesJson from "../../../../orchestrator/generated/recipes.json";
+import { loadRecipe, type Recipe } from "@open-dot/core/orchestrator/recipes.ts";
 import { loadAgentPackage, type AgentFiles, type AgentPackage, type Role } from "@open-dot/core/orchestrator/agents.ts";
 import { TOOL_IDS, type ToolId } from "@open-dot/core/orchestrator/catalog.ts";
 import { assembleTeam, type Evidence, type Weights } from "@open-dot/core/orchestrator/selector.ts";
@@ -27,6 +29,20 @@ let agentsCache: Promise<AgentPackage[]> | null = null;
 export function agentPackages(): Promise<AgentPackage[]> {
   agentsCache ??= Promise.all((agentsJson as { agentes: Array<{ files: AgentFiles; hash: string }> }).agentes.map((a) => loadAgentPackage(a.files, a.hash)));
   return agentsCache;
+}
+
+let recipesCache: Promise<Recipe[]> | null = null;
+/** Receitas geradas no build, conferidas pelo hash e contra os agentes. */
+export function recipes(): Promise<Recipe[]> {
+  recipesCache ??= agentPackages().then((pkgs) =>
+    Promise.all((recipesJson as { receitas: Array<{ text: string; hash: string }> }).receitas.map((r) => loadRecipe(r.text, pkgs.map((p) => p.meta), r.hash))),
+  );
+  return recipesCache;
+}
+
+export async function recipeById(id: string | undefined): Promise<Recipe | null> {
+  if (!id) return null;
+  return (await recipes()).find((r) => r.id === id) ?? null;
 }
 
 export async function quotas(ctx: Parameters<Handler>[0], owner: string): Promise<Partial<Record<ToolId, QuotaState>>> {
@@ -58,6 +74,7 @@ const TeamInputSchema = z
     deviceId: z.string().uuid(),
     overrides: z.record(z.string().regex(/^[a-z][a-z0-9-]{1,40}$/), z.enum(TOOL_IDS)).optional(),
     permitirPossivelmentePago: z.array(z.enum(TOOL_IDS)).max(TOOL_IDS.length).optional(),
+    receita: z.string().regex(/^[a-z][a-z0-9-]{1,40}$/).optional(),
   })
   .strict();
 
@@ -93,6 +110,8 @@ export function registerTeamRoutes(route: Registrar) {
     const dev = (await ctx.db.query<{ seen_at: number }>("SELECT seen_at FROM od_runner_devices WHERE id=? AND owner_id=? AND revoked_at IS NULL", [data.deviceId, owner!]))[0];
     if (!dev) return problem(404, "not_found", "Computador não encontrado.");
     const snapshot = await latestSnapshot(ctx, owner!, data.deviceId);
+    const recipe = await recipeById(data.receita);
+    if (data.receita && !recipe) return problem(404, "not_found", "Receita não encontrada.");
     const team = assembleTeam({
       ideia: data.ideia,
       catalog: CATALOG,
@@ -106,10 +125,18 @@ export function registerTeamRoutes(route: Registrar) {
       ...(data.overrides ? { overrides: data.overrides } : {}),
       ...(data.permitirPossivelmentePago ? { permitirPossivelmentePago: data.permitirPossivelmentePago } : {}),
       calibration: await calibrationFor(ctx, owner!),
+      recipe,
       now: ctx.now(),
     });
     return json({ team, snapshotDisponivel: snapshot !== null, executa: false, nota: "Proposta de equipe. Nada roda sem a sua confirmação." });
   });
+
+  route("GET", "/api/orchestrator/recipes", { auth: true }, async () =>
+    json({
+      receitas: (await recipes()).map((r) => ({ id: r.id, nome: r.nome, descricao: r.descricao, agentes: r.agentes, papeis: r.papeis, entradas: r.entradas, estimativa: r.estimativa_de_chamadas, modo: r.modo, hash: r.hash })),
+      nota: "Receitas são dados: não concedem ferramenta nem permissão. A quantidade de receitas não é medida de qualidade.",
+    }),
+  );
 
   route("GET", "/api/orchestrator/settings", { auth: true }, async (ctx, _r, _p, owner) => json({ ...(await settingsFor(ctx, owner!)), quotas: await quotas(ctx, owner!) }));
 

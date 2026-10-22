@@ -1,0 +1,14 @@
+{
+  "id": "bug-login",
+  "receita": "corrigir-bug",
+  "ideia": "o botão de entrar fica girando para sempre quando a senha está errada",
+  "esperado": {
+    "agentes": [
+      "arquitetura",
+      "desenvolvedor",
+      "qa"
+    ],
+    "somente_leitura": false,
+    "area": "arquitetura"
+  }
+}

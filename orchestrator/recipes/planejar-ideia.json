@@ -1,0 +1,13 @@
+{
+  "id": "planejar-ideia",
+  "versao": "1.0.0",
+  "nome": "Planejar uma ideia",
+  "descricao": "Somente leitura: Produto transforma a ideia em briefing com critérios de aceite e a Arquitetura registra a decisão técnica (ADR) com plano de migração.",
+  "papeis": ["planejador", "planejador"],
+  "agentes": ["produto", "arquitetura"],
+  "entradas": [
+    { "nome": "ideia", "descricao": "A ideia em poucas frases: para quem, o problema e o que seria sucesso." }
+  ],
+  "estimativa_de_chamadas": 2,
+  "modo": "somente-leitura"
+}

@@ -49,6 +49,8 @@ export interface TeamInput {
   permitirPossivelmentePago?: ToolId[];
   /** Calibração adaptativa (G). Só é passada quando o dono a ligou; ausente = neutro. */
   calibration?: CalibrationState | null;
+  /** Receita escolhida (v0.3): fixa a ordem de agentes no lugar da heurística do perfil. */
+  recipe?: { id: string; agentes: string[] } | null;
   now: number;
 }
 
@@ -67,6 +69,7 @@ export interface Step {
 }
 export interface Team {
   perfil: ProjectProfile;
+  receita: string | null;
   passos: Step[];
   modoUmaFerramenta: boolean;
   estimativa: Partial<Record<ToolId, number>>;
@@ -123,8 +126,9 @@ function score(entry: ToolEntry, agent: AgentMeta, input: TeamInput, tipo?: Proj
   return { valor: Math.round(v * 1000) / 1000, fatores };
 }
 
-function pipelineFor(perfil: ProjectProfile, agents: AgentMeta[]): AgentMeta[] {
+function pipelineFor(perfil: ProjectProfile, agents: AgentMeta[], recipe?: TeamInput["recipe"]): AgentMeta[] {
   const by = (id: string) => agents.find((a) => a.id === id);
+  if (recipe) return recipe.agentes.map(by).filter((a): a is AgentMeta => Boolean(a));
   const ids = ["produto", ...(perfil.precisaPesquisa ? ["pesquisa"] : []), ...(perfil.precisaDesign ? ["design"] : []), "desenvolvedor", "qa"];
   return ids.map(by).filter((a): a is AgentMeta => Boolean(a));
 }
@@ -156,7 +160,7 @@ function pick(agent: AgentMeta, input: TeamInput, avoid: ToolId | null, tipo?: P
 
 export function assembleTeam(input: TeamInput): Team {
   const perfil = profileFromIdea(input.ideia, input.stack);
-  const agents = pipelineFor(perfil, input.agents);
+  const agents = pipelineFor(perfil, input.agents, input.recipe);
   const avisos: string[] = [];
   const implAgent = agents.find((a) => a.papel === "implementador");
   const tipo = perfil.tipos[0];
@@ -180,5 +184,5 @@ export function assembleTeam(input: TeamInput): Team {
   for (const p of passos) if (p.ferramenta) estimativa[p.ferramenta] = (estimativa[p.ferramenta] ?? 0) + 1;
   const pronta = passos.every((p) => p.ferramenta !== null);
   if (!pronta) avisos.push("Equipe incompleta: veja em cada passo por que nenhuma ferramenta foi aceita.");
-  return { perfil, passos, modoUmaFerramenta: modoUmaFerramenta && pronta, estimativa, avisos, pronta };
+  return { perfil, receita: input.recipe?.id ?? null, passos, modoUmaFerramenta: modoUmaFerramenta && pronta, estimativa, avisos, pronta };
 }

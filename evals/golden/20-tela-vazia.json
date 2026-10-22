@@ -1,0 +1,14 @@
+{
+  "id": "tela-vazia",
+  "receita": "nova-tela",
+  "ideia": "uma tela de histórico que mostra as últimas tarefas, com estado vazio e de erro",
+  "esperado": {
+    "agentes": [
+      "produto",
+      "design",
+      "desenvolvedor",
+      "qa"
+    ],
+    "somente_leitura": false
+  }
+}

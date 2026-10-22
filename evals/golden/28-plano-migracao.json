@@ -1,0 +1,13 @@
+{
+  "id": "plano-migracao",
+  "receita": "planejar-ideia",
+  "ideia": "planejar a troca do banco local por outro sem perder dados",
+  "esperado": {
+    "agentes": [
+      "produto",
+      "arquitetura"
+    ],
+    "somente_leitura": true,
+    "area": "arquitetura"
+  }
+}

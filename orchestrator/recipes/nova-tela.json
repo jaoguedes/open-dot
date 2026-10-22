@@ -1,0 +1,13 @@
+{
+  "id": "nova-tela",
+  "versao": "1.0.0",
+  "nome": "Nova tela",
+  "descricao": "Produto define o objetivo e os critérios, Design especifica estados e acessibilidade, o Desenvolvedor propõe a tela e o QA revisa estados honestos.",
+  "papeis": ["planejador", "planejador", "implementador", "revisor"],
+  "agentes": ["produto", "design", "desenvolvedor", "qa"],
+  "entradas": [
+    { "nome": "objetivo", "descricao": "Para quem é a tela e o que a pessoa precisa conseguir fazer nela." }
+  ],
+  "estimativa_de_chamadas": 4,
+  "modo": "propoe-mudancas"
+}

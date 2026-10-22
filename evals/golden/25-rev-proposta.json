@@ -1,0 +1,13 @@
+{
+  "id": "rev-proposta",
+  "receita": "revisar-proposta",
+  "ideia": "revisar a proposta que adiciona um cache de respostas no servidor",
+  "esperado": {
+    "agentes": [
+      "qa",
+      "seguranca"
+    ],
+    "somente_leitura": true,
+    "area": "seguranca"
+  }
+}
