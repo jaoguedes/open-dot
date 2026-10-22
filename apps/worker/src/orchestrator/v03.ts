@@ -10,8 +10,12 @@ import { EMPTY_CALIBRATION, calibrate, explainKey, type CalibrationState, type M
 import type { Role } from "@open-dot/core/orchestrator/agents.ts";
 import type { ToolId } from "@open-dot/core/orchestrator/catalog.ts";
 import type { ProjectType } from "@open-dot/core/orchestrator/profile.ts";
+import { detectPatterns, draftHash, newProposals, parseSignals, type SkillDraft, type UserSignal } from "@open-dot/core/orchestrator/skill-suggest.ts";
+import { loadAgentPackage, type AgentFiles } from "@open-dot/core/orchestrator/agents.ts";
 import type { Handler } from "../app.ts";
-import { json } from "../http.ts";
+import { open } from "../crypto.ts";
+import { json, problem } from "../http.ts";
+import { agentPackages } from "./routes.ts";
 import { read } from "../runner/routes.ts";
 
 type Registrar = (method: string, path: string, opts: { auth: boolean; csrf?: boolean }, handler: Handler) => void;
@@ -66,11 +70,60 @@ export async function calibrationFor(ctx: Ctx, owner: string): Promise<Calibrati
   return state;
 }
 
+const TEST_PATH = /(^|\/)(tests?|__tests__|spec)(\/|$)|\.(test|spec)\.[a-z]+$/i;
+
+/**
+ * Sinais ESTRUTURADOS do próprio dono: decisões de aprovação (e se a proposta tinha teste) e
+ * receitas escolhidas. Nenhum texto de e-mail, página, README ou saída de ferramenta entra aqui;
+ * da proposta só se lê o caminho dos arquivos para saber se havia teste.
+ */
+async function userSignals(ctx: Ctx, owner: string): Promise<UserSignal[]> {
+  const signals: UserSignal[] = [];
+  const decisions = await ctx.db.query<{ task_id: string; decision: string; proposal_enc: string }>(
+    "SELECT a.task_id,a.decision,a.proposal_enc FROM od_runner_approvals a JOIN od_runner_tasks t ON t.id=a.task_id WHERE t.owner_id=? AND a.decision IN ('approve','reject') ORDER BY a.decided_at DESC LIMIT 200",
+    [owner],
+  );
+  for (const d of decisions) {
+    let paths: string[] = [];
+    try {
+      paths = ((JSON.parse(await open(ctx.keys, d.proposal_enc, `runner:proposal:${d.task_id}`)) as { files?: Array<{ path?: unknown }> }).files ?? []).map((f) => String(f.path ?? ""));
+    } catch {
+      continue;
+    }
+    signals.push({ tipo: "decisao", aprovou: d.decision === "approve", propostaTinhaTeste: paths.some((p) => TEST_PATH.test(p)) });
+  }
+  const pipes = await ctx.db.query<{ team_json: string; created_at: number }>("SELECT team_json,created_at FROM od_pipelines WHERE owner_id=? ORDER BY created_at LIMIT 500", [owner]);
+  let lastChange = -Infinity;
+  for (const p of pipes) {
+    let t: { receita?: string | null; passos?: Array<{ papel: string }> } = {};
+    try {
+      t = JSON.parse(p.team_json);
+    } catch {
+      continue;
+    }
+    const writes = (t.passos ?? []).some((s) => s.papel === "implementador");
+    if (t.receita) signals.push({ tipo: "receita", receita: t.receita, depoisDeMudanca: !writes && p.created_at - lastChange < DAY });
+    if (writes) lastChange = p.created_at;
+  }
+  return parseSignals(signals);
+}
+
+export function draftAgentFiles(d: SkillDraft): AgentFiles {
+  const evals = Object.keys(d.arquivos)
+    .filter((k) => k.startsWith("evals/"))
+    .sort()
+    .map((k) => d.arquivos[k]!);
+  return { agentMd: d.arquivos["AGENT.md"] ?? "", rubrica: d.arquivos["rubrica.md"] ?? "", schema: d.arquivos["schema.json"] ?? "", evals };
+}
+
 export function registerV03Routes(route: Registrar) {
   route("GET", "/api/orchestrator/prefs", { auth: true }, async (ctx, _r, _p, owner) => json({ prefs: await prefsFor(ctx, owner!), padrao: DEFAULT_PREFS }));
 
   route("PUT", "/api/orchestrator/prefs", { auth: true }, async (ctx, req, _p, owner) => {
-    const patch = PrefsSchema.partial().strict().parse(await read(req));
+    const body = PrefsSchema.partial().extend({ consentimento: z.literal("aprender-com-minhas-decisoes").optional() }).strict().parse(await read(req));
+    const { consentimento, ...patch } = body;
+    // Consentimento próprio para aprender com as decisões do dono (parte 3, item 3).
+    if (patch.sugestaoDeSkill === true && !consentimento) return problem(409, "consentimento_necessario", "Para sugerir skills, o Dot usa só as suas decisões (aprovou, rejeitou, receita escolhida). Confirme o consentimento.");
     const next = PrefsSchema.parse({ ...(await prefsFor(ctx, owner!)), ...patch });
     await ctx.db.run(
       "INSERT INTO od_orchestrator_prefs(owner_id,prefs_json,updated_at) VALUES(?,?,?) ON CONFLICT(owner_id) DO UPDATE SET prefs_json=excluded.prefs_json,updated_at=excluded.updated_at",
@@ -79,6 +132,61 @@ export function registerV03Routes(route: Registrar) {
     // Desligar a sugestão de skill apaga as propostas pendentes (parte 3, item 3).
     if (patch.sugestaoDeSkill === false) await ctx.db.run("DELETE FROM od_skill_proposals WHERE owner_id=? AND state='pendente'", [owner!]);
     return json({ prefs: next });
+  });
+
+  route("GET", "/api/orchestrator/skills", { auth: true }, async (ctx, _r, _p, owner) => {
+    const prefs = await prefsFor(ctx, owner!);
+    if (prefs.sugestaoDeSkill) {
+      const existing = await ctx.db.query<{ pattern: string; state: string }>("SELECT pattern,state FROM od_skill_proposals WHERE owner_id=?", [owner!]);
+      for (const d of newProposals(detectPatterns(await userSignals(ctx, owner!)), existing))
+        await ctx.db.run("INSERT INTO od_skill_proposals(id,owner_id,pattern,evidence_json,draft_json,hash,state,created_at,updated_at) VALUES(?,?,?,?,?,?,'pendente',?,?)", [
+          crypto.randomUUID(),
+          owner!,
+          d.padrao,
+          JSON.stringify({ evidencia: d.evidencia, numeros: d.numeros }),
+          JSON.stringify(d),
+          await draftHash(d),
+          ctx.now(),
+          ctx.now(),
+        ]);
+    }
+    const rows = await ctx.db.query<{ id: string; pattern: string; evidence_json: string; draft_json: string; hash: string; state: string }>(
+      "SELECT id,pattern,evidence_json,draft_json,hash,state FROM od_skill_proposals WHERE owner_id=? AND state IN ('pendente','ativa') ORDER BY created_at",
+      [owner!],
+    );
+    return json({
+      ativa: prefs.sugestaoDeSkill,
+      propostas: rows.map((r) => {
+        const d = JSON.parse(r.draft_json) as SkillDraft;
+        return { id: r.id, padrao: r.pattern, estado: r.state, ...JSON.parse(r.evidence_json), tipo: d.tipo, arquivos: d.arquivos, hash: r.hash, nivel: "experimental" };
+      }),
+    });
+  });
+
+  route("POST", "/api/orchestrator/skills/:id/approve", { auth: true }, async (ctx, req, p, owner) => {
+    const { hash } = z.object({ hash: z.string().regex(/^[a-f0-9]{64}$/) }).strict().parse(await read(req));
+    const row = (await ctx.db.query<{ draft_json: string; hash: string; state: string }>("SELECT draft_json,hash,state FROM od_skill_proposals WHERE id=? AND owner_id=?", [p.id!, owner!]))[0];
+    if (!row || row.state !== "pendente") return problem(404, "not_found", "Proposta não encontrada ou já decidida.");
+    const d = JSON.parse(row.draft_json) as SkillDraft;
+    // O hash é recalculado do rascunho guardado: aprovar só vale para o conteúdo exato mostrado.
+    if (hash !== row.hash || (await draftHash(d)) !== row.hash) return problem(409, "hash_mismatch", "O rascunho mudou desde que você viu. Revise de novo.");
+    if (d.tipo === "agente") {
+      const files = draftAgentFiles(d);
+      const pkg = await loadAgentPackage(files);
+      if ((await agentPackages()).some((a) => a.meta.id === pkg.meta.id)) return problem(409, "conflict", "Já existe um agente com esse id.");
+      await ctx.db.run(
+        "INSERT INTO od_agent_imports(owner_id,agent_id,hash,files_json,enabled,created_at,updated_at) VALUES(?,?,?,?,1,?,?) ON CONFLICT(owner_id,agent_id) DO UPDATE SET hash=excluded.hash,files_json=excluded.files_json,enabled=1,updated_at=excluded.updated_at",
+        [owner!, pkg.meta.id, pkg.hash, JSON.stringify(files), ctx.now(), ctx.now()],
+      );
+    }
+    await ctx.db.run("UPDATE od_skill_proposals SET state='ativa',updated_at=? WHERE id=? AND owner_id=? AND state='pendente'", [ctx.now(), p.id!, owner!]);
+    return json({ ativa: true, nivel: "experimental" });
+  });
+
+  route("POST", "/api/orchestrator/skills/:id/forget", { auth: true }, async (ctx, _r, p, owner) => {
+    // "Esquecer isto": a proposta some e o mesmo padrão não volta a ser sugerido.
+    const r = await ctx.db.run("UPDATE od_skill_proposals SET state='esquecida',draft_json='{}',evidence_json='{}',updated_at=? WHERE id=? AND owner_id=? AND state IN ('pendente','ativa')", [ctx.now(), p.id!, owner!]);
+    return r.changes ? json({ esquecida: true }) : problem(404, "not_found", "Proposta não encontrada.");
   });
 
   route("GET", "/api/orchestrator/calibration", { auth: true }, async (ctx, _r, _p, owner) => {
