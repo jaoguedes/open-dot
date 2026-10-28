@@ -35,4 +35,4 @@ semver = "1"
 libc = "0.2"
 
 [dev-dependencies]
-minisign = "0.7"
+minisign = "0.10"
